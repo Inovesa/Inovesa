@@ -15,7 +15,7 @@ typedef float meshdata_t;
 namespace vfps
 {
 
-typedef std::tuple<unsigned int,unsigned int,float> hi;
+typedef std::tuple<unsigned int,float> hi;
 
 template <class data_t>
 class Mesh2D
@@ -82,6 +82,7 @@ public:
 		delete [] _data1D;
 		delete [] _data1D_tmp;
 		delete [] _heritage_map;
+		delete [] _heritage_map1D;
 		delete [] _projection[0];
 		delete [] _projection[1];
 		delete [] _ws[0];
@@ -208,13 +209,12 @@ public:
 
 			for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
 				for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
+					_heritage_map[q_i][p_i].clear();
 					//  Find cell of inverse image (qp,pp) of grid point i,j.
 					data_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
 					data_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
-					if (qp > getMax<0>() || pp > getMax<1>() ||
-						qp < getMin<0>() || pp < getMin<1>() ) { //out of grid
-						_heritage_map[q_i][p_i].clear();
-					} else {
+					if ( willStayInMesh(qp,pp) )
+					{
 						/* choose number of meshpoints for interpolation;
 						 * other values than 4 might not work properly because
 						 * hardcoded dependencies are not yet flexible
@@ -240,7 +240,7 @@ public:
 							for (unsigned int i1=0; i1<interpolation_steps; i1++) {
 								unsigned int i0 = id+i1-1;
 								if(i0< size<0>() && j0 < size<1>() ){
-									ph[i1][j1] = hi(i0,j0,0);
+									ph[i1][j1] = hi(i0*size<0>()+j0,0);
 								}
 							}
 						}
@@ -261,10 +261,9 @@ public:
 						lap[3] *= (xip-1)*o3;
 
 						//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
-						_heritage_map[q_i][p_i].clear();
 						for (size_t i1=0; i1<interpolation_steps; i1++) {
 							for (size_t j1=0; j1<interpolation_steps; j1++){
-								std::get<2>(ph[i1][j1]) = laq[i1] * lap[j1] * 0.25;
+								std::get<1>(ph[i1][j1]) = laq[i1] * lap[j1] * 0.25;
 								_heritage_map[q_i][p_i].push_back(ph[i1][j1]);
 							}
 						}
@@ -272,13 +271,10 @@ public:
 				}
 			}
 		}
-		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
-			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
-				_data_tmp[q_i][p_i] = 0.0;
-				for (hi h: _heritage_map[q_i][p_i]) {
-					_data_tmp[q_i][p_i]
-							+= _data[std::get<0>(h)][std::get<1>(h)]*std::get<2>(h);
-				}
+		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
+			_data1D_tmp[i] = 0.0;
+			for (hi h: _heritage_map1D[i]) {
+				_data1D_tmp[i] += _data1D[std::get<0>(h)]*std::get<1>(h);
 			}
 		}
 		swapDataTmp();
@@ -303,10 +299,7 @@ public:
 				//  Find cell of inverse image (qp,pp) of grid point i,j.
 				data_t qp = cos_dt*x<0>(q_i) - sin_dt*(x<1>(p_i)+AF[q_i]); //q', backward mapping
 				data_t pp = sin_dt*x<0>(q_i) + cos_dt*(x<1>(p_i)+AF[q_i]); //p'
-				if (qp > getMax<0>() || pp > getMax<1>() ||
-					qp < getMin<0>() || pp < getMin<1>() ) { //out of grid
-					_data_tmp[q_i][p_i] = 0.;
-				} else {
+				if (willStayInMesh(qp,pp)) {
 					/* choose number of meshpoints for interpolation;
 					 * other values than 4 might not work properly because
 					 * hardcoded dependencies are not yet flexible
@@ -362,6 +355,8 @@ public:
 						}
 					}
 					_data_tmp[q_i][p_i] *= 0.25;
+				} else {
+					_data_tmp[q_i][p_i] = 0.;
 				}
 			}
 		}
@@ -392,7 +387,7 @@ protected:
 
 	std::array<data_t*,2> _projection;
 
-    data_t** _data;
+	data_t** _data;
 
 	data_t** _data_tmp;
 
@@ -416,6 +411,17 @@ protected:
 	std::array<std::vector<data_t>,2> _moment;
 
 	std::array<data_t*,2> _ws;
+
+	inline bool insideMesh(data_t x, data_t y) const
+	{
+		return (x <= getMax<0>() && y <= getMax<1>() &&
+				x >= getMin<0>() && y >= getMin<1>() );
+	}
+
+	inline bool willStayInMesh(data_t x, data_t y) const
+	{
+		return (sqrt(pow(x,2)+pow(y,2)) < getMax<0>());
+	}
 };
 
 }

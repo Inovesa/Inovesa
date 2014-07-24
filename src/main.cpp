@@ -18,8 +18,10 @@ int main(int argc, char** argv)
 
 	Display display;
 
+	std::vector<meshdata_t> kick(xsize,0.0);
 	for (unsigned int i=0;i<1000;i++) {
 		mesh.rotate(0.01);
+		//mesh.rotateAndKick(0.01,kick);
 		display.draw(&mesh);
 	}
 
