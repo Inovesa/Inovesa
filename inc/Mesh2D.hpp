@@ -22,18 +22,17 @@ class Mesh2D
 {
 public:
 	Mesh2D(std::array<Ruler<data_t>,2> axis) :
-		_axis(axis),
-		_heritage_step(0)
+		_axis(axis)
     {
 		_data1D = new data_t[size<0>()*size<1>()]();
-		_data1D_tmp = new data_t[size<0>()*size<1>()]();
+		_data1D_rotated = new data_t[size<0>()*size<1>()]();
 		_heritage_map1D = new std::vector<hi>[size<0>()*size<1>()]();
 		_data = new data_t*[size<0>()];
-		_data_tmp = new data_t*[size<0>()];
+		_data_rotated = new data_t*[size<0>()];
 		_heritage_map = new std::vector<hi>*[size<0>()];
 		for (unsigned int i=0; i<size<0>(); i++) {
 			_data[i] = &(_data1D[i*size<1>()]);
-			_data_tmp[i] = &(_data1D_tmp[i*size<1>()]);
+			_data_rotated[i] = &(_data1D_rotated[i*size<1>()]);
 			_heritage_map[i] = &(_heritage_map1D[i*size<1>()]);
 		}
 		_projection[0] = new data_t[size<0>()];
@@ -78,9 +77,9 @@ public:
 	~Mesh2D()
 	{
 		delete [] _data;
-		delete [] _data_tmp;
+		delete [] _data_rotated;
 		delete [] _data1D;
-		delete [] _data1D_tmp;
+		delete [] _data1D_rotated;
 		delete [] _heritage_map;
 		delete [] _heritage_map1D;
 		delete [] _projection[0];
@@ -194,90 +193,91 @@ public:
         return *this;
 	}
 
-	/**
-	 * @brief rotate
-	 * @param deltat
-	 */
-	void rotate(const data_t deltat)
+	void setRotationMap(const data_t deltat)
 	{
-		if (deltat != _heritage_step) {
-			_heritage_step = deltat;
-			constexpr double o3 = 1./3.;
+		constexpr double o3 = 1./3.;
 
-			const double cos_dt = cos(deltat);
-			const double sin_dt = sin(deltat);
+		const double cos_dt = cos(deltat);
+		const double sin_dt = sin(deltat);
 
-			for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
-				for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
-					_heritage_map[q_i][p_i].clear();
-					//  Find cell of inverse image (qp,pp) of grid point i,j.
-					data_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
-					data_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
-					if ( willStayInMesh(qp,pp) )
-					{
-						/* choose number of meshpoints for interpolation;
-						 * other values than 4 might not work properly because
-						 * hardcoded dependencies are not yet flexible
-						 */
-						constexpr unsigned int interpolation_steps = 4;
+		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
+			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
+				_heritage_map[q_i][p_i].clear();
+				//  Find cell of inverse image (qp,pp) of grid point i,j.
+				data_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
+				data_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
+				if ( willStayInMesh(qp,pp) )
+				{
+					/* choose number of meshpoints for interpolation;
+					 * other values than 4 might not work properly because
+					 * hardcoded dependencies are not yet flexible
+					 */
+					constexpr unsigned int interpolation_steps = 4;
 
-						unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
-						unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
+					unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
+					unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
 
-						// arrays of Lagrange interpolation
-						std::array<data_t,interpolation_steps> laq;
-						std::array<data_t,interpolation_steps> lap;
+					// arrays of Lagrange interpolation
+					std::array<data_t,interpolation_steps> laq;
+					std::array<data_t,interpolation_steps> lap;
 
-						// gridpoint matrix used for interpolation
-						std::array<std::array<hi,interpolation_steps>,interpolation_steps> ph;
+					// gridpoint matrix used for interpolation
+					std::array<std::array<hi,interpolation_steps>,interpolation_steps> ph;
 
-						//Scaled arguments of interpolation functions:
-						data_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
-						data_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
+					//Scaled arguments of interpolation functions:
+					data_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
+					data_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
 
-						for (unsigned int j1=0; j1<interpolation_steps; j1++) {
-							unsigned int j0 = jd+j1-1;
-							for (unsigned int i1=0; i1<interpolation_steps; i1++) {
-								unsigned int i0 = id+i1-1;
-								if(i0< size<0>() && j0 < size<1>() ){
-									ph[i1][j1] = hi(i0*size<0>()+j0,0);
-								}
+					for (unsigned int j1=0; j1<interpolation_steps; j1++) {
+						unsigned int j0 = jd+j1-1;
+						for (unsigned int i1=0; i1<interpolation_steps; i1++) {
+							unsigned int i0 = id+i1-1;
+							if(i0< size<0>() && j0 < size<1>() ){
+								ph[i1][j1] = hi(i0*size<0>()+j0,0);
 							}
 						}
+					}
 
-						//  Vectors of Lagrange interpolation functions, not including factors of 1/2.
-						laq[0] = (xiq-1)*(xiq-2);
-						laq[1] = (xiq+1)*laq[0];
-						laq[0] *= -xiq*o3;
-						laq[3] = xiq*(xiq+1);
-						laq[2] = -(xiq-2)*laq[3];
-						laq[3] *= (xiq-1)*o3;
+					//  Vectors of Lagrange interpolation functions, not including factors of 1/2.
+					laq[0] = (xiq-1)*(xiq-2);
+					laq[1] = (xiq+1)*laq[0];
+					laq[0] *= -xiq*o3;
+					laq[3] = xiq*(xiq+1);
+					laq[2] = -(xiq-2)*laq[3];
+					laq[3] *= (xiq-1)*o3;
 
-						lap[0] = (xip-1)*(xip-2);
-						lap[1] = (xip+1)*lap[0];
-						lap[0] *= -xip*o3;
-						lap[3] = xip*(xip+1);
-						lap[2] = -(xip-2)*lap[3];
-						lap[3] *= (xip-1)*o3;
+					lap[0] = (xip-1)*(xip-2);
+					lap[1] = (xip+1)*lap[0];
+					lap[0] *= -xip*o3;
+					lap[3] = xip*(xip+1);
+					lap[2] = -(xip-2)*lap[3];
+					lap[3] *= (xip-1)*o3;
 
-						//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
-						for (size_t i1=0; i1<interpolation_steps; i1++) {
-							for (size_t j1=0; j1<interpolation_steps; j1++){
-								std::get<1>(ph[i1][j1]) = laq[i1] * lap[j1] * 0.25;
-								_heritage_map[q_i][p_i].push_back(ph[i1][j1]);
-							}
+					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
+					for (size_t i1=0; i1<interpolation_steps; i1++) {
+						for (size_t j1=0; j1<interpolation_steps; j1++){
+							std::get<1>(ph[i1][j1]) = laq[i1] * lap[j1] * 0.25;
+							_heritage_map[q_i][p_i].push_back(ph[i1][j1]);
 						}
 					}
 				}
 			}
 		}
+	}
+
+	/**
+	 * @brief rotate
+	 * @param deltat
+	 */
+	void rotate()
+	{
 		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
-			_data1D_tmp[i] = 0.0;
+			_data1D_rotated[i] = 0.0;
 			for (hi h: _heritage_map1D[i]) {
-				_data1D_tmp[i] += _data1D[std::get<0>(h)]*std::get<1>(h);
+				_data1D_rotated[i] += _data1D[std::get<0>(h)]*std::get<1>(h);
 			}
 		}
-		swapDataTmp();
+		std::copy_n(_data1D_rotated,size<0>()*size<1>(),_data1D);
 	}
 
 	/**
@@ -348,15 +348,15 @@ public:
 					lap[3] *= (xip-1)*o3;
 
 					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
-					_data_tmp[q_i][p_i] = 0.;
+					_data_rotated[q_i][p_i] = 0.;
 					for (size_t i1=0; i1<interpolation_steps; i1++) {
 						for (size_t j1=0; j1<interpolation_steps; j1++){
-							_data_tmp[q_i][p_i] += ph[i1][j1] * laq[i1] * lap[j1];
+							_data_rotated[q_i][p_i] += ph[i1][j1] * laq[i1] * lap[j1];
 						}
 					}
-					_data_tmp[q_i][p_i] *= 0.25;
+					_data_rotated[q_i][p_i] *= 0.25;
 				} else {
-					_data_tmp[q_i][p_i] = 0.;
+					_data_rotated[q_i][p_i] = 0.;
 				}
 			}
 		}
@@ -365,12 +365,12 @@ public:
 
 	void swapDataTmp() {
 		data_t** data_swap = _data;
-		_data = _data_tmp;
-		_data_tmp = data_swap;
+		_data = _data_rotated;
+		_data_rotated = data_swap;
 
 		data_t* data1D_swap = _data1D;
-		_data1D = _data1D_tmp;
-		_data1D_tmp = data1D_swap;
+		_data1D = _data1D_rotated;
+		_data1D_rotated = data1D_swap;
 	}
 
     template <unsigned int x>
@@ -389,15 +389,14 @@ protected:
 
 	data_t** _data;
 
-	data_t** _data_tmp;
+	data_t** _data_rotated;
 
 	data_t* _data1D;
 
-	data_t* _data1D_tmp;
+	data_t* _data1D_rotated;
 
 	std::vector<hi>** _heritage_map;
 	std::vector<hi>* _heritage_map1D;
-	data_t _heritage_step;
 
 	/**
 	 * @brief _moment: holds the moments for distributions

@@ -19,12 +19,13 @@ int main(int argc, char** argv)
 	Display display;
 
 	std::vector<meshdata_t> kick(xsize,0.0);
+	mesh.setRotationMap(0.01);
 	for (unsigned int i=0;i<1000;i++) {
-		mesh.rotate(0.01);
+		mesh.rotate();
 		//mesh.rotateAndKick(0.01,kick);
 		display.draw(&mesh);
 	}
 
-    return 0;
+	return EXIT_SUCCESS;
 }
 
