@@ -3,6 +3,8 @@
 
 #include "Display.hpp"
 #include "Mesh2D.hpp"
+#include "CL/CLProgs.hpp"
+#include "CL/OpenCLHandler.hpp"
 
 int main(int argc, char** argv)
 {
@@ -16,14 +18,17 @@ int main(int argc, char** argv)
 		}
 	}
 
+	prepareCLEnvironment();
+	prepareCLProgs();
 	Display display;
 
 	std::vector<meshdata_t> kick(xsize,0.0);
 	mesh.setRotationMap(0.01);
+	mesh.__initOpenCL();
 	for (unsigned int i=0;i<1000;i++) {
+		display.draw(&mesh);
 		mesh.rotate();
 		//mesh.rotateAndKick(0.01,kick);
-		display.draw(&mesh);
 	}
 
 	return EXIT_SUCCESS;

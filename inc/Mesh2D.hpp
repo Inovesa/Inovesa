@@ -7,29 +7,40 @@
 #include <tuple>
 #include <vector>
 
+#include "CL/CLProgs.hpp"
+#include "CL/OpenCLHandler.hpp"
 #include "Ruler.hpp"
-
 
 typedef float meshdata_t;
 
 namespace vfps
 {
 
-typedef std::tuple<unsigned int,float> hi;
+typedef struct {
+	unsigned int index;
+	float weight;
+} hi;
 
 template <class data_t>
 class Mesh2D
-{
+{	
+public:
+	/* choose number of meshpoints for interpolation;
+	 * other values than 4 might not work properly because
+	 * hardcoded dependencies are not yet flexible
+	 */
+	static constexpr unsigned int is = 4;
+
 public:
 	Mesh2D(std::array<Ruler<data_t>,2> axis) :
 		_axis(axis),
 		_data1D(new data_t[size<0>()*size<1>()]()),
 		_data1D_rotated(new data_t[size<0>()*size<1>()]()),
-		_heritage_map1D(new std::vector<hi>[size<0>()*size<1>()]())
+		_heritage_map1D(new std::array<hi,is*is>[size<0>()*size<1>()]())
 	{
 		_data = new data_t*[size<0>()];
 		_data_rotated = new data_t*[size<0>()];
-		_heritage_map = new std::vector<hi>*[size<0>()];
+		_heritage_map = new std::array<hi,16>*[size<0>()];
 		for (unsigned int i=0; i<size<0>(); i++) {
 			_data[i] = &(_data1D[i*size<1>()]);
 			_data_rotated[i] = &(_data1D_rotated[i*size<1>()]);
@@ -202,7 +213,6 @@ public:
 
 		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
 			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
-				_heritage_map[q_i][p_i].clear();
 				//  Find cell of inverse image (qp,pp) of grid point i,j.
 				data_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
 				data_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
@@ -233,7 +243,9 @@ public:
 						for (unsigned int i1=0; i1<interpolation_steps; i1++) {
 							unsigned int i0 = id+i1-1;
 							if(i0< size<0>() && j0 < size<1>() ){
-								ph[i1][j1] = hi(i0*size<0>()+j0,0);
+								ph[i1][j1].index = i0*size<1>()+j0;
+							} else {
+								ph[i1][j1].index = 0;
 							}
 						}
 					}
@@ -256,8 +268,9 @@ public:
 					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
 					for (size_t i1=0; i1<interpolation_steps; i1++) {
 						for (size_t j1=0; j1<interpolation_steps; j1++){
-							std::get<1>(ph[i1][j1]) = laq[i1] * lap[j1] * 0.25;
-							_heritage_map[q_i][p_i].push_back(ph[i1][j1]);
+							(ph[i1][j1]).weight = laq[i1] * lap[j1] * 0.25;
+							_heritage_map[q_i][p_i][i1*interpolation_steps+j1]
+									= ph[i1][j1];
 						}
 					}
 				}
@@ -271,13 +284,38 @@ public:
 	 */
 	void rotate()
 	{
+
+		#define FR_USE_CL
+		#ifdef FR_USE_CL
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM");
+		applyHM.setArg(0, _data1D_buf);
+		applyHM.setArg(1, _heritage_map1D_buf);
+		applyHM.setArg(2, _data1D_rotated_buf);
+		OCLH::queue.enqueueNDRangeKernel (
+				applyHM,
+				cl::NullRange,
+				cl::NDRange(size<0>()*size<1>()));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		OCLH::queue.enqueueCopyBuffer(_data1D_rotated_buf,
+									  _data1D_buf,
+									  0,0,
+									  sizeof(float)*size<0>()*size<1>());
+		OCLH::queue.enqueueReadBuffer
+				(_data1D_buf, CL_FALSE, 0,
+				 sizeof(float)*size<0>()*size<1>(),_data1D);
+		#else // FR_USE_CL
 		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
 			_data1D_rotated[i] = 0.0;
 			for (hi h: _heritage_map1D[i]) {
-				_data1D_rotated[i] += _data1D[std::get<0>(h)]*std::get<1>(h);
+				_data1D_rotated[i] += _data1D[h.index]*h.weight;
 			}
 		}
 		std::copy_n(_data1D_rotated,size<0>()*size<1>(),_data1D);
+		#endif // FR_USE_CL
 	}
 
 	void kick(const std::vector<data_t> &AF)
@@ -305,29 +343,23 @@ public:
 				data_t qp = cos_dt*x<0>(q_i) - sin_dt*(x<1>(p_i)+AF[q_i]); //q', backward mapping
 				data_t pp = sin_dt*x<0>(q_i) + cos_dt*(x<1>(p_i)+AF[q_i]); //p'
 				if (willStayInMesh(qp,pp)) {
-					/* choose number of meshpoints for interpolation;
-					 * other values than 4 might not work properly because
-					 * hardcoded dependencies are not yet flexible
-					 */
-					constexpr unsigned int interpolation_steps = 4;
-
 					unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
 					unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
 
 					// arrays of Lagrange interpolation
-					std::array<data_t,interpolation_steps> laq;
-					std::array<data_t,interpolation_steps> lap;
+					std::array<data_t,is> laq;
+					std::array<data_t,is> lap;
 
 					// gridpoint matrix used for interpolation
-					std::array<std::array<data_t,interpolation_steps>,interpolation_steps> ph;
+					std::array<std::array<data_t,is>,is> ph;
 
 					//Scaled arguments of interpolation functions:
 					data_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
 					data_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
 
-					for (unsigned int j1=0; j1<interpolation_steps; j1++) {
+					for (unsigned int j1=0; j1<is; j1++) {
 						unsigned int j0 = jd+j1-1;
-						for (unsigned int i1=0; i1<interpolation_steps; i1++) {
+						for (unsigned int i1=0; i1<is; i1++) {
 							unsigned int i0 = id+i1-1;
 							if(i0< size<0>() && j0 < size<1>() ){
 								ph[i1][j1] = _data[i0][j0];
@@ -354,8 +386,8 @@ public:
 
 					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
 					_data_rotated[q_i][p_i] = 0.;
-					for (size_t i1=0; i1<interpolation_steps; i1++) {
-						for (size_t j1=0; j1<interpolation_steps; j1++){
+					for (size_t i1=0; i1<is; i1++) {
+						for (size_t j1=0; j1<is; j1++){
 							_data_rotated[q_i][p_i] += ph[i1][j1] * laq[i1] * lap[j1];
 						}
 					}
@@ -386,7 +418,6 @@ public:
 	inline const data_t x(const unsigned int n) const
 	{ return _axis[axis][n]; }
 
-
 protected:
 	const std::array<Ruler<data_t>,2> _axis;
 
@@ -400,8 +431,8 @@ protected:
 
 	data_t* const _data1D_rotated;
 
-	std::vector<hi>** _heritage_map;
-	std::vector<hi>* const _heritage_map1D;
+	std::array<hi,is*is>** _heritage_map;
+	std::array<hi,is*is>* const _heritage_map1D;
 
 	/**
 	 * @brief _moment: holds the moments for distributions
@@ -425,6 +456,31 @@ protected:
 	inline bool willStayInMesh(data_t x, data_t y) const
 	{
 		return (sqrt(pow(x,2)+pow(y,2)) < getMax<0>());
+	}
+
+private:
+	cl::Buffer _data1D_buf;
+	cl::Buffer _data1D_rotated_buf;
+	cl::Buffer _heritage_map1D_buf;
+	cl::Kernel applyHM;
+
+public:
+	void __initOpenCL()
+	{
+		_data1D_buf = cl::Buffer(OCLH::context,
+				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(float)*size<0>()*size<1>(), _data1D);
+		_data1D_rotated_buf = cl::Buffer(OCLH::context,
+				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(float)*size<0>()*size<1>(), _data1D_rotated);
+		_heritage_map1D_buf = cl::Buffer(OCLH::context,
+				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(hi)*is*is*size<0>()*size<1>(),
+				_heritage_map1D);
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM");
+		applyHM.setArg(0, _data1D_buf);
+		applyHM.setArg(1, _heritage_map1D_buf);
+		applyHM.setArg(2, _data1D_rotated_buf);
 	}
 };
 
