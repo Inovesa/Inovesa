@@ -4,7 +4,6 @@ aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
 			./src/CL/CLProgApplyHM.cpp
-			./src/CL/CLProgFindXProj.cpp
 			./src/CL/CLProgs.cpp
 			./src/CL/OpenCLHandler.cpp
 			./src/Display.cpp
@@ -13,7 +12,6 @@ set(SRC_LIST
 
 set(INC_LIST
 			./inc/CL/CLProgApplyHM.hpp
-			./inc/CL/CLProgFindXProj.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
 			./inc/Display.hpp
