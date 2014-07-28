@@ -22,11 +22,11 @@ class Mesh2D
 {
 public:
 	Mesh2D(std::array<Ruler<data_t>,2> axis) :
-		_axis(axis)
-    {
-		_data1D = new data_t[size<0>()*size<1>()]();
-		_data1D_rotated = new data_t[size<0>()*size<1>()]();
-		_heritage_map1D = new std::vector<hi>[size<0>()*size<1>()]();
+		_axis(axis),
+		_data1D(new data_t[size<0>()*size<1>()]()),
+		_data1D_rotated(new data_t[size<0>()*size<1>()]()),
+		_heritage_map1D(new std::vector<hi>[size<0>()*size<1>()]())
+	{
 		_data = new data_t*[size<0>()];
 		_data_rotated = new data_t*[size<0>()];
 		_heritage_map = new std::vector<hi>*[size<0>()];
@@ -280,6 +280,11 @@ public:
 		std::copy_n(_data1D_rotated,size<0>()*size<1>(),_data1D);
 	}
 
+	void kick(const std::vector<data_t> &AF)
+	{
+		;
+	}
+
 	/**
 	 * @brief rotateAndKick
 	 * @param deltat
@@ -391,12 +396,12 @@ protected:
 
 	data_t** _data_rotated;
 
-	data_t* _data1D;
+	data_t* const _data1D;
 
-	data_t* _data1D_rotated;
+	data_t* const _data1D_rotated;
 
 	std::vector<hi>** _heritage_map;
-	std::vector<hi>* _heritage_map1D;
+	std::vector<hi>* const _heritage_map1D;
 
 	/**
 	 * @brief _moment: holds the moments for distributions
