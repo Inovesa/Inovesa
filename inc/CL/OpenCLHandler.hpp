@@ -3,11 +3,7 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#ifdef __APPLE__
-#include "inc/CL/cl.hpp"
-#else
-#include <CL/cl.hpp>
-#endif
+#include "CL/cl.hpp"
 
 #include <iostream>
 

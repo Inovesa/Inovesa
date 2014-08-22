@@ -1,17 +1,31 @@
 #include "Display.hpp"
 
 Display::Display() :
+	#ifdef GLFW3
 	window(nullptr),
+	#endif
 	gl2fallback(false)
 {
 	glfwInit();
 
+	#ifdef GLFW3
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	#else // GLFW3
+	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
+	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
+	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
+	glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	#endif // GLFW3
+
 
 	// Open a window and create its OpenGL context
+	#ifndef GLFW3
+	glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
+	glfwSetWindowTitle("Phase Space View");
+	#else // GLFW3
 	window = glfwCreateWindow( 512, 512, "Phase Space View", NULL, NULL);
 	if( window == nullptr ) {
 		glfwTerminate();
@@ -28,8 +42,8 @@ Display::Display() :
 			glfwTerminate();
 		}
 	}
-
 	glfwMakeContextCurrent(window);
+	#endif // GLFW3
 
 	// Initialize GLEW
 	glewExperimental = true; // Needed for core profile
@@ -38,7 +52,11 @@ Display::Display() :
 	}
 
 	// Ensure we can capture the escape key being pressed below
+	#ifdef GLFW3
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	#else
+	glfwEnable(GLFW_STICKY_KEYS);
+	#endif
 
 	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -64,13 +82,13 @@ Display::Display() :
 	// Projection matrix : 45° Field of View, 1:1 ratio, display range : 0.1 unit <-> 100 units
 	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
 	// Camera matrix
-	glm::mat4 View       = glm::lookAt(
+	glm::mat4 View	   = glm::lookAt(
 								glm::vec3(0.5,0.5,1.0),
 								glm::vec3(0.5,0.5,0),
 								glm::vec3(0,1,0)
 						   );
 	// Model matrix : an identity matrix (model will be at the origin)
-	glm::mat4 Model      = glm::mat4(1.0f);
+	glm::mat4 Model	  = glm::mat4(1.0f);
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	MVP  = Projection * View * Model;
 
@@ -164,24 +182,24 @@ void Display::draw(vfps::Mesh2D<meshdata_t>* mesh)
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glVertexAttribPointer(
-		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-		3,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,                  // stride
-		(void*)0            // array buffer offset
+		0,				  // attribute. No particular reason for 0, but must match the layout in the shader.
+		3,				  // size
+		GL_FLOAT,		   // type
+		GL_FALSE,		   // normalized?
+		0,				  // stride
+		(void*)0			// array buffer offset
 	);
 
 	// 2nd attribute buffer : UVs
 	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
 	glVertexAttribPointer(
-		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
-		2,                                // size : U+V => 2
-		GL_FLOAT,                         // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
+		1,								// attribute. No particular reason for 1, but must match the layout in the shader.
+		2,								// size : U+V => 2
+		GL_FLOAT,						 // type
+		GL_FALSE,						 // normalized?
+		0,								// stride
+		(void*)0						  // array buffer offset
 	);
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
@@ -190,7 +208,11 @@ void Display::draw(vfps::Mesh2D<meshdata_t>* mesh)
 	glDisableVertexAttribArray(1);
 
 	// Swap buffers
+	#ifdef GLFW3
 	glfwSwapBuffers(window);
+	#else
+	glfwSwapBuffers();
+	#endif
 	glfwPollEvents();
 
 	glDeleteTextures(1, &TextureID);
