@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-bool prepareCLEnvironment();
+bool prepareCLEnvironment(unsigned int device=0);
 
 class OCLH
 {

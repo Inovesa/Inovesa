@@ -16,8 +16,7 @@ void prepareCLProgApplyHM()
 			float value = 0;
 			const uint i = get_global_id(0);
 			const uint offset = i*hm_len;
-			uint j;
-			for (j=0; j<hm_len; j++)
+			for (uint j=0; j<hm_len; j++)
 			{
 				value += src[hm[offset+j].src] * hm[offset+j].weight;
 			}

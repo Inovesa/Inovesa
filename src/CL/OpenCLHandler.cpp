@@ -1,6 +1,6 @@
 #include "CL/OpenCLHandler.hpp"
 
-bool prepareCLEnvironment()
+bool prepareCLEnvironment(unsigned int device)
 {
 	if (cl::Platform::get(&OCLH::platforms) != CL_SUCCESS) {
 		return false;
@@ -13,7 +13,25 @@ bool prepareCLEnvironment()
 
 	OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 
-	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[0]);
+	std::string devicename;
+	if (device == UINT_MAX) {
+		std::cout << "Available OpenCL devices:" << std::endl;
+		for (unsigned int i=0; i<OCLH::devices.size(); i++) {
+			std::string devicevendor;
+			OCLH::devices[i].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
+			OCLH::devices[i].getInfo<std::string>(CL_DEVICE_VENDOR,
+												  &devicevendor);
+			std::cout << "Device " << i+1 << ": "
+					  << devicename << " ("
+					  << devicevendor << ")" << std::endl;
+		}
+		std::cout << "Choose which device to use: ";
+		std::cin >> device;
+		device = (device-1)%OCLH::devices.size();
+	}
+	OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
+	std::cout << "Using " << devicename << " for OpenCL." << std::endl;
+	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
 
 	return true;
 }

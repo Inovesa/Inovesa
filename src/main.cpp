@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "Display.hpp"
 #include "Mesh2D.hpp"
@@ -18,7 +19,14 @@ int main(int argc, char** argv)
 		}
 	}
 
-	prepareCLEnvironment();
+	unsigned int device = 0;
+	if (argc == 2 ) {
+		std::stringstream dev(argv[1]);
+		dev >> device;
+		device--;
+	}
+
+	prepareCLEnvironment(device);
 	prepareCLProgs();
 	Display display;
 
