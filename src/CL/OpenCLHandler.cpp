@@ -17,13 +17,11 @@ bool prepareCLEnvironment(unsigned int device)
 	if (device == UINT_MAX) {
 		std::cout << "Available OpenCL devices:" << std::endl;
 		for (unsigned int i=0; i<OCLH::devices.size(); i++) {
-			std::string devicevendor;
 			OCLH::devices[i].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
-			OCLH::devices[i].getInfo<std::string>(CL_DEVICE_VENDOR,
-												  &devicevendor);
-			std::cout << "Device " << i+1 << ": "
+			std::cout << "==Device " << i+1 << "==" << std::endl
 					  << devicename << " ("
-					  << devicevendor << ")" << std::endl;
+					  << OCLH::devices[i].getInfo<CL_DEVICE_EXTENSIONS>()
+					  << ")" << std::endl;
 		}
 		std::cout << "Choose which device to use: ";
 		std::cin >> device;
@@ -32,6 +30,10 @@ bool prepareCLEnvironment(unsigned int device)
 	OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
 	std::cout << "Using " << devicename << " for OpenCL." << std::endl;
 	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
+	// cl_VENDOR_gl_sharing is present, when string contains the substring
+	OCLH::ogl_sharing
+			= OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
+				"_gl_sharing") != std::string::npos;
 
 	return true;
 }
@@ -40,3 +42,4 @@ VECTOR_CLASS<cl::Platform> OCLH::platforms;
 cl::Context OCLH::context;
 VECTOR_CLASS<cl::Device> OCLH::devices;
 cl::CommandQueue OCLH::queue;
+bool OCLH::ogl_sharing;

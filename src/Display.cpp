@@ -127,6 +127,8 @@ Display::Display() :
 
 Display::~Display()
 {
+	delTexture();
+
 	// Cleanup VBO and shader
 	glDeleteBuffers(1, &vertexbuffer);
 	glDeleteBuffers(1, &uvbuffer);
@@ -137,9 +139,8 @@ Display::~Display()
 	glfwTerminate();
 }
 
-void Display::draw(vfps::Mesh2D<meshdata_t>* mesh)
+void Display::createTexture(vfps::Mesh2D<meshdata_t>* mesh)
 {
-	GLuint Texture;
 	glGenTextures (1, &Texture);
 	glBindTexture(GL_TEXTURE_2D,Texture);
 	if (std::is_same<meshdata_t,float>::value) {
@@ -160,8 +161,16 @@ void Display::draw(vfps::Mesh2D<meshdata_t>* mesh)
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	// Get a handle for our "myTextureSampler" uniform
-	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
+	TextureID = glGetUniformLocation(programID, "myTextureSampler");
+}
 
+void Display::delTexture()
+{
+	glDeleteTextures(1, &TextureID);
+	glDeleteTextures(1, &Texture);
+}
+
+void Display::draw() {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -214,9 +223,6 @@ void Display::draw(vfps::Mesh2D<meshdata_t>* mesh)
 	glfwSwapBuffers();
 	#endif
 	glfwPollEvents();
-
-	glDeleteTextures(1, &TextureID);
-	glDeleteTextures(1, &Texture);
 }
 
 GLuint Display::LoadShaders(const char* vertex_file_path,

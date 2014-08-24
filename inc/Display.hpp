@@ -10,6 +10,7 @@
 #include <GL/glew.h>
 
 // Include GLFW
+#define GLFW3
 #ifdef GLFW3
 #include <GLFW/glfw3.h>
 #else // GLFW3
@@ -30,7 +31,14 @@ public:
 
 	~Display();
 
-	void draw(vfps::Mesh2D<meshdata_t>* mesh);
+	void createTexture(vfps::Mesh2D<meshdata_t>* mesh);
+
+	void delTexture();
+
+	void draw();
+
+	GLuint getTexture() const
+		{ return Texture; }
 
 private:
 	GLuint LoadShaders(const char* vertex_file_path,const char* fragment_file_path);
@@ -45,6 +53,8 @@ private:
 	GLuint programID;
 	GLuint VertexArrayID;
 	GLuint MatrixID;
+	GLuint Texture;
+	GLuint TextureID;
 	glm::mat4 MVP;
 };
 

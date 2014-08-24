@@ -104,8 +104,13 @@ public:
      *
      * @return pointer to array holding size<0>()*size<1>() data points
      */
-	inline const data_t* getData() const
-	{ return _data1D; }
+	inline const data_t* getData()
+	{
+		OCLH::queue.enqueueReadBuffer
+				(_data1D_buf, CL_TRUE, 0,
+				 sizeof(float)*size<0>()*size<1>(),_data1D);
+		return _data1D;
+	}
 
     template <unsigned int x>
     inline const data_t getDelta() const
@@ -216,7 +221,8 @@ public:
 				//  Find cell of inverse image (qp,pp) of grid point i,j.
 				data_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
 				data_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
-				if ( willStayInMesh(qp,pp) )
+				//if ( willStayInMesh(qp,pp) )
+				if ( insideMesh(qp,pp) )
 				{
 					/* choose number of meshpoints for interpolation;
 					 * other values than 4 might not work properly because
@@ -287,12 +293,8 @@ public:
 
 		#define FR_USE_CL
 		#ifdef FR_USE_CL
-		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM");
-		applyHM.setArg(0, _data1D_buf);
-		applyHM.setArg(1, _heritage_map1D_buf);
-		applyHM.setArg(2, _data1D_rotated_buf);
 		OCLH::queue.enqueueNDRangeKernel (
-				applyHM,
+				applyHM1D,
 				cl::NullRange,
 				cl::NDRange(size<0>()*size<1>()));
 		#ifdef CL_VERSION_1_2
@@ -304,9 +306,6 @@ public:
 									  _data1D_buf,
 									  0,0,
 									  sizeof(float)*size<0>()*size<1>());
-		OCLH::queue.enqueueReadBuffer
-				(_data1D_buf, CL_FALSE, 0,
-				 sizeof(float)*size<0>()*size<1>(),_data1D);
 		#else // FR_USE_CL
 		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
 			_data1D_rotated[i] = 0.0;
@@ -342,7 +341,8 @@ public:
 				//  Find cell of inverse image (qp,pp) of grid point i,j.
 				data_t qp = cos_dt*x<0>(q_i) - sin_dt*(x<1>(p_i)+AF[q_i]); //q', backward mapping
 				data_t pp = sin_dt*x<0>(q_i) + cos_dt*(x<1>(p_i)+AF[q_i]); //p'
-				if (willStayInMesh(qp,pp)) {
+				//if (willStayInMesh(qp,pp)) {
+				if (insideMesh(qp,pp)) {
 					unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
 					unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
 
@@ -462,7 +462,7 @@ private:
 	cl::Buffer _data1D_buf;
 	cl::Buffer _data1D_rotated_buf;
 	cl::Buffer _heritage_map1D_buf;
-	cl::Kernel applyHM;
+	cl::Kernel applyHM1D;
 
 public:
 	void __initOpenCL()
@@ -477,10 +477,10 @@ public:
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(hi)*is*is*size<0>()*size<1>(),
 				_heritage_map1D);
-		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM");
-		applyHM.setArg(0, _data1D_buf);
-		applyHM.setArg(1, _heritage_map1D_buf);
-		applyHM.setArg(2, _data1D_rotated_buf);
+		applyHM1D = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+		applyHM1D.setArg(0, _data1D_buf);
+		applyHM1D.setArg(1, _heritage_map1D_buf);
+		applyHM1D.setArg(2, _data1D_rotated_buf);
 	}
 };
 

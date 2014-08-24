@@ -8,7 +8,7 @@ void prepareCLProgApplyHM()
 			float weight;
 		} hi;
 
-		__kernel void applyHM(	const __global float* src,
+		__kernel void applyHM1D(const __global float* src,
 								const __global hi* hm,
 								__global float* dst)
 		{

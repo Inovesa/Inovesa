@@ -22,6 +22,8 @@ public:
 	 * @brief command queue for OpenCL
 	 */
 	static cl::CommandQueue queue;
+
+	static bool ogl_sharing;
 };
 
 #endif // OPENCLHANDLER_HPP

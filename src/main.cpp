@@ -31,12 +31,18 @@ int main(int argc, char** argv)
 	Display display;
 
 	std::vector<meshdata_t> kick(xsize,0.0);
-	mesh.setRotationMap(0.01);
+	constexpr unsigned int steps = 1000;
+	mesh.setRotationMap(M_PI/2/steps);
 	mesh.__initOpenCL();
-	for (unsigned int i=0;i<1000;i++) {
-		display.draw(&mesh);
-		mesh.rotate();
-		//mesh.rotateAndKick(0.01,kick);
+	for (unsigned int i=0;i<steps;i++) {
+		if (i%100 != 0) {
+			mesh.rotate();
+		} else {
+			display.createTexture(&mesh);
+			display.draw();
+			mesh.rotate();
+			display.delTexture();
+		}
 	}
 
 	return EXIT_SUCCESS;
