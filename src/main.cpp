@@ -34,6 +34,7 @@ int main(int argc, char** argv)
 	constexpr unsigned int steps = 1000;
 	mesh.setRotationMap(M_PI/2/steps);
 	mesh.__initOpenCL();
+	mesh.syncData();
 	for (unsigned int i=0;i<steps;i++) {
 		if (i%100 != 0) {
 			mesh.rotate();
@@ -42,8 +43,14 @@ int main(int argc, char** argv)
 			display.draw();
 			mesh.rotate();
 			display.delTexture();
+			mesh.syncData();
 		}
 	}
+	display.createTexture(&mesh);
+	display.draw();
+	display.delTexture();
+
+	OCLH::queue.flush();
 
 	return EXIT_SUCCESS;
 }

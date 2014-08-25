@@ -104,12 +104,17 @@ public:
      *
      * @return pointer to array holding size<0>()*size<1>() data points
      */
-	inline const data_t* getData()
+	inline const data_t* getData() const
+	{
+		data_synced.wait();
+		return _data1D;
+	}
+
+	inline void syncData()
 	{
 		OCLH::queue.enqueueReadBuffer
-				(_data1D_buf, CL_TRUE, 0,
-				 sizeof(float)*size<0>()*size<1>(),_data1D);
-		return _data1D;
+				(_data1D_buf, CL_FALSE, 0,sizeof(float)*size<0>()*size<1>(),
+				 _data1D,nullptr,&data_synced);
 	}
 
     template <unsigned int x>
@@ -404,10 +409,6 @@ public:
 		data_t** data_swap = _data;
 		_data = _data_rotated;
 		_data_rotated = data_swap;
-
-		data_t* data1D_swap = _data1D;
-		_data1D = _data1D_rotated;
-		_data1D_rotated = data1D_swap;
 	}
 
     template <unsigned int x>
@@ -430,6 +431,8 @@ protected:
 	data_t* const _data1D;
 
 	data_t* const _data1D_rotated;
+
+	cl::Event data_synced;
 
 	std::array<hi,is*is>** _heritage_map;
 	std::array<hi,is*is>* const _heritage_map1D;
