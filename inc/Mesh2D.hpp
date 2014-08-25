@@ -12,7 +12,6 @@
 #include "Ruler.hpp"
 
 #define FR_USE_CL
-#define USE_OPENCL
 
 typedef float meshdata_t;
 
@@ -21,6 +20,7 @@ namespace vfps
 
 typedef struct {
 	unsigned int index;
+	cl_uint2 index2d;
 	float weight;
 } hi;
 
@@ -109,16 +109,21 @@ public:
      */
 	inline const data_t* getData() const
 	{
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 		data_synced.wait();
-#endif
+#endif // FR_USE_CL
 		return _data1D;
 	}
 
 	inline void syncData()
 	{
-		OCLH::queue.enqueueReadBuffer
-				(_data1D_buf, CL_FALSE, 0,sizeof(float)*size<0>()*size<1>(),
+		cl::size_t<3> null3d;
+		cl::size_t<3> imgsize;
+		imgsize[0] = size<0>();
+		imgsize[1] = size<1>();
+		imgsize[2] = 1;
+		OCLH::queue.enqueueReadImage
+				(_data_buf, CL_FALSE, null3d,imgsize,0,0,
 				 _data1D,nullptr,&data_synced);
 	}
 
@@ -260,8 +265,10 @@ public:
 							unsigned int i0 = id+i1-1;
 							if(i0< size<0>() && j0 < size<1>() ){
 								ph[i1][j1].index = i0*size<1>()+j0;
+								ph[i1][j1].index2d = {{i0,j0}};
 							} else {
 								ph[i1][j1].index = 0;
+								ph[i1][j1].index2d = {{0,0}};
 							}
 						}
 					}
@@ -302,18 +309,22 @@ public:
 	{
 		#ifdef FR_USE_CL
 		OCLH::queue.enqueueNDRangeKernel (
-				applyHM1D,
+				applyHM2D,
 				cl::NullRange,
-				cl::NDRange(size<0>()*size<1>()));
+				cl::NDRange(size<0>(),size<1>()));
 		#ifdef CL_VERSION_1_2
 		OCLH::queue.enqueueBarrierWithWaitList();
 		#else // CL_VERSION_1_2
 		OCLH::queue.enqueueBarrier();
 		#endif // CL_VERSION_1_2
-		OCLH::queue.enqueueCopyBuffer(_data1D_rotated_buf,
-									  _data1D_buf,
-									  0,0,
-									  sizeof(float)*size<0>()*size<1>());
+		cl::size_t<3> null3d;
+		cl::size_t<3> imgsize;
+		imgsize[0] = size<0>();
+		imgsize[1] = size<1>();
+		imgsize[2] = 1;
+		OCLH::queue.enqueueCopyImage(_data_rotated_buf,
+									 _data_buf,
+									 null3d,null3d,imgsize);
 		#else // FR_USE_CL
 		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
 			_data1D_rotated[i] = 0.0;
@@ -465,28 +476,32 @@ protected:
 	}
 
 private:
-	cl::Buffer _data1D_buf;
-	cl::Buffer _data1D_rotated_buf;
+	cl::Image2D _data_buf;
+	cl::Image2D _data_rotated_buf;
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM1D;
+	cl::Kernel applyHM2D;
 
 public:
 	void __initOpenCL()
 	{
-		_data1D_buf = cl::Buffer(OCLH::context,
+		_data_buf = cl::Image2D(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				sizeof(float)*size<0>()*size<1>(), _data1D);
-		_data1D_rotated_buf = cl::Buffer(OCLH::context,
+				cl::ImageFormat(CL_R,CL_FLOAT),
+				size<0>(),size<1>(),0, _data1D);
+		_data_rotated_buf = cl::Image2D(OCLH::context,
 				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-				sizeof(float)*size<0>()*size<1>(), _data1D_rotated);
+				cl::ImageFormat(CL_R,CL_FLOAT),
+				size<0>(),size<1>(),0, _data1D_rotated);
 		_heritage_map1D_buf = cl::Buffer(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(hi)*is*is*size<0>()*size<1>(),
 				_heritage_map1D);
-		applyHM1D = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
-		applyHM1D.setArg(0, _data1D_buf);
-		applyHM1D.setArg(1, _heritage_map1D_buf);
-		applyHM1D.setArg(2, _data1D_rotated_buf);
+		applyHM2D = cl::Kernel(CLProgApplyHM::p, "applyHM2D");
+		applyHM2D.setArg(0, _data_buf);
+		applyHM2D.setArg(1, _heritage_map1D_buf);
+		applyHM2D.setArg(2, size<1>());
+		applyHM2D.setArg(3, _data_rotated_buf);
 	}
 };
 

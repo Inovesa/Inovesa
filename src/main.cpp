@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
 	Display display;
 
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 	prepareCLEnvironment(device);
 	prepareCLProgs();
 #else
@@ -43,14 +43,14 @@ int main(int argc, char** argv)
 #endif
 	constexpr unsigned int steps = 1000;
 	constexpr float angle = M_PI/2/steps;
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 	mesh.setRotationMap(angle);
 	mesh.__initOpenCL();
 	mesh.syncData();
 #endif
 	for (unsigned int i=0;i<steps;i++) {
 		if (i%100 != 0) {
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 			mesh.rotate();
 #else
 			mesh.rotateAndKick(angle,kick);
@@ -58,13 +58,13 @@ int main(int argc, char** argv)
 		} else {
 			display.createTexture(&mesh);
 			display.draw();
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 			mesh.rotate();
 #else
 			mesh.rotateAndKick(angle,kick);
 #endif
 			display.delTexture();
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 			mesh.syncData();
 #endif
 		}
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	display.createTexture(&mesh);
 	display.draw();
 	display.delTexture();
-#ifdef USE_OPENCL
+#ifdef FR_USE_CL
 	OCLH::queue.flush();
 #endif
 
