@@ -11,6 +11,9 @@
 #include "CL/OpenCLHandler.hpp"
 #include "Ruler.hpp"
 
+#define FR_USE_CL
+#define USE_OPENCL
+
 typedef float meshdata_t;
 
 namespace vfps
@@ -106,7 +109,9 @@ public:
      */
 	inline const data_t* getData() const
 	{
+#ifdef USE_OPENCL
 		data_synced.wait();
+#endif
 		return _data1D;
 	}
 
@@ -295,8 +300,6 @@ public:
 	 */
 	void rotate()
 	{
-
-		#define FR_USE_CL
 		#ifdef FR_USE_CL
 		OCLH::queue.enqueueNDRangeKernel (
 				applyHM1D,

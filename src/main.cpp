@@ -15,8 +15,15 @@ int main(int argc, char** argv)
 
 	for (unsigned int x=0; x<xsize/2; x++) {
 		for (unsigned int y=0; y<ysize; y++) {
-			mesh[x][y] = 1.0;
+			mesh[x][y] = 1.0f;
 		}
+	}
+	for (unsigned int x=0; x<xsize/2; x++) {
+			mesh[x][ysize/2] = 0.5f;
+	}
+	for (unsigned int x=0; x<xsize/2; x++) {
+		mesh[x][x] = 0.0f;
+		mesh[x][ysize-x] = 0.0f;
 	}
 
 	unsigned int device = 0;
@@ -26,31 +33,48 @@ int main(int argc, char** argv)
 		device--;
 	}
 
-	prepareCLEnvironment(device);
-	prepareCLProgs();
 	Display display;
 
+#ifdef USE_OPENCL
+	prepareCLEnvironment(device);
+	prepareCLProgs();
+#else
 	std::vector<meshdata_t> kick(xsize,0.0);
+#endif
 	constexpr unsigned int steps = 1000;
-	mesh.setRotationMap(M_PI/2/steps);
+	constexpr float angle = M_PI/2/steps;
+#ifdef USE_OPENCL
+	mesh.setRotationMap(angle);
 	mesh.__initOpenCL();
 	mesh.syncData();
+#endif
 	for (unsigned int i=0;i<steps;i++) {
 		if (i%100 != 0) {
+#ifdef USE_OPENCL
 			mesh.rotate();
+#else
+			mesh.rotateAndKick(angle,kick);
+#endif
 		} else {
 			display.createTexture(&mesh);
 			display.draw();
+#ifdef USE_OPENCL
 			mesh.rotate();
+#else
+			mesh.rotateAndKick(angle,kick);
+#endif
 			display.delTexture();
+#ifdef USE_OPENCL
 			mesh.syncData();
+#endif
 		}
 	}
 	display.createTexture(&mesh);
 	display.draw();
 	display.delTexture();
-
+#ifdef USE_OPENCL
 	OCLH::queue.flush();
+#endif
 
 	return EXIT_SUCCESS;
 }
