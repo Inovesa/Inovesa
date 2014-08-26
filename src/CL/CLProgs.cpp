@@ -3,4 +3,5 @@
 void prepareCLProgs()
 {
 	prepareCLProgApplyHM();
+	prepareCLProgRotateKick();
 }

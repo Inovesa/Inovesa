@@ -2,6 +2,7 @@
 #define CLPROGS_HPP
 
 #include "CLProgApplyHM.hpp"
+#include "CLProgRotateKick.hpp"
 
 void prepareCLProgs();
 

@@ -73,6 +73,8 @@ public:
 			dc = -dc;
 		}
 		_ws[1][size<0>()-1] = h13;
+
+		img_size = {{size<0>(),size<1>()}};
     }
 
 	Mesh2D(Ruler<data_t> axis1, Ruler<data_t> axis2) :
@@ -228,8 +230,10 @@ public:
 	{
 		constexpr double o3 = 1./3.;
 
-		const double cos_dt = cos(deltat);
-		const double sin_dt = sin(deltat);
+		data_t cos_dt = cos(deltat);
+		data_t sin_dt = sin(deltat);
+
+		rotation = {{cos_dt,sin_dt}};
 
 		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
 			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
@@ -308,8 +312,14 @@ public:
 	void rotate()
 	{
 		#ifdef FR_USE_CL
+		/*
 		OCLH::queue.enqueueNDRangeKernel (
 				applyHM2D,
+				cl::NullRange,
+				cl::NDRange(size<0>(),size<1>()));
+		*/
+		OCLH::queue.enqueueNDRangeKernel (
+				rotateImg,
 				cl::NullRange,
 				cl::NDRange(size<0>(),size<1>()));
 		#ifdef CL_VERSION_1_2
@@ -448,6 +458,9 @@ protected:
 
 	cl::Event data_synced;
 
+	cl_float2 rotation;
+	cl_uint2 img_size;
+
 	std::array<hi,is*is>** _heritage_map;
 	std::array<hi,is*is>* const _heritage_map1D;
 
@@ -481,6 +494,7 @@ private:
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM1D;
 	cl::Kernel applyHM2D;
+	cl::Kernel rotateImg;
 
 public:
 	void __initOpenCL()
@@ -502,6 +516,11 @@ public:
 		applyHM2D.setArg(1, _heritage_map1D_buf);
 		applyHM2D.setArg(2, size<1>());
 		applyHM2D.setArg(3, _data_rotated_buf);
+		rotateImg = cl::Kernel(CLProgRotateKick::p, "rotateKick");
+		rotateImg.setArg(0, _data_rotated_buf);
+		rotateImg.setArg(1, _data_buf);
+		rotateImg.setArg(2, img_size);
+		rotateImg.setArg(3, rotation);
 	}
 };
 
