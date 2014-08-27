@@ -34,6 +34,7 @@ int main(int argc, char** argv)
 	}
 
 	Display display;
+	display.draw();
 
 #ifdef FR_USE_CL
 	prepareCLEnvironment(device);
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
 	constexpr float angle = M_PI/2/steps;
 #ifdef FR_USE_CL
 	mesh.setRotationMap(angle);
-	mesh.__initOpenCL();
+	mesh.__initOpenCL(display.getTexture());
 	mesh.syncData();
 #endif
 	for (unsigned int i=0;i<steps;i++) {

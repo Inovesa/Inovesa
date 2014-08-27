@@ -124,8 +124,12 @@ public:
 		imgsize[0] = size<0>();
 		imgsize[1] = size<1>();
 		imgsize[2] = 1;
-		OCLH::queue.enqueueReadImage
-				(_data_buf, CL_FALSE, null3d,imgsize,0,0,
+		/*
+		OCLH::queue.enqueueCopyBufferToImage
+				(_data1D_buf, _data_img, 0,null3d,imgsize);
+				*/
+		OCLH::queue.enqueueReadBuffer
+				(_data1D_buf, CL_FALSE, 0,sizeof(float)*size<0>()*size<1>(),
 				 _data1D,nullptr,&data_synced);
 	}
 
@@ -312,16 +316,10 @@ public:
 	void rotate()
 	{
 		#ifdef FR_USE_CL
-		/*
 		OCLH::queue.enqueueNDRangeKernel (
-				applyHM2D,
+				applyHM1D,
 				cl::NullRange,
-				cl::NDRange(size<0>(),size<1>()));
-		*/
-		OCLH::queue.enqueueNDRangeKernel (
-				rotateImg,
-				cl::NullRange,
-				cl::NDRange(size<0>(),size<1>()));
+				cl::NDRange(size<0>()*size<1>()));
 		#ifdef CL_VERSION_1_2
 		OCLH::queue.enqueueBarrierWithWaitList();
 		#else // CL_VERSION_1_2
@@ -332,9 +330,9 @@ public:
 		imgsize[0] = size<0>();
 		imgsize[1] = size<1>();
 		imgsize[2] = 1;
-		OCLH::queue.enqueueCopyImage(_data_rotated_buf,
-									 _data_buf,
-									 null3d,null3d,imgsize);
+		OCLH::queue.enqueueCopyBuffer(_data1D_rotated_buf,
+									  _data1D_buf,
+									  0,0,sizeof(float)*size<0>()*size<1>());
 		#else // FR_USE_CL
 		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
 			_data1D_rotated[i] = 0.0;
@@ -489,38 +487,53 @@ protected:
 	}
 
 private:
-	cl::Image2D _data_buf;
-	cl::Image2D _data_rotated_buf;
+	cl::ImageGL _data_img;
+	cl::Buffer _data1D_buf;
+//	cl::Image2D _data_rotated_img;
+	cl::Buffer _data1D_rotated_buf;
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM1D;
-	cl::Kernel applyHM2D;
-	cl::Kernel rotateImg;
+//	cl::Kernel applyHM2D;
+//	cl::Kernel rotateImg;
 
 public:
-	void __initOpenCL()
+	void __initOpenCL(GLuint tex)
 	{
-		_data_buf = cl::Image2D(OCLH::context,
+		_data1D_buf = cl::Buffer(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				cl::ImageFormat(CL_R,CL_FLOAT),
-				size<0>(),size<1>(),0, _data1D);
-		_data_rotated_buf = cl::Image2D(OCLH::context,
+				sizeof(float)*size<0>()*size<1>(), _data1D);
+		_data_img = cl::ImageGL(OCLH::context,
+								CL_MEM_WRITE_ONLY,
+								GL_TEXTURE_2D,0,tex);
+		_data1D_rotated_buf = cl::Buffer(OCLH::context,
+				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
+				sizeof(float)*size<0>()*size<1>(), _data1D_rotated);
+		/*
+		_data_rotated_img = cl::Image2D(OCLH::context,
 				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
 				cl::ImageFormat(CL_R,CL_FLOAT),
 				size<0>(),size<1>(),0, _data1D_rotated);
+		*/
 		_heritage_map1D_buf = cl::Buffer(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(hi)*is*is*size<0>()*size<1>(),
 				_heritage_map1D);
+		applyHM1D = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+		applyHM1D.setArg(0, _data1D_buf);
+		applyHM1D.setArg(1, _heritage_map1D_buf);
+		applyHM1D.setArg(2, _data1D_rotated_buf);
+		/*
 		applyHM2D = cl::Kernel(CLProgApplyHM::p, "applyHM2D");
-		applyHM2D.setArg(0, _data_buf);
+		applyHM2D.setArg(0, _data_img);
 		applyHM2D.setArg(1, _heritage_map1D_buf);
 		applyHM2D.setArg(2, size<1>());
-		applyHM2D.setArg(3, _data_rotated_buf);
+		applyHM2D.setArg(3, _data_rotated_img);
 		rotateImg = cl::Kernel(CLProgRotateKick::p, "rotateKick");
-		rotateImg.setArg(0, _data_rotated_buf);
-		rotateImg.setArg(1, _data_buf);
+		rotateImg.setArg(0, _data_rotated_img);
+		rotateImg.setArg(1, _data_img);
 		rotateImg.setArg(2, img_size);
 		rotateImg.setArg(3, rotation);
+		*/
 	}
 };
 

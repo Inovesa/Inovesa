@@ -142,14 +142,15 @@ Display::~Display()
 void Display::createTexture(vfps::Mesh2D<meshdata_t>* mesh)
 {
 	glGenTextures (1, &Texture);
+	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 	glBindTexture(GL_TEXTURE_2D,Texture);
 	if (std::is_same<meshdata_t,float>::value) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
 					 mesh->size<0>(), mesh->size<1>(),
-					 0, GL_RED,
+					 0, GL_LUMINANCE,
 					 GL_FLOAT, mesh->getData());
 	} else {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 					 mesh->size<0>(), mesh->size<1>(),
 					 0, GL_RED,
 					 GL_DOUBLE, mesh->getData());
@@ -159,6 +160,7 @@ void Display::createTexture(vfps::Mesh2D<meshdata_t>* mesh)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Get a handle for our "myTextureSampler" uniform
 	TextureID = glGetUniformLocation(programID, "myTextureSampler");
