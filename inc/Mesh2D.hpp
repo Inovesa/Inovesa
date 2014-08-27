@@ -502,9 +502,12 @@ public:
 		_data1D_buf = cl::Buffer(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(float)*size<0>()*size<1>(), _data1D);
+#define FR_SHARE_TEXTURE
+#ifdef FR_SHARE_TEXTURE
 		_data_img = cl::ImageGL(OCLH::context,
-								CL_MEM_WRITE_ONLY,
+								CL_MEM_READ_WRITE,
 								GL_TEXTURE_2D,0,tex);
+#endif
 		_data1D_rotated_buf = cl::Buffer(OCLH::context,
 				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(float)*size<0>()*size<1>(), _data1D_rotated);
