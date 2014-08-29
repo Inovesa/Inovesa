@@ -149,7 +149,7 @@ void Display::createTexture(vfps::Mesh2D<meshdata_t>* mesh)
 	if (std::is_same<meshdata_t,float>::value) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
 					 mesh->size<0>(), mesh->size<1>(),
-					 0, GL_LUMINANCE,
+					 0, GL_RED,
 					 GL_FLOAT, mesh->getData());
 	} else {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,

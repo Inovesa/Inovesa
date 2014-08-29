@@ -112,25 +112,26 @@ public:
 	inline const data_t* getData() const
 	{
 #ifdef FR_USE_CL
-		data_synced.wait();
+		//data_synced.wait();
 #endif // FR_USE_CL
 		return _data1D;
 	}
 
 	inline void syncData()
 	{
-		cl::size_t<3> null3d;
-		cl::size_t<3> imgsize;
-		imgsize[0] = size<0>();
-		imgsize[1] = size<1>();
-		imgsize[2] = 1;
+		size_t null3d[3] = {0,0,0};
+		size_t imgsize[3] = {size<0>(),size<1>(),1};
+		//clEnqueueCopyBufferToImage(OCLH::queue(),_data1D_buf(),_data_img(),
+		//						   0,null3d,imgsize,0,nullptr,nullptr);
+		clEnqueueReadImage(OCLH::queue(),_data_img(),CL_TRUE,null3d,imgsize,size<0>(),
+						   0,_data1D,0,nullptr,&data_synced());
+		clEnqueueReleaseGLObjects(OCLH::queue(),1,&_data_img(),
+								  0,nullptr,nullptr);
 		/*
-		OCLH::queue.enqueueCopyBufferToImage
-				(_data1D_buf, _data_img, 0,null3d,imgsize);
-				*/
 		OCLH::queue.enqueueReadBuffer
-				(_data1D_buf, CL_FALSE, 0,sizeof(float)*size<0>()*size<1>(),
+				(_data1D_buf, CL_TRUE, 0,sizeof(float)*size<0>()*size<1>(),
 				 _data1D,nullptr,&data_synced);
+				 */
 	}
 
     template <unsigned int x>
@@ -493,7 +494,7 @@ private:
 	cl::Buffer _data1D_rotated_buf;
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM1D;
-//	cl::Kernel applyHM2D;
+	cl::Kernel applyHM2D;
 //	cl::Kernel rotateImg;
 
 public:
@@ -508,7 +509,7 @@ public:
          * Create clImage from GLTexture (bypass C++ wrapper bug)
          */
         cl_mem outputImageBuffer = clCreateFromGLTexture(OCLH::context(),
-                            CL_MEM_WRITE_ONLY,
+							CL_MEM_READ_WRITE,
                             GL_TEXTURE_2D,
                             0,
                             tex,
@@ -519,12 +520,6 @@ public:
 		_data1D_rotated_buf = cl::Buffer(OCLH::context,
 				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(float)*size<0>()*size<1>(), _data1D_rotated);
-		/*
-		_data_rotated_img = cl::Image2D(OCLH::context,
-				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-				cl::ImageFormat(CL_R,CL_FLOAT),
-				size<0>(),size<1>(),0, _data1D_rotated);
-		*/
 		_heritage_map1D_buf = cl::Buffer(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(hi)*is*is*size<0>()*size<1>(),
@@ -533,12 +528,13 @@ public:
 		applyHM1D.setArg(0, _data1D_buf);
 		applyHM1D.setArg(1, _heritage_map1D_buf);
 		applyHM1D.setArg(2, _data1D_rotated_buf);
-		/*
 		applyHM2D = cl::Kernel(CLProgApplyHM::p, "applyHM2D");
-		applyHM2D.setArg(0, _data_img);
+		applyHM2D.setArg(0, _data1D_buf);
 		applyHM2D.setArg(1, _heritage_map1D_buf);
 		applyHM2D.setArg(2, size<1>());
-		applyHM2D.setArg(3, _data_rotated_img);
+		clSetKernelArg(applyHM2D(),3,sizeof(cl_mem),_data_img());
+		//applyHM2D.setArg(3, _data_img);
+		/*
 		rotateImg = cl::Kernel(CLProgRotateKick::p, "rotateKick");
 		rotateImg.setArg(0, _data_rotated_img);
 		rotateImg.setArg(1, _data_img);

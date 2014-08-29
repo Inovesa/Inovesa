@@ -34,6 +34,7 @@ int main(int argc, char** argv)
 	}
 
 	Display display;
+	display.createTexture(&mesh);
 	display.draw();
 
 #ifdef FR_USE_CL
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
 #endif
 		}
 	}
-	display.createTexture(&mesh);
+	//display.createTexture(&mesh);
 	display.draw();
 	display.delTexture();
 #ifdef FR_USE_CL
