@@ -5,6 +5,7 @@
 
 #include "CL/cl.hpp"
 
+#include <climits>
 #include <iostream>
 
 bool prepareCLEnvironment(unsigned int device=0);
