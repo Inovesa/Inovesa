@@ -1,4 +1,4 @@
-project(fast_rotate)
+project(INOVESA)
 cmake_minimum_required(VERSION 2.8)
 aux_source_directory(./src SRC_LIST)
 
@@ -7,6 +7,7 @@ set(SRC_LIST
 			./src/CL/CLProgRotateKick.cpp
 			./src/CL/CLProgs.cpp
 			./src/CL/OpenCLHandler.cpp
+			./src/IO/HDF5File.cpp
 			./src/Display.cpp
 			./src/main.cpp
 )
@@ -16,6 +17,7 @@ set(INC_LIST
 			./inc/CL/CLProgRotateKick.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
+			./inc/IO/HDF5File.hpp
 			./inc/Display.hpp
 			./inc/Mesh2D.hpp
 			./inc/Ruler.hpp
@@ -41,6 +43,15 @@ find_package(GLFW REQUIRED)
 find_package(GSL REQUIRED)
 find_package(GSL COMPONENTS linalg REQUIRED)
 find_package(Boost COMPONENTS filesystem system REQUIRED)
-include_directories(./inc ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${OPENCL_INCLUDE_DIRS})
-SET(LIBS ${LIBS} ${GSL_LIBRARIES} ${Boost_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${GL_LIBRARY} ${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES})
+find_package(HDF5 COMPONENTS CXX REQUIRED)
+include_directories(./inc
+	${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS}
+	${HDF5_INCLUDE_DIRS}
+	${OPENCL_INCLUDE_DIRS}
+)
+SET(LIBS ${LIBS} ${GSL_LIBRARIES} ${Boost_LIBRARIES}
+	${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${GL_LIBRARY}
+	${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES}
+	${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES}
+)
 target_link_libraries(${PROJECT_NAME} ${LIBS})

@@ -11,7 +11,7 @@
 #include "CL/OpenCLHandler.hpp"
 #include "Ruler.hpp"
 
-#define FR_USE_CL
+//#define FR_USE_CL
 
 typedef float meshdata_t;
 
