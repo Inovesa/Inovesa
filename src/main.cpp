@@ -7,23 +7,123 @@
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 
+enum class rmtype {
+	mesh, space, normal
+};
+
+enum class pattern {
+	square, gaus, half
+};
+
 int main(int argc, char** argv)
 {
 	constexpr unsigned int xsize = 512;
 	constexpr unsigned int ysize = 512;
+	constexpr double rotations = 10.0;
+	constexpr unsigned int patterndim_x = 512;
+	constexpr unsigned int patterndim_y = 768;
+
+	constexpr rmtype rm = rmtype::space;
+	constexpr pattern ptrntype = pattern::gaus;
+
+	// no more settings below this line
+
+	std::stringstream nrbuf;
+
+	std::string resdir("results/");
+
+	nrbuf.str("");
+	nrbuf << xsize;
+	std::string meshdim = nrbuf.str();
+
+	nrbuf.str("");
+	nrbuf << patterndim_x;
+	std::string pattern_x = nrbuf.str();
+
+	nrbuf.str("");
+	nrbuf << patterndim_y;
+	std::string pattern_y = nrbuf.str();
+
+	nrbuf.str("");
+	nrbuf << rotations*100;
+	std::string rotation = nrbuf.str();
+
+	std::string rottype;
+	switch (rm) {
+	case rmtype::space:
+		rottype = "space";
+		break;
+	case rmtype::normal:
+		rottype = "normal";
+		break;
+	case rmtype::mesh:
+	default:
+		rottype = "mesh";
+		break;
+	}
+
+	std::string ptrn;
+	switch (ptrntype) {
+	case pattern::square:
+		ptrn = "sqr";
+		break;
+	case pattern::gaus:
+	default:
+		ptrn = "gaus";
+		break;
+	case pattern::half:
+		ptrn = "half";
+		break;
+	}
+
+	std::string file = meshdim + "d-" + rottype + "_"
+					 + ptrn + "-" + pattern_x+ "-" +pattern_y +"_"
+					 + rotation+ ".dat";
+
+	std::ofstream results(resdir+ "final_" + file);
+	std::ofstream decay(resdir+ "decay_" + file);
+
 	vfps::Mesh2D<meshdata_t> mesh(xsize,-10.0,10.0,ysize,-10.0,10.0);
 
-	for (unsigned int x=0; x<xsize/2; x++) {
-		for (unsigned int y=0; y<ysize; y++) {
-			mesh[x][y] = 1.0f;
+	switch (ptrntype) {
+	case pattern::square:
+		for (unsigned int x=xsize/4; x<xsize*3/4; x++) {
+			for (unsigned int y=ysize/4; y<ysize*3/4; y++) {
+				mesh[x][y] = 1.0f;
+			}
 		}
-	}
-	for (unsigned int x=0; x<xsize/2; x++) {
-			mesh[x][ysize/2] = 0.5f;
-	}
-	for (unsigned int x=0; x<xsize/2; x++) {
-		mesh[x][x] = 0.0f;
-		mesh[x][ysize-x] = 0.0f;
+		for (unsigned int x=xsize/4; x<xsize*3/4; x++) {
+				mesh[x][ysize/2] = 0.5f;
+		}
+		for (unsigned int y=ysize/4; y<ysize*3/4; y++) {
+				mesh[xsize/2][y] = 0.5f;
+		}
+		for (unsigned int x=xsize/4; x<xsize*3/4; x++) {
+			mesh[x][x] = 0.0f;
+			mesh[x][ysize-x] = 0.0f;
+		}
+		break;
+	case pattern::gaus:
+	default:
+		for (int x=0; x<int(xsize); x++) {
+			for (int y=0; y<int(ysize); y++) {
+				mesh[x][y] = std::exp(-std::pow(x-int(xsize)/2,2)/patterndim_x
+									  -std::pow(y-int(ysize)/2,2)/patterndim_y);
+			}
+		}
+		break;
+	case pattern::half:
+		for (int x=0; x<int(xsize/2); x++) {
+			for (int y=0; y<int(ysize); y++) {
+				mesh[x][y] = 1;
+			}
+		}
+		for (int x=0; x<int(xsize/2); x++) {
+			mesh[x][x] = 0;
+			mesh[x][ysize/2] = 0;
+			mesh[x][ysize-x] = 0;
+		}
+		break;
 	}
 
 	unsigned int device = 0;
@@ -33,48 +133,118 @@ int main(int argc, char** argv)
 		device--;
 	}
 
+#ifdef FR_USE_GUI
 	Display display;
+#endif
 
 #ifdef FR_USE_CL
 	prepareCLEnvironment(device);
 	prepareCLProgs();
 #else
-	std::vector<meshdata_t> kick(xsize,0.0);
+	std::vector<interpol_t> kick(xsize,0.0);
 #endif
-	constexpr unsigned int steps = 1000;
-	constexpr float angle = M_PI/2/steps;
+	constexpr unsigned int steps = 4000;
+	constexpr double angle = 2*M_PI/steps;
+	switch (rm) {
+	case rmtype::space:
+		mesh.setRotationMapMarit(angle);
+		break;
+	case rmtype::normal:
+		mesh.setRotationMapNormal(angle);
+		break;
+	case rmtype::mesh:
+	default:
+		mesh.setRotationMap(angle);
+		break;
+	}
 #ifdef FR_USE_CL
-	mesh.setRotationMap(angle);
 	mesh.__initOpenCL();
 	mesh.syncData();
 #endif
-	for (unsigned int i=0;i<steps;i++) {
-		if (i%100 != 0) {
+	unsigned int outstep = 1;
+	unsigned int i;
+	for (i=0;i<steps*rotations;i++) {
+		if (i%outstep != 0) {
 #ifdef FR_USE_CL
 			mesh.rotate();
 #else
-			mesh.rotateAndKick(angle,kick);
+			//mesh.rotateAndKick(angle,kick);
+			mesh.rotate();
 #endif
 		} else {
+			if (i == 10)
+				outstep = 10;
+			if (i == 100)
+				outstep = 100;
+#ifdef FR_USE_GUI
 			display.createTexture(&mesh);
 			display.draw();
+#endif
+
+			meshdata_t sum = 0.0;
+			for (unsigned int q_i= floor(xsize/2.0)-2; q_i < ceil(xsize/2.0)+2; q_i ++) {
+				meshdata_t linesum = 0.0;
+				for (unsigned int p_i= floor(ysize/2.0)-2; p_i < ceil(ysize/2.0)+2; p_i ++) {
+					linesum += mesh[q_i][p_i];
+				}
+				sum += linesum;
+			}
+
+			decay << double(i)/double(steps) << '\t'
+				  << mesh[xsize/2][ysize/2] - 1.0 << '\t'
+				  << sum << std::endl;
+			std::cout << double(i)/double(steps) << '\t'
+					  << mesh[xsize/2][ysize/2] - 1.0 << '\t'
+					  << sum << std::endl;
 #ifdef FR_USE_CL
 			mesh.rotate();
 #else
-			mesh.rotateAndKick(angle,kick);
+			//mesh.rotateAndKick(angle,kick);
+			mesh.rotate();
 #endif
+#ifdef FR_USE_GUI
 			display.delTexture();
+#endif
 #ifdef FR_USE_CL
 			mesh.syncData();
 #endif
 		}
 	}
+#ifdef FR_USE_CL
+	mesh.syncData();
+#endif
+#ifdef FR_USE_GUI
 	display.createTexture(&mesh);
 	display.draw();
 	display.delTexture();
+#endif
 #ifdef FR_USE_CL
 	OCLH::queue.flush();
 #endif
+
+
+	meshdata_t sum = 0.0;
+	for (unsigned int q_i= floor(xsize/2.0)-2; q_i < ceil(xsize/2.0)+2; q_i ++) {
+		meshdata_t linesum = 0.0;
+		for (unsigned int p_i= floor(ysize/2.0)-2; p_i < ceil(ysize/2.0)+2; p_i ++) {
+			linesum += mesh[q_i][p_i];
+		}
+		sum += linesum;
+	}
+
+	decay << double(i)/double(steps) << '\t'
+		  << mesh[xsize/2][ysize/2] -1.0 << '\t'
+		  << sum << std::endl;
+	std::cout << double(i)/double(steps) << '\t'
+			  << mesh[xsize/2][ysize/2] - 1.0 << '\t'
+			  << sum << std::endl;
+
+	for (unsigned int x=0; x<xsize; x++) {
+		for (unsigned int y=0; y<ysize; y++) {
+			results << mesh[x][y] << '\t';
+		}
+		results << std::endl;
+	}
 
 	return EXIT_SUCCESS;
 }
