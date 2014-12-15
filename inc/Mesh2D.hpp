@@ -6,7 +6,7 @@
 #include <cfloat>
 #include <cmath>
 #include <fstream>
-#include <gl/gl.h>
+#include <GL/gl.h>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
