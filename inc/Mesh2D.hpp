@@ -3,6 +3,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cfloat>
+#include <cmath>
+#include <fstream>
+#include <gl/gl.h>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -11,9 +15,11 @@
 #include "CL/OpenCLHandler.hpp"
 #include "Ruler.hpp"
 
-//#define FR_USE_CL
+#define FR_USE_CL
+#define FR_USE_GUI
 
 typedef float meshdata_t;
+typedef float interpol_t;
 
 namespace vfps
 {
@@ -21,7 +27,7 @@ namespace vfps
 typedef struct {
 	unsigned int index;
 	cl_uint2 index2d;
-	float weight;
+	interpol_t weight;
 } hi;
 
 template <class data_t>
@@ -35,7 +41,7 @@ public:
 	static constexpr unsigned int is = 4;
 
 public:
-	Mesh2D(std::array<Ruler<data_t>,2> axis) :
+	Mesh2D(std::array<Ruler<interpol_t>,2> axis) :
 		_axis(axis),
 		_data1D(new data_t[size<0>()*size<1>()]()),
 		_data1D_rotated(new data_t[size<0>()*size<1>()]()),
@@ -75,15 +81,16 @@ public:
 		_ws[1][size<0>()-1] = h13;
 
 		img_size = {{size<0>(),size<1>()}};
-    }
+	}
 
-	Mesh2D(Ruler<data_t> axis1, Ruler<data_t> axis2) :
-		Mesh2D(std::array<Ruler<data_t>,2>{{axis1,axis2}})
+	Mesh2D(Ruler<interpol_t> axis1, Ruler<interpol_t> axis2) :
+		Mesh2D(std::array<Ruler<interpol_t>,2>{{axis1,axis2}})
 	{}
 
-	Mesh2D(unsigned int xdim, data_t xmin, data_t xmax,
-		   unsigned int ydim, data_t ymin, data_t ymax) :
-		Mesh2D(Ruler<data_t>(xdim,xmin,xmax), Ruler<data_t>(ydim,ymin,ymax))
+	Mesh2D(unsigned int xdim, interpol_t xmin, interpol_t xmax,
+		   unsigned int ydim, interpol_t ymin, interpol_t ymax) :
+		Mesh2D(Ruler<interpol_t>(xdim,xmin,xmax),
+			   Ruler<interpol_t>(ydim,ymin,ymax))
 	{}
 
 	Mesh2D(const Mesh2D& other) :
@@ -119,31 +126,26 @@ public:
 
 	inline void syncData()
 	{
-		size_t null3d[3] = {0,0,0};
-		size_t imgsize[3] = {size<0>(),size<1>(),1};
-		//clEnqueueCopyBufferToImage(OCLH::queue(),_data1D_buf(),_data_img(),
-		//						   0,null3d,imgsize,0,nullptr,nullptr);
-		clEnqueueReadImage(OCLH::queue(),_data_img(),CL_TRUE,null3d,imgsize,size<0>(),
-						   0,_data1D,0,nullptr,&data_synced());
-		clEnqueueReleaseGLObjects(OCLH::queue(),1,&_data_img(),
-								  0,nullptr,nullptr);
-		/*
-		OCLH::queue.enqueueReadBuffer
-				(_data1D_buf, CL_TRUE, 0,sizeof(float)*size<0>()*size<1>(),
+		cl::size_t<3> null3d;
+		cl::size_t<3> imgsize;
+		imgsize[0] = size<0>();
+		imgsize[1] = size<1>();
+		imgsize[2] = 1;
+		OCLH::queue.enqueueReadImage
+				(_data_buf, CL_FALSE, null3d,imgsize,0,0,
 				 _data1D,nullptr,&data_synced);
-				 */
 	}
 
     template <unsigned int x>
-    inline const data_t getDelta() const
+	inline const interpol_t getDelta() const
 	{ return _axis[x].getDelta(); }
 
     template <unsigned int x>
-    inline const data_t getMax() const
+	inline const interpol_t getMax() const
 	{ return _axis[x].getMax(); }
 
     template <unsigned int x>
-    inline const data_t getMin() const
+	inline const interpol_t getMin() const
 	{ return _axis[x].getMin(); }
 
 	template<unsigned int axis>
@@ -231,42 +233,50 @@ public:
         return *this;
 	}
 
-	void setRotationMap(const data_t deltat)
+	void setRotationMapMarit(const interpol_t deltat)
 	{
+		std::vector<interpol_t> ti;
+		ti.resize(size<0>()*size<1>());
+
 		constexpr double o3 = 1./3.;
 
 		data_t cos_dt = cos(deltat);
 		data_t sin_dt = sin(deltat);
 
+#ifdef FR_USE_CL
 		rotation = {{cos_dt,sin_dt}};
+#endif
 
+		std::ofstream hm("hermasum_space.dat");
+		std::array<unsigned int,8> num;
+		num.fill(0);
 		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
 			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
 				//  Find cell of inverse image (qp,pp) of grid point i,j.
-				data_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
-				data_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
+				interpol_t qp = cos_dt*x<0>(q_i) - sin_dt*x<1>(p_i); //q', backward mapping
+				interpol_t pp = sin_dt*x<0>(q_i) + cos_dt*x<1>(p_i); //p'
 				//if ( willStayInMesh(qp,pp) )
 				if ( insideMesh(qp,pp) )
 				{
+
+					unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
+					unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
+
+					//Scaled arguments of interpolation functions:
+					interpol_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
+					interpol_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
 					/* choose number of meshpoints for interpolation;
 					 * other values than 4 might not work properly because
 					 * hardcoded dependencies are not yet flexible
 					 */
 					constexpr unsigned int interpolation_steps = 4;
 
-					unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
-					unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
-
 					// arrays of Lagrange interpolation
-					std::array<data_t,interpolation_steps> laq;
-					std::array<data_t,interpolation_steps> lap;
+					std::array<interpol_t,interpolation_steps> laq;
+					std::array<interpol_t,interpolation_steps> lap;
 
 					// gridpoint matrix used for interpolation
 					std::array<std::array<hi,interpolation_steps>,interpolation_steps> ph;
-
-					//Scaled arguments of interpolation functions:
-					data_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
-					data_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
 
 					for (unsigned int j1=0; j1<interpolation_steps; j1++) {
 						unsigned int j0 = jd+j1-1;
@@ -300,13 +310,280 @@ public:
 					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
 					for (size_t i1=0; i1<interpolation_steps; i1++) {
 						for (size_t j1=0; j1<interpolation_steps; j1++){
-							(ph[i1][j1]).weight = laq[i1] * lap[j1] * 0.25;
+							(ph[i1][j1]).weight = laq[i1] * lap[j1] /4;
 							_heritage_map[q_i][p_i][i1*interpolation_steps+j1]
 									= ph[i1][j1];
 						}
 					}
 				}
+				double hmsum = 0.0;
+				for (hi h : _heritage_map[q_i][p_i]) {
+					hmsum += h.weight;
+					ti[h.index] += h.weight;
+				}
+				int epsilon = std::round((hmsum-1.0+DBL_EPSILON)/DBL_EPSILON)-1;
+				if (p_i > 1 && q_i > 1
+					&& p_i < size<1>()-1
+						&& q_i < size<0>() -1 ) {
+					if (epsilon >= -3 && epsilon <= 3) {
+						num[epsilon+3]++;
+					} else {
+						num[7]++;
+					}
+				}
+				hm << epsilon << '\t';
 			}
+			hm << std::endl;
+		}
+		std::ofstream hmb("hermabin_space.dat");
+		for (unsigned int i=0; i< num.size(); i++) {
+			hmb << int(i)-3 << '\t' << num[i] << std::endl;
+		}
+		std::ofstream tm("target_space.dat");
+		for (unsigned int x=0; x<size<0>(); x++) {
+			for (unsigned int y=0; y<size<1>(); y++) {
+				tm << ti[y*size<0>()+x] - 1.0 << '\t';
+			}
+			tm << std::endl;
+		}
+	}
+
+	void setRotationMapNormal(const interpol_t deltat)
+	{
+		std::vector<interpol_t> ti;
+		ti.resize(size<0>()*size<1>());
+
+		constexpr double o3 = 1./3.;
+
+		interpol_t cos_dt = cos(deltat);
+		interpol_t sin_dt = sin(deltat);
+
+#ifdef FR_USE_CL
+		rotation = {{cos_dt,sin_dt}};
+#endif
+
+		std::ofstream hm("hermasum_normal.dat");
+		std::array<unsigned int,8> num;
+		num.fill(0);
+		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
+			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
+				//  Find cell of inverse image (qp,pp) of grid point i,j.
+				interpol_t qp = cos_dt*((q_i-size<0>()/2.0)/size<0>())
+							  - sin_dt*((p_i-size<1>()/2.0)/size<1>())+0.5; //q', backward mapping
+				interpol_t pp = sin_dt*((q_i-size<0>()/2.0)/size<0>())
+							  + cos_dt*((p_i-size<1>()/2.0)/size<1>())+0.5; //p'
+				if ( qp > 0.0 && qp < 1.0 && pp > 0.0 && pp < 1.0 )
+				{
+					/* choose number of meshpoints for interpolation;
+					 * other values than 4 might not work properly because
+					 * hardcoded dependencies are not yet flexible
+					 */
+					constexpr unsigned int interpolation_steps = 4;
+
+
+					//Scaled arguments of interpolation functions:
+					interpol_t xiq;  //distance from id
+					interpol_t xip; //distance of p' from lower mesh point
+					interpol_t qq_int;
+					interpol_t qp_int;
+					interpol_t qcoord = qp*size<0>();
+					interpol_t pcoord = pp*size<1>();
+					xiq = std::modf(qcoord, &qq_int);
+					xip = std::modf(pcoord, &qp_int);
+					unsigned int id = qq_int; //meshpoint smaller q'
+					unsigned int jd = qp_int; //numper of lower mesh point from p'
+
+					// arrays of Lagrange interpolation
+					std::array<interpol_t,interpolation_steps> laq;
+					std::array<interpol_t,interpolation_steps> lap;
+
+					// gridpoint matrix used for interpolation
+					std::array<std::array<hi,interpolation_steps>,interpolation_steps> ph;
+
+					for (unsigned int j1=0; j1<interpolation_steps; j1++) {
+						unsigned int j0 = jd+j1-1;
+						for (unsigned int i1=0; i1<interpolation_steps; i1++) {
+							unsigned int i0 = id+i1-1;
+							if(i0< size<0>() && j0 < size<1>() ){
+								ph[i1][j1].index = i0*size<1>()+j0;
+								ph[i1][j1].index2d = {{i0,j0}};
+							} else {
+								ph[i1][j1].index = 0;
+								ph[i1][j1].index2d = {{0,0}};
+							}
+						}
+					}
+
+					//  Vectors of Lagrange interpolation functions, not including factors of 1/2.
+					laq[0] = (xiq-1)*(xiq-2);
+					laq[1] = (xiq+1)*laq[0];
+					laq[0] *= -xiq*o3;
+					laq[3] = xiq*(xiq+1);
+					laq[2] = -(xiq-2)*laq[3];
+					laq[3] *= (xiq-1)*o3;
+
+					lap[0] = (xip-1)*(xip-2);
+					lap[1] = (xip+1)*lap[0];
+					lap[0] *= -xip*o3;
+					lap[3] = xip*(xip+1);
+					lap[2] = -(xip-2)*lap[3];
+					lap[3] *= (xip-1)*o3;
+
+					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
+					for (size_t i1=0; i1<interpolation_steps; i1++) {
+						for (size_t j1=0; j1<interpolation_steps; j1++){
+							(ph[i1][j1]).weight = laq[i1] * lap[j1] /4;
+							_heritage_map[q_i][p_i][i1*interpolation_steps+j1]
+									= ph[i1][j1];
+						}
+					}
+				}
+				double hmsum = 0.0;
+				for (hi h : _heritage_map[q_i][p_i]) {
+					hmsum += h.weight;
+					ti[h.index] += h.weight;
+				}
+				int epsilon = std::round((hmsum-1.0+DBL_EPSILON)/DBL_EPSILON)-1;
+				if (p_i > 1 && q_i > 1
+					&& p_i < size<1>()-1
+						&& q_i < size<0>() -1 ) {
+					if (epsilon >= -3 && epsilon <= 3) {
+						num[epsilon+3]++;
+					} else {
+						num[7]++;
+					}
+				}
+				hm << epsilon << '\t';
+			}
+			hm << std::endl;
+		}
+		std::ofstream hmb("hermabin_normal.dat");
+		for (unsigned int i=0; i< num.size(); i++) {
+			hmb << int(i)-3 << '\t' << num[i] << std::endl;
+		}
+		std::ofstream tm("target_normal.dat");
+		for (unsigned int x=0; x<size<0>(); x++) {
+			for (unsigned int y=0; y<size<1>(); y++) {
+				tm << ti[y*size<0>()+x] - 1.0 << '\t';
+			}
+			tm << std::endl;
+		}
+	}
+
+	void setRotationMap(const interpol_t deltat)
+	{
+		std::vector<interpol_t> ti;
+		ti.resize(size<0>()*size<1>());
+
+		constexpr double o3 = 1./3.;
+
+		interpol_t cos_dt = cos(deltat);
+		interpol_t sin_dt = sin(deltat);
+
+#ifdef FR_USE_CL
+		rotation = {{cos_dt,sin_dt}};
+#endif
+
+		std::ofstream hm("hermasum_mesh.dat");
+		std::array<unsigned int,8> num;
+		num.fill(0);
+		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
+			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
+				//  Find cell of inverse image (qp,pp) of grid point i,j.
+				interpol_t qp = cos_dt*(q_i-size<0>()/2.0)
+							  - sin_dt*(p_i-size<1>()/2.0)+size<0>()/2.0; //q', backward mapping
+				interpol_t pp = sin_dt*(q_i-size<0>()/2.0)
+							  + cos_dt*(p_i-size<1>()/2.0)+size<1>()/2.0; //p'
+				interpol_t qp_int, xiq;
+				xiq = std::modf(qp, &qp_int);
+				unsigned int id = qp_int; //meshpoint smaller q'
+
+				interpol_t pp_int, xip;
+				xip = std::modf(pp, &pp_int);
+				unsigned int jd = pp_int; //numper of lower mesh point from p'
+
+				if ( id <  size<0>() && jd < size<1>() )
+				{
+					/* choose number of meshpoints for interpolation;
+					 * other values than 4 might not work properly because
+					 * hardcoded dependencies are not yet flexible
+					 */
+					constexpr unsigned int interpolation_steps = 4;
+
+					// arrays of Lagrange interpolation
+					std::array<interpol_t,interpolation_steps> laq;
+					std::array<interpol_t,interpolation_steps> lap;
+
+					// gridpoint matrix used for interpolation
+					std::array<std::array<hi,interpolation_steps>,interpolation_steps> ph;
+
+					for (unsigned int j1=0; j1<interpolation_steps; j1++) {
+						unsigned int j0 = jd+j1-1;
+						for (unsigned int i1=0; i1<interpolation_steps; i1++) {
+							unsigned int i0 = id+i1-1;
+							if(i0< size<0>() && j0 < size<1>() ){
+								ph[i1][j1].index = i0*size<1>()+j0;
+								ph[i1][j1].index2d = {{i0,j0}};
+							} else {
+								ph[i1][j1].index = 0;
+								ph[i1][j1].index2d = {{0,0}};
+							}
+						}
+					}
+
+					//  Vectors of Lagrange interpolation functions, not including factors of 1/2.
+					laq[0] = (xiq-1)*(xiq-2);
+					laq[1] = (xiq+1)*laq[0];
+					laq[0] *= -xiq*o3;
+					laq[3] = xiq*(xiq+1);
+					laq[2] = -(xiq-2)*laq[3];
+					laq[3] *= (xiq-1)*o3;
+
+					lap[0] = (xip-1)*(xip-2);
+					lap[1] = (xip+1)*lap[0];
+					lap[0] *= -xip*o3;
+					lap[3] = xip*(xip+1);
+					lap[2] = -(xip-2)*lap[3];
+					lap[3] *= (xip-1)*o3;
+
+					//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
+					for (size_t i1=0; i1<interpolation_steps; i1++) {
+						for (size_t j1=0; j1<interpolation_steps; j1++){
+							(ph[i1][j1]).weight = laq[i1] * lap[j1] /4;
+							_heritage_map[q_i][p_i][i1*interpolation_steps+j1]
+									= ph[i1][j1];
+						}
+					}
+				}
+				double hmsum = 0.0;
+				for (hi h : _heritage_map[q_i][p_i]) {
+					hmsum += h.weight;
+					ti[h.index] += h.weight;
+				}
+				int epsilon = std::round((hmsum-1.0+DBL_EPSILON)/DBL_EPSILON)-1;
+				if (p_i > 1 && q_i > 1
+					&& p_i < size<1>()-1
+						&& q_i < size<0>() -1 ) {
+					if (epsilon >= -3 && epsilon <= 3) {
+						num[epsilon+3]++;
+					} else {
+						num[7]++;
+					}
+				}
+				hm << epsilon << '\t';
+			}
+			hm << std::endl;
+		}
+		std::ofstream hmb("hermabin_mesh.dat");
+		for (unsigned int i=0; i< num.size(); i++) {
+			hmb << int(i)-3 << '\t' << num[i] << std::endl;
+		}
+		std::ofstream tm("target_mesh.dat");
+		for (unsigned int x=0; x<size<0>(); x++) {
+			for (unsigned int y=0; y<size<1>(); y++) {
+				tm << ti[y*size<0>()+x] - 1.0 << '\t';
+			}
+			tm << std::endl;
 		}
 	}
 
@@ -318,9 +595,15 @@ public:
 	{
 		#ifdef FR_USE_CL
 		OCLH::queue.enqueueNDRangeKernel (
-				applyHM1D,
+				applyHM2D,
 				cl::NullRange,
-				cl::NDRange(size<0>()*size<1>()));
+				cl::NDRange(size<0>(),size<1>()));
+		/*
+		OCLH::queue.enqueueNDRangeKernel (
+				rotateImg,
+				cl::NullRange,
+				cl::NDRange(size<0>(),size<1>()));
+				*/
 		#ifdef CL_VERSION_1_2
 		OCLH::queue.enqueueBarrierWithWaitList();
 		#else // CL_VERSION_1_2
@@ -331,9 +614,9 @@ public:
 		imgsize[0] = size<0>();
 		imgsize[1] = size<1>();
 		imgsize[2] = 1;
-		OCLH::queue.enqueueCopyBuffer(_data1D_rotated_buf,
-									  _data1D_buf,
-									  0,0,sizeof(float)*size<0>()*size<1>());
+		OCLH::queue.enqueueCopyImage(_data_rotated_buf,
+									 _data_buf,
+									 null3d,null3d,imgsize);
 		#else // FR_USE_CL
 		for (unsigned int i=0; i< size<0>()*size<1>(); i++) {
 			_data1D_rotated[i] = 0.0;
@@ -357,33 +640,34 @@ public:
 	 *
 	 * Method has to be reviewed!
 	 */
-	void rotateAndKick(const data_t deltat, const std::vector<data_t> &AF)
+	void rotateAndKick(const interpol_t deltat,
+					   const std::vector<interpol_t> &AF)
 	{
 		constexpr double o3 = 1./3.;
 
-		const double cos_dt = cos(deltat);
-		const double sin_dt = sin(deltat);
+		const interpol_t cos_dt = std::cos(deltat);
+		const interpol_t sin_dt = std::sin(deltat);
 
 		for(unsigned int p_i=0; p_i< size<1>(); p_i++) {
 			for (unsigned int q_i=0; q_i< size<0>(); q_i++) {
 				//  Find cell of inverse image (qp,pp) of grid point i,j.
-				data_t qp = cos_dt*x<0>(q_i) - sin_dt*(x<1>(p_i)+AF[q_i]); //q', backward mapping
-				data_t pp = sin_dt*x<0>(q_i) + cos_dt*(x<1>(p_i)+AF[q_i]); //p'
+				interpol_t qp = cos_dt*x<0>(q_i) - sin_dt*(x<1>(p_i)+AF[q_i]); //q', backward mapping
+				interpol_t pp = sin_dt*x<0>(q_i) + cos_dt*(x<1>(p_i)+AF[q_i]); //p'
 				//if (willStayInMesh(qp,pp)) {
 				if (insideMesh(qp,pp)) {
 					unsigned int id = floor((qp-getMin<0>())/getDelta<0>()); //meshpoint smaller q'
 					unsigned int jd = floor((pp-getMin<1>())/getDelta<1>()); //numper of lower mesh point from p'
 
 					// arrays of Lagrange interpolation
-					std::array<data_t,is> laq;
-					std::array<data_t,is> lap;
+					std::array<interpol_t,is> laq;
+					std::array<interpol_t,is> lap;
 
 					// gridpoint matrix used for interpolation
-					std::array<std::array<data_t,is>,is> ph;
+					std::array<std::array<meshdata_t,is>,is> ph;
 
 					//Scaled arguments of interpolation functions:
-					data_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
-					data_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
+					interpol_t xiq = (qp-x<0>(id))/getDelta<0>();  //distance from id
+					interpol_t xip = (pp-x<1>(jd))/getDelta<1>(); //distance of p' from lower mesh point
 
 					for (unsigned int j1=0; j1<is; j1++) {
 						unsigned int j0 = jd+j1-1;
@@ -416,10 +700,10 @@ public:
 					_data_rotated[q_i][p_i] = 0.;
 					for (size_t i1=0; i1<is; i1++) {
 						for (size_t j1=0; j1<is; j1++){
-							_data_rotated[q_i][p_i] += ph[i1][j1] * laq[i1] * lap[j1];
+							_data_rotated[q_i][p_i] += std::round(ph[i1][j1] * laq[i1] * lap[j1]);
 						}
 					}
-					_data_rotated[q_i][p_i] *= 0.25;
+					_data_rotated[q_i][p_i] /= 4;
 				} else {
 					_data_rotated[q_i][p_i] = 0.;
 				}
@@ -439,11 +723,11 @@ public:
 	{ return _axis[x].getNSteps(); }
 
 	template <unsigned int axis>
-	inline const data_t x(const unsigned int n) const
+	inline const interpol_t x(const unsigned int n) const
 	{ return _axis[axis][n]; }
 
 protected:
-	const std::array<Ruler<data_t>,2> _axis;
+	const std::array<Ruler<interpol_t>,2> _axis;
 
 	std::array<data_t*,2> _projection;
 
@@ -488,59 +772,38 @@ protected:
 	}
 
 private:
-	cl::ImageGL _data_img;
-	cl::Buffer _data1D_buf;
-//	cl::Image2D _data_rotated_img;
-	cl::Buffer _data1D_rotated_buf;
+	cl::Image2D _data_buf;
+	cl::Image2D _data_rotated_buf;
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM1D;
 	cl::Kernel applyHM2D;
-//	cl::Kernel rotateImg;
+	cl::Kernel rotateImg;
 
 public:
-    void __initOpenCL(GLuint tex)
+	void __initOpenCL()
 	{
-		_data1D_buf = cl::Buffer(OCLH::context,
+		_data_buf = cl::Image2D(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-				sizeof(float)*size<0>()*size<1>(), _data1D);
-#define FR_SHARE_TEXTURE
-#ifdef FR_SHARE_TEXTURE
-        /*
-         * Create clImage from GLTexture (bypass C++ wrapper bug)
-         */
-        cl_mem outputImageBuffer = clCreateFromGLTexture(OCLH::context(),
-							CL_MEM_READ_WRITE,
-                            GL_TEXTURE_2D,
-                            0,
-                            tex,
-                            NULL);
-
-        _data_img = cl::ImageGL(outputImageBuffer);
-#endif
-		_data1D_rotated_buf = cl::Buffer(OCLH::context,
+				cl::ImageFormat(CL_R,CL_FLOAT),
+				size<0>(),size<1>(),0, _data1D);
+		_data_rotated_buf = cl::Image2D(OCLH::context,
 				CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-				sizeof(float)*size<0>()*size<1>(), _data1D_rotated);
+				cl::ImageFormat(CL_R,CL_FLOAT),
+				size<0>(),size<1>(),0, _data1D_rotated);
 		_heritage_map1D_buf = cl::Buffer(OCLH::context,
 				CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 				sizeof(hi)*is*is*size<0>()*size<1>(),
 				_heritage_map1D);
-		applyHM1D = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
-		applyHM1D.setArg(0, _data1D_buf);
-		applyHM1D.setArg(1, _heritage_map1D_buf);
-		applyHM1D.setArg(2, _data1D_rotated_buf);
 		applyHM2D = cl::Kernel(CLProgApplyHM::p, "applyHM2D");
-		applyHM2D.setArg(0, _data1D_buf);
+		applyHM2D.setArg(0, _data_buf);
 		applyHM2D.setArg(1, _heritage_map1D_buf);
 		applyHM2D.setArg(2, size<1>());
-		clSetKernelArg(applyHM2D(),3,sizeof(cl_mem),_data_img());
-		//applyHM2D.setArg(3, _data_img);
-		/*
+		applyHM2D.setArg(3, _data_rotated_buf);
 		rotateImg = cl::Kernel(CLProgRotateKick::p, "rotateKick");
-		rotateImg.setArg(0, _data_rotated_img);
-		rotateImg.setArg(1, _data_img);
+		rotateImg.setArg(0, _data_rotated_buf);
+		rotateImg.setArg(1, _data_buf);
 		rotateImg.setArg(2, img_size);
 		rotateImg.setArg(3, rotation);
-		*/
 	}
 };
 
