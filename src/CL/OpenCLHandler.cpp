@@ -7,7 +7,7 @@ bool prepareCLEnvironment(unsigned int device)
 	}
 
 	cl_context_properties properties[] =
-		{ CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[0])(), 0};
+        { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[0])(), 0};
 
 	OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
 

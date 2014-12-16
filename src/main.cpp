@@ -172,13 +172,8 @@ int main(int argc, char** argv)
 	unsigned int outstep = 1;
 	unsigned int i;
 	for (i=0;i<steps*rotations;i++) {
-		if (i%outstep != 0) {
-#ifdef FR_USE_CL
-			mesh.rotate();
-#else
-			//mesh.rotateAndKick(angle,kick);
-			mesh.rotate();
-#endif
+        if (i%outstep != 0) {
+            mesh.rotate();
 		} else {
 			if (i == 10)
 				outstep = 10;
@@ -205,12 +200,7 @@ int main(int argc, char** argv)
 			std::cout << double(i)/double(steps) << '\t'
 					  << mesh[vfps::fs_xsize/2][vfps::fs_ysize/2] - 1.0 << '\t'
 					  << sum << std::endl;
-#ifdef FR_USE_CL
-			mesh.rotate();
-#else
-			//mesh.rotateAndKick(angle,kick);
-			mesh.rotate();
-#endif
+            mesh.rotate();
 #ifdef FR_USE_GUI
 			display.delTexture();
 #endif
@@ -253,7 +243,7 @@ int main(int argc, char** argv)
 			results << mesh[x][y] << '\t';
 		}
 		results << std::endl;
-	}
+    }
 
 	return EXIT_SUCCESS;
 }

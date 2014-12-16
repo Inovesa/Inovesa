@@ -51,12 +51,16 @@ void prepareCLProgApplyHM()
 
 	cl::Program::Sources source(1,std::make_pair(code,strlen(code)));
 	CLProgApplyHM::p = cl::Program(OCLH::context, source);
-	CLProgApplyHM::p.build(OCLH::devices);
-#ifdef DEBUG
-	std::cout	<< "Build Log:\t "
-				<< CLProgApplyHM::p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
-				<< std::endl;
-#endif // DEBUG
+    try {
+        CLProgApplyHM::p.build(OCLH::devices);
+    } catch (cl::Error &e) {
+        e.what();
+    #ifdef DEBUG
+        std::cout	<< "Build Log:\t "
+                    << CLProgApplyHM::p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
+                    << std::endl;
+    #endif // DEBUG
+    }
 }
 
 cl::Program CLProgApplyHM::p;

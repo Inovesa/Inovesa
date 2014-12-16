@@ -132,7 +132,7 @@ public:
 		imgsize[1] = size<1>();
 		imgsize[2] = 1;
 		OCLH::queue.enqueueReadImage
-				(_data_buf, CL_FALSE, null3d,imgsize,0,0,
+                (_data_buf, CL_TRUE, null3d,imgsize,0,0,
 				 _data1D,nullptr,&data_synced);
 	}
 
