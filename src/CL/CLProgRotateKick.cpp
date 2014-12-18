@@ -12,14 +12,12 @@ void prepareCLProgRotateKick()
 			int x = get_global_id(0);
 			int y = get_global_id(1);
 			float4 value;
-			int2 center = (imgSize.x/2,imgSize.y/2);
+            int2 center = (int2)(imgSize.x/2,imgSize.y/2);
 
 			int2 dstpos = (int2)(x,y);
 
 			x -= center.x;
-			y -= center.y;
-
-			//rot = (float2)(1.0f,0.0f);
+            y -= center.y;
 
 			float srcx = (rot.x*(x) - rot.y*(y) + center.x);
 			float srcy = (rot.y*(x) + rot.x*(y) + center.y);
@@ -27,21 +25,26 @@ void prepareCLProgRotateKick()
 			float xf = srcx-srcpos.x;
 			float yf = srcy-srcpos.y;
 
+            const sampler_t sampler
+                    = CLK_NORMALIZED_COORDS_FALSE
+                    | CLK_ADDRESS_CLAMP_TO_EDGE
+                    | CLK_FILTER_NEAREST;
+
 			value = (
 					xf*(xf-1)*(
-						+yf*(yf-1)*read_imagef(src,srcpos+(int2)(-1,-1))
-						+2*(1-yf*yf)*read_imagef(src,srcpos+(int2)(-1,0))
-						+yf*(yf+1)*read_imagef(src,srcpos+(int2)(-1,1))
+                        +yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(-1,-1))
+                        +2*(1-yf*yf)*read_imagef(src,sampler,srcpos+(int2)(-1,0))
+                        +yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(-1,1))
 					) +
 					2*(1-xf*xf)*(
-						+yf*(yf-1)*read_imagef(src,srcpos+(int2)(0,-1))
-						+2*(1-yf*yf)*read_imagef(src,srcpos)
-						+yf*(yf+1)*read_imagef(src,srcpos+(int2)(0,1))
+                        +yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(0,-1))
+                        +2*(1-yf*yf)*read_imagef(src,sampler,srcpos)
+                        +yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(0,1))
 					) +
 					xf*(xf+1)*(
-						+yf*(yf-1)*read_imagef(src,srcpos+(int2)(1,-1))
-						+2*(1-yf*yf)*read_imagef(src,srcpos+(int2)(1,0))
-						+yf*(yf+1)*read_imagef(src,srcpos+(int2)(1,1))
+                        +yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(1,-1))
+                        +2*(1-yf*yf)*read_imagef(src,sampler,srcpos+(int2)(1,0))
+                        +yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(1,1))
 					))/4;
 			write_imagef(dst,dstpos,value);
 		}
