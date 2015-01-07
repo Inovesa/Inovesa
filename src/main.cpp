@@ -26,12 +26,12 @@ int main(int argc, char** argv)
 	vfps::HDF5File file("results.h5");
     
     
-	constexpr double rotations = 1.0;
+    constexpr double rotations = 0.125;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 768;
 
 	constexpr rmtype rm = rmtype::space;
-	constexpr pattern ptrntype = pattern::square;
+    constexpr pattern ptrntype = pattern::half;
 
 	// no more settings below this line
 
@@ -155,14 +155,14 @@ int main(int argc, char** argv)
 	constexpr double angle = 2*M_PI/steps;
 	switch (rm) {
 	case rmtype::space:
-		mesh.setRotationMapMarit(angle);
+        mesh.setRotationMap(angle,vfps::Mesh2D<meshdata_t>::MESH_NORMALIZATION::PHYSICAL);
 		break;
 	case rmtype::normal:
-		mesh.setRotationMapNormal(angle);
+        mesh.setRotationMap(angle,vfps::Mesh2D<meshdata_t>::MESH_NORMALIZATION::ONE);
 		break;
 	case rmtype::mesh:
 	default:
-		mesh.setRotationMap(angle);
+        mesh.setRotationMap(angle,vfps::Mesh2D<meshdata_t>::MESH_NORMALIZATION::NONE);
 		break;
 	}
 #ifdef FR_USE_CL
