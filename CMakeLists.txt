@@ -4,7 +4,6 @@ aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
 			./src/CL/CLProgApplyHM.cpp
-			./src/CL/CLProgRotateKick.cpp
 			./src/CL/CLProgs.cpp
 			./src/CL/OpenCLHandler.cpp
 			./src/IO/HDF5File.cpp
@@ -15,7 +14,6 @@ set(SRC_LIST
 
 set(INC_LIST
 			./inc/CL/CLProgApplyHM.hpp
-			./inc/CL/CLProgRotateKick.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
 			./inc/IO/HDF5File.hpp

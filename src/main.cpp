@@ -22,13 +22,14 @@ int main(int argc, char** argv)
 	vfps::HDF5File file("results.h5");
     
     
-    constexpr double rotations = 0.125;
+	constexpr double rotations = 0.25;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 768;
+	constexpr unsigned int pattern_margin = 128;
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
-			= vfps::PhaseSpace::ROTATION_TYPE::SPACE;
-    constexpr pattern ptrntype = pattern::half;
+			= vfps::PhaseSpace::ROTATION_TYPE::MESH;
+	constexpr pattern ptrntype = pattern::half;
 
 	// no more settings below this line
 
@@ -115,12 +116,12 @@ int main(int argc, char** argv)
 		}
 		break;
 	case pattern::half:
-		for (int x=0; x<int(vfps::ps_xsize/2); x++) {
-			for (int y=0; y<int(vfps::ps_ysize); y++) {
+		for (int y=pattern_margin; y<int(vfps::ps_ysize-pattern_margin); y++) {
+			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
 				mesh[x][y] = 1;
 			}
 		}
-		for (int x=0; x<int(vfps::ps_xsize/2); x++) {
+		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
 			mesh[x][x] = 0;
 			mesh[x][vfps::ps_ysize/2] = 0;
 			mesh[x][vfps::ps_ysize-x] = 0;
@@ -146,7 +147,7 @@ int main(int argc, char** argv)
 	prepareCLEnvironment(device);
 	prepareCLProgs();
 #else
-	std::vector<meshdata_t> kick(vfps::fs_xsize,0.0);
+	std::vector<meshdata_t> kick(vfps::ps_xsize,0.0);
 #endif
 	constexpr unsigned int steps = 4000;
 	constexpr double angle = 2*M_PI/steps;
@@ -159,7 +160,7 @@ int main(int argc, char** argv)
 	unsigned int i;
 	for (i=0;i<steps*rotations;i++) {
         if (i%outstep != 0) {
-            mesh.rotate();
+			mesh.rotate();
 		} else {
 			if (i == 10)
 				outstep = 10;
@@ -183,9 +184,11 @@ int main(int argc, char** argv)
 			decay << double(i)/double(steps) << '\t'
 				  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
 				  << sum << std::endl;
+			#ifdef FR_PRINT_RESULTS
 			std::cout << double(i)/double(steps) << '\t'
 					  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
 					  << sum << std::endl;
+			#endif
             mesh.rotate();
 #ifdef FR_USE_GUI
 			display.delTexture();
@@ -220,9 +223,11 @@ int main(int argc, char** argv)
 	decay << double(i)/double(steps) << '\t'
 		  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] -1.0 << '\t'
 		  << sum << std::endl;
+	#ifdef FR_PRINT_RESULTS
 	std::cout << double(i)/double(steps) << '\t'
 			  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
 			  << sum << std::endl;
+	#endif
 
 	for (unsigned int x=0; x<vfps::ps_xsize; x++) {
 		for (unsigned int y=0; y<vfps::ps_ysize; y++) {

@@ -34,20 +34,21 @@ class PhaseSpace
 {	
 public:
 	/**
-	 * @brief is
-	 * number of meshpoints for interpolation;
-	 * other values than 4 might not work properly because
-	 * bicubic interpolation is still hardcoded in some parts
-	 */
-	static constexpr unsigned int is = 4;
-
-	/**
 	 * @brief The MESH_NORMALIZATION enum
 	 */
 	enum class ROTATION_TYPE
 	{
-		 MESH=0, NORMAL, SPACE
+		MESH=0, NORMAL, SPACE
 	};
+
+	enum INTERPOL_TYPE
+	{
+		NONE=1,
+		LINEAR=2,
+		QUADRATIC=3,
+		CUBIC=4
+	};
+	static constexpr INTERPOL_TYPE is = INTERPOL_TYPE::CUBIC;
 
 public:
 	PhaseSpace(std::array<Ruler<interpol_t>,2> axis);
@@ -82,8 +83,8 @@ public:
 		imgsize[1] = size(1);
 		imgsize[2] = 1;
 		OCLH::queue.enqueueReadImage
-					 (_data_buf, CL_TRUE, null3d,imgsize,0,0,
-				 _data1D,nullptr,&data_synced);
+					(_data_buf, CL_TRUE, null3d,imgsize,0,0,
+					_data1D,nullptr,&data_synced);
 	}
 
 	inline const interpol_t getDelta(const unsigned int x) const
@@ -162,18 +163,6 @@ public:
 	void rotate();
 
 	void kick(const std::vector<meshdata_t> &AF);
-
-	/**
-	 * @brief rotateAndKick
-	 * @param deltat
-	 * @param AF
-	 *
-	 * Method has to be reviewed!
-	 */
-	void rotateAndKick(const interpol_t deltat,
-						const std::vector<interpol_t> &AF);
-
-	void swapDataTmp();
 
 	inline const unsigned int size(const unsigned int x) const
 	{ return _axis[x].getNSteps(); }

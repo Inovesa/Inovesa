@@ -8,7 +8,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<interpol_t>,2> axis) :
 {
 	_data = new meshdata_t*[size(0)];
 	_data_rotated = new meshdata_t*[size(0)];
-	_heritage_map = new std::array<hi,16>*[size(0)];
+	_heritage_map = new std::array<hi,is*is>*[size(0)];
 	for (unsigned int i=0; i<size(0); i++) {
 		_data[i] = &(_data1D[i*size(1)]);
 		_data_rotated[i] = &(_data1D_rotated[i*size(1)]);
@@ -136,11 +136,10 @@ void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
 	num.fill(0);
 	for(unsigned int p_i=0; p_i< size(1); p_i++) {
 		for (unsigned int q_i=0; q_i< size(0); q_i++) {
-			bool valid_meshpoint;
 
 			// Cell of inverse image (qp,pp) of grid point i,j.
-			interpol_t qp;
-			interpol_t pp;
+			interpol_t qp; //q', backward mapping
+			interpol_t pp; //p'
 			// interpolation type specific q and p coordinates
 			interpol_t pcoord;
 			interpol_t qcoord;
@@ -154,20 +153,19 @@ void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
 			switch (mn) {
 			case ROTATION_TYPE::MESH:
 				qp = cos_dt*(q_i-size(0)/2.0)
-						- sin_dt*(p_i-size(1)/2.0)+size(0)/2.0; //q', backward mapping
+						- sin_dt*(p_i-size(1)/2.0)+size(0)/2.0;
 				pp = sin_dt*(q_i-size(0)/2.0)
-						+ cos_dt*(p_i-size(1)/2.0)+size(1)/2.0; //p'
+						+ cos_dt*(p_i-size(1)/2.0)+size(1)/2.0;
 				xiq = std::modf(qp, &qq_int);
-				id = qq_int; //meshpoint smaller q'
 				xip = std::modf(pp, &qp_int);
-				jd = qp_int; //numper of lower mesh point from p'
-
+				id = qq_int;
+				jd = qp_int;
 				break;
 			case ROTATION_TYPE::NORMAL:
 				qp = cos_dt*((q_i-size(0)/2.0)/size(0))
-						- sin_dt*((p_i-size(1)/2.0)/size(1))+0.5; //q', backward mapping
+						- sin_dt*((p_i-size(1)/2.0)/size(1))+0.5;
 				pp = sin_dt*((q_i-size(0)/2.0)/size(0))
-						+ cos_dt*((p_i-size(1)/2.0)/size(1))+0.5; //p'
+						+ cos_dt*((p_i-size(1)/2.0)/size(1))+0.5;
 				qcoord = qp*size(0);
 				pcoord = pp*size(1);
 				xiq = std::modf(qcoord, &qq_int);
@@ -176,80 +174,106 @@ void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
 				jd = qp_int;
 				break;
 			case ROTATION_TYPE::SPACE:
-			default:
-				qp = cos_dt*x(0,q_i) - sin_dt*x(1,p_i); //q', backward mapping
-				pp = sin_dt*x(0,q_i) + cos_dt*x(1,p_i); //p'
-				valid_meshpoint =  insideMesh(qp,pp);
-				if (valid_meshpoint) {
-					id = floor((qp-getMin(0))/getDelta(0));
-					jd = floor((pp-getMin(1))/getDelta(1));
-					xiq = (qp-x(0,id))/getDelta(0);
-					xip = (pp-x(1,jd))/getDelta(1);
-				}
+				qp = cos_dt*x(0,q_i) - sin_dt*x(1,p_i) - getMin(0);
+				pp = sin_dt*x(0,q_i) + cos_dt*x(1,p_i) - getMin(1);
+				qcoord = qp/getDelta(0);
+				pcoord = pp/getDelta(1);
+				xiq = std::modf(qcoord, &qq_int);
+				xip = std::modf(pcoord, &qp_int);
+				id = qq_int;
+				jd = qp_int;
 				break;
 			}
 
-			switch (mn) {
-			case ROTATION_TYPE::MESH:
-				valid_meshpoint =  (id <  size(0) && jd < size(1));
-				break;
-			case ROTATION_TYPE::NORMAL:
-				valid_meshpoint =  ( qp > 0.0 && qp < 1.0 && pp > 0.0 && pp < 1.0 );
-				break;
-			default:
-				break;
-			}
-			if (valid_meshpoint)
+			if (id <  size(0) && jd < size(1))
 			{
-				/* choose number of meshpoints for interpolation;
-					 * other values than 4 might not work properly because
-					 * hardcoded dependencies are not yet flexible
-					 */
-				constexpr unsigned int interpolation_steps = 4;
-
-				// arrays of Lagrange interpolation
-				std::array<interpol_t,interpolation_steps> laq;
-				std::array<interpol_t,interpolation_steps> lap;
-
 				// gridpoint matrix used for interpolation
-				std::array<std::array<hi,interpolation_steps>,interpolation_steps> ph;
+				std::array<std::array<hi,is>,is> ph;
 
-				for (unsigned int j1=0; j1<interpolation_steps; j1++) {
-					unsigned int j0 = jd+j1-1;
-					for (unsigned int i1=0; i1<interpolation_steps; i1++) {
-						unsigned int i0 = id+i1-1;
-						if(i0< size(0) && j0 < size(1) ){
-							ph[i1][j1].index = i0*size(1)+j0;
-							ph[i1][j1].index2d = {{i0,j0}};
-						} else {
-							ph[i1][j1].index = 0;
-							ph[i1][j1].index2d = {{0,0}};
+				// arrays of interpolation coefficients
+				std::array<interpol_t,is> icq;
+				std::array<interpol_t,is> icp;
+
+				switch (is)
+				{
+				case INTERPOL_TYPE::NONE:
+					break;
+				case INTERPOL_TYPE::LINEAR:
+					break;
+				case INTERPOL_TYPE::QUADRATIC:
+					for (unsigned int j1=0; j1<3; j1++) {
+						unsigned int j0 = jd+j1-1;
+						for (unsigned int i1=0; i1<3; i1++) {
+							unsigned int i0 = id+i1-1;
+							if(i0< size(0) && j0 < size(1) ){
+								ph[i1][j1].index = i0*size(1)+j0;
+								ph[i1][j1].index2d = {{i0,j0}};
+							} else {
+								ph[i1][j1].index = 0;
+								ph[i1][j1].index2d = {{0,0}};
+							}
 						}
 					}
-				}
 
-				//  Vectors of Lagrange interpolation functions, not including factors of 1/2.
-				laq[0] = (xiq-1)*(xiq-2);
-				laq[1] = (xiq+1)*laq[0];
-				laq[0] *= -xiq*o3;
-				laq[3] = xiq*(xiq+1);
-				laq[2] = -(xiq-2)*laq[3];
-				laq[3] *= (xiq-1)*o3;
+					/*  Vectors of quadratic interpolation,
+					 * not including factors of 1/2. */
+					icq[0] = xiq*(xiq-1);
+					icq[1] = 2*(1-xiq*xiq);
+					icq[2] = xiq*(xiq+1);
 
-				lap[0] = (xip-1)*(xip-2);
-				lap[1] = (xip+1)*lap[0];
-				lap[0] *= -xip*o3;
-				lap[3] = xip*(xip+1);
-				lap[2] = -(xip-2)*lap[3];
-				lap[3] *= (xip-1)*o3;
+					icp[0] = xip*(xip-1);
+					icp[1] = 2*(1-xip*xip);
+					icp[2] = xip*(xip+1);
 
-				//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
-				for (size_t i1=0; i1<interpolation_steps; i1++) {
-					for (size_t j1=0; j1<interpolation_steps; j1++){
-						(ph[i1][j1]).weight = laq[i1] * lap[j1] /4;
-						_heritage_map[q_i][p_i][i1*interpolation_steps+j1]
-								= ph[i1][j1];
+					// Assemble interpolation, restoring factors of 1/2
+					for (size_t i1=0; i1<3; i1++) {
+						for (size_t j1=0; j1<3; j1++){
+							(ph[i1][j1]).weight = icq[i1] * icp[j1] /4;
+							_heritage_map[q_i][p_i][i1*3+j1]
+									= ph[i1][j1];
+						}
 					}
+					break;
+				case INTERPOL_TYPE::CUBIC:
+					for (unsigned int j1=0; j1<4; j1++) {
+						unsigned int j0 = jd+j1-1;
+						for (unsigned int i1=0; i1<4; i1++) {
+							unsigned int i0 = id+i1-1;
+							if(i0< size(0) && j0 < size(1) ){
+								ph[i1][j1].index = i0*size(1)+j0;
+								ph[i1][j1].index2d = {{i0,j0}};
+							} else {
+								ph[i1][j1].index = 0;
+								ph[i1][j1].index2d = {{0,0}};
+							}
+						}
+					}
+
+					/*  Vectors of lagrange interpolation,
+					 * not including factors of 1/2. */
+					icq[0] = (xiq-1)*(xiq-2);
+					icq[1] = (xiq+1)*icq[0];
+					icq[0] *= -xiq*o3;
+					icq[3] = xiq*(xiq+1);
+					icq[2] = -(xiq-2)*icq[3];
+					icq[3] *= (xiq-1)*o3;
+
+					icp[0] = (xip-1)*(xip-2);
+					icp[1] = (xip+1)*icp[0];
+					icp[0] *= -xip*o3;
+					icp[3] = xip*(xip+1);
+					icp[2] = -(xip-2)*icp[3];
+					icp[3] *= (xip-1)*o3;
+
+					//  Assemble interpolation, restoring factors of 1/2:
+					for (size_t i1=0; i1<4; i1++) {
+						for (size_t j1=0; j1<4; j1++){
+							(ph[i1][j1]).weight = icq[i1] * icp[j1]/4;
+							_heritage_map[q_i][p_i][i1*4+j1]
+									= ph[i1][j1];
+						}
+					}
+					break;
 				}
 			}
 			double hmsum = 0.0;
@@ -291,12 +315,6 @@ void vfps::PhaseSpace::rotate()
 				applyHM2D,
 				cl::NullRange,
 				cl::NDRange(size(0),size(1)));
-	/*
-		OCLH::queue.enqueueNDRangeKernel (
-				rotateImg,
-				cl::NullRange,
-				cl::NDRange(size(0),size(1)));
-				*/
 #ifdef CL_VERSION_1_2
 	OCLH::queue.enqueueBarrierWithWaitList();
 #else // CL_VERSION_1_2
@@ -326,84 +344,6 @@ void vfps::PhaseSpace::kick(const std::vector<meshdata_t>& AF)
 	;
 }
 
-void vfps::PhaseSpace::rotateAndKick(const interpol_t deltat,
-									 const std::vector<interpol_t>& AF)
-{
-	constexpr double o3 = 1./3.;
-
-	const interpol_t cos_dt = std::cos(deltat);
-	const interpol_t sin_dt = std::sin(deltat);
-
-	for(unsigned int p_i=0; p_i< size(1); p_i++) {
-		for (unsigned int q_i=0; q_i< size(0); q_i++) {
-			//  Find cell of inverse image (qp,pp) of grid point i,j.
-			interpol_t qp = cos_dt*x(0,q_i) - sin_dt*(x(1,p_i)+AF[q_i]); //q', backward mapping
-			interpol_t pp = sin_dt*x(0,q_i) + cos_dt*(x(1,p_i)+AF[q_i]); //p'
-			//if (willStayInMesh(qp,pp)) {
-			if (insideMesh(qp,pp)) {
-				unsigned int id = floor((qp-getMin(0))/getDelta(0)); //meshpoint smaller q'
-				unsigned int jd = floor((pp-getMin(1))/getDelta(1)); //numper of lower mesh point from p'
-
-				// arrays of Lagrange interpolation
-				std::array<interpol_t,is> laq;
-				std::array<interpol_t,is> lap;
-
-				// gridpoint matrix used for interpolation
-				std::array<std::array<meshdata_t,is>,is> ph;
-
-				//Scaled arguments of interpolation functions:
-				interpol_t xiq = (qp-x(0,id))/getDelta(0);  //distance from id
-				interpol_t xip = (pp-x(1,jd))/getDelta(1); //distance of p' from lower mesh point
-
-				for (unsigned int j1=0; j1<is; j1++) {
-					unsigned int j0 = jd+j1-1;
-					for (unsigned int i1=0; i1<is; i1++) {
-						unsigned int i0 = id+i1-1;
-						if(i0< size(0) && j0 < size(1) ){
-							ph[i1][j1] = _data[i0][j0];
-						} else {
-							ph[i1][j1]=0.0;
-						}
-					}
-				}
-
-				//  Vectors of Lagrange interpolation functions, not including factors of 1/2.
-				laq[0] = (xiq-1)*(xiq-2);
-				laq[1] = (xiq+1)*laq[0];
-				laq[0] *= -xiq*o3;
-				laq[3] = xiq*(xiq+1);
-				laq[2] = -(xiq-2)*laq[3];
-				laq[3] *= (xiq-1)*o3;
-
-				lap[0] = (xip-1)*(xip-2);
-				lap[1] = (xip+1)*lap[0];
-				lap[0] *= -xip*o3;
-				lap[3] = xip*(xip+1);
-				lap[2] = -(xip-2)*lap[3];
-				lap[3] *= (xip-1)*o3;
-
-				//  Assemble Lagrange interpolation as quadratic form, restoring factors of 1/2:
-				_data_rotated[q_i][p_i] = 0.;
-				for (size_t i1=0; i1<is; i1++) {
-					for (size_t j1=0; j1<is; j1++){
-						_data_rotated[q_i][p_i] += std::round(ph[i1][j1] * laq[i1] * lap[j1]);
-					}
-				}
-				_data_rotated[q_i][p_i] /= 4;
-			} else {
-				_data_rotated[q_i][p_i] = 0.;
-			}
-		}
-	}
-	swapDataTmp();
-}
-
-void vfps::PhaseSpace::swapDataTmp() {
-	meshdata_t** data_swap = _data;
-	_data = _data_rotated;
-	_data_rotated = data_swap;
-}
-
 void vfps::PhaseSpace::__initOpenCL()
 {
 	_data_buf = cl::Image2D(OCLH::context,
@@ -422,10 +362,6 @@ void vfps::PhaseSpace::__initOpenCL()
 	applyHM2D.setArg(0, _data_buf);
 	applyHM2D.setArg(1, _heritage_map1D_buf);
 	applyHM2D.setArg(2, size(1));
-	applyHM2D.setArg(3, _data_rotated_buf);
-	rotateImg = cl::Kernel(CLProgRotateKick::p, "rotateKick");
-	rotateImg.setArg(0, _data_rotated_buf);
-	rotateImg.setArg(1, _data_buf);
-	rotateImg.setArg(2, img_size);
-	rotateImg.setArg(3, rotation);
+	applyHM2D.setArg(3, is*is);
+	applyHM2D.setArg(4, _data_rotated_buf);
 }
