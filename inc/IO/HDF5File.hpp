@@ -6,7 +6,7 @@
 #include <string>
 
 #include "main.hpp"
-#include "Mesh2D.hpp"
+#include "PhaseSpace.hpp"
 
 namespace vfps {
 
@@ -17,9 +17,9 @@ public:
 
 	~HDF5File();
 
-	void append(Mesh2D<meshdata_t>* ps);
+	void append(PhaseSpace* ps);
 
-	void write(Mesh2D<meshdata_t>* ps);
+	void write(PhaseSpace* ps);
 
 private:
 	H5::H5File* file;

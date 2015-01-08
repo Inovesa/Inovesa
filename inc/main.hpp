@@ -3,8 +3,8 @@
 
 namespace vfps {
 
-constexpr unsigned int fs_xsize = 512;
-constexpr unsigned int fs_ysize = 512;
+constexpr unsigned int ps_xsize = 512;
+constexpr unsigned int ps_ysize = 512;
 
 }
 

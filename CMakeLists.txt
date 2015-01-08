@@ -9,6 +9,7 @@ set(SRC_LIST
 			./src/CL/OpenCLHandler.cpp
 			./src/IO/HDF5File.cpp
 			./src/Display.cpp
+			./src/PhaseSpace.cpp
 			./src/main.cpp
 )
 
@@ -19,7 +20,7 @@ set(INC_LIST
 			./inc/CL/OpenCLHandler.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/Display.hpp
-			./inc/Mesh2D.hpp
+			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
 )
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST})

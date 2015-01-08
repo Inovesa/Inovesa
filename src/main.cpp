@@ -3,16 +3,12 @@
 #include <sstream>
 
 #include "Display.hpp"
-#include "Mesh2D.hpp"
+#include "PhaseSpace.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "IO/HDF5File.hpp"
 
 #include "main.hpp"
-
-enum class rmtype {
-	mesh, space, normal
-};
 
 enum class pattern {
 	square, gaus, half
@@ -20,8 +16,8 @@ enum class pattern {
 
 int main(int argc, char** argv)
 {
-	vfps::Mesh2D<meshdata_t> mesh(vfps::fs_xsize,-10.0,10.0,
-								  vfps::fs_ysize,-10.0,10.0);
+	vfps::PhaseSpace mesh(	vfps::ps_xsize,-10.0,10.0,
+							vfps::ps_ysize,-10.0,10.0);
 
 	vfps::HDF5File file("results.h5");
     
@@ -30,7 +26,8 @@ int main(int argc, char** argv)
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 768;
 
-	constexpr rmtype rm = rmtype::space;
+	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
+			= vfps::PhaseSpace::ROTATION_TYPE::SPACE;
     constexpr pattern ptrntype = pattern::half;
 
 	// no more settings below this line
@@ -40,7 +37,7 @@ int main(int argc, char** argv)
 	std::string resdir("results/");
 
 	nrbuf.str("");
-	nrbuf << vfps::fs_xsize;
+	nrbuf << vfps::ps_xsize;
 	std::string meshdim = nrbuf.str();
 
 	nrbuf.str("");
@@ -56,14 +53,14 @@ int main(int argc, char** argv)
 	std::string rotation = nrbuf.str();
 
 	std::string rottype;
-	switch (rm) {
-	case rmtype::space:
+	switch (rt) {
+	case vfps::PhaseSpace::ROTATION_TYPE::SPACE:
 		rottype = "space";
 		break;
-	case rmtype::normal:
+	case vfps::PhaseSpace::ROTATION_TYPE::NORMAL:
 		rottype = "normal";
 		break;
-	case rmtype::mesh:
+	case vfps::PhaseSpace::ROTATION_TYPE::MESH:
 	default:
 		rottype = "mesh";
 		break;
@@ -92,41 +89,41 @@ int main(int argc, char** argv)
 
 	switch (ptrntype) {
 	case pattern::square:
-		for (unsigned int x=vfps::fs_xsize/4; x<vfps::fs_xsize*3/4; x++) {
-			for (unsigned int y=vfps::fs_ysize/4; y<vfps::fs_ysize*3/4; y++) {
+		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
+			for (unsigned int y=vfps::ps_ysize/4; y<vfps::ps_ysize*3/4; y++) {
 				mesh[x][y] = 1.0f;
 			}
 		}
-		for (unsigned int x=vfps::fs_xsize/4; x<vfps::fs_xsize*3/4; x++) {
-				mesh[x][vfps::fs_ysize/2] = 0.5f;
+		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
+				mesh[x][vfps::ps_ysize/2] = 0.5f;
 		}
-		for (unsigned int y=vfps::fs_ysize/4; y<vfps::fs_ysize*3/4; y++) {
-				mesh[vfps::fs_xsize/2][y] = 0.5f;
+		for (unsigned int y=vfps::ps_ysize/4; y<vfps::ps_ysize*3/4; y++) {
+				mesh[vfps::ps_xsize/2][y] = 0.5f;
 		}
-		for (unsigned int x=vfps::fs_xsize/4; x<vfps::fs_xsize*3/4; x++) {
+		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
 			mesh[x][x] = 0.0f;
-			mesh[x][vfps::fs_ysize-x] = 0.0f;
+			mesh[x][vfps::ps_ysize-x] = 0.0f;
 		}
 		break;
 	case pattern::gaus:
 	default:
-		for (int x=0; x<int(vfps::fs_xsize); x++) {
-			for (int y=0; y<int(vfps::fs_ysize); y++) {
-				mesh[x][y] = std::exp(-std::pow(x-int(vfps::fs_xsize)/2,2)/patterndim_x
-									  -std::pow(y-int(vfps::fs_ysize)/2,2)/patterndim_y);
+		for (int x=0; x<int(vfps::ps_xsize); x++) {
+			for (int y=0; y<int(vfps::ps_ysize); y++) {
+				mesh[x][y] = std::exp(-std::pow(x-int(vfps::ps_xsize)/2,2)/patterndim_x
+									  -std::pow(y-int(vfps::ps_ysize)/2,2)/patterndim_y);
 			}
 		}
 		break;
 	case pattern::half:
-		for (int x=0; x<int(vfps::fs_xsize/2); x++) {
-			for (int y=0; y<int(vfps::fs_ysize); y++) {
+		for (int x=0; x<int(vfps::ps_xsize/2); x++) {
+			for (int y=0; y<int(vfps::ps_ysize); y++) {
 				mesh[x][y] = 1;
 			}
 		}
-		for (int x=0; x<int(vfps::fs_xsize/2); x++) {
+		for (int x=0; x<int(vfps::ps_xsize/2); x++) {
 			mesh[x][x] = 0;
-			mesh[x][vfps::fs_ysize/2] = 0;
-			mesh[x][vfps::fs_ysize-x] = 0;
+			mesh[x][vfps::ps_ysize/2] = 0;
+			mesh[x][vfps::ps_ysize-x] = 0;
 		}
 		break;
 	}
@@ -153,18 +150,7 @@ int main(int argc, char** argv)
 #endif
 	constexpr unsigned int steps = 4000;
 	constexpr double angle = 2*M_PI/steps;
-	switch (rm) {
-	case rmtype::space:
-        mesh.setRotationMap(angle,vfps::Mesh2D<meshdata_t>::MESH_NORMALIZATION::PHYSICAL);
-		break;
-	case rmtype::normal:
-        mesh.setRotationMap(angle,vfps::Mesh2D<meshdata_t>::MESH_NORMALIZATION::ONE);
-		break;
-	case rmtype::mesh:
-	default:
-        mesh.setRotationMap(angle,vfps::Mesh2D<meshdata_t>::MESH_NORMALIZATION::NONE);
-		break;
-	}
+	mesh.setRotationMap(angle,rt);
 #ifdef FR_USE_CL
 	mesh.__initOpenCL();
 	mesh.syncData();
@@ -186,19 +172,19 @@ int main(int argc, char** argv)
 			file.append(&mesh);
 
 			meshdata_t sum = 0.0;
-			for (unsigned int q_i= floor(vfps::fs_xsize/2.0)-2; q_i < ceil(vfps::fs_xsize/2.0)+2; q_i ++) {
+			for (unsigned int q_i= floor(vfps::ps_xsize/2.0)-2; q_i < ceil(vfps::ps_xsize/2.0)+2; q_i ++) {
 				meshdata_t linesum = 0.0;
-				for (unsigned int p_i= floor(vfps::fs_ysize/2.0)-2; p_i < ceil(vfps::fs_ysize/2.0)+2; p_i ++) {
+				for (unsigned int p_i= floor(vfps::ps_ysize/2.0)-2; p_i < ceil(vfps::ps_ysize/2.0)+2; p_i ++) {
 					linesum += mesh[q_i][p_i];
 				}
 				sum += linesum;
 			}
 
 			decay << double(i)/double(steps) << '\t'
-				  << mesh[vfps::fs_xsize/2][vfps::fs_ysize/2] - 1.0 << '\t'
+				  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
 				  << sum << std::endl;
 			std::cout << double(i)/double(steps) << '\t'
-					  << mesh[vfps::fs_xsize/2][vfps::fs_ysize/2] - 1.0 << '\t'
+					  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
 					  << sum << std::endl;
             mesh.rotate();
 #ifdef FR_USE_GUI
@@ -223,23 +209,23 @@ int main(int argc, char** argv)
 
 
 	meshdata_t sum = 0.0;
-	for (unsigned int q_i= floor(vfps::fs_xsize/2.0)-2; q_i < ceil(vfps::fs_xsize/2.0)+2; q_i ++) {
+	for (unsigned int q_i= floor(vfps::ps_xsize/2.0)-2; q_i < ceil(vfps::ps_xsize/2.0)+2; q_i ++) {
 		meshdata_t linesum = 0.0;
-		for (unsigned int p_i= floor(vfps::fs_ysize/2.0)-2; p_i < ceil(vfps::fs_ysize/2.0)+2; p_i ++) {
+		for (unsigned int p_i= floor(vfps::ps_ysize/2.0)-2; p_i < ceil(vfps::ps_ysize/2.0)+2; p_i ++) {
 			linesum += mesh[q_i][p_i];
 		}
 		sum += linesum;
 	}
 
 	decay << double(i)/double(steps) << '\t'
-		  << mesh[vfps::fs_xsize/2][vfps::fs_ysize/2] -1.0 << '\t'
+		  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] -1.0 << '\t'
 		  << sum << std::endl;
 	std::cout << double(i)/double(steps) << '\t'
-			  << mesh[vfps::fs_xsize/2][vfps::fs_ysize/2] - 1.0 << '\t'
+			  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
 			  << sum << std::endl;
 
-	for (unsigned int x=0; x<vfps::fs_xsize; x++) {
-		for (unsigned int y=0; y<vfps::fs_ysize; y++) {
+	for (unsigned int x=0; x<vfps::ps_xsize; x++) {
+		for (unsigned int y=0; y<vfps::ps_ysize; y++) {
 			results << mesh[x][y] << '\t';
 		}
 		results << std::endl;

@@ -22,7 +22,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Mesh2D.hpp"
+#include "PhaseSpace.hpp"
 
 class Display
 {
@@ -31,7 +31,7 @@ public:
 
 	~Display();
 
-	void createTexture(vfps::Mesh2D<meshdata_t>* mesh);
+	void createTexture(vfps::PhaseSpace* mesh);
 
 	void delTexture();
 

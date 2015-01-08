@@ -139,7 +139,7 @@ Display::~Display()
 	glfwTerminate();
 }
 
-void Display::createTexture(vfps::Mesh2D<meshdata_t>* mesh)
+void Display::createTexture(vfps::PhaseSpace* mesh)
 {
 	glGenTextures (1, &Texture);
 	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
@@ -148,12 +148,12 @@ void Display::createTexture(vfps::Mesh2D<meshdata_t>* mesh)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 	if (std::is_same<meshdata_t,float>::value) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-					 mesh->size<0>(), mesh->size<1>(),
+					 mesh->size(0), mesh->size(1),
 					 0, GL_RED,
 					 GL_FLOAT, mesh->getData());
 	} else {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-					 mesh->size<0>(), mesh->size<1>(),
+					 mesh->size(0), mesh->size(1),
 					 0, GL_RED,
 					 GL_DOUBLE, mesh->getData());
 	}
