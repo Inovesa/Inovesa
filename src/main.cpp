@@ -204,6 +204,7 @@ int main(int argc, char** argv)
 #ifdef FR_USE_GUI
 	display.createTexture(&mesh);
 	display.draw();
+	file.append(&mesh);
 	display.delTexture();
 #endif
 #ifdef FR_USE_CL

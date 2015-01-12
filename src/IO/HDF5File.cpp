@@ -39,8 +39,8 @@ void vfps::HDF5File::write(PhaseSpace* ps)
 
 void vfps::HDF5File::append(PhaseSpace* ps)
 {
-	static constexpr std::array<hsize_t,fs_rank> offset
-			= {{0,0,1}};
+	std::array<hsize_t,fs_rank> offset
+			= {{0,0,fs_dims[2]}};
 	static constexpr std::array<hsize_t,fs_rank> fs_ext
 			= {{ps_xsize,ps_ysize,1}};
 	fs_dims[2]++;
