@@ -11,7 +11,7 @@
 #include "main.hpp"
 
 enum class pattern {
-	square, gaus, half
+	square, gaus, half, quarters
 };
 
 int main(int argc, char** argv)
@@ -22,14 +22,14 @@ int main(int argc, char** argv)
 	vfps::HDF5File file("results.h5");
     
     
-	constexpr double rotations = 0.25;
+	constexpr double rotations = 1;
 	constexpr unsigned int patterndim_x = 512;
-	constexpr unsigned int patterndim_y = 768;
+	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
 			= vfps::PhaseSpace::ROTATION_TYPE::MESH;
-	constexpr pattern ptrntype = pattern::half;
+	constexpr pattern ptrntype = pattern::quarters;
 
 	// no more settings below this line
 
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
 	case pattern::half:
 		for (int y=pattern_margin; y<int(vfps::ps_ysize-pattern_margin); y++) {
 			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
-				mesh[x][y] = 1;
+				mesh[x][y] = 1.0f;
 			}
 		}
 		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
@@ -127,6 +127,28 @@ int main(int argc, char** argv)
 			mesh[x][vfps::ps_ysize-x] = 0;
 		}
 		break;
+	case pattern::quarters:
+		for (int y=pattern_margin; y<int(vfps::ps_ysize/2); y++) {
+			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+				mesh[x][y] = (float(y-pattern_margin))
+							/float(vfps::ps_ysize/2-pattern_margin);
+			}
+		}
+		for (int y=vfps::ps_ysize/2; y<int(vfps::ps_ysize-pattern_margin); y++) {
+			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+				mesh[x][y] = 1.0f;
+			}
+		}
+		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+			mesh[x][vfps::ps_ysize-x] = 0.0f;
+		}
+		for (int x=vfps::ps_xsize/2; x<int(vfps::ps_xsize-pattern_margin); x++) {
+			for (int y=pattern_margin; y<int(vfps::ps_ysize/2); y++) {
+				mesh[x][y] = std::exp(-std::pow(x-int(vfps::ps_xsize)/2,2)/patterndim_x
+									  -std::pow(y-int(vfps::ps_ysize)/2,2)/patterndim_y);
+			}
+		}
+
 	}
 	file.write(&mesh);
 

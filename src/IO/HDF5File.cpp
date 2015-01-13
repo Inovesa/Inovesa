@@ -18,6 +18,8 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	static constexpr std::array<hsize_t,fs_rank> fs_chunkdims
 			= {{ps_xsize/8,ps_ysize/8,1}};
 	fs_prop.setChunk(3,fs_chunkdims.data());
+	fs_prop.setShuffle();
+	fs_prop.setDeflate(6);
 
 	fs_dataset = new H5::DataSet(
 						file->createDataSet(fs_name,fs_datatype,
