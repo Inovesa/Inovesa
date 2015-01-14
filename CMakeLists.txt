@@ -10,6 +10,7 @@ set(SRC_LIST
 			./src/Display.cpp
 			./src/PhaseSpace.cpp
 			./src/main.cpp
+			./src/Share.cpp
 )
 
 set(INC_LIST
@@ -20,6 +21,7 @@ set(INC_LIST
 			./inc/Display.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
+			./inc/Share.hpp
 )
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST})
 
