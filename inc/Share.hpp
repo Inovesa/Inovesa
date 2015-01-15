@@ -7,7 +7,7 @@
 
 class Share
 {
-public:
+public: // constructors and destructors
 	/**
 	 * @brief Share
 	 */
@@ -22,66 +22,187 @@ public:
 	/**
 	 * @brief Share
 	 * @param share
+	 *
+	 * Easiest way to use is Share(Share::ONE*numerator/denominator).
+	 * Since Share::ONE may be >UINT_MAX and the argument will be casted
+	 * to unsigned int, use default constructor Share() to obtain Share==1.0.
 	 */
 	Share(unsigned int share);
 
-public: // operators
-	/**
-	 * @brief operator *=
-	 * @param other
-	 * @return
-	 */
-	Share& operator*=(const Share& other)
-		{ __s += other.__s; return *this; }
+	~Share();
 
+public: // important definitions
 	/**
 	 * @brief ONE
 	 */
-	static constexpr long unsigned int ONE = (long unsigned int)(UINT_MAX)+1;
+	static constexpr unsigned int ONE = UINT_MAX/2 + 1;
 
+public: // operators
 	/**
-	 * @brief operator =
+	 * @brief operator=
 	 * @param other
 	 * @return
 	 */
-	Share& operator=(Share other)
-		{ swap(*this,other); return *this; }
+	Share& operator=(Share other);
 
 	/**
-	 * @brief operator +=
+	 * @brief operator+=
 	 * @param other
 	 * @return
 	 */
-	Share operator+=(const Share& other);
+	Share& operator+=(const Share& other);
 
-public:
-	inline unsigned int toInt() const
+	/**
+	 * @brief operator -=
+	 * @param other
+	 * @return
+	 */
+	Share& operator-=(const Share& other);
+
+	/**
+	 * @brief operator*=
+	 * @param other
+	 * @return
+	 */
+	Share& operator*=(const Share& other);
+
+	/**
+	 * @brief operator float
+	 *
+	 * The conversion to float is designed to give an estimate
+	 * of the share in an easy format.
+	 * Doing calculations with the returned float instead of the Share itself,
+	 * you will loose precision.
+	 */
+	inline operator float() const
+		{ return float(__s)/ONE; }
+
+	/**
+	 * @brief operator unsigned int
+	 */
+	inline explicit operator unsigned int() const
 		{ return (unsigned int)(__s); }
+
+public: // other functions
+	/**
+	 * @brief swap
+	 * @param first
+	 * @param second
+	 */
+	friend inline void swap(Share& first, Share& second)
+		{ std::swap(first.__s, second.__s); }
 
 private:
 	/**
 	 * @brief __s
 	 */
-	unsigned long int __s;
-
-public:
-	friend void swap(Share first, Share second);
+	unsigned int __s;
 };
 
-std::ostream& operator<<(std::ostream& os, const Share& obj)
-{
-  os << obj.toInt();
-  return os;
-}
+/**
+ * @brief operator>>
+ * @param is
+ * @param obj
+ * @return
+ */
+std::istream& operator>>(std::istream& is, Share& obj);
 
+/**
+ * @brief operator<<
+ * @param os
+ * @param obj
+ * @return
+ */
+std::ostream& operator<<(std::ostream& os, const Share& obj);
+
+/**
+ * @brief operator*
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline unsigned int operator*(const unsigned int lhs, const Share& rhs)
+	{ return (lhs)*static_cast<unsigned int>(rhs)/Share::ONE; }
+
+/**
+ * @brief operator*
+ * @param num
+ * @return
+ */
+inline unsigned int operator*(const Share& lhs, const unsigned int rhs)
+	{ return rhs*lhs; }
+
+/**
+ * @brief operator*
+ * @param lhs
+ * @param rhs
+ * @return
+ */
 inline Share operator*(Share lhs, const Share& rhs)
-{
-	lhs *= rhs;
-	return lhs;
-}
+	{ lhs *= rhs; return lhs; }
 
-inline void swap(Share first, Share second)
-	{ std::swap(first.__s, second.__s); }
+/**
+ * @brief operator*=
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline unsigned int operator*=(unsigned int lhs, const Share& rhs)
+	{ lhs = lhs*rhs; return lhs; }
+
+/**
+ * @brief operator==
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline bool operator==(const Share& lhs, const Share& rhs)
+	{ return static_cast<unsigned int>(lhs) == static_cast<unsigned int>(rhs); }
+
+/**
+ * @brief operator!=
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline bool operator!=(const Share& lhs, const Share& rhs)
+	{ return !operator==(lhs,rhs); }
+
+/**
+ * @brief operator<
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline bool operator< (const Share& lhs, const Share& rhs)
+	{ return static_cast<unsigned int>(lhs) < static_cast<unsigned int>(rhs); }
+
+/**
+ * @brief operator>
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline bool operator> (const Share& lhs, const Share& rhs)
+	{ return  operator< (rhs,lhs); }
+
+/**
+ * @brief operator<=
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline bool operator<=(const Share& lhs, const Share& rhs)
+	{ return !operator> (lhs,rhs); }
+
+/**
+ * @brief operator>=
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline bool operator>=(const Share& lhs, const Share& rhs)
+	{ return !operator< (lhs,rhs); }
 
 
 #endif // SHARE_HPP
