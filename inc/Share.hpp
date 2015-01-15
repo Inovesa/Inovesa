@@ -5,6 +5,16 @@
 #include <climits>
 #include <iostream>
 
+/**
+ * @brief The Share class represents a number between 0 and 1
+ * (including 0 and 1).
+ *
+ * The Share class has been designed to represent parts of a whole.
+ * In Contrast to floating point numbers (0..1)
+ * Share does not suffer from cancellation or absorption.
+ * (So when "Share s = Share::ONE - Share(foo)",
+ * "Share(foo) + s == Share::ONE" is guaranteed to be true.)
+ */
 class Share
 {
 public: // constructors and destructors
@@ -24,8 +34,6 @@ public: // constructors and destructors
 	 * @param share
 	 *
 	 * Easiest way to use is Share(Share::ONE*numerator/denominator).
-	 * Since Share::ONE may be >UINT_MAX and the argument will be casted
-	 * to unsigned int, use default constructor Share() to obtain Share==1.0.
 	 */
 	Share(unsigned int share);
 
@@ -114,6 +122,24 @@ std::istream& operator>>(std::istream& is, Share& obj);
  * @return
  */
 std::ostream& operator<<(std::ostream& os, const Share& obj);
+
+/**
+ * @brief operator+
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline Share operator+(Share lhs, const Share rhs)
+	{ return lhs += rhs; }
+
+/**
+ * @brief operator-
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline Share operator-(Share lhs, const Share rhs)
+	{ return lhs -= rhs; }
 
 /**
  * @brief operator*
