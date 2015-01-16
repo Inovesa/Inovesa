@@ -1,5 +1,8 @@
 #include "Share.hpp"
 
+namespace vfps
+{
+
 Share::Share() :
 	__s(ONE)
 {
@@ -81,20 +84,4 @@ Share& Share::operator=(Share other)
 	return *this;
 }
 
-std::istream&operator>>(std::istream& is, Share& obj)
-{
-	unsigned int val;
-	is >> val;
-	obj = val;
-	if (false)
-	{
-		is.setstate(std::ios::failbit);
-	}
-	return is;
-}
-
-std::ostream&operator<<(std::ostream& os, const Share& obj)
-{
-	os << static_cast<float>(obj);
-	return os;
 }

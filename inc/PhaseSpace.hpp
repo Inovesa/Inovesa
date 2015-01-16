@@ -14,16 +14,19 @@
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "Ruler.hpp"
+#include "Share.hpp"
 
 #define FR_USE_GUI
 #define FR_USE_CL
 #define FR_CL_SYNC_BLOCKING CL_TRUE
 
-typedef float meshdata_t;
-typedef float interpol_t;
 
 namespace vfps
 {
+
+typedef float meshaxis_t;
+typedef float meshdata_t;
+typedef float interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -52,12 +55,12 @@ public:
 	static constexpr INTERPOL_TYPE is = INTERPOL_TYPE::CUBIC;
 
 public:
-	PhaseSpace(std::array<Ruler<interpol_t>,2> axis);
+	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
 
-	PhaseSpace(Ruler<interpol_t> axis1, Ruler<interpol_t> axis2);
+	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
 
-	PhaseSpace(	unsigned int xdim, interpol_t xmin, interpol_t xmax,
-				unsigned int ydim, interpol_t ymin, interpol_t ymax);
+	PhaseSpace(	unsigned int xdim, meshaxis_t xmin, meshaxis_t xmax,
+				unsigned int ydim, meshaxis_t ymin, meshaxis_t ymax);
 
 	PhaseSpace(const PhaseSpace& other);
 
@@ -78,6 +81,7 @@ public:
 		return _data1D;
 	}
 
+#ifdef FR_USE_CL
 	inline void syncData()
 	{
 		cl::size_t<3> null3d;
@@ -89,14 +93,15 @@ public:
 					(_data_buf, FR_CL_SYNC_BLOCKING, null3d,imgsize,0,0,
 					_data1D,nullptr,&data_synced);
 	}
+#endif
 
-	inline const interpol_t getDelta(const unsigned int x) const
+	inline const meshaxis_t getDelta(const unsigned int x) const
 	{ return _axis[x].getDelta(); }
 
-	inline const interpol_t getMax(const unsigned int x) const
+	inline const meshaxis_t getMax(const unsigned int x) const
 	{ return _axis[x].getMax(); }
 
-	inline const interpol_t getMin(const unsigned int x) const
+	inline const meshaxis_t getMin(const unsigned int x) const
 	{ return _axis[x].getMin(); }
 
 	meshdata_t average(const unsigned int axis);
@@ -112,7 +117,7 @@ public:
 
 	PhaseSpace& operator=(const PhaseSpace& other);
 
-	void setRotationMap(const interpol_t deltat,
+	void setRotationMap(const meshaxis_t deltat,
 						const ROTATION_TYPE mn=ROTATION_TYPE::SPACE);
 
 	/**
@@ -125,12 +130,12 @@ public:
 	inline const unsigned int size(const unsigned int x) const
 	{ return _axis[x].getNSteps(); }
 
-	inline const interpol_t x(const unsigned int axis,
+	inline const meshaxis_t x(const unsigned int axis,
 							  const unsigned int n) const
 	{ return _axis[axis][n]; }
 
 protected:
-	const std::array<Ruler<interpol_t>,2> _axis;
+	const std::array<Ruler<meshaxis_t>,2> _axis;
 
 	std::array<meshdata_t*,2> _projection;
 
@@ -162,13 +167,13 @@ protected:
 
 	std::array<meshdata_t*,2> _ws;
 
-	inline bool insideMesh(interpol_t x, interpol_t y) const
+	inline bool insideMesh(meshaxis_t x, meshaxis_t y) const
 	{
 		return (x <= getMax(0) && y <= getMax(1) &&
 				x >= getMin(0) && y >= getMin(1) );
 	}
 
-	inline bool willStayInMesh(interpol_t x, interpol_t y) const
+	inline bool willStayInMesh(meshaxis_t x, meshaxis_t y) const
 	{
 		return (sqrt(pow(x,2)+pow(y,2)) < getMax(0));
 	}

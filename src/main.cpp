@@ -1,3 +1,4 @@
+#include <climits>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -26,6 +27,7 @@ int main(int argc, char** argv)
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
+	constexpr unsigned int pattern_max = 1;
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
 			= vfps::PhaseSpace::ROTATION_TYPE::MESH;
@@ -92,14 +94,14 @@ int main(int argc, char** argv)
 	case pattern::square:
 		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
 			for (unsigned int y=vfps::ps_ysize/4; y<vfps::ps_ysize*3/4; y++) {
-				mesh[x][y] = 1.0f;
+				mesh[x][y] = 1.0f*pattern_max;
 			}
 		}
 		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
-				mesh[x][vfps::ps_ysize/2] = 0.5f;
+				mesh[x][vfps::ps_ysize/2] = 0.5f*pattern_max;
 		}
 		for (unsigned int y=vfps::ps_ysize/4; y<vfps::ps_ysize*3/4; y++) {
-				mesh[vfps::ps_xsize/2][y] = 0.5f;
+				mesh[vfps::ps_xsize/2][y] = 0.5f*pattern_max;
 		}
 		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
 			mesh[x][x] = 0.0f;
@@ -118,7 +120,7 @@ int main(int argc, char** argv)
 	case pattern::half:
 		for (int y=pattern_margin; y<int(vfps::ps_ysize-pattern_margin); y++) {
 			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
-				mesh[x][y] = 1.0f;
+				mesh[x][y] = 1.0f*pattern_max;
 			}
 		}
 		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
@@ -131,21 +133,22 @@ int main(int argc, char** argv)
 		for (int y=pattern_margin; y<int(vfps::ps_ysize/2); y++) {
 			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
 				mesh[x][y] = (float(y-pattern_margin))
-							/float(vfps::ps_ysize/2-pattern_margin);
+							/float(vfps::ps_ysize/2-pattern_margin)*pattern_max;
 			}
 		}
 		for (int y=vfps::ps_ysize/2; y<int(vfps::ps_ysize-pattern_margin); y++) {
 			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
-				mesh[x][y] = 1.0f;
+				mesh[x][y] = 1.0f*pattern_max;
 			}
 		}
 		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
-			mesh[x][vfps::ps_ysize-x] = 0.0f;
+			mesh[x][vfps::ps_ysize-x] = 0.0f*pattern_max;
 		}
 		for (int x=vfps::ps_xsize/2; x<int(vfps::ps_xsize-pattern_margin); x++) {
 			for (int y=pattern_margin; y<int(vfps::ps_ysize/2); y++) {
 				mesh[x][y] = std::exp(-std::pow(x-int(vfps::ps_xsize)/2,2)/patterndim_x
-									  -std::pow(y-int(vfps::ps_ysize)/2,2)/patterndim_y);
+									  -std::pow(y-int(vfps::ps_ysize)/2,2)/patterndim_y)
+						*pattern_max;
 			}
 		}
 
@@ -169,7 +172,7 @@ int main(int argc, char** argv)
 	prepareCLEnvironment(device);
 	prepareCLProgs();
 #else
-	std::vector<meshdata_t> kick(vfps::ps_xsize,0.0);
+	std::vector<vfps::meshdata_t> kick(vfps::ps_xsize,0.0);
 #endif
 	constexpr unsigned int steps = 4000;
 	constexpr double angle = 2*M_PI/steps;
@@ -194,9 +197,9 @@ int main(int argc, char** argv)
 #endif
 			file.append(&mesh);
 
-			meshdata_t sum = 0.0;
+			vfps::meshdata_t sum = 0.0;
 			for (unsigned int q_i= floor(vfps::ps_xsize/2.0)-2; q_i < ceil(vfps::ps_xsize/2.0)+2; q_i ++) {
-				meshdata_t linesum = 0.0;
+				vfps::meshdata_t linesum = 0.0;
 				for (unsigned int p_i= floor(vfps::ps_ysize/2.0)-2; p_i < ceil(vfps::ps_ysize/2.0)+2; p_i ++) {
 					linesum += mesh[q_i][p_i];
 				}
@@ -234,9 +237,9 @@ int main(int argc, char** argv)
 #endif
 
 
-	meshdata_t sum = 0.0;
+	vfps::meshdata_t sum = 0.0;
 	for (unsigned int q_i= floor(vfps::ps_xsize/2.0)-2; q_i < ceil(vfps::ps_xsize/2.0)+2; q_i ++) {
-		meshdata_t linesum = 0.0;
+		vfps::meshdata_t linesum = 0.0;
 		for (unsigned int p_i= floor(vfps::ps_ysize/2.0)-2; p_i < ceil(vfps::ps_ysize/2.0)+2; p_i ++) {
 			linesum += mesh[q_i][p_i];
 		}

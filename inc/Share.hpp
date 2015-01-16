@@ -7,6 +7,9 @@
 #include <list>
 #include <vector>
 
+namespace vfps
+{
+
 /**
  * @brief The Share class represents a number between 0 and 1
  * (including 0 and 1).
@@ -126,22 +129,6 @@ private:
 };
 
 /**
- * @brief operator>>
- * @param is
- * @param obj
- * @return
- */
-std::istream& operator>>(std::istream& is, Share& obj);
-
-/**
- * @brief operator<<
- * @param os
- * @param obj
- * @return
- */
-std::ostream& operator<<(std::ostream& os, const Share& obj);
-
-/**
  * @brief operator+
  * @param lhs
  * @param rhs
@@ -248,5 +235,6 @@ inline bool operator<=(const Share& lhs, const Share& rhs)
 inline bool operator>=(const Share& lhs, const Share& rhs)
 	{ return !operator< (lhs,rhs); }
 
+}
 
 #endif // SHARE_HPP

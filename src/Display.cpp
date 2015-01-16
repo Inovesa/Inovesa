@@ -146,7 +146,7 @@ void Display::createTexture(vfps::PhaseSpace* mesh)
 	glBindTexture(GL_TEXTURE_2D,Texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	if (std::is_same<meshdata_t,float>::value) {
+	if (std::is_same<vfps::meshdata_t,float>::value) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
 					 mesh->size(0), mesh->size(1),
 					 0, GL_RED,
@@ -155,7 +155,7 @@ void Display::createTexture(vfps::PhaseSpace* mesh)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 					 mesh->size(0), mesh->size(1),
 					 0, GL_RED,
-					 GL_DOUBLE, mesh->getData());
+					 GL_UNSIGNED_INT, mesh->getData());
 	}
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );

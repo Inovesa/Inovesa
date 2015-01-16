@@ -1,6 +1,6 @@
 #include "PhaseSpace.hpp"
 
-vfps::PhaseSpace::PhaseSpace(std::array<Ruler<interpol_t>,2> axis) :
+vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_axis(axis),
 	_data1D(new meshdata_t[size(0)*size(1)]()),
 	_data1D_rotated(new meshdata_t[size(0)*size(1)]()),
@@ -43,14 +43,14 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<interpol_t>,2> axis) :
 }
 
 
-vfps::PhaseSpace::PhaseSpace(Ruler<interpol_t> axis1, Ruler<interpol_t> axis2) :
-	PhaseSpace(std::array<Ruler<interpol_t>,2>{{axis1,axis2}})
+vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
+	PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}})
 {}
 
-vfps::PhaseSpace::PhaseSpace(unsigned int xdim, interpol_t xmin, interpol_t xmax,
-							 unsigned int ydim, interpol_t ymin, interpol_t ymax) :
-	PhaseSpace(Ruler<interpol_t>(xdim,xmin,xmax),
-			   Ruler<interpol_t>(ydim,ymin,ymax))
+vfps::PhaseSpace::PhaseSpace(unsigned int xdim, meshaxis_t xmin, meshaxis_t xmax,
+							 unsigned int ydim, meshaxis_t ymin, meshaxis_t ymax) :
+	PhaseSpace(Ruler<meshaxis_t>(xdim,xmin,xmax),
+			   Ruler<meshaxis_t>(ydim,ymin,ymax))
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -71,7 +71,7 @@ vfps::PhaseSpace::~PhaseSpace()
 	delete [] _ws[1];
 }
 
-meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
+vfps::meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
 {
 	if (axis == 0) {
 		projectionToX();
@@ -94,7 +94,7 @@ meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
 	return x(axis,avg);
 }
 
-meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
+vfps::meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
 {
 	if (axis == 0) {
 		projectionToX();
@@ -120,7 +120,7 @@ meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
 	return x(axis,var);
 }
 
-meshdata_t* vfps::PhaseSpace::projectionToX() {
+vfps::meshdata_t* vfps::PhaseSpace::projectionToX() {
 	for (unsigned int x=0; x < size(0); x++) {
 		_projection[0][x] = 0;
 		for (unsigned int y=0; y< size(1); y++) {
@@ -130,7 +130,7 @@ meshdata_t* vfps::PhaseSpace::projectionToX() {
 	return _projection[0];
 }
 
-meshdata_t* vfps::PhaseSpace::projectionToY() {
+vfps::meshdata_t* vfps::PhaseSpace::projectionToY() {
 	for (unsigned int y=0; y< size(1); y++) {
 		_projection[1][y] = 0;
 		for (unsigned int x=0; x < size(0); x++) {
@@ -151,16 +151,16 @@ vfps::PhaseSpace& vfps::PhaseSpace::operator=(const vfps::PhaseSpace& other)
 	return *this;
 }
 
-void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
+void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 									  const vfps::PhaseSpace::ROTATION_TYPE mn)
 {
-	std::vector<interpol_t> ti;
+	std::vector<meshaxis_t> ti;
 	ti.resize(size(0)*size(1));
 
 	constexpr double o3 = 1./3.;
 
-	interpol_t cos_dt = cos(deltat);
-	interpol_t sin_dt = sin(deltat);
+	meshaxis_t cos_dt = cos(deltat);
+	meshaxis_t sin_dt = sin(deltat);
 
 	std::string interpol_str;
 	switch (mn) {
@@ -183,18 +183,18 @@ void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
 		for (unsigned int q_i=0; q_i< size(0); q_i++) {
 
 			// Cell of inverse image (qp,pp) of grid point i,j.
-			interpol_t qp; //q', backward mapping
-			interpol_t pp; //p'
+			meshaxis_t qp; //q', backward mapping
+			meshaxis_t pp; //p'
 			// interpolation type specific q and p coordinates
-			interpol_t pcoord;
-			interpol_t qcoord;
-			interpol_t qq_int;
-			interpol_t qp_int;
+			meshaxis_t pcoord;
+			meshaxis_t qcoord;
+			meshaxis_t qq_int;
+			meshaxis_t qp_int;
 			//Scaled arguments of interpolation functions:
 			unsigned int id; //meshpoint smaller q'
 			unsigned int jd; //numper of lower mesh point from p'
-			interpol_t xiq; //distance from id
-			interpol_t xip; //distance of p' from lower mesh point
+			meshaxis_t xiq; //distance from id
+			meshaxis_t xip; //distance of p' from lower mesh point
 			switch (mn) {
 			case ROTATION_TYPE::MESH:
 				qp = cos_dt*(q_i-size(0)/2.0)
@@ -236,8 +236,8 @@ void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
 				std::array<std::array<hi,is>,is> ph;
 
 				// arrays of interpolation coefficients
-				std::array<interpol_t,is> icq;
-				std::array<interpol_t,is> icp;
+				std::array<meshaxis_t,is> icq;
+				std::array<meshaxis_t,is> icp;
 
 				switch (is)
 				{
