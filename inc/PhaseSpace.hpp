@@ -15,8 +15,9 @@
 #include "CL/OpenCLHandler.hpp"
 #include "Ruler.hpp"
 
-#define FR_USE_CL
 #define FR_USE_GUI
+#define FR_USE_CL
+#define FR_CL_SYNC_BLOCKING CL_TRUE
 
 typedef float meshdata_t;
 typedef float interpol_t;
@@ -70,7 +71,9 @@ public:
 	inline const meshdata_t* getData() const
 	{
 #ifdef FR_USE_CL
-		//data_synced.wait();
+#if (FR_CL_SYNC_BLOCKING == CL_FALSE)
+		data_synced.wait();
+#endif // FR_CL_SYNC_BLOCKING
 #endif // FR_USE_CL
 		return _data1D;
 	}
@@ -83,7 +86,7 @@ public:
 		imgsize[1] = size(1);
 		imgsize[2] = 1;
 		OCLH::queue.enqueueReadImage
-					(_data_buf, CL_TRUE, null3d,imgsize,0,0,
+					(_data_buf, FR_CL_SYNC_BLOCKING, null3d,imgsize,0,0,
 					_data1D,nullptr,&data_synced);
 	}
 
@@ -96,54 +99,9 @@ public:
 	inline const interpol_t getMin(const unsigned int x) const
 	{ return _axis[x].getMin(); }
 
-	meshdata_t average(const unsigned int axis)
-	{
-		if (axis == 0) {
-			projectionToX();
-		} else {
-			projectionToY();
-		}
+	meshdata_t average(const unsigned int axis);
 
-		if (_moment[axis].size() == 0) {
-			_moment[axis].resize(1);
-		}
-
-		meshdata_t avg = 0;
-		for (unsigned int i=0; i<size(axis); i++) {
-			avg += i*_projection[axis][i];
-		}
-		avg = avg/size(axis);
-
-		_moment[axis][0] = avg;
-
-		return x(axis,avg);
-	}
-
-	meshdata_t variance(const unsigned int axis)
-	{
-		if (axis == 0) {
-			projectionToX();
-		} else {
-			projectionToY();
-		}
-
-		if (_moment[axis].size() < 2) {
-			_moment[axis].resize(2);
-		}
-
-		average(axis);
-
-		meshdata_t avg = _moment[axis][0];
-		meshdata_t var = 0;
-		for (unsigned int i=0; i<size(axis); i++) {
-			var += (i-avg)*_projection[axis][i];
-		}
-		var = var/size(axis);
-
-		_moment[axis][1] = var;
-
-		return x(axis,var);
-	}
+	meshdata_t variance(const unsigned int axis);
 
 	meshdata_t* projectionToX();
 
@@ -186,7 +144,6 @@ protected:
 
 	cl::Event data_synced;
 
-	cl_float2 rotation;
 	cl_uint2 img_size;
 
 	std::array<hi,is*is>** _heritage_map;

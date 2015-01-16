@@ -71,6 +71,55 @@ vfps::PhaseSpace::~PhaseSpace()
 	delete [] _ws[1];
 }
 
+meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
+{
+	if (axis == 0) {
+		projectionToX();
+	} else {
+		projectionToY();
+	}
+
+	if (_moment[axis].size() == 0) {
+		_moment[axis].resize(1);
+	}
+
+	meshdata_t avg = 0;
+	for (unsigned int i=0; i<size(axis); i++) {
+		avg += i*_projection[axis][i];
+	}
+	avg = avg/size(axis);
+
+	_moment[axis][0] = avg;
+
+	return x(axis,avg);
+}
+
+meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
+{
+	if (axis == 0) {
+		projectionToX();
+	} else {
+		projectionToY();
+	}
+
+	if (_moment[axis].size() < 2) {
+		_moment[axis].resize(2);
+	}
+
+	average(axis);
+
+	meshdata_t avg = _moment[axis][0];
+	meshdata_t var = 0;
+	for (unsigned int i=0; i<size(axis); i++) {
+		var += (i-avg)*_projection[axis][i];
+	}
+	var = var/size(axis);
+
+	_moment[axis][1] = var;
+
+	return x(axis,var);
+}
+
 meshdata_t* vfps::PhaseSpace::projectionToX() {
 	for (unsigned int x=0; x < size(0); x++) {
 		_projection[0][x] = 0;
@@ -112,10 +161,6 @@ void vfps::PhaseSpace::setRotationMap(const interpol_t deltat,
 
 	interpol_t cos_dt = cos(deltat);
 	interpol_t sin_dt = sin(deltat);
-
-#ifdef FR_USE_CL
-	rotation = {{cos_dt,sin_dt}};
-#endif
 
 	std::string interpol_str;
 	switch (mn) {

@@ -2,15 +2,17 @@
 #define SHARE_HPP
 
 #include <algorithm>
+#include <array>
 #include <climits>
-#include <iostream>
+#include <list>
+#include <vector>
 
 /**
  * @brief The Share class represents a number between 0 and 1
  * (including 0 and 1).
  *
  * The Share class has been designed to represent parts of a whole.
- * In Contrast to floating point numbers (0..1)
+ * In Contrast to floating point numbers [0,1]
  * Share does not suffer from cancellation or absorption.
  * (So when "Share s = Share::ONE - Share(foo)",
  * "Share(foo) + s == Share::ONE" is guaranteed to be true.)
@@ -36,6 +38,12 @@ public: // constructors and destructors
 	 * Easiest way to use is Share(Share::ONE*numerator/denominator).
 	 */
 	Share(unsigned int share);
+
+	/**
+	 * @brief Share
+	 * @param share number in the range [0,1]
+	 */
+	Share(double share);
 
 	~Share();
 
@@ -92,6 +100,16 @@ public: // operators
 		{ return (unsigned int)(__s); }
 
 public: // other functions
+	/**
+	 * @brief renormalize rescales the arguments so that their sum is Share::ONE
+	 * @param n number of arguments
+	 * @param args pointer to first element in an array of Share
+	 *
+	 * Finds offset from Share::ONE and distributes it accoding to the
+	 * largest remainder method.
+	 */
+	friend void renormalize(unsigned int n, Share* args);
+
 	/**
 	 * @brief swap
 	 * @param first
