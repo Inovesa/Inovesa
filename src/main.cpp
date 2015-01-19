@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
-	constexpr unsigned int pattern_max = 1;
+	constexpr unsigned int pattern_max = vfps::Share::ONE;
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
 			= vfps::PhaseSpace::ROTATION_TYPE::MESH;

@@ -375,9 +375,15 @@ void vfps::PhaseSpace::rotate()
 								 null3d,null3d,imgsize);
 #else // FR_USE_CL
 	for (unsigned int i=0; i< size(0)*size(1); i++) {
-		_data1D_rotated[i] = 0.0;
+		_data1D_rotated[i] = 0;
 		for (hi h: _heritage_map1D[i]) {
 			_data1D_rotated[i] += _data1D[h.index]*h.weight;
+		}
+		// handle overflow
+		if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
+			if (_data1D_rotated[i] > UINT32_MAX/4*3) {
+				_data1D_rotated[i] = 0;
+			}
 		}
 	}
 	std::copy_n(_data1D_rotated,size(0)*size(1),_data1D);

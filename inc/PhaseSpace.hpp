@@ -17,15 +17,15 @@
 #include "Share.hpp"
 
 #define FR_USE_GUI
-#define FR_USE_CL
-#define FR_CL_SYNC_BLOCKING CL_TRUE
+//#define FR_USE_CL
+//#define FR_CL_SYNC_BLOCKING CL_TRUE
 
 
 namespace vfps
 {
 
 typedef float meshaxis_t;
-typedef float meshdata_t;
+typedef unsigned int meshdata_t;
 typedef float interpol_t;
 
 typedef struct {
