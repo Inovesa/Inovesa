@@ -18,7 +18,7 @@
 
 #define FR_USE_GUI
 //#define FR_USE_CL
-//#define FR_CL_SYNC_BLOCKING CL_TRUE
+#define FR_CL_SYNC_BLOCKING CL_TRUE
 
 
 namespace vfps
@@ -38,13 +38,16 @@ class PhaseSpace
 {	
 public:
 	/**
-	 * @brief The MESH_NORMALIZATION enum
+	 * @brief The ROTATION_TYPE enum
 	 */
 	enum class ROTATION_TYPE
 	{
 		MESH=0, NORMAL, SPACE
 	};
 
+	/**
+	 * @brief The INTERPOL_TYPE enum
+	 */
 	enum INTERPOL_TYPE
 	{
 		NONE=1,
@@ -52,7 +55,7 @@ public:
 		QUADRATIC=3,
 		CUBIC=4
 	};
-	static constexpr INTERPOL_TYPE is = INTERPOL_TYPE::CUBIC;
+	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::CUBIC;
 
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
@@ -151,8 +154,8 @@ protected:
 
 	cl_uint2 img_size;
 
-	std::array<hi,is*is>** _heritage_map;
-	std::array<hi,is*is>* const _heritage_map1D;
+	std::array<hi,it*it>** _heritage_map;
+	std::array<hi,it*it>* const _heritage_map1D;
 
 	/**
 	 * @brief _moment: holds the moments for distributions

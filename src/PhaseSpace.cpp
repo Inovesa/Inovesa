@@ -4,11 +4,11 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_axis(axis),
 	_data1D(new meshdata_t[size(0)*size(1)]()),
 	_data1D_rotated(new meshdata_t[size(0)*size(1)]()),
-	_heritage_map1D(new std::array<hi,is*is>[size(0)*size(1)]())
+	_heritage_map1D(new std::array<hi,it*it>[size(0)*size(1)]())
 {
 	_data = new meshdata_t*[size(0)];
 	_data_rotated = new meshdata_t*[size(0)];
-	_heritage_map = new std::array<hi,is*is>*[size(0)];
+	_heritage_map = new std::array<hi,it*it>*[size(0)];
 	for (unsigned int i=0; i<size(0); i++) {
 		_data[i] = &(_data1D[i*size(1)]);
 		_data_rotated[i] = &(_data1D_rotated[i*size(1)]);
@@ -233,13 +233,13 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 			if (id <  size(0) && jd < size(1))
 			{
 				// gridpoint matrix used for interpolation
-				std::array<std::array<hi,is>,is> ph;
+				std::array<std::array<hi,it>,it> ph;
 
 				// arrays of interpolation coefficients
-				std::array<meshaxis_t,is> icq;
-				std::array<meshaxis_t,is> icp;
+				std::array<meshaxis_t,it> icq;
+				std::array<meshaxis_t,it> icp;
 
-				switch (is)
+				switch (it)
 				{
 				case INTERPOL_TYPE::NONE:
 					break;
@@ -407,12 +407,12 @@ void vfps::PhaseSpace::__initOpenCL()
 									size(0),size(1),0, _data1D_rotated);
 	_heritage_map1D_buf = cl::Buffer(OCLH::context,
 									 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-									 sizeof(hi)*is*is*size(0)*size(1),
+									 sizeof(hi)*it*it*size(0)*size(1),
 									 _heritage_map1D);
 	applyHM2D = cl::Kernel(CLProgApplyHM::p, "applyHM2D");
 	applyHM2D.setArg(0, _data_buf);
 	applyHM2D.setArg(1, _heritage_map1D_buf);
 	applyHM2D.setArg(2, size(1));
-	applyHM2D.setArg(3, is*is);
+	applyHM2D.setArg(3, it*it);
 	applyHM2D.setArg(4, _data_rotated_buf);
 }

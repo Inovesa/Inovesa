@@ -11,8 +11,8 @@ namespace vfps
 {
 
 /**
- * @brief The Share class represents a number between 0 and 1
- * (including 0 and 1).
+ * @brief The Share class is a fixed number implementation
+ * designed to represent numbers between 0 and 1 (including 0 and 1).
  *
  * The Share class has been designed to represent parts of a whole.
  * In Contrast to floating point numbers [0,1]
@@ -97,10 +97,28 @@ public: // operators
 		{ return float(__s)/ONE; }
 
 	/**
+	 * @brief operator int
+	 */
+	inline operator int() const
+		{ return static_cast<unsigned int>(*this); }
+
+	/**
 	 * @brief operator unsigned int
 	 */
-	inline explicit operator unsigned int() const
-		{ return (unsigned int)(__s); }
+	inline operator unsigned int() const
+		{ return __s; }
+
+	/**
+	 * @brief operator long int
+	 */
+	inline operator long int() const
+		{ return static_cast<unsigned int>(*this); }
+
+	/**
+	 * @brief operator long unsigned int
+	 */
+	inline operator long unsigned int() const
+		{ return static_cast<unsigned int>(*this); }
 
 public: // other functions
 	/**
