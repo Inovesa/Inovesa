@@ -26,7 +26,7 @@ namespace vfps
 
 typedef float meshaxis_t;
 typedef unsigned int meshdata_t;
-typedef float interpol_t;
+typedef Share interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -55,7 +55,7 @@ public:
 		QUADRATIC=3,
 		CUBIC=4
 	};
-	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::CUBIC;
+	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::LINEAR;
 
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);

@@ -154,7 +154,7 @@ vfps::PhaseSpace& vfps::PhaseSpace::operator=(const vfps::PhaseSpace& other)
 void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 									  const vfps::PhaseSpace::ROTATION_TYPE mn)
 {
-	std::vector<meshaxis_t> ti;
+	std::vector<interpol_t> ti;
 	ti.resize(size(0)*size(1));
 
 	constexpr double o3 = 1./3.;
@@ -177,7 +177,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 	}
 
 	std::ofstream hm("hermasum_"+interpol_str+".dat");
-	std::array<unsigned int,8> num;
+	std::array<unsigned int,12> num;
 	num.fill(0);
 	for(unsigned int p_i=0; p_i< size(1); p_i++) {
 		for (unsigned int q_i=0; q_i< size(0); q_i++) {
@@ -193,8 +193,8 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 			//Scaled arguments of interpolation functions:
 			unsigned int id; //meshpoint smaller q'
 			unsigned int jd; //numper of lower mesh point from p'
-			meshaxis_t xiq; //distance from id
-			meshaxis_t xip; //distance of p' from lower mesh point
+			interpol_t xiq; //distance from id
+			interpol_t xip; //distance of p' from lower mesh point
 			switch (mn) {
 			case ROTATION_TYPE::MESH:
 				qp = cos_dt*(q_i-size(0)/2.0)
@@ -236,15 +236,50 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 				std::array<std::array<hi,it>,it> ph;
 
 				// arrays of interpolation coefficients
-				std::array<meshaxis_t,it> icq;
-				std::array<meshaxis_t,it> icp;
+				std::array<interpol_t,it> icq;
+				std::array<interpol_t,it> icp;
+
+				std::array<interpol_t,it*it> hmc;
 
 				switch (it)
 				{
 				case INTERPOL_TYPE::NONE:
 					break;
 				case INTERPOL_TYPE::LINEAR:
+					/*  Vectors of linear interpolation */
+					icq[0] = (1-xiq);
+					icq[1] = xiq;
+
+					icp[0] = (1-xip);
+					icp[1] = xip;
+
+					// Assemble interpolation
+					for (size_t hmq=0; hmq<2; hmq++) {
+						for (size_t hmp=0; hmp<2; hmp++){
+							hmc[hmp*it+hmq] = icq[hmp]*icp[hmq];
+						}
+					}
+					renormalize(4,hmc.data());
+
+					for (unsigned int j1=0; j1<2; j1++) {
+						unsigned int j0 = jd+j1-1;
+						for (unsigned int i1=0; i1<2; i1++) {
+							unsigned int i0 = id+i1-1;
+							if(i0< size(0) && j0 < size(1) ){
+								ph[i1][j1].index = i0*size(1)+j0;
+								ph[i1][j1].index2d = {{i0,j0}};
+								ph[i1][j1].weight = hmc[i1*it+j1];
+							} else {
+								ph[i1][j1].index = 0;
+								ph[i1][j1].index2d = {{0,0}};
+								ph[i1][j1].weight = 0;
+							}
+							_heritage_map[q_i][p_i][i1*3+j1]
+									= ph[i1][j1];
+						}
+					}
 					break;
+#ifdef SHARE_IMPLEMENTED
 				case INTERPOL_TYPE::QUADRATIC:
 					for (unsigned int j1=0; j1<3; j1++) {
 						unsigned int j0 = jd+j1-1;
@@ -263,7 +298,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					/*  Vectors of quadratic interpolation,
 					 * not including factors of 1/2. */
 					icq[0] = xiq*(xiq-1);
-					icq[1] = 2*(1-xiq*xiq);
+					icq[1] = 2*(1.0-xiq*xiq);
 					icq[2] = xiq*(xiq+1);
 
 					icp[0] = xip*(xip-1);
@@ -319,21 +354,35 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 						}
 					}
 					break;
+					#endif
 				}
 			}
-			double hmsum = 0.0;
+			interpol_t hmsum = 0;
 			for (hi h : _heritage_map[q_i][p_i]) {
 				hmsum += h.weight;
 				ti[h.index] += h.weight;
 			}
-			int epsilon = std::round((hmsum-1.0+DBL_EPSILON)/DBL_EPSILON)-1;
+
+			long int epsilon;
+			if (std::is_same<vfps::interpol_t,double>::value) {
+				epsilon = std::round((static_cast<double>(hmsum)
+									  -1.0+DBL_EPSILON)/DBL_EPSILON)-1.0;
+			}
+			if (std::is_same<vfps::interpol_t,float>::value) {
+				epsilon = std::round((static_cast<float>(hmsum)
+									  -1.0f+FLT_EPSILON)/FLT_EPSILON)-1.0f;
+			}
+			if (std::is_same<vfps::interpol_t,Share>::value) {
+				epsilon = static_cast<long int>(hmsum);
+			}
+
 			if (p_i > 1 && q_i > 1
 				&& p_i < size(1)-1
 				&& q_i < size(0) -1 ) {
-				if (epsilon >= -3 && epsilon <= 3) {
-					num[epsilon+3]++;
+				if (epsilon >= -5 && epsilon <= 5) {
+					num[epsilon+5]++;
 				} else {
-					num[7]++;
+					num[11]++;
 				}
 			}
 			hm << epsilon << '\t';
@@ -342,12 +391,12 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 	}
 	std::ofstream hmb("hermabin_"+interpol_str+".dat");
 	for (unsigned int i=0; i< num.size(); i++) {
-		hmb << int(i)-3 << '\t' << num[i] << std::endl;
+		hmb << int(i)-5 << '\t' << num[i] << std::endl;
 	}
 	std::ofstream tm("target_"+interpol_str+".dat");
 	for (unsigned int x=0; x<size(0); x++) {
 		for (unsigned int y=0; y<size(1); y++) {
-			tm << ti[y*size(0)+x] - 1.0 << '\t';
+			tm << static_cast<float>(ti[y*size(0)+x] - 1.0) << '\t';
 		}
 		tm << std::endl;
 	}

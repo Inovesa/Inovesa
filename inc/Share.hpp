@@ -37,6 +37,12 @@ public: // constructors and destructors
 	/**
 	 * @brief Share
 	 * @param share
+	 */
+	Share(int share);
+
+	/**
+	 * @brief Share
+	 * @param share
 	 *
 	 * Easiest way to use is Share(Share::ONE*numerator/denominator).
 	 */
@@ -86,6 +92,17 @@ public: // operators
 	Share& operator*=(const Share& other);
 
 	/**
+	 * @brief operator /=
+	 * @param rhs
+	 * @return
+	 */
+	Share& operator/=(const unsigned int rhs);
+
+
+	inline explicit operator double() const
+		{ return double(__s)/ONE; }
+
+	/**
 	 * @brief operator float
 	 *
 	 * The conversion to float is designed to give an estimate
@@ -93,31 +110,31 @@ public: // operators
 	 * Doing calculations with the returned float instead of the Share itself,
 	 * you will loose precision.
 	 */
-	inline operator float() const
+	inline explicit operator float() const
 		{ return float(__s)/ONE; }
 
 	/**
 	 * @brief operator int
 	 */
-	inline operator int() const
+	inline explicit operator int() const
 		{ return static_cast<unsigned int>(*this); }
 
 	/**
 	 * @brief operator unsigned int
 	 */
-	inline operator unsigned int() const
+	inline explicit operator unsigned int() const
 		{ return __s; }
 
 	/**
 	 * @brief operator long int
 	 */
-	inline operator long int() const
+	inline explicit operator long int() const
 		{ return static_cast<unsigned int>(*this); }
 
 	/**
 	 * @brief operator long unsigned int
 	 */
-	inline operator long unsigned int() const
+	inline explicit operator long unsigned int() const
 		{ return static_cast<unsigned int>(*this); }
 
 public: // other functions
@@ -156,6 +173,36 @@ inline Share operator+(Share lhs, const Share rhs)
 	{ return lhs += rhs; }
 
 /**
+ * @brief operator+
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline Share operator+(Share lhs, const double rhs)
+	{ return lhs+Share(rhs); }
+
+/**
+ * @brief operator -
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline Share operator-(Share lhs, const int rhs)
+	{ return lhs-=rhs; }
+
+/**
+ * @brief operator -
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline Share operator-(Share lhs, const unsigned int rhs)
+	{ return lhs-=rhs; }
+
+inline Share operator-(const double lhs, const Share rhs)
+	{ return Share(lhs)-=rhs; }
+
+/**
  * @brief operator-
  * @param lhs
  * @param rhs
@@ -163,6 +210,15 @@ inline Share operator+(Share lhs, const Share rhs)
  */
 inline Share operator-(Share lhs, const Share rhs)
 	{ return lhs -= rhs; }
+
+/**
+ * @brief operator-
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline Share operator-(Share lhs, const double rhs)
+	{ return lhs-Share(rhs); }
 
 /**
  * @brief operator*
@@ -198,6 +254,9 @@ inline Share operator*(Share lhs, const Share& rhs)
  */
 inline unsigned int operator*=(unsigned int lhs, const Share& rhs)
 	{ lhs = lhs*rhs; return lhs; }
+
+inline Share operator/(Share lhs, const unsigned int rhs)
+	{ lhs /= rhs; return lhs; }
 
 /**
  * @brief operator==
@@ -252,6 +311,8 @@ inline bool operator<=(const Share& lhs, const Share& rhs)
  */
 inline bool operator>=(const Share& lhs, const Share& rhs)
 	{ return !operator< (lhs,rhs); }
+
+void renormalize(unsigned int n, Share* args);
 
 }
 

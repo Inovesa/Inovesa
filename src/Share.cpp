@@ -13,6 +13,11 @@ Share::Share(const Share& other) :
 {
 }
 
+Share::Share(int share) :
+	Share(static_cast<unsigned int>(share))
+{
+}
+
 Share::Share(unsigned int share) :
 	__s(share)
 {
@@ -46,6 +51,12 @@ Share& Share::operator*=(const Share& other)
 	return *this;
 }
 
+Share&Share::operator/=(const unsigned int rhs)
+{
+	__s /= rhs;
+	return *this;
+}
+
 void renormalize(unsigned int n, Share* args)
 {
 	std::vector<unsigned long int> tmpshare;
@@ -56,8 +67,16 @@ void renormalize(unsigned int n, Share* args)
 		sum += static_cast<unsigned int>(args[i]);
 		tmpshare.push_back(static_cast<unsigned int>(args[i]));
 	}
+	if (sum == 0)
+	{
+		for( unsigned int i=0; i<n; i++)
+		{
+			tmpshare[i] = 1UL;
+		}
+		sum = n;
+	}
 	std::list<std::array<unsigned int,2>> remainders;
-	unsigned long int rensum=0;
+	long int rensum=0;
 	for( unsigned int i=0; i<n; i++)
 	{
 		long unsigned int val = tmpshare[i]*Share::ONE;
@@ -69,12 +88,22 @@ void renormalize(unsigned int n, Share* args)
 	}
 
 	remainders.sort();
-	unsigned int rest = Share::ONE - rensum;
-	while (rest > 0)
+	long int rest = static_cast<long int>(Share::ONE) - rensum;
+	if (rest >= 0)
+		while (rest > 0)
+		{
+			args[remainders.front()[1]] += 1U;
+			remainders.pop_front();
+			rest--;
+		}
+	else
 	{
-		args[remainders.front()[1]] += 1U;
-		remainders.pop_front();
-		rest--;
+		while (rest < 0)
+		{
+			args[remainders.front()[1]] -= 1U;
+			remainders.pop_front();
+			rest++;
+		}
 	}
 }
 
