@@ -13,12 +13,12 @@ Share::Share(const Share& other) :
 {
 }
 
-Share::Share(int share) :
-	Share(static_cast<unsigned int>(share))
+Share::Share(int32_t share) :
+	Share(static_cast<uint32_t>(share))
 {
 }
 
-Share::Share(unsigned int share) :
+Share::Share(uint32_t share) :
 	__s(share)
 {
 }
@@ -51,18 +51,20 @@ Share& Share::operator-=(const Share& other)
 
 Share& Share::operator*=(const Share& other)
 {
-	__s *= other.__s;
-	__s /= ONE;
+	uint64_t s = __s;
+	s *= other.__s;
+	s /= ONE;
+	__s = s;
 	return *this;
 }
 
-Share&Share::operator/=(const unsigned int rhs)
+Share&Share::operator/=(const uint32_t rhs)
 {
 	__s /= rhs;
 	return *this;
 }
 
-void renormalize(unsigned int n, Share* args)
+void renormalize(size_t n, Share* args)
 {
 	std::vector<unsigned long int> tmpshare;
 	tmpshare.reserve(n);

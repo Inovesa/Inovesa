@@ -16,7 +16,7 @@
 #include "Ruler.hpp"
 #include "Share.hpp"
 
-//#define FR_USE_GUI
+#define FR_USE_GUI
 //#define FR_USE_CL
 #define FR_CL_SYNC_BLOCKING CL_TRUE
 

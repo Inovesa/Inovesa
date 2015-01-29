@@ -38,7 +38,7 @@ public: // constructors and destructors
 	 * @brief Share
 	 * @param share
 	 */
-	Share(int share);
+	Share(int32_t share);
 
 	/**
 	 * @brief Share
@@ -46,7 +46,7 @@ public: // constructors and destructors
 	 *
 	 * Easiest way to use is Share(Share::ONE*numerator/denominator).
 	 */
-	Share(unsigned int share);
+	Share(uint32_t share);
 
 	/**
 	 * @brief Share
@@ -60,7 +60,7 @@ public: // important definitions
 	/**
 	 * @brief ONE
 	 */
-	static constexpr unsigned int ONE = UINT_MAX/2 + 1;
+	static constexpr uint32_t ONE = UINT_MAX/2 + 1;
 
 public: // operators
 	/**
@@ -96,7 +96,7 @@ public: // operators
 	 * @param rhs
 	 * @return
 	 */
-	Share& operator/=(const unsigned int rhs);
+	Share& operator/=(const uint32_t rhs);
 
 
 	inline explicit operator double() const
@@ -116,25 +116,25 @@ public: // operators
 	/**
 	 * @brief operator int
 	 */
-	inline explicit operator int() const
-		{ return static_cast<unsigned int>(*this); }
+	inline explicit operator int32_t() const
+		{ return static_cast<uint32_t>(*this); }
 
 	/**
 	 * @brief operator unsigned int
 	 */
-	inline explicit operator unsigned int() const
+	inline explicit operator uint32_t() const
 		{ return __s; }
 
 	/**
 	 * @brief operator long int
 	 */
-	inline explicit operator long int() const
-		{ return static_cast<unsigned int>(*this); }
+	inline explicit operator int64_t() const
+		{ return static_cast<uint32_t>(*this); }
 
 	/**
 	 * @brief operator long unsigned int
 	 */
-	inline explicit operator long unsigned int() const
+	inline explicit operator uint64_t() const
 		{ return static_cast<unsigned int>(*this); }
 
 public: // other functions
@@ -146,7 +146,7 @@ public: // other functions
 	 * Finds offset from Share::ONE and distributes it accoding to the
 	 * largest remainder method.
 	 */
-	friend void renormalize(unsigned int n, Share* args);
+	friend void renormalize(size_t n, Share* args);
 
 	/**
 	 * @brief swap
@@ -160,7 +160,7 @@ private:
 	/**
 	 * @brief __s
 	 */
-	unsigned int __s;
+	uint32_t __s;
 };
 
 /**
@@ -182,21 +182,21 @@ inline Share operator+(Share lhs, const double rhs)
 	{ return lhs+Share(rhs); }
 
 /**
- * @brief operator -
+ * @brief operator-
  * @param lhs
  * @param rhs
  * @return
  */
-inline Share operator-(Share lhs, const int rhs)
+inline Share operator-(Share lhs, const int32_t rhs)
 	{ return lhs-=Share(Share::ONE*rhs); }
 
 /**
- * @brief operator -
+ * @brief operator-
  * @param lhs
  * @param rhs
  * @return
  */
-inline Share operator-(Share lhs, const unsigned int rhs)
+inline Share operator-(Share lhs, const uint32_t rhs)
 	{ return lhs-=Share(Share::ONE*rhs); }
 
 inline Share operator-(const double lhs, const Share rhs)
@@ -226,15 +226,15 @@ inline Share operator-(Share lhs, const double rhs)
  * @param rhs
  * @return
  */
-inline unsigned int operator*(const unsigned int lhs, const Share& rhs)
-	{ return (lhs)*static_cast<unsigned int>(rhs)/Share::ONE; }
+inline unsigned int operator*(const uint32_t lhs, const Share& rhs)
+	{ return (lhs)*static_cast<uint64_t>(rhs)/Share::ONE; }
 
 /**
  * @brief operator*
  * @param num
  * @return
  */
-inline unsigned int operator*(const Share& lhs, const unsigned int rhs)
+inline unsigned int operator*(const Share& lhs, const uint32_t rhs)
 	{ return rhs*lhs; }
 
 /**
@@ -252,10 +252,10 @@ inline Share operator*(Share lhs, const Share& rhs)
  * @param rhs
  * @return
  */
-inline unsigned int operator*=(unsigned int lhs, const Share& rhs)
+inline unsigned int operator*=(uint32_t lhs, const Share& rhs)
 	{ lhs = lhs*rhs; return lhs; }
 
-inline Share operator/(Share lhs, const unsigned int rhs)
+inline Share operator/(Share lhs, const uint32_t rhs)
 	{ lhs /= rhs; return lhs; }
 
 /**
@@ -265,7 +265,7 @@ inline Share operator/(Share lhs, const unsigned int rhs)
  * @return
  */
 inline bool operator==(const Share& lhs, const Share& rhs)
-	{ return static_cast<unsigned int>(lhs) == static_cast<unsigned int>(rhs); }
+	{ return static_cast<uint32_t>(lhs) == static_cast<uint32_t>(rhs); }
 
 /**
  * @brief operator!=
@@ -312,7 +312,7 @@ inline bool operator<=(const Share& lhs, const Share& rhs)
 inline bool operator>=(const Share& lhs, const Share& rhs)
 	{ return !operator< (lhs,rhs); }
 
-void renormalize(unsigned int n, Share* args);
+void renormalize(size_t n, Share* args);
 
 }
 

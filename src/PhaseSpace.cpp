@@ -298,9 +298,9 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
-					unsigned int j0 = jd+j1-1;
+					unsigned int j0 = jd+j1-(it-1)/2;
 					for (unsigned int i1=0; i1<it; i1++) {
-						unsigned int i0 = id+i1-1;
+						unsigned int i0 = id+i1-(it-1)/2;
 						if(i0< size(0) && j0 < size(1) ){
 							ph[i1][j1].index = i0*size(1)+j0;
 							ph[i1][j1].index2d = {{i0,j0}};
@@ -332,7 +332,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 									  -1.0f+FLT_EPSILON)/FLT_EPSILON)-1.0f;
 			}
 			if (std::is_same<vfps::interpol_t,Share>::value) {
-				epsilon = static_cast<long int>(hmsum);
+				epsilon = static_cast<uint32_t>(hmsum);
 			}
 
 			if (p_i > 1 && q_i > 1
@@ -359,13 +359,6 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 		}
 		tm << std::endl;
 	}
-	for (size_t hmq=0; hmq<it; hmq++) {
-		for (size_t hmp=0; hmp<it; hmp++){
-			std::cout << static_cast<float>(_heritage_map1D[512*256+64][hmq*it+hmp].weight) << '\t';
-		}
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
 }
 
 void vfps::PhaseSpace::rotate()

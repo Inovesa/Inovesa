@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 	vfps::HDF5File file("results.h5");
     
     
-	constexpr double rotations = 0.01;
+	constexpr double rotations = 1;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
