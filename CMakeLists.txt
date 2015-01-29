@@ -19,6 +19,7 @@ set(INC_LIST
 			./inc/CL/OpenCLHandler.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/Display.hpp
+			./inc/main.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
 			./inc/Share.hpp
