@@ -24,19 +24,19 @@ int main(int argc, char** argv)
 	vfps::HDF5File file("results.h5");
     
     
-	constexpr double rotations = 1;
+	constexpr double rotations = 0.01;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
 	unsigned int pattern_max;
-	if (std::is_same<vfps::meshdata_t,vfps::Share>::value) {
+	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
 		pattern_max = vfps::Share::ONE;
 	} else {
 		pattern_max = 1;
 	}
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
-			= vfps::PhaseSpace::ROTATION_TYPE::MESH;
+			= vfps::PhaseSpace::ROTATION_TYPE::SPACE;
 	constexpr pattern ptrntype = pattern::quarters;
 	constexpr unsigned int steps = 4000;
 

@@ -23,9 +23,14 @@ Share::Share(unsigned int share) :
 {
 }
 
-Share::Share(double share) :
-	__s(share*ONE)
+Share::Share(double share)
 {
+	if (share >= 0) {
+		__s = share*ONE;
+	} else {
+		__s = (1+share)*ONE;
+	}
+
 }
 
 Share::~Share()

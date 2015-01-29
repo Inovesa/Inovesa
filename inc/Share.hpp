@@ -188,7 +188,7 @@ inline Share operator+(Share lhs, const double rhs)
  * @return
  */
 inline Share operator-(Share lhs, const int rhs)
-	{ return lhs-=rhs; }
+	{ return lhs-=Share(Share::ONE*rhs); }
 
 /**
  * @brief operator -
@@ -197,7 +197,7 @@ inline Share operator-(Share lhs, const int rhs)
  * @return
  */
 inline Share operator-(Share lhs, const unsigned int rhs)
-	{ return lhs-=rhs; }
+	{ return lhs-=Share(Share::ONE*rhs); }
 
 inline Share operator-(const double lhs, const Share rhs)
 	{ return Share(lhs)-=rhs; }

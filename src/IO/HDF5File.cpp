@@ -3,10 +3,15 @@
 vfps::HDF5File::HDF5File(std::string fname) :
 	file( nullptr ),
 	fname( fname ),
-	fs_datatype( H5::PredType::IEEE_F32LE ),
 	fs_dims( {{ps_xsize,ps_ysize,1}} ),
 	fs_name( "PhaseSpace" )
 {
+	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
+		fs_datatype = H5::PredType::STD_U32LE;
+	} else {
+		fs_datatype = H5::PredType::IEEE_F32LE;
+	}
+
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);
 
 	static constexpr std::array<hsize_t,fs_rank> fs_maxdims

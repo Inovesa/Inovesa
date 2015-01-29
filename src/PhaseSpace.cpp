@@ -249,10 +249,10 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					break;
 
 				case INTERPOL_TYPE::LINEAR:
-					icq[0] = (1-xiq);
+					icq[0] = 1-xiq;
 					icq[1] = xiq;
 
-					icp[0] = (1-xip);
+					icp[0] = 1-xip;
 					icp[1] = xip;
 					break;
 
@@ -294,7 +294,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 				}
 
 				// renormlize to minimize rounding errors
-				//normalize(it,hmc.data());
+				//renormalize(it,hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
@@ -315,6 +315,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					}
 				}
 			}
+
 			interpol_t hmsum = 0;
 			for (hi h : _heritage_map[q_i][p_i]) {
 				hmsum += h.weight;
@@ -358,6 +359,13 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 		}
 		tm << std::endl;
 	}
+	for (size_t hmq=0; hmq<it; hmq++) {
+		for (size_t hmp=0; hmp<it; hmp++){
+			std::cout << static_cast<float>(_heritage_map1D[512*256+64][hmq*it+hmp].weight) << '\t';
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
 }
 
 void vfps::PhaseSpace::rotate()
