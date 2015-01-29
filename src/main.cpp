@@ -5,6 +5,7 @@
 
 #include "Display.hpp"
 #include "PhaseSpace.hpp"
+#include "Share.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "IO/HDF5File.hpp"
@@ -27,11 +28,17 @@ int main(int argc, char** argv)
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
-	constexpr unsigned int pattern_max = 1.0f;
+	unsigned int pattern_max;
+	if (std::is_same<vfps::meshdata_t,vfps::Share>::value) {
+		pattern_max = vfps::Share::ONE;
+	} else {
+		pattern_max = 1;
+	}
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
 			= vfps::PhaseSpace::ROTATION_TYPE::MESH;
 	constexpr pattern ptrntype = pattern::quarters;
+	constexpr unsigned int steps = 4000;
 
 	// no more settings below this line
 
@@ -174,7 +181,6 @@ int main(int argc, char** argv)
 #else
 	std::vector<vfps::meshdata_t> kick(vfps::ps_xsize,0.0);
 #endif
-	constexpr unsigned int steps = 4000;
 	constexpr double angle = 2*M_PI/steps;
 	mesh.setRotationMap(angle,rt);
 #ifdef FR_USE_CL

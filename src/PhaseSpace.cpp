@@ -239,119 +239,80 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 				std::array<interpol_t,it*it> hmc;
 
+				// create vectors containing interpolation coefficiants
 				switch (it)
 				{
 				case INTERPOL_TYPE::NONE:
+					icq[0] = 1;
+
+					icp[0] = 1;
 					break;
+
 				case INTERPOL_TYPE::LINEAR:
-					/*  Vectors of linear interpolation */
 					icq[0] = (1-xiq);
 					icq[1] = xiq;
 
 					icp[0] = (1-xip);
 					icp[1] = xip;
-
-					// Assemble interpolation
-					for (size_t hmq=0; hmq<2; hmq++) {
-						for (size_t hmp=0; hmp<2; hmp++){
-							hmc[hmp*it+hmq] = icq[hmp]*icp[hmq];
-						}
-					}
-//					renormalize(4,hmc.data());
-
-					for (unsigned int j1=0; j1<2; j1++) {
-						unsigned int j0 = jd+j1-1;
-						for (unsigned int i1=0; i1<2; i1++) {
-							unsigned int i0 = id+i1-1;
-							if(i0< size(0) && j0 < size(1) ){
-								ph[i1][j1].index = i0*size(1)+j0;
-								ph[i1][j1].index2d = {{i0,j0}};
-								ph[i1][j1].weight = hmc[i1*it+j1];
-							} else {
-								ph[i1][j1].index = 0;
-								ph[i1][j1].index2d = {{0,0}};
-								ph[i1][j1].weight = 0;
-							}
-							_heritage_map[q_i][p_i][i1*3+j1]
-									= ph[i1][j1];
-						}
-					}
 					break;
+
 				case INTERPOL_TYPE::QUADRATIC:
-					for (unsigned int j1=0; j1<3; j1++) {
-						unsigned int j0 = jd+j1-1;
-						for (unsigned int i1=0; i1<3; i1++) {
-							unsigned int i0 = id+i1-1;
-							if(i0< size(0) && j0 < size(1) ){
-								ph[i1][j1].index = i0*size(1)+j0;
-								ph[i1][j1].index2d = {{i0,j0}};
-							} else {
-								ph[i1][j1].index = 0;
-								ph[i1][j1].index2d = {{0,0}};
-							}
-						}
-					}
+					icq[0] = xiq*(xiq-1)/2;
+					icq[1] = 1-xiq*xiq;
+					icq[2] = xiq*(xiq+1)/2;
 
-					/*  Vectors of quadratic interpolation,
-					 * not including factors of 1/2. */
-					icq[0] = xiq*(xiq-1);
-					icq[1] = 2*(1.0-xiq*xiq);
-					icq[2] = xiq*(xiq+1);
+					icp[0] = xip*(xip-1)/2;
+					icp[1] = 1-xip*xip;
+					icp[2] = xip*(xip+1)/2;
 
-					icp[0] = xip*(xip-1);
-					icp[1] = 2*(1-xip*xip);
-					icp[2] = xip*(xip+1);
-
-					// Assemble interpolation, restoring factors of 1/2
-					for (size_t i1=0; i1<3; i1++) {
-						for (size_t j1=0; j1<3; j1++){
-							(ph[i1][j1]).weight = icq[i1] * icp[j1] /4;
-							_heritage_map[q_i][p_i][i1*3+j1]
-									= ph[i1][j1];
-						}
-					}
 					break;
+
 				case INTERPOL_TYPE::CUBIC:
 					constexpr double o3 = 1./3.;
-					for (unsigned int j1=0; j1<4; j1++) {
-						unsigned int j0 = jd+j1-1;
-						for (unsigned int i1=0; i1<4; i1++) {
-							unsigned int i0 = id+i1-1;
-							if(i0< size(0) && j0 < size(1) ){
-								ph[i1][j1].index = i0*size(1)+j0;
-								ph[i1][j1].index2d = {{i0,j0}};
-							} else {
-								ph[i1][j1].index = 0;
-								ph[i1][j1].index2d = {{0,0}};
-							}
-						}
-					}
 
-					/*  Vectors of lagrange interpolation,
-					 * not including factors of 1/2. */
-					icq[0] = (xiq-1)*(xiq-2);
+					icq[0] = (xiq-1)*(xiq-2)/2;
 					icq[1] = (xiq+1)*icq[0];
-					icq[0] *= -xiq*o3;
-					icq[3] = xiq*(xiq+1);
-					icq[2] = -(xiq-2)*icq[3];
+					icq[0] *= -o3*xiq;
+					icq[3] = xiq*(xiq+1)/2;
+					icq[2] = (2-xiq)*icq[3];
 					icq[3] *= (xiq-1)*o3;
 
-					icp[0] = (xip-1)*(xip-2);
+					icp[0] = (xip-1)*(xip-2)/2;
 					icp[1] = (xip+1)*icp[0];
-					icp[0] *= -xip*o3;
-					icp[3] = xip*(xip+1);
-					icp[2] = -(xip-2)*icp[3];
+					icp[0] *= -o3*xip;
+					icp[3] = xip*(xip+1)/2;
+					icp[2] = (2-xip)*icp[3];
 					icp[3] *= (xip-1)*o3;
-
-					//  Assemble interpolation, restoring factors of 1/2:
-					for (size_t i1=0; i1<4; i1++) {
-						for (size_t j1=0; j1<4; j1++){
-							(ph[i1][j1]).weight = icq[i1] * icp[j1]/4;
-							_heritage_map[q_i][p_i][i1*4+j1]
-									= ph[i1][j1];
-						}
-					}
 					break;
+				}
+
+				//  Assemble interpolation
+				for (size_t hmq=0; hmq<it; hmq++) {
+					for (size_t hmp=0; hmp<it; hmp++){
+						hmc[hmp*it+hmq] = icq[hmp]*icp[hmq];
+					}
+				}
+
+				// renormlize to minimize rounding errors
+				//normalize(it,hmc.data());
+
+				// write heritage map
+				for (unsigned int j1=0; j1<it; j1++) {
+					unsigned int j0 = jd+j1-1;
+					for (unsigned int i1=0; i1<it; i1++) {
+						unsigned int i0 = id+i1-1;
+						if(i0< size(0) && j0 < size(1) ){
+							ph[i1][j1].index = i0*size(1)+j0;
+							ph[i1][j1].index2d = {{i0,j0}};
+							ph[i1][j1].weight = hmc[i1*it+j1];
+						} else {
+							ph[i1][j1].index = 0;
+							ph[i1][j1].index2d = {{0,0}};
+							ph[i1][j1].weight = 0;
+						}
+						_heritage_map[q_i][p_i][i1*it+j1]
+								= ph[i1][j1];
+					}
 				}
 			}
 			interpol_t hmsum = 0;
