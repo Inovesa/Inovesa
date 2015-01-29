@@ -17,7 +17,7 @@
 #include "Share.hpp"
 
 #define FR_USE_GUI
-//#define FR_USE_CL
+#define FR_USE_CL
 #define FR_CL_SYNC_BLOCKING CL_TRUE
 
 
@@ -25,8 +25,8 @@ namespace vfps
 {
 
 typedef float meshaxis_t;
-typedef unsigned int meshdata_t;
-typedef Share interpol_t;
+typedef float meshdata_t;
+typedef float interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -55,7 +55,7 @@ public:
 		QUADRATIC=3,
 		CUBIC=4
 	};
-	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::LINEAR;
+	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::CUBIC;
 
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);

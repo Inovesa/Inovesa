@@ -23,11 +23,11 @@ int main(int argc, char** argv)
 	vfps::HDF5File file("results.h5");
     
     
-	constexpr double rotations = 0;
+	constexpr double rotations = 1;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
-	constexpr unsigned int pattern_max = vfps::Share::ONE;
+	constexpr unsigned int pattern_max = 1.0f;
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
 			= vfps::PhaseSpace::ROTATION_TYPE::MESH;

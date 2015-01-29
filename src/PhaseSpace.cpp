@@ -157,8 +157,6 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 	std::vector<interpol_t> ti;
 	ti.resize(size(0)*size(1));
 
-	constexpr double o3 = 1./3.;
-
 	meshaxis_t cos_dt = cos(deltat);
 	meshaxis_t sin_dt = sin(deltat);
 
@@ -259,7 +257,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 							hmc[hmp*it+hmq] = icq[hmp]*icp[hmq];
 						}
 					}
-					renormalize(4,hmc.data());
+//					renormalize(4,hmc.data());
 
 					for (unsigned int j1=0; j1<2; j1++) {
 						unsigned int j0 = jd+j1-1;
@@ -279,7 +277,6 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 						}
 					}
 					break;
-#ifdef SHARE_IMPLEMENTED
 				case INTERPOL_TYPE::QUADRATIC:
 					for (unsigned int j1=0; j1<3; j1++) {
 						unsigned int j0 = jd+j1-1;
@@ -315,6 +312,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					}
 					break;
 				case INTERPOL_TYPE::CUBIC:
+					constexpr double o3 = 1./3.;
 					for (unsigned int j1=0; j1<4; j1++) {
 						unsigned int j0 = jd+j1-1;
 						for (unsigned int i1=0; i1<4; i1++) {
@@ -354,7 +352,6 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 						}
 					}
 					break;
-					#endif
 				}
 			}
 			interpol_t hmsum = 0;
