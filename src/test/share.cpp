@@ -48,6 +48,9 @@ int main(int argc, char** argv)
 	vfps::Share diff = 1-a[0];
 	std::cout << "1 - " << static_cast<float>(a[0]) << " = "
 			  << static_cast<float>(diff) << std::endl;
+	float prod = 0.5f*a[1];
+	std::cout << "0.5 * " << static_cast<float>(a[1]) << " = "
+			  << prod << std::endl;
 
 	
 	return 0;

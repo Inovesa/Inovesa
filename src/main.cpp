@@ -1,5 +1,4 @@
 #include <climits>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -18,21 +17,16 @@ enum class pattern {
 
 int main(int argc, char** argv)
 {
-	vfps::PhaseSpace mesh(	vfps::ps_xsize,-10.0,10.0,
-							vfps::ps_ysize,-10.0,10.0);
-
-	vfps::HDF5File file("results.h5");
-    
-    
+	// settings
 	constexpr double rotations = 1;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
-	unsigned int pattern_max;
+	vfps::meshdata_t pattern_max;
 	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
 		pattern_max = vfps::Share::ONE;
 	} else {
-		pattern_max = 1;
+		pattern_max = 0.5;
 	}
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
@@ -40,63 +34,15 @@ int main(int argc, char** argv)
 	constexpr pattern ptrntype = pattern::quarters;
 	constexpr unsigned int steps = 4000;
 
-	// no more settings below this line
+	/* @todo: remove global settings from main.hpp
+	 * (vfps::HDF5File::HDF5File() could take mesh as argument)
+	 */
+	vfps::PhaseSpace mesh(	vfps::ps_xsize,-10.0,10.0,
+							vfps::ps_ysize,-10.0,10.0);
 
-	std::stringstream nrbuf;
+	vfps::HDF5File file("results.h5");
 
-	std::string resdir("results/");
-
-	nrbuf.str("");
-	nrbuf << vfps::ps_xsize;
-	std::string meshdim = nrbuf.str();
-
-	nrbuf.str("");
-	nrbuf << patterndim_x;
-	std::string pattern_x = nrbuf.str();
-
-	nrbuf.str("");
-	nrbuf << patterndim_y;
-	std::string pattern_y = nrbuf.str();
-
-	nrbuf.str("");
-	nrbuf << rotations*100;
-	std::string rotation = nrbuf.str();
-
-	std::string rottype;
-	switch (rt) {
-	case vfps::PhaseSpace::ROTATION_TYPE::SPACE:
-		rottype = "space";
-		break;
-	case vfps::PhaseSpace::ROTATION_TYPE::NORMAL:
-		rottype = "normal";
-		break;
-	case vfps::PhaseSpace::ROTATION_TYPE::MESH:
-	default:
-		rottype = "mesh";
-		break;
-	}
-
-	std::string ptrn;
-	switch (ptrntype) {
-	case pattern::square:
-		ptrn = "sqr";
-		break;
-	case pattern::gaus:
-	default:
-		ptrn = "gaus";
-		break;
-	case pattern::half:
-		ptrn = "half";
-		break;
-	}
-
-	std::string fname = meshdim + "d-" + rottype + "_"
-					 + ptrn + "-" + pattern_x+ "-" +pattern_y +"_"
-					 + rotation+ ".dat";
-
-	std::ofstream results(resdir+ "final_" + fname);
-	std::ofstream decay(resdir+ "decay_" + fname);
-
+	// create pattern to start with
 	switch (ptrntype) {
 	case pattern::square:
 		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
@@ -162,13 +108,6 @@ int main(int argc, char** argv)
 	}
 	file.write(&mesh);
 
-	unsigned int device = 0;
-	if (argc == 2 ) {
-		std::stringstream dev(argv[1]);
-		dev >> device;
-		device--;
-	}
-
 #ifdef FR_USE_GUI
 	Display display;
     display.createTexture(&mesh);
@@ -176,11 +115,17 @@ int main(int argc, char** argv)
 #endif
 
 #ifdef FR_USE_CL
+	// OpenCL device can be given as command line argument
+	unsigned int device = 0;
+	if (argc == 2 ) {
+		std::stringstream dev(argv[1]);
+		dev >> device;
+		device--;
+	}
 	prepareCLEnvironment(device);
 	prepareCLProgs();
-#else
-	std::vector<vfps::meshdata_t> kick(vfps::ps_xsize,0.0);
 #endif
+	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
 	mesh.setRotationMap(angle,rt);
 #ifdef FR_USE_CL
@@ -203,23 +148,6 @@ int main(int argc, char** argv)
 #endif
 			file.append(&mesh);
 
-			vfps::meshdata_t sum = 0.0;
-			for (unsigned int q_i= floor(vfps::ps_xsize/2.0)-2; q_i < ceil(vfps::ps_xsize/2.0)+2; q_i ++) {
-				vfps::meshdata_t linesum = 0.0;
-				for (unsigned int p_i= floor(vfps::ps_ysize/2.0)-2; p_i < ceil(vfps::ps_ysize/2.0)+2; p_i ++) {
-					linesum += mesh[q_i][p_i];
-				}
-				sum += linesum;
-			}
-
-			decay << double(i)/double(steps) << '\t'
-				  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
-				  << sum << std::endl;
-			#ifdef FR_PRINT_RESULTS
-			std::cout << double(i)/double(steps) << '\t'
-					  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
-					  << sum << std::endl;
-			#endif
             mesh.rotate();
 #ifdef FR_USE_GUI
 			display.delTexture();
@@ -241,32 +169,6 @@ int main(int argc, char** argv)
 #ifdef FR_USE_CL
 	OCLH::queue.flush();
 #endif
-
-
-	vfps::meshdata_t sum = 0.0;
-	for (unsigned int q_i= floor(vfps::ps_xsize/2.0)-2; q_i < ceil(vfps::ps_xsize/2.0)+2; q_i ++) {
-		vfps::meshdata_t linesum = 0.0;
-		for (unsigned int p_i= floor(vfps::ps_ysize/2.0)-2; p_i < ceil(vfps::ps_ysize/2.0)+2; p_i ++) {
-			linesum += mesh[q_i][p_i];
-		}
-		sum += linesum;
-	}
-
-	decay << double(i)/double(steps) << '\t'
-		  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] -1.0 << '\t'
-		  << sum << std::endl;
-	#ifdef FR_PRINT_RESULTS
-	std::cout << double(i)/double(steps) << '\t'
-			  << mesh[vfps::ps_xsize/2][vfps::ps_ysize/2] - 1.0 << '\t'
-			  << sum << std::endl;
-	#endif
-
-	for (unsigned int x=0; x<vfps::ps_xsize; x++) {
-		for (unsigned int y=0; y<vfps::ps_ysize; y++) {
-			results << mesh[x][y] << '\t';
-		}
-		results << std::endl;
-    }
 
 	return EXIT_SUCCESS;
 }

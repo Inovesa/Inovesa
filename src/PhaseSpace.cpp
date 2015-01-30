@@ -293,8 +293,9 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					}
 				}
 
+
 				// renormlize to minimize rounding errors
-				//renormalize(it,hmc.data());
+				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {

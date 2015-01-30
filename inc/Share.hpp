@@ -220,13 +220,50 @@ inline Share operator-(Share lhs, const Share rhs)
 inline Share operator-(Share lhs, const double rhs)
 	{ return lhs-Share(rhs); }
 
+
 /**
  * @brief operator*
  * @param lhs
  * @param rhs
  * @return
  */
-inline unsigned int operator*(const uint32_t lhs, const Share& rhs)
+inline double operator*(const double lhs, const Share& rhs)
+	{ return lhs*static_cast<uint32_t>(rhs)/Share::ONE; }
+
+/**
+ * @brief operator*
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline double operator*(const Share& lhs, const double rhs)
+	{ return rhs*lhs; }
+
+/**
+ * @brief operator*
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline float operator*(const float lhs, const Share& rhs)
+	{ return lhs*static_cast<uint32_t>(rhs)/Share::ONE; }
+
+/**
+ * @brief operator*
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline float operator*(const Share& lhs, const float rhs)
+	{ return rhs*lhs; }
+
+/**
+ * @brief operator*
+ * @param lhs
+ * @param rhs
+ * @return
+ */
+inline uint32_t operator*(const uint32_t lhs, const Share& rhs)
 	{ return (lhs)*static_cast<uint64_t>(rhs)/Share::ONE; }
 
 /**
@@ -234,7 +271,7 @@ inline unsigned int operator*(const uint32_t lhs, const Share& rhs)
  * @param num
  * @return
  */
-inline unsigned int operator*(const Share& lhs, const uint32_t rhs)
+inline uint32_t operator*(const Share& lhs, const uint32_t rhs)
 	{ return rhs*lhs; }
 
 /**
@@ -312,6 +349,12 @@ inline bool operator<=(const Share& lhs, const Share& rhs)
 inline bool operator>=(const Share& lhs, const Share& rhs)
 	{ return !operator< (lhs,rhs); }
 
+/**
+ * @brief renormalize
+ * @param n
+ * @param args
+ * @todo optimize runtime when no renormalization is needed
+ */
 void renormalize(size_t n, Share* args);
 
 }

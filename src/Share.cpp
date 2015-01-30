@@ -66,51 +66,44 @@ Share&Share::operator/=(const uint32_t rhs)
 
 void renormalize(size_t n, Share* args)
 {
-	std::vector<unsigned long int> tmpshare;
+	std::vector<uint32_t> tmpshare;
 	tmpshare.reserve(n);
-	unsigned long int sum=0;
-	for( unsigned int i=0; i<n; i++)
-	{
-		sum += static_cast<unsigned int>(args[i]);
-		tmpshare.push_back(static_cast<unsigned int>(args[i]));
+	uint64_t sum=0;
+	for( size_t i=0; i<n; i++) {
+		sum += args[i].__s;
+		tmpshare.push_back(args[i].__s);
 	}
-	if (sum == 0)
-	{
-		for( unsigned int i=0; i<n; i++)
-		{
-			tmpshare[i] = 1UL;
+
+	if (sum == 0) {
+		for( size_t i=0; i<n; i++) {
+			tmpshare[i] = 1U;
 		}
 		sum = n;
 	}
-	std::list<std::array<unsigned int,2>> remainders;
-	long int rensum=0;
-	for( unsigned int i=0; i<n; i++)
-	{
-		long unsigned int val = tmpshare[i]*Share::ONE;
+	std::list<std::pair<uint32_t,size_t>> remainders;
+	uint32_t rensum=0;
+	for( size_t i=0; i<n; i++) {
+		uint64_t val = static_cast<uint64_t>(tmpshare[i])*Share::ONE;
+		uint32_t remainder = val%sum;
 		val /= sum;
-		unsigned int remainder = val%sum;
 		rensum += val;
-		args[i] = (unsigned int)(val);
-		remainders.push_back({{remainder,i}});
+		args[i].__s = val;
+		remainders.push_back(std::pair<uint32_t,size_t>(remainder,i));
 	}
 
-	remainders.sort();
-	long int rest = static_cast<long int>(Share::ONE) - rensum;
-	if (rest >= 0)
-		while (rest > 0)
-		{
-			args[remainders.front()[1]] += 1U;
+	size_t rest = Share::ONE - rensum;
+	if (rest > 0) {
+		// sort remainders rescending
+		remainders.sort([](	const std::pair<uint32_t,size_t> &lhs,
+							const std::pair<uint32_t,size_t> &rhs)
+						-> bool
+						{ return lhs.first > rhs.first; }
+		);
+		do {
+			args[remainders.front().second].__s += 1U;
 			remainders.pop_front();
 			rest--;
-		}
-	else
-	{
-		while (rest < 0)
-		{
-			args[remainders.front()[1]] -= 1U;
-			remainders.pop_front();
-			rest++;
-		}
+		} while (rest > 0);
 	}
 }
 
