@@ -18,7 +18,7 @@ enum class pattern {
 int main(int argc, char** argv)
 {
 	// settings
-	constexpr double rotations = 1;
+	constexpr double rotations = 0.1;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
@@ -26,11 +26,11 @@ int main(int argc, char** argv)
 	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
 		pattern_max = vfps::Share::ONE;
 	} else {
-		pattern_max = 0.5;
+		pattern_max = static_cast<vfps::meshdata_t>(0.5);
 	}
 
 	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
-			= vfps::PhaseSpace::ROTATION_TYPE::SPACE;
+			= vfps::PhaseSpace::ROTATION_TYPE::NORMAL;
 	constexpr pattern ptrntype = pattern::quarters;
 	constexpr unsigned int steps = 4000;
 

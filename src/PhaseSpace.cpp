@@ -157,24 +157,9 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 	std::vector<interpol_t> ti;
 	ti.resize(size(0)*size(1));
 
-	meshaxis_t cos_dt = cos(deltat);
-	meshaxis_t sin_dt = sin(deltat);
+	const meshaxis_t cos_dt = cos(deltat);
+	const meshaxis_t sin_dt = sin(deltat);
 
-	std::string interpol_str;
-	switch (mn) {
-	case ROTATION_TYPE::MESH:
-		interpol_str = "mesh";
-		break;
-	case ROTATION_TYPE::NORMAL:
-		interpol_str = "normal";
-		break;
-	case ROTATION_TYPE::SPACE:
-	default:
-		interpol_str = "space";
-		break;
-	}
-
-	std::ofstream hm("hermasum_"+interpol_str+".dat");
 	std::array<unsigned int,12> num;
 	num.fill(0);
 	for(unsigned int p_i=0; p_i< size(1); p_i++) {
@@ -199,34 +184,37 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 						- sin_dt*(p_i-size(1)/2.0)+size(0)/2.0;
 				pp = sin_dt*(q_i-size(0)/2.0)
 						+ cos_dt*(p_i-size(1)/2.0)+size(1)/2.0;
-				xiq = std::modf(qp, &qq_int);
-				xip = std::modf(pp, &qp_int);
-				id = qq_int;
-				jd = qp_int;
+				qcoord = qp;
+				pcoord = pp;
 				break;
 			case ROTATION_TYPE::NORMAL:
 				qp = cos_dt*((q_i-size(0)/2.0)/size(0))
-						- sin_dt*((p_i-size(1)/2.0)/size(1))+0.5;
+						- sin_dt*((p_i-size(1)/2.0)/size(1));
 				pp = sin_dt*((q_i-size(0)/2.0)/size(0))
-						+ cos_dt*((p_i-size(1)/2.0)/size(1))+0.5;
-				qcoord = qp*size(0);
-				pcoord = pp*size(1);
-				xiq = std::modf(qcoord, &qq_int);
-				xip = std::modf(pcoord, &qp_int);
-				id = qq_int;
-				jd = qp_int;
+						+ cos_dt*((p_i-size(1)/2.0)/size(1));
+				qcoord = (qp+0.5)*size(0);
+				pcoord = (pp+0.5)*size(1);
+				break;
+			case ROTATION_TYPE::NORMAL2:
+				qp = cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(size(0)))/static_cast<int>(size(0))
+				   - sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(size(1)))/static_cast<int>(size(1));
+
+				pp = sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(size(0)))/static_cast<int>(size(0))
+				   + cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(size(1)))/static_cast<int>(size(1));
+				qcoord = (qp+1)*size(0)/2;
+				pcoord = (pp+1)*size(1)/2;
 				break;
 			case ROTATION_TYPE::SPACE:
-				qp = cos_dt*x(0,q_i) - sin_dt*x(1,p_i) - getMin(0);
-				pp = sin_dt*x(0,q_i) + cos_dt*x(1,p_i) - getMin(1);
-				qcoord = qp/getDelta(0);
-				pcoord = pp/getDelta(1);
-				xiq = std::modf(qcoord, &qq_int);
-				xip = std::modf(pcoord, &qp_int);
-				id = qq_int;
-				jd = qp_int;
+				qp = cos_dt*x(0,q_i) - sin_dt*x(1,p_i);
+				pp = sin_dt*x(0,q_i) + cos_dt*x(1,p_i);
+				qcoord = (qp-getMin(0))/getDelta(0);
+				pcoord = (pp-getMin(1))/getDelta(1);
 				break;
 			}
+			xiq = std::modf(qcoord, &qq_int);
+			xip = std::modf(pcoord, &qp_int);
+			id = qq_int;
+			jd = qp_int;
 
 			if (id <  size(0) && jd < size(1))
 			{
@@ -257,32 +245,60 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					break;
 
 				case INTERPOL_TYPE::QUADRATIC:
-					icq[0] = xiq*(xiq-1)/2;
-					icq[1] = 1-xiq*xiq;
-					icq[2] = xiq*(xiq+1)/2;
+					switch (ist)
+					{
+					case INTERPOL_SUBTYPE::BERNSTEIN:
+						icq[0] = (1-xiq)*(1-xiq);
+						icq[1] = 2*xiq*(1-xiq);
+						icq[2] = xiq*xiq;
 
-					icp[0] = xip*(xip-1)/2;
-					icp[1] = 1-xip*xip;
-					icp[2] = xip*(xip+1)/2;
+						icp[0] = (1-xip)*(1-xip);
+						icp[1] = 2*xip*(1-xip);
+						icp[2] = xip*xip;
+						break;
+					default:
+						icq[0] = xiq*(xiq-1)/2;
+						icq[1] = 1-xiq*xiq;
+						icq[2] = xiq*(xiq+1)/2;
 
+						icp[0] = xip*(xip-1)/2;
+						icp[1] = 1-xip*xip;
+						icp[2] = xip*(xip+1)/2;
+						break;
+					}
 					break;
 
 				case INTERPOL_TYPE::CUBIC:
-					constexpr double o3 = 1./3.;
+					switch (ist)
+					{
+					case INTERPOL_SUBTYPE::BERNSTEIN:
+						icq[0] = (1-xiq)*(1-xiq)*(1-xiq);
+						icq[1] = 3*xiq*(1-xiq)*(1-xiq);
+						icq[2] = 3*xiq*xiq*(1-xiq);
+						icq[3] = xiq*xiq*xiq;
 
-					icq[0] = (xiq-1)*(xiq-2)/2;
-					icq[1] = (xiq+1)*icq[0];
-					icq[0] *= -o3*xiq;
-					icq[3] = xiq*(xiq+1)/2;
-					icq[2] = (2-xiq)*icq[3];
-					icq[3] *= (xiq-1)*o3;
+						icp[0] = (1-xip)*(1-xip)*(1-xip);
+						icp[1] = 3*xip*(1-xip)*(1-xip);
+						icp[2] = 3*xip*xip*(1-xip);
+						icp[3] = xip*xip*xip;
+						break;
+					case INTERPOL_SUBTYPE::LAGRANGE:
+					default:
+						icq[0] = (xiq-1)*(xiq-2)/2;
+						icq[1] = (xiq+1)*icq[0];
+						icq[0] *= xiq/(-3);
+						icq[3] = xiq*(xiq+1)/2;
+						icq[2] = (2-xiq)*icq[3];
+						icq[3] *= (xiq-1)/3;
 
-					icp[0] = (xip-1)*(xip-2)/2;
-					icp[1] = (xip+1)*icp[0];
-					icp[0] *= -o3*xip;
-					icp[3] = xip*(xip+1)/2;
-					icp[2] = (2-xip)*icp[3];
-					icp[3] *= (xip-1)*o3;
+						icp[0] = (xip-1)*(xip-2)/2;
+						icp[1] = (xip+1)*icp[0];
+						icp[0] *= xip/(-3);
+						icp[3] = xip*(xip+1)/2;
+						icp[2] = (2-xip)*icp[3];
+						icp[3] *= (xip-1)/3;
+						break;
+					}
 					break;
 				}
 
@@ -295,7 +311,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 
 				// renormlize to minimize rounding errors
-				renormalize(hmc.size(),hmc.data());
+//				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
@@ -316,49 +332,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					}
 				}
 			}
-
-			interpol_t hmsum = 0;
-			for (hi h : _heritage_map[q_i][p_i]) {
-				hmsum += h.weight;
-				ti[h.index] += h.weight;
-			}
-
-			long int epsilon;
-			if (std::is_same<vfps::interpol_t,double>::value) {
-				epsilon = std::round((static_cast<double>(hmsum)
-									  -1.0+DBL_EPSILON)/DBL_EPSILON)-1.0;
-			}
-			if (std::is_same<vfps::interpol_t,float>::value) {
-				epsilon = std::round((static_cast<float>(hmsum)
-									  -1.0f+FLT_EPSILON)/FLT_EPSILON)-1.0f;
-			}
-			if (std::is_same<vfps::interpol_t,Share>::value) {
-				epsilon = static_cast<uint32_t>(hmsum);
-			}
-
-			if (p_i > 1 && q_i > 1
-				&& p_i < size(1)-1
-				&& q_i < size(0) -1 ) {
-				if (epsilon >= -5 && epsilon <= 5) {
-					num[epsilon+5]++;
-				} else {
-					num[11]++;
-				}
-			}
-			hm << epsilon << '\t';
 		}
-		hm << std::endl;
-	}
-	std::ofstream hmb("hermabin_"+interpol_str+".dat");
-	for (unsigned int i=0; i< num.size(); i++) {
-		hmb << int(i)-5 << '\t' << num[i] << std::endl;
-	}
-	std::ofstream tm("target_"+interpol_str+".dat");
-	for (unsigned int x=0; x<size(0); x++) {
-		for (unsigned int y=0; y<size(1); y++) {
-			tm << static_cast<float>(ti[y*size(0)+x] - 1.0) << '\t';
-		}
-		tm << std::endl;
 	}
 }
 

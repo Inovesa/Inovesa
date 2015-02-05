@@ -25,8 +25,8 @@ namespace vfps
 {
 
 typedef float meshaxis_t;
-typedef unsigned int meshdata_t;
-typedef Share interpol_t;
+typedef float meshdata_t;
+typedef float interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -42,7 +42,7 @@ public:
 	 */
 	enum class ROTATION_TYPE
 	{
-		MESH=0, NORMAL, SPACE
+		MESH=0, NORMAL, NORMAL2, SPACE
 	};
 
 	/**
@@ -55,7 +55,14 @@ public:
 		QUADRATIC=3,
 		CUBIC=4
 	};
-	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::LINEAR;
+	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::QUADRATIC;
+
+	enum class INTERPOL_SUBTYPE
+	{
+		BERNSTEIN,
+		LAGRANGE
+	};
+	static constexpr INTERPOL_SUBTYPE ist = INTERPOL_SUBTYPE::BERNSTEIN;
 
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);

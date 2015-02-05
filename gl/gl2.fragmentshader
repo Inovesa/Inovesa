@@ -9,5 +9,5 @@ uniform sampler2D myTextureSampler;
 void main(){
 
 	// Output color = color of the texture at the specified UV
-	gl_FragColor =  log(64*texture2D( myTextureSampler, UV )+1)/log(65);
+	gl_FragColor =  2*texture2D( myTextureSampler, UV );
 }
