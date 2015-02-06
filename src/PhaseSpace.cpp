@@ -245,60 +245,25 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					break;
 
 				case INTERPOL_TYPE::QUADRATIC:
-					switch (ist)
-					{
-					case INTERPOL_SUBTYPE::BERNSTEIN:
-						icq[0] = (1-xiq)*(1-xiq);
-						icq[1] = 2*xiq*(1-xiq);
-						icq[2] = xiq*xiq;
+					icq[0] = xiq*(xiq-1)/2;
+					icq[1] = 1-xiq*xiq;
+					icq[2] = xiq*(xiq+1)/2;
 
-						icp[0] = (1-xip)*(1-xip);
-						icp[1] = 2*xip*(1-xip);
-						icp[2] = xip*xip;
-						break;
-					default:
-						icq[0] = xiq*(xiq-1)/2;
-						icq[1] = 1-xiq*xiq;
-						icq[2] = xiq*(xiq+1)/2;
-
-						icp[0] = xip*(xip-1)/2;
-						icp[1] = 1-xip*xip;
-						icp[2] = xip*(xip+1)/2;
-						break;
-					}
+					icp[0] = xip*(xip-1)/2;
+					icp[1] = 1-xip*xip;
+					icp[2] = xip*(xip+1)/2;
 					break;
 
 				case INTERPOL_TYPE::CUBIC:
-					switch (ist)
-					{
-					case INTERPOL_SUBTYPE::BERNSTEIN:
-						icq[0] = (1-xiq)*(1-xiq)*(1-xiq);
-						icq[1] = 3*xiq*(1-xiq)*(1-xiq);
-						icq[2] = 3*xiq*xiq*(1-xiq);
-						icq[3] = xiq*xiq*xiq;
+					icq[0] = (xiq-1)*(xiq-2)*xiq/(-6);
+					icq[1] = (xiq+1)*(xiq-1)*(xiq-2)/2;
+					icq[2] = (2-xiq)*xiq*(xiq+1)/2;
+					icq[3] = xiq*(xiq+1)*(xiq-1)/6;
 
-						icp[0] = (1-xip)*(1-xip)*(1-xip);
-						icp[1] = 3*xip*(1-xip)*(1-xip);
-						icp[2] = 3*xip*xip*(1-xip);
-						icp[3] = xip*xip*xip;
-						break;
-					case INTERPOL_SUBTYPE::LAGRANGE:
-					default:
-						icq[0] = (xiq-1)*(xiq-2)/2;
-						icq[1] = (xiq+1)*icq[0];
-						icq[0] *= xiq/(-3);
-						icq[3] = xiq*(xiq+1)/2;
-						icq[2] = (2-xiq)*icq[3];
-						icq[3] *= (xiq-1)/3;
-
-						icp[0] = (xip-1)*(xip-2)/2;
-						icp[1] = (xip+1)*icp[0];
-						icp[0] *= xip/(-3);
-						icp[3] = xip*(xip+1)/2;
-						icp[2] = (2-xip)*icp[3];
-						icp[3] *= (xip-1)/3;
-						break;
-					}
+					icp[0] = (xip-1)*(xip-2)/2*xip/(-6);
+					icp[1] = (xip+1)*(xip-1)*(xip-2)/2;
+					icp[2] = (2-xip)*xip*(xip+1)/2;
+					icp[3] = xip*(xip+1)*(xip-1)/6;
 					break;
 				}
 
@@ -311,7 +276,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 
 				// renormlize to minimize rounding errors
-//				renormalize(hmc.size(),hmc.data());
+				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
@@ -376,6 +341,24 @@ void vfps::PhaseSpace::rotate()
 void vfps::PhaseSpace::kick(const std::vector<meshdata_t>& AF)
 {
 	;
+}
+
+void vfps::PhaseSpace::renormalize(size_t n, float* args)
+{
+	float sum=0;
+	for( size_t i=0; i<n; i++) {
+		sum += args[i];
+	}
+
+	if (sum > 0) {
+		for( size_t i=0; i<n; i++) {
+			args[i] /= sum;
+		}
+	} else {
+		for( size_t i=0; i<n; i++) {
+			args[i] = 1.0f/n;
+		}
+	}
 }
 
 void vfps::PhaseSpace::__initOpenCL()

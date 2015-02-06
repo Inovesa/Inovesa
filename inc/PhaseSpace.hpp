@@ -55,14 +55,7 @@ public:
 		QUADRATIC=3,
 		CUBIC=4
 	};
-	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::QUADRATIC;
-
-	enum class INTERPOL_SUBTYPE
-	{
-		BERNSTEIN,
-		LAGRANGE
-	};
-	static constexpr INTERPOL_SUBTYPE ist = INTERPOL_SUBTYPE::BERNSTEIN;
+	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::CUBIC;
 
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
@@ -195,6 +188,8 @@ private:
 	cl::Kernel applyHM1D;
 	cl::Kernel applyHM2D;
 	cl::Kernel rotateImg;
+
+	void renormalize(size_t n, float* args);
 
 public:
 	void __initOpenCL();
