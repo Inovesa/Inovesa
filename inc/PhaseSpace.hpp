@@ -13,8 +13,8 @@
 
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
+#include "fixed_point.h"
 #include "Ruler.hpp"
-#include "Share.hpp"
 
 #define FR_USE_GUI
 //#define FR_USE_CL
@@ -25,8 +25,8 @@ namespace vfps
 {
 
 typedef float meshaxis_t;
-typedef float meshdata_t;
-typedef float interpol_t;
+typedef fpml::fixed_point<int,3,28> meshdata_t;
+typedef fpml::fixed_point<int,3,28> interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -190,6 +190,8 @@ private:
 	cl::Kernel rotateImg;
 
 	void renormalize(size_t n, float* args);
+
+//	void renormalize(size_t n, fpml::fixed_point<int,3,28>* args);
 
 public:
 	void __initOpenCL();

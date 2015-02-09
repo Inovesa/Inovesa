@@ -139,6 +139,7 @@ class fixed_point
 	/// Grant the fixed_point template access to private members. Types with
 	/// different template parameters are different types and without this
 	/// declaration they do not have access to private members.
+	template<typename,unsigned char,unsigned char>
 	friend class fpml::fixed_point;
 
 	/// Grant the numeric_limits specialization for this fixed_point class 

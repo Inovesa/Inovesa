@@ -15,6 +15,8 @@ enum class pattern {
 	square, gaus, half, quarters
 };
 
+using namespace vfps;
+
 int main(int argc, char** argv)
 {
 	// settings
@@ -22,85 +24,85 @@ int main(int argc, char** argv)
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
-	vfps::meshdata_t pattern_max;
-	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
-		pattern_max = vfps::Share::ONE;
+	float pattern_max;
+	if (std::is_same<meshdata_t,fpml::fixed_point<int,3,28>>::value) {
+		pattern_max = 4.0;
 	} else {
-		pattern_max = static_cast<vfps::meshdata_t>(0.5);
+		pattern_max = 0.5;
 	}
 
-	constexpr vfps::PhaseSpace::ROTATION_TYPE rt
-			= vfps::PhaseSpace::ROTATION_TYPE::NORMAL;
+	constexpr PhaseSpace::ROTATION_TYPE rt
+			= PhaseSpace::ROTATION_TYPE::NORMAL;
 	constexpr pattern ptrntype = pattern::quarters;
 	constexpr unsigned int steps = 4000;
 
 	/* @todo: remove global settings from main.hpp
-	 * (vfps::HDF5File::HDF5File() could take mesh as argument)
+	 * (HDF5File::HDF5File() could take mesh as argument)
 	 */
-	vfps::PhaseSpace mesh(	vfps::ps_xsize,-10.0,10.0,
-							vfps::ps_ysize,-10.0,10.0);
+	PhaseSpace mesh(	ps_xsize,-10.0,10.0,
+							ps_ysize,-10.0,10.0);
 
-	vfps::HDF5File file("results.h5");
+	HDF5File file("results.h5");
 
 	// create pattern to start with
 	switch (ptrntype) {
 	case pattern::square:
-		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
-			for (unsigned int y=vfps::ps_ysize/4; y<vfps::ps_ysize*3/4; y++) {
+		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
+			for (unsigned int y=ps_ysize/4; y<ps_ysize*3/4; y++) {
 				mesh[x][y] = 1.0f*pattern_max;
 			}
 		}
-		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
-				mesh[x][vfps::ps_ysize/2] = 0.5f*pattern_max;
+		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
+				mesh[x][ps_ysize/2] = 0.5f*pattern_max;
 		}
-		for (unsigned int y=vfps::ps_ysize/4; y<vfps::ps_ysize*3/4; y++) {
-				mesh[vfps::ps_xsize/2][y] = 0.5f*pattern_max;
+		for (unsigned int y=ps_ysize/4; y<ps_ysize*3/4; y++) {
+				mesh[ps_xsize/2][y] = 0.5f*pattern_max;
 		}
-		for (unsigned int x=vfps::ps_xsize/4; x<vfps::ps_xsize*3/4; x++) {
+		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
 			mesh[x][x] = 0.0f;
-			mesh[x][vfps::ps_ysize-x] = 0.0f;
+			mesh[x][ps_ysize-x] = 0.0f;
 		}
 		break;
 	case pattern::gaus:
 	default:
-		for (int x=0; x<int(vfps::ps_xsize); x++) {
-			for (int y=0; y<int(vfps::ps_ysize); y++) {
-				mesh[x][y] = std::exp(-std::pow(x-int(vfps::ps_xsize)/2,2)/patterndim_x
-									  -std::pow(y-int(vfps::ps_ysize)/2,2)/patterndim_y);
+		for (int x=0; x<int(ps_xsize); x++) {
+			for (int y=0; y<int(ps_ysize); y++) {
+				mesh[x][y] = std::exp(-std::pow(x-int(ps_xsize)/2,2)/patterndim_x
+									  -std::pow(y-int(ps_ysize)/2,2)/patterndim_y);
 			}
 		}
 		break;
 	case pattern::half:
-		for (int y=pattern_margin; y<int(vfps::ps_ysize-pattern_margin); y++) {
-			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+		for (int y=pattern_margin; y<int(ps_ysize-pattern_margin); y++) {
+			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
 				mesh[x][y] = 1.0f*pattern_max;
 			}
 		}
-		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+		for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
 			mesh[x][x] = 0;
-			mesh[x][vfps::ps_ysize/2] = 0;
-			mesh[x][vfps::ps_ysize-x] = 0;
+			mesh[x][ps_ysize/2] = 0;
+			mesh[x][ps_ysize-x] = 0;
 		}
 		break;
 	case pattern::quarters:
-		for (int y=pattern_margin; y<int(vfps::ps_ysize/2); y++) {
-			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+		for (int y=pattern_margin; y<int(ps_ysize/2); y++) {
+			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
 				mesh[x][y] = (float(y-pattern_margin))
-							/float(vfps::ps_ysize/2-pattern_margin)*pattern_max;
+							/float(ps_ysize/2-pattern_margin)*pattern_max;
 			}
 		}
-		for (int y=vfps::ps_ysize/2; y<int(vfps::ps_ysize-pattern_margin); y++) {
-			for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
+		for (int y=ps_ysize/2; y<int(ps_ysize-pattern_margin); y++) {
+			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
 				mesh[x][y] = 1.0f*pattern_max;
 			}
 		}
-		for (int x=pattern_margin; x<int(vfps::ps_xsize/2); x++) {
-			mesh[x][vfps::ps_ysize-x] = 0.0f*pattern_max;
+		for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
+			mesh[x][ps_ysize-x] = 0.0f*pattern_max;
 		}
-		for (int x=vfps::ps_xsize/2; x<int(vfps::ps_xsize-pattern_margin); x++) {
-			for (int y=pattern_margin; y<int(vfps::ps_ysize/2); y++) {
-				mesh[x][y] = std::exp(-std::pow(x-int(vfps::ps_xsize)/2,2)/patterndim_x
-									  -std::pow(y-int(vfps::ps_ysize)/2,2)/patterndim_y)
+		for (int x=ps_xsize/2; x<int(ps_xsize-pattern_margin); x++) {
+			for (int y=pattern_margin; y<int(ps_ysize/2); y++) {
+				mesh[x][y] = std::exp(-std::pow(x-int(ps_xsize)/2,2)/patterndim_x
+									  -std::pow(y-int(ps_ysize)/2,2)/patterndim_y)
 						*pattern_max;
 			}
 		}

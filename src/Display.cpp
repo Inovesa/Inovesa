@@ -155,7 +155,7 @@ void Display::createTexture(vfps::PhaseSpace* mesh)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
 					 mesh->size(0), mesh->size(1),
 					 0, GL_RED,
-					 GL_UNSIGNED_INT, mesh->getData());
+					 GL_INT, mesh->getData());
 	}
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );

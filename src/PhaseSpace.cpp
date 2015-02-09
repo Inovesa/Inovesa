@@ -20,7 +20,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_ws[1] = new meshdata_t[size(1)];
 
 	const meshdata_t ca = 3.;
-	double dc = 1.;
+	meshdata_t dc = 1;
 
 	const meshdata_t h03 = getDelta(0)/3.;
 	_ws[0][0] = h03;
@@ -85,9 +85,9 @@ vfps::meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
 
 	meshdata_t avg = 0;
 	for (unsigned int i=0; i<size(axis); i++) {
-		avg += i*_projection[axis][i];
+		avg += meshdata_t(i)*_projection[axis][i];
 	}
-	avg = avg/size(axis);
+	avg = avg/meshdata_t(size(axis));
 
 	_moment[axis][0] = avg;
 
@@ -111,9 +111,9 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
 	meshdata_t avg = _moment[axis][0];
 	meshdata_t var = 0;
 	for (unsigned int i=0; i<size(axis); i++) {
-		var += (i-avg)*_projection[axis][i];
+		var += (meshdata_t(i)-avg)*_projection[axis][i];
 	}
-	var = var/size(axis);
+	var = var/meshdata_t(size(axis));
 
 	_moment[axis][1] = var;
 
@@ -237,33 +237,33 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					break;
 
 				case INTERPOL_TYPE::LINEAR:
-					icq[0] = 1-xiq;
+					icq[0] = interpol_t(1)-xiq;
 					icq[1] = xiq;
 
-					icp[0] = 1-xip;
+					icp[0] = interpol_t(1)-xip;
 					icp[1] = xip;
 					break;
 
 				case INTERPOL_TYPE::QUADRATIC:
-					icq[0] = xiq*(xiq-1)/2;
-					icq[1] = 1-xiq*xiq;
-					icq[2] = xiq*(xiq+1)/2;
+					icq[0] = xiq*(xiq-interpol_t(1))/interpol_t(2);
+					icq[1] = interpol_t(1)-xiq*xiq;
+					icq[2] = xiq*(xiq+interpol_t(1))/interpol_t(2);
 
-					icp[0] = xip*(xip-1)/2;
-					icp[1] = 1-xip*xip;
-					icp[2] = xip*(xip+1)/2;
+					icp[0] = xip*(xip-interpol_t(1))/interpol_t(2);
+					icp[1] = interpol_t(1)-xip*xip;
+					icp[2] = xip*(xip+interpol_t(1))/interpol_t(2);
 					break;
 
 				case INTERPOL_TYPE::CUBIC:
-					icq[0] = (xiq-1)*(xiq-2)*xiq/(-6);
-					icq[1] = (xiq+1)*(xiq-1)*(xiq-2)/2;
-					icq[2] = (2-xiq)*xiq*(xiq+1)/2;
-					icq[3] = xiq*(xiq+1)*(xiq-1)/6;
+					icq[0] = (xiq-interpol_t(1))*(xiq-interpol_t(2))*xiq/interpol_t(-6);
+					icq[1] = (xiq+interpol_t(1))*(xiq-interpol_t(1))*(xiq-interpol_t(2))/interpol_t(2);
+					icq[2] = (interpol_t(2)-xiq)*xiq*(xiq+interpol_t(1))/interpol_t(2);
+					icq[3] = xiq*(xiq+interpol_t(1))*(xiq-interpol_t(1))/interpol_t(6);
 
-					icp[0] = (xip-1)*(xip-2)/2*xip/(-6);
-					icp[1] = (xip+1)*(xip-1)*(xip-2)/2;
-					icp[2] = (2-xip)*xip*(xip+1)/2;
-					icp[3] = xip*(xip+1)*(xip-1)/6;
+					icp[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip/interpol_t(-6);
+					icp[1] = (xip+interpol_t(1))*(xip-interpol_t(1))*(xip-interpol_t(2))/interpol_t(2);
+					icp[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))/interpol_t(2);
+					icp[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))/interpol_t(6);
 					break;
 				}
 
@@ -276,7 +276,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 
 				// renormlize to minimize rounding errors
-				renormalize(hmc.size(),hmc.data());
+//				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
@@ -325,11 +325,11 @@ void vfps::PhaseSpace::rotate()
 	for (unsigned int i=0; i< size(0)*size(1); i++) {
 		_data1D_rotated[i] = 0;
 		for (hi h: _heritage_map1D[i]) {
-			_data1D_rotated[i] += _data1D[h.index]*h.weight;
+			_data1D_rotated[i] += _data1D[h.index]*static_cast<meshdata_t>(h.weight);
 		}
 		// handle overflow
 		if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
-			if (_data1D_rotated[i] > UINT32_MAX/4*3) {
+			if (_data1D_rotated[i] > meshdata_t(UINT32_MAX/4*3)) {
 				_data1D_rotated[i] = 0;
 			}
 		}
@@ -360,6 +360,52 @@ void vfps::PhaseSpace::renormalize(size_t n, float* args)
 		}
 	}
 }
+
+/*
+void renormalize(size_t n, fpml::fixed_point<int,3,28>* args)
+{
+	std::vector<uint32_t> tmpshare;
+	tmpshare.reserve(n);
+	uint64_t sum=0;
+	for( size_t i=0; i<n; i++) {
+		sum += args[i].__s;
+		tmpshare.push_back(args[i].__s);
+	}
+
+	if (sum == 0) {
+		for( size_t i=0; i<n; i++) {
+			tmpshare[i] = 1U;
+		}
+		sum = n;
+	}
+	std::list<std::pair<uint32_t,size_t>> remainders;
+	uint32_t rensum=0;
+	for( size_t i=0; i<n; i++) {
+		uint64_t val = static_cast<uint64_t>(tmpshare[i])*Share::ONE;
+		uint32_t remainder = val%sum;
+		val /= sum;
+		rensum += val;
+		args[i].__s = val;
+		remainders.push_back(std::pair<uint32_t,size_t>(remainder,i));
+	}
+
+	size_t rest = fpml::fixed_point<int,3,28>(1) - rensum;
+	if (rest > 0) {
+		// sort remainders rescending
+		remainders.sort([](	const std::pair<uint32_t,size_t> &lhs,
+							const std::pair<uint32_t,size_t> &rhs)
+						-> bool
+						{ return lhs.first > rhs.first; }
+		);
+		do {
+			args[remainders.front().second].__s += 1U;
+			remainders.pop_front();
+			rest--;
+		} while (rest > 0);
+	}
+}
+*/
+
 
 void vfps::PhaseSpace::__initOpenCL()
 {
