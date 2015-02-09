@@ -361,51 +361,48 @@ void vfps::PhaseSpace::renormalize(size_t n, float* args)
 	}
 }
 
-/*
-void renormalize(size_t n, fpml::fixed_point<int,3,28>* args)
+void vfps::PhaseSpace::renormalize(size_t n, fixp32* args)
 {
-	std::vector<uint32_t> tmpshare;
+	std::vector<fixp32> tmpshare;
 	tmpshare.reserve(n);
-	uint64_t sum=0;
+	fixp32 sum=0;
 	for( size_t i=0; i<n; i++) {
-		sum += args[i].__s;
-		tmpshare.push_back(args[i].__s);
+		sum += args[i];
+		tmpshare.push_back(args[i]);
 	}
 
-	if (sum == 0) {
+	if (sum == fixp32(0)) {
 		for( size_t i=0; i<n; i++) {
-			tmpshare[i] = 1U;
+			tmpshare[i] = 1;
 		}
 		sum = n;
 	}
-	std::list<std::pair<uint32_t,size_t>> remainders;
-	uint32_t rensum=0;
+	std::list<std::pair<fixp32,size_t>> remainders;
+	fixp32 rensum=0;
 	for( size_t i=0; i<n; i++) {
-		uint64_t val = static_cast<uint64_t>(tmpshare[i])*Share::ONE;
-		uint32_t remainder = val%sum;
+		fixp32 val = tmpshare[i];
+		fixp32 remainder = val - sum*(val/sum);
 		val /= sum;
 		rensum += val;
-		args[i].__s = val;
-		remainders.push_back(std::pair<uint32_t,size_t>(remainder,i));
+		args[i] = val;
+		remainders.push_back(std::pair<fixp32,size_t>(remainder,i));
 	}
 
-	size_t rest = fpml::fixed_point<int,3,28>(1) - rensum;
-	if (rest > 0) {
+	fixp32 rest = fixp32(1) - rensum;
+	if (rest > fixp32(0)) {
 		// sort remainders rescending
-		remainders.sort([](	const std::pair<uint32_t,size_t> &lhs,
-							const std::pair<uint32_t,size_t> &rhs)
+		remainders.sort([](	const std::pair<fixp32,size_t> &lhs,
+							const std::pair<fixp32,size_t> &rhs)
 						-> bool
 						{ return lhs.first > rhs.first; }
 		);
 		do {
-			args[remainders.front().second].__s += 1U;
+			args[remainders.front().second] += std::numeric_limits<fixp32>::epsilon();
 			remainders.pop_front();
-			rest--;
-		} while (rest > 0);
+			rest -= fixp32(std::numeric_limits<fixp32>::epsilon());
+		} while (rest > fixp32(0));
 	}
 }
-*/
-
 
 void vfps::PhaseSpace::__initOpenCL()
 {

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <GL/gl.h>
+#include <list>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -23,10 +24,12 @@
 
 namespace vfps
 {
+typedef fpml::fixed_point<int,3,28> fixp32;
+typedef fpml::fixed_point<long int,35,28> fixp64;
 
 typedef float meshaxis_t;
-typedef fpml::fixed_point<int,3,28> meshdata_t;
-typedef fpml::fixed_point<int,3,28> interpol_t;
+typedef fixp32 meshdata_t;
+typedef fixp32 interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -191,7 +194,7 @@ private:
 
 	void renormalize(size_t n, float* args);
 
-//	void renormalize(size_t n, fpml::fixed_point<int,3,28>* args);
+	void renormalize(size_t n, fixp32* args);
 
 public:
 	void __initOpenCL();
