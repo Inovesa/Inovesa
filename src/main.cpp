@@ -20,13 +20,13 @@ using namespace vfps;
 int main(int argc, char** argv)
 {
 	// settings
-	constexpr double rotations = 0.1;
+	constexpr double rotations = 1;
 	constexpr unsigned int patterndim_x = 512;
 	constexpr unsigned int patterndim_y = 4048;
 	constexpr unsigned int pattern_margin = 128;
 	float pattern_max;
-	if (std::is_same<meshdata_t,fpml::fixed_point<int,3,28>>::value) {
-		pattern_max = 4.0;
+	if (std::is_same<meshdata_t,fixp32>::value) {
+		pattern_max = 1.0;
 	} else {
 		pattern_max = 0.5;
 	}

@@ -25,7 +25,6 @@
 namespace vfps
 {
 typedef fpml::fixed_point<int,3,28> fixp32;
-typedef fpml::fixed_point<long int,35,28> fixp64;
 
 typedef float meshaxis_t;
 typedef fixp32 meshdata_t;

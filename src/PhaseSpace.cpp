@@ -276,7 +276,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 
 				// renormlize to minimize rounding errors
-//				renormalize(hmc.size(),hmc.data());
+				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
@@ -327,12 +327,16 @@ void vfps::PhaseSpace::rotate()
 		for (hi h: _heritage_map1D[i]) {
 			_data1D_rotated[i] += _data1D[h.index]*static_cast<meshdata_t>(h.weight);
 		}
-		// handle overflow
-		if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
-			if (_data1D_rotated[i] > meshdata_t(UINT32_MAX/4*3)) {
-				_data1D_rotated[i] = 0;
+		// handle overshooting
+		meshdata_t ceil=std::numeric_limits<fixp32>::min();
+		meshdata_t flor=std::numeric_limits<fixp32>::max();
+		for (size_t x=1; x<=2; x++) {
+			for (size_t y=1; y<=2; y++) {
+				ceil = std::max(ceil,_data1D[_heritage_map1D[i][x*it+y].index]);
+				flor = std::min(flor,_data1D[_heritage_map1D[i][x*it+y].index]);
 			}
 		}
+		_data1D_rotated[i] = std::max(std::min(ceil,_data1D_rotated[i]),flor);
 	}
 	std::copy_n(_data1D_rotated,size(0)*size(1),_data1D);
 #endif // FR_USE_CL

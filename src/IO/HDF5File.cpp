@@ -42,10 +42,10 @@ vfps::HDF5File::~HDF5File()
 void vfps::HDF5File::write(PhaseSpace* ps)
 {
 
-	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
-		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_UINT32);
-	} else {
+	if (std::is_same<vfps::meshdata_t,float>::value) {
 		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_FLOAT);
+	} else {
+		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_INT32);
 	}
 }
 
@@ -61,11 +61,11 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 	H5::DataSpace* filespace = new H5::DataSpace(fs_dataset->getSpace());
 	filespace->selectHyperslab(H5S_SELECT_SET, fs_ext.data(), offset.data());
 	H5::DataSpace* memspace = new H5::DataSpace(fs_rank,fs_ext.data(),nullptr);
-	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
-		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_UINT32,
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_FLOAT,
 						  *memspace, *filespace);
 	} else {
-		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_FLOAT,
+		fs_dataset->write(ps->getData(), H5::PredType::NATIVE_INT32,
 						  *memspace, *filespace);
 	}
 
