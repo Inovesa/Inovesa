@@ -7,6 +7,7 @@
 #include "Share.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
+#include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 
 #include "main.hpp"
@@ -31,8 +32,6 @@ int main(int argc, char** argv)
 		pattern_max = 0.5;
 	}
 
-	constexpr PhaseSpace::ROTATION_TYPE rt
-			= PhaseSpace::ROTATION_TYPE::NORMAL;
 	constexpr pattern ptrntype = pattern::quarters;
 	constexpr unsigned int steps = 4000;
 
@@ -129,7 +128,7 @@ int main(int argc, char** argv)
 #endif
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
-	mesh.setRotationMap(angle,rt);
+	RotationMap rm(mesh.getData(),mesh.getDataRotated(),ps_xsize,ps_ysize,angle);
 #ifdef FR_USE_CL
 	mesh.__initOpenCL();
 	mesh.syncData();
@@ -138,7 +137,7 @@ int main(int argc, char** argv)
 	unsigned int i;
 	for (i=0;i<steps*rotations;i++) {
         if (i%outstep != 0) {
-			mesh.rotate();
+			rm.apply();
 		} else {
 			if (i == 10)
 				outstep = 10;
@@ -150,7 +149,7 @@ int main(int argc, char** argv)
 #endif
 			file.append(&mesh);
 
-            mesh.rotate();
+			rm.apply();
 #ifdef FR_USE_GUI
 			display.delTexture();
 #endif

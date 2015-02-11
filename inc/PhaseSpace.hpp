@@ -39,27 +39,6 @@ typedef struct {
 class PhaseSpace
 {	
 public:
-	/**
-	 * @brief The ROTATION_TYPE enum
-	 */
-	enum class ROTATION_TYPE
-	{
-		MESH=0, NORMAL, NORMAL2, SPACE
-	};
-
-	/**
-	 * @brief The INTERPOL_TYPE enum
-	 */
-	enum INTERPOL_TYPE
-	{
-		NONE=1,
-		LINEAR=2,
-		QUADRATIC=3,
-		CUBIC=4
-	};
-	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::CUBIC;
-
-public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
 
 	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
@@ -76,7 +55,7 @@ public:
 	  *
 	  * @return pointer to array holding size<0>()*size<1>() data points
 	  */
-	inline const meshdata_t* getData() const
+	inline meshdata_t* const getData() const
 	{
 #ifdef FR_USE_CL
 #if (FR_CL_SYNC_BLOCKING == CL_FALSE)
@@ -84,6 +63,11 @@ public:
 #endif // FR_CL_SYNC_BLOCKING
 #endif // FR_USE_CL
 		return _data1D;
+	}
+
+	inline meshdata_t* const getDataRotated() const
+	{
+		return _data1D_rotated;
 	}
 
 #ifdef FR_USE_CL
@@ -122,16 +106,6 @@ public:
 
 	PhaseSpace& operator=(const PhaseSpace& other);
 
-	void setRotationMap(const meshaxis_t deltat,
-						const ROTATION_TYPE mn=ROTATION_TYPE::SPACE);
-
-	/**
-	 * @brief rotate applies the rotation map
-	 */
-	void rotate();
-
-	void kick(const std::vector<meshdata_t> &AF);
-
 	inline const unsigned int size(const unsigned int x) const
 	{ return _axis[x].getNSteps(); }
 
@@ -155,9 +129,6 @@ protected:
 	cl::Event data_synced;
 
 	cl_uint2 img_size;
-
-	std::array<hi,it*it>** _heritage_map;
-	std::array<hi,it*it>* const _heritage_map1D;
 
 	/**
 	 * @brief _moment: holds the moments for distributions
@@ -184,19 +155,9 @@ protected:
 	}
 
 private:
-	cl::Image2D _data_buf;
-	cl::Image2D _data_rotated_buf;
-	cl::Buffer _heritage_map1D_buf;
-	cl::Kernel applyHM1D;
-	cl::Kernel applyHM2D;
-	cl::Kernel rotateImg;
-
 	void renormalize(size_t n, float* args);
 
 	void renormalize(size_t n, fixp32* args);
-
-public:
-	void __initOpenCL();
 };
 
 }
