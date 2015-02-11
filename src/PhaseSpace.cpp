@@ -255,15 +255,23 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 					break;
 
 				case INTERPOL_TYPE::CUBIC:
-					icq[0] = (xiq-interpol_t(1))*(xiq-interpol_t(2))*xiq/interpol_t(-6);
-					icq[1] = (xiq+interpol_t(1))*(xiq-interpol_t(1))*(xiq-interpol_t(2))/interpol_t(2);
-					icq[2] = (interpol_t(2)-xiq)*xiq*(xiq+interpol_t(1))/interpol_t(2);
-					icq[3] = xiq*(xiq+interpol_t(1))*(xiq-interpol_t(1))/interpol_t(6);
+					icq[0] = (xiq-interpol_t(1))*(xiq-interpol_t(2))*xiq
+							* interpol_t(-1./6.);
+					icq[1] = (xiq+interpol_t(1))*(xiq-interpol_t(1))
+							* (xiq-interpol_t(2)) / interpol_t(2);
+					icq[2] = (interpol_t(2)-xiq)*xiq*(xiq+interpol_t(1))
+							/ interpol_t(2);
+					icq[3] = xiq*(xiq+interpol_t(1))*(xiq-interpol_t(1))
+							* interpol_t(1./6.);
 
-					icp[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip/interpol_t(-6);
-					icp[1] = (xip+interpol_t(1))*(xip-interpol_t(1))*(xip-interpol_t(2))/interpol_t(2);
-					icp[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))/interpol_t(2);
-					icp[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))/interpol_t(6);
+					icp[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
+							* interpol_t(-1./6.);
+					icp[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
+							* (xip-interpol_t(2)) / interpol_t(2);
+					icp[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))
+							/ interpol_t(2);
+					icp[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
+							* interpol_t(1./6.);
 					break;
 				}
 
@@ -276,7 +284,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 
 
 				// renormlize to minimize rounding errors
-				renormalize(hmc.size(),hmc.data());
+//				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (unsigned int j1=0; j1<it; j1++) {
@@ -394,7 +402,7 @@ void vfps::PhaseSpace::renormalize(size_t n, fixp32* args)
 
 	fixp32 rest = fixp32(1) - rensum;
 	if (rest > fixp32(0)) {
-		// sort remainders rescending
+		// sort remainders descending
 		remainders.sort([](	const std::pair<fixp32,size_t> &lhs,
 							const std::pair<fixp32,size_t> &rhs)
 						-> bool
@@ -404,6 +412,18 @@ void vfps::PhaseSpace::renormalize(size_t n, fixp32* args)
 			args[remainders.front().second] += std::numeric_limits<fixp32>::epsilon();
 			remainders.pop_front();
 			rest -= fixp32(std::numeric_limits<fixp32>::epsilon());
+		} while (rest > fixp32(0));
+	} else  if (rest < fixp32(0)) {
+		// sort remainders ascending
+		remainders.sort([](	const std::pair<fixp32,size_t> &lhs,
+							const std::pair<fixp32,size_t> &rhs)
+						-> bool
+						{ return lhs.first < rhs.first; }
+		);
+		do {
+			args[remainders.front().second] -= std::numeric_limits<fixp32>::epsilon();
+			remainders.pop_front();
+			rest += fixp32(std::numeric_limits<fixp32>::epsilon());
 		} while (rest > fixp32(0));
 	}
 }
