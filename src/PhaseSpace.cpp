@@ -158,7 +158,7 @@ void vfps::PhaseSpace::setRotationMap(const meshaxis_t deltat,
 	ti.resize(size(0)*size(1));
 
 	const meshaxis_t cos_dt = cos(deltat);
-	const meshaxis_t sin_dt = sin(deltat);
+	const meshaxis_t sin_dt = -sin(deltat);
 
 	std::array<unsigned int,12> num;
 	num.fill(0);
