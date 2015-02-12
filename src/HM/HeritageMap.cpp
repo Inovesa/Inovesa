@@ -4,12 +4,12 @@ vfps::HeritageMap::HeritageMap(meshdata_t* in, meshdata_t* out,
 							   size_t xsize, size_t ysize) :
 	_data1D(in),
 	_data1D_rotated(out),
+	_heritage_map(new std::array<hi,it*it>*[xsize]),
 	_heritage_map1D(new std::array<hi,it*it>[xsize*ysize]()),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize)
 {
-
 	for (unsigned int i=0; i<xsize; i++) {
 		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
 	}
