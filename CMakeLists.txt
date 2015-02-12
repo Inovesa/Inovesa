@@ -23,7 +23,6 @@ set(INC_LIST
 			./inc/HM/RotationMap.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/Display.hpp
-			./inc/main.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
 			./inc/Share.hpp

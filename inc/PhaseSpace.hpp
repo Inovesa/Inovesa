@@ -26,6 +26,9 @@ namespace vfps
 {
 typedef fpml::fixed_point<int,2,29> fixp32;
 
+constexpr unsigned int ps_xsize = 512;
+constexpr unsigned int ps_ysize = 512;
+
 typedef float meshaxis_t;
 typedef fixp32 meshdata_t;
 typedef fixp32 interpol_t;
@@ -43,8 +46,8 @@ public:
 
 	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
 
-	PhaseSpace(	unsigned int xdim, meshaxis_t xmin, meshaxis_t xmax,
-				unsigned int ydim, meshaxis_t ymin, meshaxis_t ymax);
+	PhaseSpace(	meshaxis_t xmin, meshaxis_t xmax,
+				meshaxis_t ymin, meshaxis_t ymax);
 
 	PhaseSpace(const PhaseSpace& other);
 
@@ -63,11 +66,6 @@ public:
 #endif // FR_CL_SYNC_BLOCKING
 #endif // FR_USE_CL
 		return _data1D;
-	}
-
-	inline meshdata_t* const getDataRotated() const
-	{
-		return _data1D_rotated;
 	}
 
 #ifdef FR_USE_CL
@@ -104,7 +102,7 @@ public:
 	inline meshdata_t* operator[](const unsigned int i) const
 	{ return _data[i]; }
 
-	PhaseSpace& operator=(const PhaseSpace& other);
+	PhaseSpace& operator=(PhaseSpace other);
 
 	inline const unsigned int size(const unsigned int x) const
 	{ return _axis[x].getNSteps(); }
@@ -113,6 +111,12 @@ public:
 							  const unsigned int n) const
 	{ return _axis[axis][n]; }
 
+	/**
+	 * @brief swap
+	 * @param other
+	 */
+	friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
+
 protected:
 	const std::array<Ruler<meshaxis_t>,2> _axis;
 
@@ -120,11 +124,7 @@ protected:
 
 	meshdata_t** _data;
 
-	meshdata_t** _data_rotated;
-
-	meshdata_t* const _data1D;
-
-	meshdata_t* const _data1D_rotated;
+	meshdata_t* _data1D;
 
 	cl::Event data_synced;
 
@@ -142,23 +142,9 @@ protected:
 	std::array<std::vector<meshdata_t>,2> _moment;
 
 	std::array<meshdata_t*,2> _ws;
-
-	inline bool insideMesh(meshaxis_t x, meshaxis_t y) const
-	{
-		return (x <= getMax(0) && y <= getMax(1) &&
-				x >= getMin(0) && y >= getMin(1) );
-	}
-
-	inline bool willStayInMesh(meshaxis_t x, meshaxis_t y) const
-	{
-		return (sqrt(pow(x,2)+pow(y,2)) < getMax(0));
-	}
-
-private:
-	void renormalize(size_t n, float* args);
-
-	void renormalize(size_t n, fixp32* args);
 };
+
+void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 }
 

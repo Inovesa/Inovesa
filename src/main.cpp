@@ -10,8 +10,6 @@
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 
-#include "main.hpp"
-
 enum class pattern {
 	square, gaus, half, quarters
 };
@@ -38,8 +36,8 @@ int main(int argc, char** argv)
 	/* @todo: remove global settings from main.hpp
 	 * (HDF5File::HDF5File() could take mesh as argument)
 	 */
-	PhaseSpace mesh(	ps_xsize,-10.0,10.0,
-							ps_ysize,-10.0,10.0);
+	PhaseSpace mesh(-10.0,10.0,-10.0,10.0);
+	PhaseSpace mesh_rotated(mesh);
 
 	HDF5File file("results.h5");
 
@@ -128,21 +126,18 @@ int main(int argc, char** argv)
 #endif
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
-	RotationMap rm(mesh.getData(),mesh.getDataRotated(),ps_xsize,ps_ysize,angle);
+	RotationMap rm(mesh.getData(),mesh_rotated.getData(),ps_xsize,ps_ysize,angle);
 #ifdef FR_USE_CL
 	mesh.__initOpenCL();
 	mesh.syncData();
 #endif
-	unsigned int outstep = 1;
+	unsigned int outstep = 100;
 	unsigned int i;
 	for (i=0;i<steps*rotations;i++) {
         if (i%outstep != 0) {
 			rm.apply();
+			swap(mesh,mesh_rotated);
 		} else {
-			if (i == 10)
-				outstep = 10;
-			if (i == 100)
-				outstep = 100;
 #ifdef FR_USE_GUI
 			display.createTexture(&mesh);
 			display.draw();
@@ -150,6 +145,7 @@ int main(int argc, char** argv)
 			file.append(&mesh);
 
 			rm.apply();
+			swap(mesh,mesh_rotated);
 #ifdef FR_USE_GUI
 			display.delTexture();
 #endif

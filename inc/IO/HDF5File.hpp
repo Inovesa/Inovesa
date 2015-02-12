@@ -5,7 +5,6 @@
 #include <H5Cpp.h>
 #include <string>
 
-#include "main.hpp"
 #include "PhaseSpace.hpp"
 
 namespace vfps {
