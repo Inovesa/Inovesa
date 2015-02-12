@@ -18,7 +18,7 @@
 #include "Ruler.hpp"
 
 #define FR_USE_GUI
-//#define FR_USE_CL
+#define FR_USE_CL
 #define FR_CL_SYNC_BLOCKING CL_TRUE
 
 
@@ -27,8 +27,8 @@ namespace vfps
 typedef fpml::fixed_point<int,2,29> fixp32;
 
 typedef float meshaxis_t;
-typedef fixp32 meshdata_t;
-typedef fixp32 interpol_t;
+typedef float meshdata_t;
+typedef float interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -89,13 +89,9 @@ public:
 #ifdef FR_USE_CL
 	inline void syncData()
 	{
-		cl::size_t<3> null3d;
-		cl::size_t<3> imgsize;
-		imgsize[0] = size(0);
-		imgsize[1] = size(1);
-		imgsize[2] = 1;
-		OCLH::queue.enqueueReadImage
-					(_data_buf, FR_CL_SYNC_BLOCKING, null3d,imgsize,0,0,
+		OCLH::queue.enqueueReadBuffer
+					(_data_buf, FR_CL_SYNC_BLOCKING,
+					 0,sizeof(float)*size(0)*size(1),
 					_data1D,nullptr,&data_synced);
 	}
 #endif
@@ -184,8 +180,8 @@ protected:
 	}
 
 private:
-	cl::Image2D _data_buf;
-	cl::Image2D _data_rotated_buf;
+	cl::Buffer _data_buf;
+	cl::Buffer _data_rotated_buf;
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM1D;
 	cl::Kernel applyHM2D;

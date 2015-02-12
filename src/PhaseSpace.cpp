@@ -313,22 +313,17 @@ void vfps::PhaseSpace::rotate()
 {
 #ifdef FR_USE_CL
 	OCLH::queue.enqueueNDRangeKernel (
-				applyHM2D,
+				applyHM1D,
 				cl::NullRange,
-				cl::NDRange(size(0),size(1)));
+				cl::NDRange(size(0)*size(1)));
 #ifdef CL_VERSION_1_2
 	OCLH::queue.enqueueBarrierWithWaitList();
 #else // CL_VERSION_1_2
 	OCLH::queue.enqueueBarrier();
 #endif // CL_VERSION_1_2
-	cl::size_t<3> null3d;
-	cl::size_t<3> imgsize;
-	imgsize[0] = size(0);
-	imgsize[1] = size(1);
-	imgsize[2] = 1;
-	OCLH::queue.enqueueCopyImage(_data_rotated_buf,
-								 _data_buf,
-								 null3d,null3d,imgsize);
+	OCLH::queue.enqueueCopyBuffer(_data_rotated_buf,
+								  _data_buf,
+								  0,0,sizeof(float)*size(0)*size(1));
 #else // FR_USE_CL
 	for (unsigned int i=0; i< size(0)*size(1); i++) {
 		_data1D_rotated[i] = 0;
@@ -430,22 +425,28 @@ void vfps::PhaseSpace::renormalize(size_t n, fixp32* args)
 
 void vfps::PhaseSpace::__initOpenCL()
 {
-	_data_buf = cl::Image2D(OCLH::context,
+	_data_buf = cl::Buffer(OCLH::context,
 							CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-							cl::ImageFormat(CL_R,CL_FLOAT),
-							size(0),size(1),0, _data1D);
-	_data_rotated_buf = cl::Image2D(OCLH::context,
+							sizeof(float)*size(0)*size(1),
+						   _data1D);
+	_data_rotated_buf = cl::Buffer(OCLH::context,
 									CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-									cl::ImageFormat(CL_R,CL_FLOAT),
-									size(0),size(1),0, _data1D_rotated);
+								   sizeof(float)*size(0)*size(1),
+								   _data1D_rotated);
 	_heritage_map1D_buf = cl::Buffer(OCLH::context,
 									 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 									 sizeof(hi)*it*it*size(0)*size(1),
 									 _heritage_map1D);
-	applyHM2D = cl::Kernel(CLProgApplyHM::p, "applyHM2D");
-	applyHM2D.setArg(0, _data_buf);
-	applyHM2D.setArg(1, _heritage_map1D_buf);
-	applyHM2D.setArg(2, size(1));
-	applyHM2D.setArg(3, it*it);
-	applyHM2D.setArg(4, _data_rotated_buf);
+	if (it == 4) {
+		applyHM1D = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
+		applyHM1D.setArg(0, _data_buf);
+		applyHM1D.setArg(1, _heritage_map1D_buf);
+		applyHM1D.setArg(2, _data_rotated_buf);
+	} else {
+		applyHM1D = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+		applyHM1D.setArg(0, _data_buf);
+		applyHM1D.setArg(1, _heritage_map1D_buf);
+		applyHM1D.setArg(2, it*it);
+		applyHM1D.setArg(3, _data_rotated_buf);
+	}
 }
