@@ -14,30 +14,11 @@
 
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
-#include "fixed_point.h"
+#include "defines.hpp"
 #include "Ruler.hpp"
-
-#define FR_USE_GUI
-#define FR_USE_CL
-#define FR_CL_SYNC_BLOCKING CL_TRUE
-
 
 namespace vfps
 {
-typedef fpml::fixed_point<int,2,29> fixp32;
-
-constexpr unsigned int ps_xsize = 512;
-constexpr unsigned int ps_ysize = 512;
-
-typedef float meshaxis_t;
-typedef float meshdata_t;
-typedef float interpol_t;
-
-typedef struct {
-	unsigned int index;
-	cl_uint2 index2d;
-	interpol_t weight;
-} hi;
 
 class PhaseSpace
 {	
@@ -60,23 +41,8 @@ public:
 	  */
 	inline meshdata_t* const getData() const
 	{
-#ifdef FR_USE_CL
-#if (FR_CL_SYNC_BLOCKING == CL_FALSE)
-		data_synced.wait();
-#endif // FR_CL_SYNC_BLOCKING
-#endif // FR_USE_CL
 		return _data1D;
 	}
-
-#ifdef FR_USE_CL
-	inline void syncData()
-	{
-		OCLH::queue.enqueueReadBuffer
-					(data_buf, FR_CL_SYNC_BLOCKING,
-					 0,sizeof(float)*size(0)*size(1),
-					_data1D,nullptr,&data_synced);
-	}
-#endif
 
 	inline const meshaxis_t getDelta(const unsigned int x) const
 	{ return _axis[x].getDelta(); }
@@ -122,10 +88,6 @@ protected:
 
 	meshdata_t* _data1D;
 
-	cl::Event data_synced;
-
-	cl_uint2 img_size;
-
 	/**
 	 * @brief _moment: holds the moments for distributions
 	 *			in both axis in mesh coordinates
@@ -139,7 +101,7 @@ protected:
 
 	std::array<meshdata_t*,2> _ws;
 
-#ifdef FR_USE_CL
+#ifdef INOVESA_USE_CL
 public:
 	cl::Buffer data_buf;
 
@@ -148,6 +110,13 @@ public:
 #endif
 };
 
+/**
+ * @brief swap
+ * @param first
+ * @param second
+ *
+ * @todo adjust to also swap cl::Buffer
+ */
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 }

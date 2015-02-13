@@ -32,8 +32,6 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 		dc = -dc;
 	}
 	_ws[1][size(0)-1] = h13;
-
-	img_size = {{size(0),size(1)}};
 }
 
 
@@ -140,10 +138,9 @@ void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
 {
 	std::swap(first._data, second._data);
 	std::swap(first._data1D,second._data1D);
-	std::swap(first.data_buf,second.data_buf);
 }
 
-#ifdef FR_USE_CL
+#ifdef INOVESA_USE_CL
 void vfps::PhaseSpace::__initOpenCL()
 {
 	data_buf = cl::Buffer(OCLH::context,

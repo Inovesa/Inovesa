@@ -8,6 +8,12 @@ namespace vfps
 
 class HeritageMap
 {
+protected:
+	typedef struct {
+		unsigned int index;
+		interpol_t weight;
+	} hi;
+
 public:
 	/**
 	 * @brief The INTERPOL_TYPE enum
@@ -26,6 +32,11 @@ public:
 
 	~HeritageMap();
 
+	/**
+	 * @brief apply
+	 *
+	 * @todo get rid of copying to host RAM and syncing every step
+	 */
 	void apply();
 
 protected:
@@ -42,13 +53,12 @@ protected:
 	PhaseSpace* _in;
 	PhaseSpace* _out;
 
-#ifdef FR_USE_CL
+	#ifdef INOVESA_USE_CL
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM;
 
-protected:
 	void __initOpenCL();
-#endif
+	#endif // INOVESA_USE_CL
 };
 
 }

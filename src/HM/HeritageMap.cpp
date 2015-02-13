@@ -24,17 +24,23 @@ vfps::HeritageMap::~HeritageMap()
 
 void vfps::HeritageMap::apply()
 {
-#ifdef FR_USE_CL
+	#ifdef INOVESA_USE_CL
 	OCLH::queue.enqueueNDRangeKernel (
 				applyHM,
 				cl::NullRange,
 				cl::NDRange(_size));
-#ifdef CL_VERSION_1_2
+	#ifdef CL_VERSION_1_2
 	OCLH::queue.enqueueBarrierWithWaitList();
-#else // CL_VERSION_1_2
+	#else // CL_VERSION_1_2
 	OCLH::queue.enqueueBarrier();
-#endif // CL_VERSION_1_2
-#else // FR_USE_CL
+	#endif // CL_VERSION_1_2
+	OCLH::queue.enqueueCopyBuffer(_out->data_buf,_in->data_buf,
+								  0,0,sizeof(float)*_size);
+	OCLH::queue.enqueueReadBuffer
+				(_out->data_buf, CL_TRUE,
+				 0,sizeof(float)*_size,
+				_data1D_rotated);
+	#else // INOVESA_USE_CL
 	for (unsigned int i=0; i< _size; i++) {
 		_data1D_rotated[i] = 0;
 		for (hi h: _heritage_map1D[i]) {
@@ -52,10 +58,10 @@ void vfps::HeritageMap::apply()
 		_data1D_rotated[i] = std::max(std::min(ceil,_data1D_rotated[i]),flor);
 	}
 	std::copy_n(_data1D_rotated,_size,_data1D);
-#endif // FR_USE_CL
+	#endif // INOVESA_USE_CL
 }
 
-#ifdef FR_USE_CL
+#ifdef INOVESA_USE_CL
 void vfps::HeritageMap::__initOpenCL()
 {
 	_heritage_map1D_buf = cl::Buffer(OCLH::context,

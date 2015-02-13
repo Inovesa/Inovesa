@@ -26,6 +26,7 @@ set(INC_LIST
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
 			./inc/Share.hpp
+			./inc/defines.hpp
 			./inc/fixed_point.h
 )
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST})

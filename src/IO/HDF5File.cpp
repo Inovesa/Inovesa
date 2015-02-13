@@ -6,10 +6,10 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	fs_dims( {{ps_xsize,ps_ysize,1}} ),
 	fs_name( "PhaseSpace" )
 {
-	if (std::is_same<vfps::meshdata_t,unsigned int>::value) {
-		fs_datatype = H5::PredType::STD_U32LE;
-	} else {
+	if (std::is_same<vfps::meshdata_t,float>::value) {
 		fs_datatype = H5::PredType::IEEE_F32LE;
+	} else {
+		fs_datatype = H5::PredType::STD_U32LE;
 	}
 
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);

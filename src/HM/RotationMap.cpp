@@ -143,11 +143,9 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 						unsigned int i0 = id+i1-(it-1)/2;
 						if(i0< _xsize && j0 < _ysize ){
 							ph[i1][j1].index = i0*_ysize+j0;
-							ph[i1][j1].index2d = {{i0,j0}};
 							ph[i1][j1].weight = hmc[i1*it+j1];
 						} else {
 							ph[i1][j1].index = 0;
-							ph[i1][j1].index2d = {{0,0}};
 							ph[i1][j1].weight = 0;
 						}
 						_heritage_map[q_i][p_i][i1*it+j1]
@@ -157,7 +155,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 			}
 		}
 	}
-	#ifdef FR_USE_CL
+	#ifdef INOVESA_USE_CL
 	__initOpenCL();
 	#endif
 }
