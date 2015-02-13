@@ -72,7 +72,7 @@ public:
 	inline void syncData()
 	{
 		OCLH::queue.enqueueReadBuffer
-					(data_read_buf, FR_CL_SYNC_BLOCKING,
+					(data_buf, FR_CL_SYNC_BLOCKING,
 					 0,sizeof(float)*size(0)*size(1),
 					_data1D,nullptr,&data_synced);
 	}
@@ -141,8 +141,7 @@ protected:
 
 #ifdef FR_USE_CL
 public:
-	cl::Buffer data_read_buf;
-	cl::Buffer data_write_buf;
+	cl::Buffer data_buf;
 
 public:
 	void __initOpenCL();

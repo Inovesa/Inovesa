@@ -140,18 +140,15 @@ void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
 {
 	std::swap(first._data, second._data);
 	std::swap(first._data1D,second._data1D);
+	std::swap(first.data_buf,second.data_buf);
 }
 
 #ifdef FR_USE_CL
 void vfps::PhaseSpace::__initOpenCL()
 {
-	data_read_buf = cl::Buffer(OCLH::context,
-							CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+	data_buf = cl::Buffer(OCLH::context,
+							CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 							sizeof(float)*size(0)*size(1),
 						   _data1D);
-	data_write_buf = cl::Buffer(OCLH::context,
-									CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR,
-								   sizeof(float)*size(0)*size(1),
-								   _data1D);
 }
 #endif

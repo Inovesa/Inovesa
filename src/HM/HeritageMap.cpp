@@ -8,15 +8,13 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 	_heritage_map1D(new std::array<hi,it*it>[xsize*ysize]()),
 	_size(xsize*ysize),
 	_xsize(xsize),
-	_ysize(ysize)
+	_ysize(ysize),
+	_in(in),
+	_out(out)
 {
 	for (unsigned int i=0; i<xsize; i++) {
 		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
 	}
-	#ifdef FR_USE_CL
-	data_read_buf = &(in->data_read_buf);
-	data_write_buf = &(in->data_write_buf);
-	#endif
 }
 
 vfps::HeritageMap::~HeritageMap()
@@ -36,9 +34,6 @@ void vfps::HeritageMap::apply()
 #else // CL_VERSION_1_2
 	OCLH::queue.enqueueBarrier();
 #endif // CL_VERSION_1_2
-	OCLH::queue.enqueueCopyBuffer(*data_write_buf,
-								  *data_read_buf,
-								  0,0,sizeof(float)*_size);
 #else // FR_USE_CL
 	for (unsigned int i=0; i< _size; i++) {
 		_data1D_rotated[i] = 0;
@@ -69,15 +64,15 @@ void vfps::HeritageMap::__initOpenCL()
 									 _heritage_map1D);
 	if (it == 4) {
 		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
-		applyHM.setArg(0, *data_read_buf);
+		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _heritage_map1D_buf);
-		applyHM.setArg(2, *data_write_buf);
+		applyHM.setArg(2, _out->data_buf);
 	} else {
 		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
-		applyHM.setArg(0, *data_read_buf);
+		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _heritage_map1D_buf);
 		applyHM.setArg(2, it*it);
-		applyHM.setArg(3, *data_write_buf);
+		applyHM.setArg(3, _out->data_buf);
 	}
 }
 #endif

@@ -39,12 +39,12 @@ protected:
 	const size_t _xsize;
 	const size_t _ysize;
 
+	PhaseSpace* _in;
+	PhaseSpace* _out;
+
 #ifdef FR_USE_CL
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM;
-
-	cl::Buffer* data_read_buf;
-	cl::Buffer* data_write_buf;
 
 protected:
 	void __initOpenCL();
