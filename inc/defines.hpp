@@ -34,8 +34,8 @@ constexpr unsigned int ps_ysize = 512;
 typedef fpml::fixed_point<int,2,29> fixp32;
 
 typedef float meshaxis_t;
-typedef float meshdata_t;
-typedef float interpol_t;
+typedef fixp32 meshdata_t;
+typedef fixp32 interpol_t;
 }
 
 #endif // DEFINES_HPP

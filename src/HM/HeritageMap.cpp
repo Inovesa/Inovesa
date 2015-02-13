@@ -25,7 +25,7 @@ void vfps::HeritageMap::apply()
 	#ifdef INOVESA_USE_CL
 	OCLH::queue.enqueueWriteBuffer
 				(_in->data_buf, CL_TRUE,
-				 0,sizeof(float)*ps_xsize*ps_ysize,
+				 0,sizeof(meshdata_t)*ps_xsize*ps_ysize,
 				_in->getData());
 	OCLH::queue.enqueueNDRangeKernel (
 				applyHM,
@@ -38,7 +38,7 @@ void vfps::HeritageMap::apply()
 	#endif // CL_VERSION_1_2
 	OCLH::queue.enqueueReadBuffer
 				(_out->data_buf, CL_TRUE,
-				 0,sizeof(float)*_size,
+				 0,sizeof(meshdata_t)*_size,
 				_out->getData());
 	#else // INOVESA_USE_CL
 	for (unsigned int i=0; i< _size; i++) {

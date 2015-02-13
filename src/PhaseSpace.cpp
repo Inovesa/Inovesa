@@ -35,7 +35,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	#ifdef INOVESA_USE_CL
 	data_buf = cl::Buffer(OCLH::context,
 							CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-							sizeof(float)*size(0)*size(1),
+							sizeof(meshdata_t)*size(0)*size(1),
 						   _data1D);
 	#endif
 }
