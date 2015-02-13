@@ -7,6 +7,10 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
+	#ifndef INOVESA_USE_CL
+	_data_in(in->getData()),
+	_data_out(out->getData()),
+	#endif // INOVESA_USE_CL
 	_in(in),
 	_out(out)
 {
@@ -42,22 +46,22 @@ void vfps::HeritageMap::apply()
 				_out->getData());
 	#else // INOVESA_USE_CL
 	for (unsigned int i=0; i< _size; i++) {
-		_data1D_rotated[i] = 0;
+		_data_out[i] = 0;
 		for (hi h: _heritage_map1D[i]) {
-			_data1D_rotated[i] += _data1D[h.index]*static_cast<meshdata_t>(h.weight);
+			_data_out[i] += _data_in[h.index]*static_cast<meshdata_t>(h.weight);
 		}
 		// handle overshooting
 		meshdata_t ceil=std::numeric_limits<fixp32>::min();
 		meshdata_t flor=std::numeric_limits<fixp32>::max();
 		for (size_t x=1; x<=2; x++) {
 			for (size_t y=1; y<=2; y++) {
-				ceil = std::max(ceil,_data1D[_heritage_map1D[i][x*it+y].index]);
-				flor = std::min(flor,_data1D[_heritage_map1D[i][x*it+y].index]);
+				ceil = std::max(ceil,_data_in[_heritage_map1D[i][x*it+y].index]);
+				flor = std::min(flor,_data_in[_heritage_map1D[i][x*it+y].index]);
 			}
 		}
-		_data1D_rotated[i] = std::max(std::min(ceil,_data1D_rotated[i]),flor);
+		_data_out[i] = std::max(std::min(ceil,_data_out[i]),flor);
 	}
-	std::copy_n(_data1D_rotated,_size,_data1D);
+	std::copy_n(_data_out,_size,_data_in);
 	#endif // INOVESA_USE_CL
 }
 

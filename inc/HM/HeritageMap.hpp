@@ -47,9 +47,6 @@ protected:
 	const size_t _xsize;
 	const size_t _ysize;
 
-	PhaseSpace* _in;
-	PhaseSpace* _out;
-
 	#ifdef INOVESA_USE_CL
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM;
@@ -59,7 +56,13 @@ protected:
 	 * (use after _heritage_map1D has been filled)
 	 */
 	void __initOpenCL();
+	#else
+	meshdata_t* _data_in;
+	meshdata_t* _data_out;
 	#endif // INOVESA_USE_CL
+
+	PhaseSpace* _in;
+	PhaseSpace* _out;
 };
 
 }
