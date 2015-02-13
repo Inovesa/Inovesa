@@ -1,6 +1,6 @@
 #include "HM/RotationMap.hpp"
 
-vfps::RotationMap::RotationMap(meshdata_t* in, meshdata_t* out,
+vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							   const size_t xsize, const size_t ysize,
 							   const meshaxis_t angle,
 							   const ROTATION_TYPE mn) :
@@ -157,4 +157,7 @@ vfps::RotationMap::RotationMap(meshdata_t* in, meshdata_t* out,
 			}
 		}
 	}
+	#ifdef FR_USE_CL
+	__initOpenCL();
+	#endif
 }

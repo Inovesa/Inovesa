@@ -18,7 +18,7 @@ public:
 	};
 
 public:
-	RotationMap(meshdata_t* in, meshdata_t* out,
+	RotationMap(PhaseSpace* in, PhaseSpace* out,
 				const size_t xsize, const size_t ysize,
 				const meshaxis_t angle,
 				const ROTATION_TYPE mn=ROTATION_TYPE::NORMAL2);

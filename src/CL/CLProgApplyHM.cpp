@@ -47,6 +47,49 @@ void prepareCLProgApplyHM()
 			}
 			write_imagef(dst,coords,value);
 		}
+
+
+		__kernel void applyHM4sat(	const __global float* src,
+									const __global hi* hm,
+									__global float* dst)
+		{
+			float value = 0;
+			const uint i = get_global_id(0);
+			const uint offset = i*16;
+			float ceil=0;
+			float flor=1;
+			float tmp;
+			value += src[hm[offset].src] * hm[offset].weight;
+			value += src[hm[offset+1].src] * hm[offset+1].weight;
+			value += src[hm[offset+2].src] * hm[offset+2].weight;
+			value += src[hm[offset+3].src] * hm[offset+3].weight;
+			value += src[hm[offset+4].src] * hm[offset+4].weight;
+			tmp = src[hm[offset+5].src];
+			value += tmp * hm[offset+5].weight;
+			ceil = max(ceil,tmp);
+			flor = min(flor,tmp);
+			tmp = src[hm[offset+6].src];
+			value += tmp * hm[offset+6].weight;
+			ceil = max(ceil,tmp);
+			flor = min(flor,tmp);
+			value += src[hm[offset+7].src] * hm[offset+7].weight;
+			value += src[hm[offset+8].src] * hm[offset+8].weight;
+			tmp = src[hm[offset+9].src];
+			value += tmp * hm[offset+9].weight;
+			ceil = max(ceil,tmp);
+			flor = min(flor,tmp);
+			tmp = src[hm[offset+10].src];
+			value += tmp * hm[offset+10].weight;
+			ceil = max(ceil,tmp);
+			flor = min(flor,tmp);
+			value += src[hm[offset+11].src] * hm[offset+11].weight;
+			value += src[hm[offset+12].src] * hm[offset+12].weight;
+			value += src[hm[offset+13].src] * hm[offset+13].weight;
+			value += src[hm[offset+14].src] * hm[offset+14].weight;
+			value += src[hm[offset+15].src] * hm[offset+15].weight;
+
+			dst[i] = max(min(ceil,value),flor);
+		}
 		)";
 
 	cl::Program::Sources source(1,std::make_pair(code,strlen(code)));

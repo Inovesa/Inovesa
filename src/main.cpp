@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 #endif
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
-	RotationMap rm(mesh.getData(),mesh_rotated.getData(),ps_xsize,ps_ysize,angle);
+	RotationMap rm(&mesh,&mesh_rotated,ps_xsize,ps_ysize,angle);
 #ifdef FR_USE_CL
 	mesh.__initOpenCL();
 	mesh.syncData();

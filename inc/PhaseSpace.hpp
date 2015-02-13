@@ -30,8 +30,8 @@ constexpr unsigned int ps_xsize = 512;
 constexpr unsigned int ps_ysize = 512;
 
 typedef float meshaxis_t;
-typedef fixp32 meshdata_t;
-typedef fixp32 interpol_t;
+typedef float meshdata_t;
+typedef float interpol_t;
 
 typedef struct {
 	unsigned int index;
@@ -71,13 +71,9 @@ public:
 #ifdef FR_USE_CL
 	inline void syncData()
 	{
-		cl::size_t<3> null3d;
-		cl::size_t<3> imgsize;
-		imgsize[0] = size(0);
-		imgsize[1] = size(1);
-		imgsize[2] = 1;
-		OCLH::queue.enqueueReadImage
-					(_data_buf, FR_CL_SYNC_BLOCKING, null3d,imgsize,0,0,
+		OCLH::queue.enqueueReadBuffer
+					(data_read_buf, FR_CL_SYNC_BLOCKING,
+					 0,sizeof(float)*size(0)*size(1),
 					_data1D,nullptr,&data_synced);
 	}
 #endif
@@ -142,6 +138,15 @@ protected:
 	std::array<std::vector<meshdata_t>,2> _moment;
 
 	std::array<meshdata_t*,2> _ws;
+
+#ifdef FR_USE_CL
+public:
+	cl::Buffer data_read_buf;
+	cl::Buffer data_write_buf;
+
+public:
+	void __initOpenCL();
+#endif
 };
 
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;

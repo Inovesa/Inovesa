@@ -1,9 +1,9 @@
 #include "HM/HeritageMap.hpp"
 
-vfps::HeritageMap::HeritageMap(meshdata_t* in, meshdata_t* out,
+vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 							   size_t xsize, size_t ysize) :
-	_data1D(in),
-	_data1D_rotated(out),
+	_data1D(in->getData()),
+	_data1D_rotated(out->getData()),
 	_heritage_map(new std::array<hi,it*it>*[xsize]),
 	_heritage_map1D(new std::array<hi,it*it>[xsize*ysize]()),
 	_size(xsize*ysize),
@@ -13,6 +13,10 @@ vfps::HeritageMap::HeritageMap(meshdata_t* in, meshdata_t* out,
 	for (unsigned int i=0; i<xsize; i++) {
 		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
 	}
+	#ifdef FR_USE_CL
+	data_read_buf = &(in->data_read_buf);
+	data_write_buf = &(in->data_write_buf);
+	#endif
 }
 
 vfps::HeritageMap::~HeritageMap()
@@ -24,22 +28,17 @@ void vfps::HeritageMap::apply()
 {
 #ifdef FR_USE_CL
 	OCLH::queue.enqueueNDRangeKernel (
-				applyHM2D,
+				applyHM,
 				cl::NullRange,
-				cl::NDRange(size(0),size(1)));
+				cl::NDRange(_size));
 #ifdef CL_VERSION_1_2
 	OCLH::queue.enqueueBarrierWithWaitList();
 #else // CL_VERSION_1_2
 	OCLH::queue.enqueueBarrier();
 #endif // CL_VERSION_1_2
-	cl::size_t<3> null3d;
-	cl::size_t<3> imgsize;
-	imgsize[0] = size(0);
-	imgsize[1] = size(1);
-	imgsize[2] = 1;
-	OCLH::queue.enqueueCopyImage(_data_rotated_buf,
-								 _data_buf,
-								 null3d,null3d,imgsize);
+	OCLH::queue.enqueueCopyBuffer(*data_write_buf,
+								  *data_read_buf,
+								  0,0,sizeof(float)*_size);
 #else // FR_USE_CL
 	for (unsigned int i=0; i< _size; i++) {
 		_data1D_rotated[i] = 0;
@@ -60,3 +59,25 @@ void vfps::HeritageMap::apply()
 	std::copy_n(_data1D_rotated,_size,_data1D);
 #endif // FR_USE_CL
 }
+
+#ifdef FR_USE_CL
+void vfps::HeritageMap::__initOpenCL()
+{
+	_heritage_map1D_buf = cl::Buffer(OCLH::context,
+									 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+									 sizeof(hi)*it*it*_size,
+									 _heritage_map1D);
+	if (it == 4) {
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
+		applyHM.setArg(0, *data_read_buf);
+		applyHM.setArg(1, _heritage_map1D_buf);
+		applyHM.setArg(2, *data_write_buf);
+	} else {
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+		applyHM.setArg(0, *data_read_buf);
+		applyHM.setArg(1, _heritage_map1D_buf);
+		applyHM.setArg(2, it*it);
+		applyHM.setArg(3, *data_write_buf);
+	}
+}
+#endif
