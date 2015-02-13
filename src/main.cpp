@@ -123,14 +123,14 @@ int main(int argc, char** argv)
 	}
 	prepareCLEnvironment(device);
 	prepareCLProgs();
+
+	mesh.__initOpenCL();
+	mesh.syncData();
+	mesh_rotated.__initOpenCL();
 #endif
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
 	RotationMap rm(&mesh,&mesh_rotated,ps_xsize,ps_ysize,angle);
-#ifdef FR_USE_CL
-	mesh.__initOpenCL();
-	mesh.syncData();
-#endif
 	unsigned int outstep = 100;
 	unsigned int i;
 	for (i=0;i<steps*rotations;i++) {
@@ -145,12 +145,13 @@ int main(int argc, char** argv)
 			file.append(&mesh);
 
 			rm.apply();
+#ifdef FR_USE_CL
+			mesh.syncData();
+			mesh_rotated.syncData();
+#endif
 			swap(mesh,mesh_rotated);
 #ifdef FR_USE_GUI
 			display.delTexture();
-#endif
-#ifdef FR_USE_CL
-			mesh.syncData();
 #endif
 		}
 	}
