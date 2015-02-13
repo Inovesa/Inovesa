@@ -35,14 +35,11 @@ public:
 	/**
 	 * @brief apply
 	 *
-	 * @todo get rid of copying to host RAM and syncing every step
+	 * @todo get rid of copying from/to host RAM every step
 	 */
 	void apply();
 
 protected:
-	meshdata_t* const _data1D;
-	meshdata_t* const _data1D_rotated;
-
 	std::array<hi,it*it>** _heritage_map;
 	std::array<hi,it*it>* const _heritage_map1D;
 
@@ -57,6 +54,10 @@ protected:
 	cl::Buffer _heritage_map1D_buf;
 	cl::Kernel applyHM;
 
+	/**
+	 * @brief __initOpenCL initialize OpenCL
+	 * (use after _heritage_map1D has been filled)
+	 */
 	void __initOpenCL();
 	#endif // INOVESA_USE_CL
 };

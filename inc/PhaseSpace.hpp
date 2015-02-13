@@ -104,9 +104,6 @@ protected:
 #ifdef INOVESA_USE_CL
 public:
 	cl::Buffer data_buf;
-
-public:
-	void __initOpenCL();
 #endif
 };
 

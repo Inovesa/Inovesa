@@ -14,6 +14,18 @@ using namespace vfps;
 
 int main(int argc, char** argv)
 {
+	#ifdef INOVESA_USE_CL
+	// OpenCL device can be given as command line argument
+	unsigned int device = 0;
+	if (argc == 2 ) {
+		std::stringstream dev(argv[1]);
+		dev >> device;
+		device--;
+	}
+	prepareCLEnvironment(device);
+	prepareCLProgs();
+	#endif // INOVESA_USE_CL
+
 	float pattern_max;
 	if (std::is_same<meshdata_t,fixp32>::value) {
 		pattern_max = 1.0;
@@ -92,6 +104,7 @@ int main(int argc, char** argv)
 		}
 
 	}
+
 	PhaseSpace mesh_rotated(mesh);
 	file.write(&mesh_rotated);
 
@@ -100,21 +113,6 @@ int main(int argc, char** argv)
 	display.createTexture(&mesh_rotated);
 	display.draw();
 	#endif
-
-	#ifdef INOVESA_USE_CL
-	// OpenCL device can be given as command line argument
-	unsigned int device = 0;
-	if (argc == 2 ) {
-		std::stringstream dev(argv[1]);
-		dev >> device;
-		device--;
-	}
-	prepareCLEnvironment(device);
-	prepareCLProgs();
-
-	mesh.__initOpenCL();
-	mesh_rotated.__initOpenCL();
-	#endif // INOVESA_USE_CL
 
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;

@@ -32,6 +32,12 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 		dc = -dc;
 	}
 	_ws[1][size(0)-1] = h13;
+	#ifdef INOVESA_USE_CL
+	data_buf = cl::Buffer(OCLH::context,
+							CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+							sizeof(float)*size(0)*size(1),
+						   _data1D);
+	#endif
 }
 
 
@@ -139,13 +145,3 @@ void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
 	std::swap(first._data, second._data);
 	std::swap(first._data1D,second._data1D);
 }
-
-#ifdef INOVESA_USE_CL
-void vfps::PhaseSpace::__initOpenCL()
-{
-	data_buf = cl::Buffer(OCLH::context,
-							CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-							sizeof(float)*size(0)*size(1),
-						   _data1D);
-}
-#endif

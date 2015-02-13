@@ -2,8 +2,6 @@
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 							   size_t xsize, size_t ysize) :
-	_data1D(in->getData()),
-	_data1D_rotated(out->getData()),
 	_heritage_map(new std::array<hi,it*it>*[xsize]),
 	_heritage_map1D(new std::array<hi,it*it>[xsize*ysize]()),
 	_size(xsize*ysize),
@@ -25,6 +23,10 @@ vfps::HeritageMap::~HeritageMap()
 void vfps::HeritageMap::apply()
 {
 	#ifdef INOVESA_USE_CL
+	OCLH::queue.enqueueWriteBuffer
+				(_in->data_buf, CL_TRUE,
+				 0,sizeof(float)*ps_xsize*ps_ysize,
+				_in->getData());
 	OCLH::queue.enqueueNDRangeKernel (
 				applyHM,
 				cl::NullRange,
@@ -34,12 +36,10 @@ void vfps::HeritageMap::apply()
 	#else // CL_VERSION_1_2
 	OCLH::queue.enqueueBarrier();
 	#endif // CL_VERSION_1_2
-	OCLH::queue.enqueueCopyBuffer(_out->data_buf,_in->data_buf,
-								  0,0,sizeof(float)*_size);
 	OCLH::queue.enqueueReadBuffer
 				(_out->data_buf, CL_TRUE,
 				 0,sizeof(float)*_size,
-				_data1D_rotated);
+				_out->getData());
 	#else // INOVESA_USE_CL
 	for (unsigned int i=0; i< _size; i++) {
 		_data1D_rotated[i] = 0;
