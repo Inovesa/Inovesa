@@ -85,8 +85,8 @@ void prepareCLProgApplyHM()
 			const uint offset = i*hm_len;
 			for (uint j=0; j<hm_len; j++)
 			{
-				value += long(src[hm[offset+j].src])
-						* long(hm[offset+j].weight);
+				value += (long)(src[hm[offset+j].src])
+						* (long)(hm[offset+j].weight);
 			}
 			// hardcoded for 1:2:29 bit fixed point data
 			dst[i] = value >> 29;
@@ -103,50 +103,50 @@ void prepareCLProgApplyHM()
 			int ceil=INT_MIN;
 			int flor=INT_MAX;
 			int tmp;
-			value += long(src[hm[offset].src])
-					* long(hm[offset].weight);
-			value += long(src[hm[offset+1].src])
-					* long(hm[offset+1].weight);
-			value += long(src[hm[offset+2].src])
-					* long(hm[offset+2].weight);
-			value += long(src[hm[offset+3].src])
-					* long(hm[offset+3].weight);
-			value += long(src[hm[offset+4].src])
-					* long(hm[offset+4].weight);
+			value += (long)(src[hm[offset].src])
+					* (long)(hm[offset].weight);
+			value += (long)(src[hm[offset+1].src])
+					* (long)(hm[offset+1].weight);
+			value += (long)(src[hm[offset+2].src])
+					* (long)(hm[offset+2].weight);
+			value += (long)(src[hm[offset+3].src])
+					* (long)(hm[offset+3].weight);
+			value += (long)(src[hm[offset+4].src])
+					* (long)(hm[offset+4].weight);
 			tmp = src[hm[offset+5].src];
-			value += long(tmp)
-					* long(hm[offset+5].weight);
+			value += (long)(tmp)
+					* (long)(hm[offset+5].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
 			tmp = src[hm[offset+6].src];
-			value += long(tmp)
-					* long(hm[offset+6].weight);
+			value += (long)(tmp)
+					* (long)(hm[offset+6].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
-			value += long(src[hm[offset+7].src])
-					* long(hm[offset+7].weight);
-			value += long(src[hm[offset+8].src])
-					* long(hm[offset+8].weight);
+			value += (long)(src[hm[offset+7].src])
+					* (long)(hm[offset+7].weight);
+			value += (long)(src[hm[offset+8].src])
+					* (long)(hm[offset+8].weight);
 			tmp = src[hm[offset+9].src];
-			value += long(tmp)
-					* long(hm[offset+9].weight);
+			value += (long)(tmp)
+					* (long)(hm[offset+9].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
 			tmp = src[hm[offset+10].src];
-			value += long(tmp)
-					* long(hm[offset+10].weight);
+			value += (long)(tmp)
+					* (long)(hm[offset+10].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
-			value += long(src[hm[offset+11].src])
-					* long(hm[offset+11].weight);
-			value += long(src[hm[offset+12].src])
-					* long(hm[offset+12].weight);
-			value += long(src[hm[offset+13].src])
-					* long(hm[offset+13].weight);
-			value += long(src[hm[offset+14].src])
-					* long(hm[offset+14].weight);
-			value += long(src[hm[offset+15].src])
-					* long(hm[offset+15].weight);
+			value += (long)(src[hm[offset+11].src])
+					* (long)(hm[offset+11].weight);
+			value += (long)(src[hm[offset+12].src])
+					* (long)(hm[offset+12].weight);
+			value += (long)(src[hm[offset+13].src])
+					* (long)(hm[offset+13].weight);
+			value += (long)(src[hm[offset+14].src])
+					* (long)(hm[offset+14].weight);
+			value += (long)(src[hm[offset+15].src])
+					* (long)(hm[offset+15].weight);
 
 			// hardcoded for 1:2:29 bit fixed point data
 			result = value >> 29;

@@ -214,6 +214,7 @@ public:
 	//! Just as with built-in types no initialization is done. The value is
 	//! undetermined after executing this constructor.
 	fixed_point()
+		: value_(0)
 	{ }
 
 	template<
