@@ -8,6 +8,18 @@
 #include <climits>
 #include <iostream>
 
+/**
+ * @brief prepareCLEnvironment
+ * @param device
+ * @return
+ *
+ * Picks the last available platform.
+ * If several platforms are available,
+ * AMD plattforms are prefered.
+ *
+ * @todo: check if OpenCL 1.0 or 2.x do the job
+ * (currently "OpenCL 1." is set to be the required version)
+ */
 bool prepareCLEnvironment(unsigned int device=0);
 
 class OCLH

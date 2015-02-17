@@ -7,17 +7,18 @@ bool prepareCLEnvironment(unsigned int device)
 	}
 
     std::string available_clversion;
-    std::string needed_clversion = "OpenCL 1.2";
+	std::string needed_clversion = "OpenCL 1.";
 
     unsigned int plati = 0;
     std::string cl_plat_vendor;
     for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
         OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
         if (available_clversion.substr(0,needed_clversion.length()) == needed_clversion) {
-            if (cl_plat_vendor != "Advanced Micro Devices, Inc.") {
+			// stick with AMD (if available)
+			if (cl_plat_vendor != "Advanced Micro Devices, Inc.") {
                 plati = p;
                 cl_plat_vendor = OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>();
-            }
+			}
         }
     }
 

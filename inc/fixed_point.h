@@ -533,6 +533,15 @@ public:
 			typedef unsigned long long type;
 		};
 
+		template<
+			/// Make gcc happy.
+			typename U>
+		/// Promote unsigned int to unsigned long long.
+		struct promote_type<int64_t, U>
+		{
+			typedef __int128_t type;
+		};
+
 	public:
 
 	/// Multiplication.

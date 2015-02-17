@@ -33,9 +33,6 @@ int main(int argc, char** argv)
 		pattern_max = 0.5;
 	}
 
-	/* @todo: remove global settings from main.hpp
-	 * (HDF5File::HDF5File() could take mesh as argument)
-	 */
 	PhaseSpace mesh(-10.0,10.0,-10.0,10.0);
 
 	HDF5File file("results.h5");
@@ -128,8 +125,8 @@ int main(int argc, char** argv)
 			display.createTexture(&mesh_rotated);
 			display.draw();
 			#endif // INOVESA_USE_GUI
-			file.append(&mesh_rotated);
 
+			file.append(&mesh_rotated);
 			rm.apply();
 			swap(mesh,mesh_rotated);
 			#ifdef INOVESA_USE_GUI
@@ -137,12 +134,6 @@ int main(int argc, char** argv)
 			#endif // INOVESA_USE_GUI
 		}
 	}
-	#ifdef INOVESA_USE_GUI
-	display.createTexture(&mesh_rotated);
-	display.draw();
-	file.append(&mesh_rotated);
-	display.delTexture();
-	#endif // INOVESA_USE_GUI
 	#ifdef INOVESA_USE_CL
 	OCLH::queue.flush();
 	#endif // INOVESA_USE_CL

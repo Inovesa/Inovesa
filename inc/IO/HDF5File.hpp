@@ -25,19 +25,37 @@ private:
 
 	std::string fname;
 
-	static constexpr unsigned int fs_rank = 3;
+	static constexpr unsigned int compression = 6;
 
-	H5::DataSet* fs_dataset;
+private:
+	static constexpr unsigned int bp_rank = 2;
 
-	H5::DataSpace* fs_dataspace;
+	H5::DataSet* bp_dataset;
 
-	H5::IntType fs_datatype;
+	H5::DataSpace* bp_dataspace;
 
-	std::array<hsize_t,3> fs_dims;
+	H5::IntType bp_datatype;
 
-	const std::string fs_name;
+	std::array<hsize_t,bp_rank> bp_dims;
 
-	H5::DSetCreatPropList fs_prop;
+	const std::string bp_name;
+
+	H5::DSetCreatPropList bp_prop;
+
+private:
+	static constexpr unsigned int ps_rank = 3;
+
+	H5::DataSet* ps_dataset;
+
+	H5::DataSpace* ps_dataspace;
+
+	H5::IntType ps_datatype;
+
+	std::array<hsize_t,ps_rank> ps_dims;
+
+	const std::string ps_name;
+
+	H5::DSetCreatPropList ps_prop;
 };
 
 }

@@ -57,9 +57,9 @@ public:
 
 	meshdata_t variance(const unsigned int axis);
 
-	meshdata_t* projectionToX();
+	integral_t* projectionToX();
 
-	meshdata_t* projectionToY();
+	integral_t* projectionToY();
 
 	inline meshdata_t* operator[](const unsigned int i) const
 	{ return _data[i]; }
@@ -82,7 +82,7 @@ public:
 protected:
 	const std::array<Ruler<meshaxis_t>,2> _axis;
 
-	std::array<meshdata_t*,2> _projection;
+	std::array<integral_t*,2> _projection;
 
 	meshdata_t** _data;
 
