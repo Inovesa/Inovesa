@@ -283,6 +283,25 @@ public:
 	{ }
 
 	template<
+		/// The other basetype name
+		typename B2,
+		/// The other integer part bit count.
+		unsigned char I2,
+		/// The other fractional part bit count.
+		unsigned char F2>
+	/// Converting copy constructor.
+	fixed_point(
+		/// The right hand side.
+		fixed_point<B2, I2, F2> const& rhs)
+		: value_(rhs.value_)
+	{
+		if (F2-F > 0)
+			value_ >>= F2-F;
+		if (F-F2 > 0)
+			value_ <<= F-F2;
+	}
+
+	template<
 		/// The other integer part bit count.
 		unsigned char I2,
 		/// The other fractional part bit count.

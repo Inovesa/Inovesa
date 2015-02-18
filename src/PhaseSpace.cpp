@@ -13,10 +13,10 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_ws[0] = new meshdata_t[size(0)];
 	_ws[1] = new meshdata_t[size(1)];
 
-	const meshdata_t ca = 3.;
-	meshdata_t dc = 1;
+	const integral_t ca = 3.;
+	integral_t dc = 1;
 
-	const meshdata_t h03 = getDelta(0)/3.;
+	const integral_t h03 = getDelta(0)/3.;
 	_ws[0][0] = h03;
 	for (unsigned int x=1; x< size(0)-1; x++){
 		_ws[0][x] = h03 * (ca+dc);
@@ -25,7 +25,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_ws[0][size(0)-1] = h03;
 
 
-	const meshdata_t h13 = getDelta(1)/3.;
+	const integral_t h13 = getDelta(1)/3.;
 	_ws[1][0] = h13;
 	for (unsigned int x=1; x< size(1)-1; x++){
 		_ws[1][x] = h13 * (ca+dc);
@@ -120,10 +120,10 @@ vfps::integral_t* vfps::PhaseSpace::projectionToX() {
 	for (unsigned int x=0; x < size(0); x++) {
 		_projection[0][x] = 0;
 		for (unsigned int y=0; y< size(1); y++) {
-			_projection[0][x] += _data[x][y];
+			//_projection[0][x] += _data[x][y];
 
 			// needs to be implemented for fixed point data types
-			//_projection[0][x] += _data[x][y]*_ws[0][y];
+			_projection[0][x] += _data[x][y]*_ws[0][y];
 		}
 	}
 	return _projection[0];

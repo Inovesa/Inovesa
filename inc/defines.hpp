@@ -32,11 +32,12 @@ constexpr unsigned int ps_xsize = 512;
 constexpr unsigned int ps_ysize = 512;
 
 typedef fpml::fixed_point<int32_t,2,29> fixp32;
+typedef fpml::fixed_point<int64_t,34,29> fixp64;
 
 typedef float meshaxis_t;
-typedef float meshdata_t;
-typedef float interpol_t;
-typedef float integral_t;
+typedef fixp32 meshdata_t;
+typedef fixp32 interpol_t;
+typedef fixp64 integral_t;
 }
 
 #endif // DEFINES_HPP
