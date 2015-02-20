@@ -148,12 +148,12 @@ void Display::createTexture(vfps::PhaseSpace* mesh)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 	if (std::is_same<vfps::meshdata_t,float>::value) {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-					 mesh->size(0), mesh->size(1),
+					 mesh->nMeshCells(0), mesh->nMeshCells(1),
 					 0, GL_RED,
 					 GL_FLOAT, mesh->getData());
 	} else {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-					 mesh->size(0), mesh->size(1),
+					 mesh->nMeshCells(0), mesh->nMeshCells(1),
 					 0, GL_RED,
 					 GL_INT, mesh->getData());
 	}

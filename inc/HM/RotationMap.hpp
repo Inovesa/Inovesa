@@ -9,19 +9,9 @@ namespace vfps
 class RotationMap : public HeritageMap
 {
 public:
-	/**
-	 * @brief The ROTATION_TYPE enum
-	 */
-	enum class ROTATION_TYPE
-	{
-		MESH=0, NORMAL, NORMAL2
-	};
-
-public:
 	RotationMap(PhaseSpace* in, PhaseSpace* out,
 				const size_t xsize, const size_t ysize,
-				const meshaxis_t angle,
-				const ROTATION_TYPE mn=ROTATION_TYPE::NORMAL2);
+				const meshaxis_t angle);
 };
 
 }

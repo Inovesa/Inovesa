@@ -2,8 +2,8 @@
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 							   size_t xsize, size_t ysize) :
-	_heritage_map(new std::array<hi,it*it>*[xsize]),
-	_heritage_map1D(new std::array<hi,it*it>[xsize*ysize]()),
+	_heritage_map(new std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>*[xsize]),
+	_heritage_map1D(new std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>[xsize*ysize]()),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
@@ -70,19 +70,19 @@ void vfps::HeritageMap::__initOpenCL()
 {
 	_heritage_map1D_buf = cl::Buffer(OCLH::context,
 									 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-									 sizeof(hi)*it*it*_size,
+									 sizeof(hi)*INTERPOL_TYPE*INTERPOL_TYPE*_size,
 									 _heritage_map1D);
-	if (it == 4) {
+	#if INTERPOL_TYPE == 4
 		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
 		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _heritage_map1D_buf);
 		applyHM.setArg(2, _out->data_buf);
-	} else {
+	#else
 		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
 		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _heritage_map1D_buf);
-		applyHM.setArg(2, it*it);
+		applyHM.setArg(2, INTERPOL_TYPE*INTERPOL_TYPE);
 		applyHM.setArg(3, _out->data_buf);
-	}
+	#endif
 }
 #endif

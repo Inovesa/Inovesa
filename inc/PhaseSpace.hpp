@@ -21,7 +21,7 @@ namespace vfps
 {
 
 class PhaseSpace
-{	
+{
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
 
@@ -39,18 +39,18 @@ public:
 	  *
 	  * @return pointer to array holding size<0>()*size<1>() data points
 	  */
-	inline meshdata_t* const getData() const
+	inline meshdata_t* getData() const
 	{
 		return _data1D;
 	}
 
-	inline const meshaxis_t getDelta(const unsigned int x) const
+	inline meshaxis_t getDelta(const unsigned int x) const
 	{ return _axis[x].getDelta(); }
 
-	inline const meshaxis_t getMax(const unsigned int x) const
+	inline meshaxis_t getMax(const unsigned int x) const
 	{ return _axis[x].getMax(); }
 
-	inline const meshaxis_t getMin(const unsigned int x) const
+	inline meshaxis_t getMin(const unsigned int x) const
 	{ return _axis[x].getMin(); }
 
 	meshdata_t average(const unsigned int axis);
@@ -66,10 +66,16 @@ public:
 
 	PhaseSpace& operator=(PhaseSpace other);
 
-	inline const unsigned int size(const unsigned int x) const
+	inline unsigned int nMeshCells() const
+	{ return _axis[0].getNSteps()*_axis[1].getNSteps(); }
+
+	inline unsigned int nMeshCells(const unsigned int x) const
 	{ return _axis[x].getNSteps(); }
 
-	inline const meshaxis_t x(const unsigned int axis,
+	inline meshaxis_t size(const unsigned int x) const
+	{ return _axis[x].size(); }
+
+	inline meshaxis_t x(const unsigned int axis,
 							  const unsigned int n) const
 	{ return _axis[axis][n]; }
 

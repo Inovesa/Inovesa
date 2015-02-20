@@ -15,19 +15,6 @@ protected:
 	} hi;
 
 public:
-	/**
-	 * @brief The INTERPOL_TYPE enum
-	 */
-	enum INTERPOL_TYPE
-	{
-		NONE=1,
-		LINEAR=2,
-		QUADRATIC=3,
-		CUBIC=4
-	};
-	static constexpr INTERPOL_TYPE it = INTERPOL_TYPE::CUBIC;
-
-public:
 	HeritageMap(PhaseSpace* in, PhaseSpace* out, size_t xsize, size_t ysize);
 
 	~HeritageMap();
@@ -40,8 +27,8 @@ public:
 	void apply();
 
 protected:
-	std::array<hi,it*it>** _heritage_map;
-	std::array<hi,it*it>* const _heritage_map1D;
+	std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>** _heritage_map;
+	std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>* const _heritage_map1D;
 
 	const size_t _size;
 	const size_t _xsize;

@@ -51,11 +51,14 @@ public:
     inline const data_t getMin() const
         {return _min;}
 
-    inline const unsigned int getNSteps() const
+	inline unsigned int getNSteps() const
         {return _steps;}
 
     inline const data_t getDelta() const
         {return _delta;}
+
+	inline const data_t size() const
+		{ return _max - _min; }
 
     inline const data_t& operator[](unsigned int d) const
         {return _data[d];}
@@ -65,7 +68,7 @@ public:
      * @param other grid to compare
      * @return true (same dimensions) or false (different dimensions)
      */
-    const bool operator==(const Ruler& other) const
+	bool operator==(const Ruler& other) const
     {
         if (_min == other._min && _max == other._max && _steps == other._steps){
             return true;
