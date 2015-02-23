@@ -17,11 +17,56 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#ifndef CLPROGS_HPP
-#define CLPROGS_HPP
+#ifndef KICKMAP_HPP
+#define KICKMAP_HPP
 
-#include "CLProgApplyHM.hpp"
+#include <array>
 
-void prepareCLProgs();
+#include "defines.hpp"
+#include "HeritageMap.hpp"
 
-#endif // CLPROGS_HPP
+namespace vfps
+{
+
+/**
+ * @brief The KickMap class offers an option for one-dimensional kicks
+ *
+ * @todo implement option to have 1D interpolation with HeritageMap
+ */
+class WakeKickMap : public HeritageMap
+{
+public:
+	/**
+	 * @brief WakeKickMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
+	 * @param wake has to be normalized in a way,
+	 *	      that plain multiplication with density gives the force
+	 */
+	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
+			const size_t xsize, const size_t ysize,
+			const std::array<integral_t,2*ps_xsize> wake);
+
+public:
+	/**
+	 * @brief overloads HeritageMap::apply() to have a variable HeritageMap
+	 */
+	void apply();
+
+private:
+	/**
+	 * @brief _wake (normalized) wake
+	 */
+	const std::array<vfps::integral_t,2*ps_xsize> _wake;
+
+	/**
+	 * @brief _wakeforce
+	 */
+	std::array<vfps::meshaxis_t,ps_xsize> _wakeforce;
+};
+
+} // namespace VFPS
+
+#endif // KICKMAP_HPP

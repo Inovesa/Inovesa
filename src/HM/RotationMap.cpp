@@ -1,6 +1,5 @@
 /******************************************************************************/
 /* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2007-2009: Peter Schregle (Fixed Point Math Library)         */
 /* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
@@ -64,15 +63,19 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 				qcoord = (qp+0.5)*_xsize;
 				pcoord = (pp+0.5)*_ysize;
 			#elif ROTATION_TYPE == 3
-				qp = cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
-						/static_cast<int>(_xsize)
-				   - sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
-						/static_cast<int>(_ysize);
+				qp = cos_dt*meshaxis_t(
+							(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
+							/static_cast<int>(_xsize))
+				   - sin_dt*meshaxis_t(
+							(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
+							/static_cast<int>(_ysize));
 
-				pp = sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
-						/static_cast<int>(_xsize)
-				   + cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
-						/static_cast<int>(_ysize);
+				pp = sin_dt*meshaxis_t(
+							(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
+							/static_cast<int>(_xsize))
+				   + cos_dt*meshaxis_t(
+							(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
+							/static_cast<int>(_ysize));
 				qcoord = (qp+1)*_xsize/2;
 				pcoord = (pp+1)*_ysize/2;
 			#endif

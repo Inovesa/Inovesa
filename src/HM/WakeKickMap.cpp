@@ -17,11 +17,28 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#ifndef CLPROGS_HPP
-#define CLPROGS_HPP
+#include "HM/WakeKickMap.hpp"
 
-#include "CLProgApplyHM.hpp"
+vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+					const size_t xsize, const size_t ysize,
+					const std::array<vfps::integral_t,2*ps_xsize> wake) :
+	HeritageMap(in,out,xsize,ysize),
+	_wake(wake)
+{
+}
 
-void prepareCLProgs();
+void vfps::WakeKickMap::apply()
+{
+	integral_t* density = _in->projectionToX();
+	for (unsigned int i=0;i<_xsize;i++) {
+		_wakeforce[i] = 0;
+		for (unsigned int j=0;j<_xsize;j++) {
+			_wakeforce[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
+		}
+	}
+	// translate force into HM
 
-#endif // CLPROGS_HPP
+	// call original apply method
+	HeritageMap::apply();
+}
+

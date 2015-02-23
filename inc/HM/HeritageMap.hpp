@@ -1,6 +1,5 @@
 /******************************************************************************/
 /* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2007-2009: Peter Schregle (Fixed Point Math Library)         */
 /* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
@@ -44,7 +43,7 @@ public:
 	 *
 	 * @todo get rid of copying from/to host RAM every step
 	 */
-	void apply();
+	virtual void apply();
 
 protected:
 	std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>** _heritage_map;

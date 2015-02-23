@@ -1,6 +1,5 @@
 /******************************************************************************/
 /* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2007-2009: Peter Schregle (Fixed Point Math Library)         */
 /* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
