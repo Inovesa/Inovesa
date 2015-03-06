@@ -6,8 +6,9 @@ set(SRC_LIST
 			./src/CL/CLProgApplyHM.cpp
 			./src/CL/CLProgs.cpp
 			./src/CL/OpenCLHandler.cpp
-			./src/HM/HeritageMap.cpp
+                        ./src/HM/HeritageMap.cpp
 			./src/HM/RotationMap.cpp
+                        ./src/HM/WakeKickMap.cpp
 			./src/IO/HDF5File.cpp
 			./src/Display.cpp
 			./src/PhaseSpace.cpp
@@ -19,8 +20,9 @@ set(INC_LIST
 			./inc/CL/CLProgApplyHM.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
-			./inc/HM/HeritageMap.hpp
+                        ./inc/HM/HeritageMap.hpp
 			./inc/HM/RotationMap.hpp
+                        ./inc/HM/WakeKickMap.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/Display.hpp
 			./inc/PhaseSpace.hpp
@@ -34,10 +36,10 @@ add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST})
 add_definitions(-std=c++11)
 if(DEFINED CMAKE_BUILD_TYPE)
     if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        add_definitions(-O3)
+		add_definitions(-O3 -Wall -Wextra )
         MESSAGE ("Doing release compile, using optimization flags.")
     else()
-        add_definitions(-g -Wall -DDEBUG)
+		add_definitions(-g -Wall -Wextra -DDEBUG)
         MESSAGE ("Doing debug compile, including debug symbols.")
     endif()
 endif()

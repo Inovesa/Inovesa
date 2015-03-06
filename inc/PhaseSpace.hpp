@@ -1,3 +1,22 @@
+/******************************************************************************/
+/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
+/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
+/*                                                                            */
+/* This file is part of Inovesa.                                              */
+/* Inovesa is free software: you can redistribute it and/or modify            */
+/* it under the terms of the GNU General Public License as published by       */
+/* the Free Software Foundation, either version 3 of the License, or          */
+/* (at your option) any later version.                                        */
+/*                                                                            */
+/* Inovesa is distributed in the hope that it will be useful,                 */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
+/* GNU General Public License for more details.                               */
+/*                                                                            */
+/* You should have received a copy of the GNU General Public License          */
+/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
+/******************************************************************************/
+
 #ifndef PHASESPACE_HPP
 #define PHASESPACE_HPP
 
@@ -21,7 +40,7 @@ namespace vfps
 {
 
 class PhaseSpace
-{	
+{
 public:
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
 
@@ -39,18 +58,18 @@ public:
 	  *
 	  * @return pointer to array holding size<0>()*size<1>() data points
 	  */
-	inline meshdata_t* const getData() const
+	inline meshdata_t* getData() const
 	{
 		return _data1D;
 	}
 
-	inline const meshaxis_t getDelta(const unsigned int x) const
+	inline meshaxis_t getDelta(const unsigned int x) const
 	{ return _axis[x].getDelta(); }
 
-	inline const meshaxis_t getMax(const unsigned int x) const
+	inline meshaxis_t getMax(const unsigned int x) const
 	{ return _axis[x].getMax(); }
 
-	inline const meshaxis_t getMin(const unsigned int x) const
+	inline meshaxis_t getMin(const unsigned int x) const
 	{ return _axis[x].getMin(); }
 
 	meshdata_t average(const unsigned int axis);
@@ -66,10 +85,16 @@ public:
 
 	PhaseSpace& operator=(PhaseSpace other);
 
-	inline const unsigned int size(const unsigned int x) const
+	inline unsigned int nMeshCells() const
+	{ return _axis[0].getNSteps()*_axis[1].getNSteps(); }
+
+	inline unsigned int nMeshCells(const unsigned int x) const
 	{ return _axis[x].getNSteps(); }
 
-	inline const meshaxis_t x(const unsigned int axis,
+	inline meshaxis_t size(const unsigned int x) const
+	{ return _axis[x].size(); }
+
+	inline meshaxis_t x(const unsigned int axis,
 							  const unsigned int n) const
 	{ return _axis[axis][n]; }
 

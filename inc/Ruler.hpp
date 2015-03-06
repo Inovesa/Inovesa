@@ -1,3 +1,22 @@
+/******************************************************************************/
+/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
+/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
+/*                                                                            */
+/* This file is part of Inovesa.                                              */
+/* Inovesa is free software: you can redistribute it and/or modify            */
+/* it under the terms of the GNU General Public License as published by       */
+/* the Free Software Foundation, either version 3 of the License, or          */
+/* (at your option) any later version.                                        */
+/*                                                                            */
+/* Inovesa is distributed in the hope that it will be useful,                 */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
+/* GNU General Public License for more details.                               */
+/*                                                                            */
+/* You should have received a copy of the GNU General Public License          */
+/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
+/******************************************************************************/
+
 #ifndef RULER_HPP
 #define RULER_HPP
 
@@ -51,11 +70,14 @@ public:
     inline const data_t getMin() const
         {return _min;}
 
-    inline const unsigned int getNSteps() const
+	inline unsigned int getNSteps() const
         {return _steps;}
 
     inline const data_t getDelta() const
         {return _delta;}
+
+	inline const data_t size() const
+		{ return _max - _min; }
 
     inline const data_t& operator[](unsigned int d) const
         {return _data[d];}
@@ -65,7 +87,7 @@ public:
      * @param other grid to compare
      * @return true (same dimensions) or false (different dimensions)
      */
-    const bool operator==(const Ruler& other) const
+	bool operator==(const Ruler& other) const
     {
         if (_min == other._min && _max == other._max && _steps == other._steps){
             return true;

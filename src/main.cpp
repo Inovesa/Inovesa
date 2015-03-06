@@ -1,3 +1,22 @@
+/******************************************************************************/
+/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
+/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
+/*                                                                            */
+/* This file is part of Inovesa.                                              */
+/* Inovesa is free software: you can redistribute it and/or modify            */
+/* it under the terms of the GNU General Public License as published by       */
+/* the Free Software Foundation, either version 3 of the License, or          */
+/* (at your option) any later version.                                        */
+/*                                                                            */
+/* Inovesa is distributed in the hope that it will be useful,                 */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
+/* GNU General Public License for more details.                               */
+/*                                                                            */
+/* You should have received a copy of the GNU General Public License          */
+/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
+/******************************************************************************/
+
 #include <climits>
 #include <iostream>
 #include <sstream>
@@ -38,8 +57,7 @@ int main(int argc, char** argv)
 	HDF5File file("results.h5");
 
 	// create pattern to start with
-	switch (ptrntype) {
-	case pattern::square:
+	#if TEST_PATTERN == 1
 		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
 			for (unsigned int y=ps_ysize/4; y<ps_ysize*3/4; y++) {
 				mesh[x][y] = 1.0f*pattern_max;
@@ -55,17 +73,14 @@ int main(int argc, char** argv)
 			mesh[x][x] = 0.0f;
 			mesh[x][ps_ysize-x] = 0.0f;
 		}
-		break;
-	case pattern::gaus:
-	default:
+	#elif TEST_PATTERN == 2
 		for (int x=0; x<int(ps_xsize); x++) {
 			for (int y=0; y<int(ps_ysize); y++) {
 				mesh[x][y] = std::exp(-std::pow(x-int(ps_xsize)/2,2)/patterndim_x
 									  -std::pow(y-int(ps_ysize)/2,2)/patterndim_y);
 			}
 		}
-		break;
-	case pattern::half:
+	#elif TEST_PATTERN == 3
 		for (int y=pattern_margin; y<int(ps_ysize-pattern_margin); y++) {
 			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
 				mesh[x][y] = 1.0f*pattern_max;
@@ -76,8 +91,7 @@ int main(int argc, char** argv)
 			mesh[x][ps_ysize/2] = 0;
 			mesh[x][ps_ysize-x] = 0;
 		}
-		break;
-	case pattern::quarters:
+	#elif TEST_PATTERN == 4
 		for (int y=pattern_margin; y<int(ps_ysize/2); y++) {
 			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
 				mesh[x][y] = (float(y-pattern_margin))
@@ -99,8 +113,7 @@ int main(int argc, char** argv)
 						*pattern_max;
 			}
 		}
-
-	}
+	#endif
 
 	PhaseSpace mesh_rotated(mesh);
 	file.write(&mesh_rotated);
