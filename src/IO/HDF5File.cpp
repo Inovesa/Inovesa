@@ -3,9 +3,9 @@
 vfps::HDF5File::HDF5File(std::string fname) :
 	file( nullptr ),
 	fname( fname ),
-	bp_dims( {{ ps_xsize,1 }}),
+	bp_dims( {{ 1, ps_xsize }}),
 	bp_name( "BunchProfile" ),
-	ps_dims( {{ ps_xsize,ps_ysize,1}} ),
+	ps_dims( {{ 1, ps_xsize, ps_ysize}} ),
 	ps_name( "PhaseSpace" )
 {
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);
@@ -18,13 +18,13 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	}
 
 	static constexpr std::array<hsize_t,bp_rank> bp_maxdims
-			= {{ps_xsize,H5S_UNLIMITED}};
+			= {{H5S_UNLIMITED,ps_xsize}};
 
 	bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
 
 	static constexpr std::array<hsize_t,bp_rank> bp_chunkdims
-			= {{ps_xsize/8,1}};
+			= {{1,ps_xsize/8}};
 	bp_prop.setChunk(bp_rank,bp_chunkdims.data());
 	bp_prop.setShuffle();
 	bp_prop.setDeflate(compression);
@@ -42,13 +42,13 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	}
 
 	static constexpr std::array<hsize_t,ps_rank> ps_maxdims
-			= {{ps_xsize,ps_ysize,H5S_UNLIMITED}};
+			= {{H5S_UNLIMITED,ps_xsize,ps_ysize}};
 
 	ps_dataspace = new H5::DataSpace(ps_rank,ps_dims.data(),ps_maxdims.data());
 
 
 	static constexpr std::array<hsize_t,ps_rank> ps_chunkdims
-			= {{ps_xsize/8,ps_ysize/8,1}};
+			= {{1,ps_xsize/8,ps_ysize/8}};
 	ps_prop.setChunk(ps_rank,ps_chunkdims.data());
 	ps_prop.setShuffle();
 	ps_prop.setDeflate(compression);
@@ -87,10 +87,10 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 {
 	// append PhaseSpace
 	std::array<hsize_t,ps_rank> ps_offset
-			= {{0,0,ps_dims[2]}};
+			= {{ps_dims[0],0,0}};
 	static constexpr std::array<hsize_t,ps_rank> ps_ext
-			= {{ps_xsize,ps_ysize,1}};
-	ps_dims[2]++;
+			= {{1,ps_xsize,ps_ysize}};
+	ps_dims[0]++;
 
 	ps_dataset->extend(ps_dims.data());
 	H5::DataSpace* filespace = new H5::DataSpace(ps_dataset->getSpace());
@@ -106,10 +106,10 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 
 	// append BunchProfile
 	std::array<hsize_t,bp_rank> bp_offset
-			= {{0,bp_dims[1]}};
+			= {{bp_dims[0],0}};
 	static constexpr std::array<hsize_t,bp_rank> bp_ext
-			= {{ps_xsize,1}};
-	bp_dims[1]++;
+			= {{1,ps_xsize}};
+	bp_dims[0]++;
 
 	bp_dataset->extend(bp_dims.data());
 
