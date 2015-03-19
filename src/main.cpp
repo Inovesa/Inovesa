@@ -31,7 +31,7 @@
 
 using namespace vfps;
 
-int main(int argc, char** argv)
+int main()
 {
 	#ifdef INOVESA_USE_CL
 	// OpenCL device can be given as command line argument
@@ -116,36 +116,26 @@ int main(int argc, char** argv)
 	#endif
 
 	PhaseSpace mesh_rotated(mesh);
-	file.write(&mesh_rotated);
 
 	#ifdef INOVESA_USE_GUI
 	Display display;
-	display.createTexture(&mesh_rotated);
-	display.draw();
 	#endif
 
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
 	RotationMap rm(&mesh,&mesh_rotated,ps_xsize,ps_ysize,angle);
 	unsigned int outstep = 100;
-	unsigned int i;
-	for (i=0;i<steps*rotations;i++) {
-        if (i%outstep != 0) {
-			rm.apply();
-			swap(mesh,mesh_rotated);
-		} else {
+	for (unsigned int i=0;i<steps;i++) {
+		if (i%outstep == 0) {
+			file.append(&mesh);
 			#ifdef INOVESA_USE_GUI
-			display.createTexture(&mesh_rotated);
+			display.createTexture(&mesh);
 			display.draw();
-			#endif // INOVESA_USE_GUI
-
-			file.append(&mesh_rotated);
-			rm.apply();
-			swap(mesh,mesh_rotated);
-			#ifdef INOVESA_USE_GUI
 			display.delTexture();
 			#endif // INOVESA_USE_GUI
 		}
+		rm.apply();
+		mesh = mesh_rotated;
 	}
 	#ifdef INOVESA_USE_CL
 	OCLH::queue.flush();

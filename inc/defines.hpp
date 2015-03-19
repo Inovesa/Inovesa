@@ -23,7 +23,7 @@
 #include "fixed_point.h"
 
 #define INOVESA_USE_GUI
-#define INOVESA_USE_CL
+//#define INOVESA_USE_CL
 
 /**
  * possible choices are:
@@ -42,12 +42,19 @@
 #define INTERPOL_TYPE 4
 
 /**
+  * possible choices are:
+  * 0: no saturation
+  * 1: crop at maximum neigbouring value
+  */
+#define INTERPOL_SATURATING 1
+
+/**
  * possible choices are:
  * 1: rotate on mesh
  * 2: normalized space between 0 and 1
  * 3: normalized space between -1 and +1
  */
-#define ROTATION_TYPE 3
+#define ROTATION_TYPE 2
 
 /**
  * possible choices are:

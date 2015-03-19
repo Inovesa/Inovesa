@@ -24,7 +24,7 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	fname( fname ),
 	bp_dims( {{ 1, ps_xsize }}),
 	bp_name( "BunchProfile" ),
-	ps_dims( {{ 1, ps_xsize, ps_ysize}} ),
+	ps_dims( {{ 0, ps_xsize, ps_ysize}} ),
 	ps_name( "PhaseSpace" )
 {
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);
@@ -85,21 +85,6 @@ vfps::HDF5File::~HDF5File()
 	delete bp_dataspace;
 	delete ps_dataset;
 	delete ps_dataspace;
-}
-
-void vfps::HDF5File::write(PhaseSpace* ps)
-{
-	if (std::is_same<vfps::meshdata_t,float>::value) {
-		ps_dataset->write(ps->getData(), H5::PredType::NATIVE_FLOAT);
-	} else {
-		ps_dataset->write(ps->getData(), H5::PredType::NATIVE_INT32);
-	}
-
-	if (std::is_same<vfps::integral_t,float>::value) {
-		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_FLOAT);
-	} else {
-		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_INT64);
-	}
 }
 
 void vfps::HDF5File::append(PhaseSpace* ps)

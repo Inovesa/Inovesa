@@ -62,9 +62,6 @@ protected:
 	 * (use after _heritage_map1D has been filled)
 	 */
 	void __initOpenCL();
-	#else
-	meshdata_t* _data_in;
-	meshdata_t* _data_out;
 	#endif // INOVESA_USE_CL
 
 	PhaseSpace* _in;

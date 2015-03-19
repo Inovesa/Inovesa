@@ -32,9 +32,8 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 
 	std::array<unsigned int,12> num;
 	num.fill(0);
-	for(unsigned int p_i=0; p_i< _ysize; p_i++) {
-		for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-
+	for (unsigned int q_i=0; q_i< _xsize; q_i++) {
+		for(unsigned int p_i=0; p_i< _ysize; p_i++) {
 			// Cell of inverse image (qp,pp) of grid point i,j.
 			meshaxis_t qp; //q', backward mapping
 			meshaxis_t pp; //p'

@@ -26,10 +26,6 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
-	#ifndef INOVESA_USE_CL
-	_data_in(in->getData()),
-	_data_out(out->getData()),
-	#endif // INOVESA_USE_CL
 	_in(in),
 	_out(out)
 {
@@ -65,23 +61,27 @@ void vfps::HeritageMap::apply()
 				 0,sizeof(meshdata_t)*_size,
 				_out->getData());
 	#else // INOVESA_USE_CL
+	meshdata_t* data_in = _in->getData();
+	meshdata_t* data_out = _out->getData();
+
 	for (unsigned int i=0; i< _size; i++) {
-		_data_out[i] = 0;
+		data_out[i] = 0;
 		for (hi h: _heritage_map1D[i]) {
-			_data_out[i] += _data_in[h.index]*static_cast<meshdata_t>(h.weight);
+			data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 		}
+		#if INTERPOL_SATURATING == 1
 		// handle overshooting
 		meshdata_t ceil=std::numeric_limits<fixp32>::min();
 		meshdata_t flor=std::numeric_limits<fixp32>::max();
 		for (size_t x=1; x<=2; x++) {
 			for (size_t y=1; y<=2; y++) {
-				ceil = std::max(ceil,_data_in[_heritage_map1D[i][x*it+y].index]);
-				flor = std::min(flor,_data_in[_heritage_map1D[i][x*it+y].index]);
+				ceil = std::max(ceil,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);
+				flor = std::min(flor,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);
 			}
 		}
-		_data_out[i] = std::max(std::min(ceil,_data_out[i]),flor);
+		data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
+		#endif // INTERPOL_SATURATING
 	}
-	std::copy_n(_data_out,_size,_data_in);
 	#endif // INOVESA_USE_CL
 }
 

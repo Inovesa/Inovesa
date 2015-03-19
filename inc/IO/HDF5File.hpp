@@ -37,8 +37,6 @@ public:
 
 	void append(PhaseSpace* ps);
 
-	void write(PhaseSpace* ps);
-
 private:
 	H5::H5File* file;
 
