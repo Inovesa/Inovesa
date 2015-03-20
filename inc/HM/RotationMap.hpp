@@ -29,7 +29,7 @@ class RotationMap : public HeritageMap
 {
 public:
 	RotationMap(PhaseSpace* in, PhaseSpace* out,
-				const size_t xsize, const size_t ysize,
+				const unsigned int xsize, const unsigned int ysize,
 				const meshaxis_t angle);
 };
 

@@ -46,7 +46,7 @@ public:
 	 *	      that plain multiplication with density gives the force
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
-			const size_t xsize, const size_t ysize,
+			const unsigned int xsize, const unsigned int ysize,
 			const std::array<integral_t,2*ps_xsize> wake);
 
 public:

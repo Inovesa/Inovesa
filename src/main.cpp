@@ -31,7 +31,7 @@
 
 using namespace vfps;
 
-int main()
+int main(int argc, char** argv)
 {
 	#ifdef INOVESA_USE_CL
 	// OpenCL device can be given as command line argument

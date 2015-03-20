@@ -20,7 +20,8 @@
 #include "HM/RotationMap.hpp"
 
 vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
-							   const size_t xsize, const size_t ysize,
+							   const unsigned int xsize,
+							   const unsigned int ysize,
 							   const meshaxis_t angle) :
 	HeritageMap(in,out,xsize,ysize)
 {
@@ -30,8 +31,6 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	const meshaxis_t cos_dt = cos(angle);
 	const meshaxis_t sin_dt = -sin(angle);
 
-	std::array<unsigned int,12> num;
-	num.fill(0);
 	for (unsigned int q_i=0; q_i< _xsize; q_i++) {
 		for(unsigned int p_i=0; p_i< _ysize; p_i++) {
 			// Cell of inverse image (qp,pp) of grid point i,j.

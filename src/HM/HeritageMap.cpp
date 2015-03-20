@@ -20,7 +20,7 @@
 #include "HM/HeritageMap.hpp"
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
-							   size_t xsize, size_t ysize) :
+							   unsigned int xsize, unsigned int ysize) :
 	_heritage_map(new std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>*[xsize]),
 	_heritage_map1D(new std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>[xsize*ysize]()),
 	_size(xsize*ysize),

@@ -34,7 +34,8 @@ protected:
 	} hi;
 
 public:
-	HeritageMap(PhaseSpace* in, PhaseSpace* out, size_t xsize, size_t ysize);
+	HeritageMap(PhaseSpace* in, PhaseSpace* out,
+				unsigned int xsize, unsigned int ysize);
 
 	~HeritageMap();
 
@@ -49,9 +50,9 @@ protected:
 	std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>** _heritage_map;
 	std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>* const _heritage_map1D;
 
-	const size_t _size;
-	const size_t _xsize;
-	const size_t _ysize;
+	const unsigned int _size;
+	const unsigned int _xsize;
+	const unsigned int _ysize;
 
 	#ifdef INOVESA_USE_CL
 	cl::Buffer _heritage_map1D_buf;
