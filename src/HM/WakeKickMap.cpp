@@ -22,7 +22,7 @@
 vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 					const unsigned int xsize, const unsigned int ysize,
 					const std::array<vfps::integral_t,2*ps_xsize> wake) :
-	HeritageMap(in,out,xsize,ysize),
+	HeritageMap(in,out,xsize,ysize,INTERPOL_TYPE),
 	_wake(wake)
 {
 }

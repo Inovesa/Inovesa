@@ -20,9 +20,12 @@
 #include "HM/HeritageMap.hpp"
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
-							   unsigned int xsize, unsigned int ysize) :
-	_heritage_map(new std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>*[xsize]),
-	_heritage_map1D(new std::array<hi,INTERPOL_TYPE*INTERPOL_TYPE>[xsize*ysize]()),
+							   unsigned int xsize, unsigned int ysize,
+							   unsigned int interpoints) :
+	_ip(interpoints),
+	_heritage_map(new hi**[xsize]),
+	_heritage_map1D(new hi*[xsize*ysize]()),
+	_hinfo(new hi[xsize*ysize*interpoints]),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
@@ -30,6 +33,9 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 	_out(out)
 {
 	for (unsigned int i=0; i<xsize; i++) {
+		for (unsigned int j=0; j<ysize; j++) {
+			_heritage_map1D[i*ysize+j]=&(_hinfo[(i*ysize+j)*interpoints]);
+		}
 		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
 	}
 }
@@ -38,6 +44,7 @@ vfps::HeritageMap::~HeritageMap()
 {
 	delete [] _heritage_map1D;
 	delete [] _heritage_map;
+	delete [] _hinfo;
 }
 
 void vfps::HeritageMap::apply()
@@ -88,14 +95,14 @@ void vfps::HeritageMap::apply()
 #ifdef INOVESA_USE_CL
 void vfps::HeritageMap::__initOpenCL()
 {
-	_heritage_map1D_buf = cl::Buffer(OCLH::context,
+	_hi_buf = cl::Buffer(OCLH::context,
 									 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-									 sizeof(hi)*INTERPOL_TYPE*INTERPOL_TYPE*_size,
-									 _heritage_map1D);
+									 sizeof(hi)*_ip*_size,
+									 _hinfo);
 	#if INTERPOL_TYPE == 4
 		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
 		applyHM.setArg(0, _in->data_buf);
-		applyHM.setArg(1, _heritage_map1D_buf);
+		applyHM.setArg(1, _hi_buf);
 		applyHM.setArg(2, _out->data_buf);
 	#else
 		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");

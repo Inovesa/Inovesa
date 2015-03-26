@@ -22,7 +22,7 @@
 vfps::HDF5File::HDF5File(std::string fname) :
 	file( nullptr ),
 	fname( fname ),
-	bp_dims( {{ 1, ps_xsize }}),
+	bp_dims( {{ 0, ps_xsize }}),
 	bp_name( "BunchProfile" ),
 	ps_dims( {{ 0, ps_xsize, ps_ysize}} ),
 	ps_name( "PhaseSpace" )

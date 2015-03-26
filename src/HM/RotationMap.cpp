@@ -23,7 +23,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							   const unsigned int xsize,
 							   const unsigned int ysize,
 							   const meshaxis_t angle) :
-	HeritageMap(in,out,xsize,ysize)
+	HeritageMap(in,out,xsize,ysize,INTERPOL_TYPE*INTERPOL_TYPE)
 {
 	std::vector<interpol_t> ti;
 	ti.resize(_xsize*_ysize);
@@ -151,8 +151,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							ph[i1][j1].index = i0*_ysize+j0;
 							ph[i1][j1].weight = hmc[i1*INTERPOL_TYPE+j1];
 						} else {
-							ph[i1][j1].index = 0;
-							ph[i1][j1].weight = 0;
+							ph[i1][j1] = {0,0};
 						}
 						_heritage_map[q_i][p_i][i1*INTERPOL_TYPE+j1]
 								= ph[i1][j1];

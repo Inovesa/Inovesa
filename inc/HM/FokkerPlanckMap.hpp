@@ -17,80 +17,47 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#ifndef HERITAGEMAP_HPP
-#define HERITAGEMAP_HPP
+#ifndef FOKKERPLANCKMAP_HPP
+#define FOKKERPLANCKMAP_HPP
 
-#include "PhaseSpace.hpp"
+#include "HeritageMap.hpp"
 
 namespace vfps
 {
 
-class HeritageMap
+/**
+ * @brief The FokkerPlanckMap class
+ *
+ * @todo Padding for faster memory access
+ */
+class FokkerPlanckMap : public HeritageMap
 {
-protected:
-	typedef struct {
-		unsigned int index;
-		interpol_t weight;
-	} hi;
+public:
+	/**
+	 * @brief The FPType enum holds ways to solve Fokker Planck equation
+	 */
+	enum class FPType : unsigned int {
+		none=0,
+		damping_only=1,
+		diffusion_only=2,
+		full=3
+	};
 
 public:
 	/**
-	 * @brief HeritageMap
+	 * @brief FokkerPlanckMap
 	 * @param in
 	 * @param out
 	 * @param xsize
 	 * @param ysize
-	 * @param interpoints number of points used for interpolation
+	 * @param fpt
+	 * @param e0 Marit: (deltat*2./(omegas*td))
 	 */
-	HeritageMap(PhaseSpace* in, PhaseSpace* out,
-				unsigned int xsize, unsigned int ysize,
-				unsigned int interpoints);
-
-	~HeritageMap();
-
-	/**
-	 * @brief apply
-	 *
-	 * @todo get rid of copying from/to host RAM every step
-	 */
-	virtual void apply();
-
-protected:
-	/**
-	 * @brief _ip holds the number of points used for interpolation
-	 */
-	const unsigned int _ip;
-
-	hi*** _heritage_map;
-	hi** const _heritage_map1D;
-	hi* const _hinfo;
-
-	const unsigned int _size;
-	const unsigned int _xsize;
-	const unsigned int _ysize;
-
-	#ifdef INOVESA_USE_CL
-	/**
-	 * @brief _hi_buf buffer for heritage information
-	 */
-	cl::Buffer _hi_buf;
-
-	/**
-	 * @brief applyHM
-	 */
-	cl::Kernel applyHM;
-
-	/**
-	 * @brief __initOpenCL initialize OpenCL
-	 * (use after _hinfo has been computed)
-	 */
-	void __initOpenCL();
-	#endif // INOVESA_USE_CL
-
-	PhaseSpace* _in;
-	PhaseSpace* _out;
+	FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
+					const unsigned int xsize, const unsigned int ysize,
+					FPType fpt, double e0);
 };
 
 }
 
-#endif // HERITAGEMAP_HPP
+#endif // FOKKERPLANCKMAP_HPP
