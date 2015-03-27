@@ -26,6 +26,7 @@
 #include "Share.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
+#include "HM/FokkerPlanckMap.hpp"
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 
@@ -123,6 +124,8 @@ int main(int argc, char** argv)
 
 	// angle of one rotation step (in rad)
 	constexpr double angle = 2*M_PI/steps;
+	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_xsize,ps_ysize,
+						vfps::FokkerPlanckMap::FPType::full,3.74e-6);
 	RotationMap rm(&mesh,&mesh_rotated,ps_xsize,ps_ysize,angle);
 	unsigned int outstep = 100;
 	for (unsigned int i=0;i<steps;i++) {
@@ -135,7 +138,7 @@ int main(int argc, char** argv)
 			#endif // INOVESA_USE_GUI
 		}
 		rm.apply();
-		mesh = mesh_rotated;
+		fpm.apply();
 	}
 	#ifdef INOVESA_USE_CL
 	OCLH::queue.flush();

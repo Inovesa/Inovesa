@@ -30,47 +30,48 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	const double e02d2 = e0/(in->getDelta(1)*in->getDelta(1));
 	const double daome = 1+e0;
 	const double diome = 1-2*e02d2;
-	const double fptme = e0-2*e02d2+2;
+	const double fptme = 1+e0-2*e02d2;
 
 
-	if (fpt == FPType::none) {
-		for (unsigned int i=0; i< _size; i++) {
-			_hinfo[i] = {0,0};
-		}
-	} else {
-		for (unsigned int i=0; i< _xsize; i++) {
-			_heritage_map[i][0][0] = {0,0};
-			_heritage_map[i][0][1] = {0,0};
-			_heritage_map[i][0][2] = {0,0};
-			switch (fpt) {
-			case FPType::damping_only:
-				for (unsigned int j=1; j< _ysize-1; j++) {
-					_heritage_map[i][j][0]={i*_ysize+j-1, e02d*in->x(1,j)};
-					_heritage_map[i][j][1]={i*_ysize+j  , daome};
-					_heritage_map[i][j][2]={i*_ysize+j+1,-e02d*in->x(1,j)};
-				}
-				break;
-			case FPType::diffusion_only:
-				for (unsigned int j=1; j< _ysize-1; j++) {
-					_heritage_map[i][j][0]={i*_ysize+j-1,e02d2};
-					_heritage_map[i][j][1]={i*_ysize+j  ,diome};
-					_heritage_map[i][j][2]={i*_ysize+j+1,e02d2};
-				}
-				break;
-			case FPType::full:
-				for (unsigned int j=1; j< _ysize-1; j++) {
-					_heritage_map[i][j][0]={i*_ysize+j-1,e02d2+e02d*in->x(1,j)};
-					_heritage_map[i][j][1]={i*_ysize+j  ,fptme};
-					_heritage_map[i][j][2]={i*_ysize+j+1,e02d2-e02d*in->x(1,j)};
-				}
-				break;
-			default:
-				break;
+	for (unsigned int i=0; i< _xsize; i++) {
+		_heritage_map[i][0][0] = {0,0};
+		_heritage_map[i][0][1] = {0,0};
+		_heritage_map[i][0][2] = {0,0};
+		switch (fpt) {
+		case FPType::none:
+			for (unsigned int j=1; j< _ysize-1; j++) {
+				_heritage_map[i][j][0]={i*_ysize+j,1};
+				_heritage_map[i][j][1]={0,0};
+				_heritage_map[i][j][2]={0,0};
 			}
-			_heritage_map[i][_ysize-1][0] = {0,0};
-			_heritage_map[i][_ysize-1][1] = {0,0};
-			_heritage_map[i][_ysize-1][2] = {0,0};
+			break;
+		case FPType::damping_only:
+			for (unsigned int j=1; j< _ysize-1; j++) {
+				_heritage_map[i][j][0]={i*_ysize+j-1, e02d*in->x(1,j)};
+				_heritage_map[i][j][1]={i*_ysize+j  , daome};
+				_heritage_map[i][j][2]={i*_ysize+j+1,-e02d*in->x(1,j)};
+			}
+			break;
+		case FPType::diffusion_only:
+			for (unsigned int j=1; j< _ysize-1; j++) {
+				_heritage_map[i][j][0]={i*_ysize+j-1,e02d2};
+				_heritage_map[i][j][1]={i*_ysize+j  ,diome};
+				_heritage_map[i][j][2]={i*_ysize+j+1,e02d2};
+			}
+			break;
+		case FPType::full:
+			for (unsigned int j=1; j< _ysize-1; j++) {
+				_heritage_map[i][j][0]={i*_ysize+j-1,e02d2+e02d*in->x(1,j)};
+				_heritage_map[i][j][1]={i*_ysize+j  ,fptme};
+				_heritage_map[i][j][2]={i*_ysize+j+1,e02d2-e02d*in->x(1,j)};
+			}
+			break;
+		default:
+			break;
 		}
+		_heritage_map[i][_ysize-1][0] = {0,0};
+		_heritage_map[i][_ysize-1][1] = {0,0};
+		_heritage_map[i][_ysize-1][2] = {0,0};
 	}
 }
 

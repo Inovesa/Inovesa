@@ -31,6 +31,14 @@ public:
 	RotationMap(PhaseSpace* in, PhaseSpace* out,
 				const unsigned int xsize, const unsigned int ysize,
 				const meshaxis_t angle);
+
+	/**
+	 * @brief apply
+	 *
+	 * Saturation only makes sense with quadratic/cubic interpolation.
+	 * Enabling it with linear (or without) currently crashes the program.
+	 */
+	void apply();
 };
 
 }
