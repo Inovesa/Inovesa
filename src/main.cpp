@@ -19,6 +19,7 @@
 
 #include <climits>
 #include <iostream>
+#include <png++/png.hpp>
 #include <sstream>
 
 #include "Display.hpp"
@@ -58,7 +59,16 @@ int main(int argc, char** argv)
 	HDF5File file("results.h5");
 
 	// create pattern to start with
-	#if TEST_PATTERN == 1
+
+	#if TEST_PATTERN == 0
+		png::image<png::gray_pixel_16> image("start.png");
+		for (unsigned int x=0; x<ps_xsize; x++) {
+			for (unsigned int y=0; y<ps_ysize; y++) {
+				mesh[x][y] = pattern_max*(image[ps_ysize-y-1][x]
+										  /float(UINT16_MAX));
+			}
+		}
+	#elif TEST_PATTERN == 1
 		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
 			for (unsigned int y=ps_ysize/4; y<ps_ysize*3/4; y++) {
 				mesh[x][y] = 1.0f*pattern_max;

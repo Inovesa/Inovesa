@@ -58,13 +58,13 @@
 
 /**
  * possible choices are:
- * 0: no test pattern
+ * 0: load "start.png"
  * 1: a square
  * 2: a 2D gaussian
  * 3: a rectengle (half)
  * 4: quarters with different patterns
  */
-#define TEST_PATTERN 4
+#define TEST_PATTERN 0
 
 namespace vfps
 {
