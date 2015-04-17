@@ -61,7 +61,26 @@ int main(int argc, char** argv)
 	// create pattern to start with
 
 	#if TEST_PATTERN == 0
-		png::image<png::gray_pixel_16> image("start.png");
+		png::image<png::gray_pixel_16> image;
+		try {
+			image.read("start.png");
+		} catch ( const png::std_error &e ) {
+			std::cerr << e.what() << std::endl;
+			return EXIT_FAILURE;
+		}
+		catch ( const png::error &e ) {
+			std::cerr << "Problem loading start.png: " << e.what() << std::endl;
+			return EXIT_FAILURE;
+		}
+
+		if (image.get_height() != ps_xsize ||
+			image.get_width()  != ps_ysize ) {
+			std::cerr	<< "Provided start.png has to have "
+						<< ps_ysize << "x" << ps_xsize << " pixels."
+						<< std::endl
+						<< "Will now quit." << std::endl;
+			return EXIT_FAILURE;
+		}
 		for (unsigned int x=0; x<ps_xsize; x++) {
 			for (unsigned int y=0; y<ps_ysize; y++) {
 				mesh[x][y] = pattern_max*(image[ps_ysize-y-1][x]
