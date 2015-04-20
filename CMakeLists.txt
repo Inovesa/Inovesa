@@ -23,6 +23,7 @@ set(INC_LIST
 			./inc/CL/OpenCLHandler.hpp
 			./inc/HM/HeritageMap.hpp
 			./inc/HM/FokkerPlanckMap.hpp
+			./inc/HM/Identity.hpp
 			./inc/HM/RotationMap.hpp
 			./inc/HM/WakeKickMap.hpp
 			./inc/IO/HDF5File.hpp

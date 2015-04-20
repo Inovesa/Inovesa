@@ -28,6 +28,7 @@
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
+#include "HM/Identity.hpp"
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 
@@ -156,9 +157,16 @@ int main(int argc, char** argv)
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_xsize,ps_ysize,
 						vfps::FokkerPlanckMap::FPType::full,3.74e-6);
 	RotationMap rm(&mesh,&mesh_rotated,ps_xsize,ps_ysize,angle);
+	//Identity id(&mesh_rotated,&mesh,ps_xsize,ps_ysize);
+	#ifdef INOVESA_USE_CL
+	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+	#endif // INOVESA_USE_CL
 	unsigned int outstep = 100;
 	for (unsigned int i=0;i<steps;i++) {
 		if (i%outstep == 0) {
+			#ifdef INOVESA_USE_CL
+			mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+			#endif // INOVESA_USE_CL
 			file.append(&mesh);
 			#ifdef INOVESA_USE_GUI
 			display.createTexture(&mesh);

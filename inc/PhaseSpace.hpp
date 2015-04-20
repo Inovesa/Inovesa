@@ -59,9 +59,7 @@ public:
 	  * @return pointer to array holding size<0>()*size<1>() data points
 	  */
 	inline meshdata_t* getData() const
-	{
-		return _data1D;
-	}
+	{ return _data1D; }
 
 	inline meshaxis_t getDelta(const unsigned int x) const
 	{ return _axis[x].getDelta(); }
@@ -103,6 +101,15 @@ public:
 	 * @param other
 	 */
 	friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
+
+	#ifdef INOVESA_USE_CL
+	enum class clCopyDirection {
+		cpu2dev,
+		dev2cpu
+	};
+
+	void syncCLMem(clCopyDirection dir);
+	#endif
 
 protected:
 	const std::array<Ruler<meshaxis_t>,2> _axis;

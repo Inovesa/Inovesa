@@ -20,10 +20,15 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
+#define INOVESA_RELEASE			0
+#define INOVESA_VERSION_MINOR	5
+#define INOVESA_VERSION_FIX		0
+
 #include "fixed_point.h"
 
 #define INOVESA_USE_GUI
-//#define INOVESA_USE_CL
+#define INOVESA_USE_CL
+//#define INOVESA_SYNC_CL
 
 /**
  * possible choices are:
