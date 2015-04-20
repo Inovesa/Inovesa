@@ -152,17 +152,24 @@ int main(int argc, char** argv)
 	Display display;
 	#endif
 
-	// angle of one rotation step (in rad)
+
+	/* angle of one rotation step (in rad)
+	 * (angle = 2*pi corresponds to 1 synchrotron period)
+	 */
 	constexpr double angle = 2*M_PI/steps;
+
+	constexpr double e0 = 2.0/(vfps::f_s*vfps::t_d*steps);
+
+
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_xsize,ps_ysize,
-						vfps::FokkerPlanckMap::FPType::full,3.74e-6);
+						vfps::FokkerPlanckMap::FPType::full,e0);
 	RotationMap rm(&mesh,&mesh_rotated,ps_xsize,ps_ysize,angle);
-	//Identity id(&mesh_rotated,&mesh,ps_xsize,ps_ysize);
+
 	#ifdef INOVESA_USE_CL
 	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	#endif // INOVESA_USE_CL
 	unsigned int outstep = 100;
-	for (unsigned int i=0;i<steps;i++) {
+	for (unsigned int i=0;i<steps*vfps::rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
 			mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);

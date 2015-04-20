@@ -81,6 +81,9 @@ constexpr unsigned int pattern_margin = 128;
 
 constexpr unsigned int steps = 4000;
 
+constexpr double f_s = 8.5e3;
+constexpr double t_d = 0.01;
+
 /**
  * @brief ps_xsize horizontal size of the phase space (in mesh points)
  */
