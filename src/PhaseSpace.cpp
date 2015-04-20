@@ -177,6 +177,22 @@ vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
 	return *this;
 }
 
+#ifdef INOVESA_USE_CL
+void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
+{
+	switch (dir) {
+	case clCopyDirection::cpu2dev:
+		OCLH::queue.enqueueWriteBuffer
+			(data_buf,CL_TRUE,0,sizeof(meshdata_t)*ps_xsize*ps_ysize,_data1D);
+		break;
+	case clCopyDirection::dev2cpu:
+		OCLH::queue.enqueueReadBuffer
+			(data_buf,CL_TRUE,0,sizeof(meshdata_t)*ps_xsize*ps_ysize,_data1D);
+		break;
+	}
+}
+#endif // INOVESA_USE_CL
+
 void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
 {
 	std::swap(first._data, second._data);

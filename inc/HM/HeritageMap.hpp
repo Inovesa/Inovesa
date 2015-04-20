@@ -50,8 +50,6 @@ public:
 
 	/**
 	 * @brief apply
-	 *
-	 * @todo get rid of copying from/to host RAM every step
 	 */
 	virtual void apply();
 
@@ -80,11 +78,6 @@ protected:
 	 */
 	cl::Kernel applyHM;
 
-	/**
-	 * @brief __initOpenCL initialize OpenCL
-	 * (use after _hinfo has been computed)
-	 */
-	void __initOpenCL();
 	#endif // INOVESA_USE_CL
 
 	PhaseSpace* _in;

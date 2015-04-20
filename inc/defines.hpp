@@ -23,7 +23,8 @@
 #include "fixed_point.h"
 
 #define INOVESA_USE_GUI
-//#define INOVESA_USE_CL
+#define INOVESA_USE_CL
+//#define INOVESA_SYNC_CL
 
 /**
  * possible choices are:

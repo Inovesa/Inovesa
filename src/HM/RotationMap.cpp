@@ -25,9 +25,6 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							   const meshaxis_t angle) :
 	HeritageMap(in,out,xsize,ysize,INTERPOL_TYPE*INTERPOL_TYPE)
 {
-	std::vector<interpol_t> ti;
-	ti.resize(_xsize*_ysize);
-
 	const meshaxis_t cos_dt = cos(angle);
 	const meshaxis_t sin_dt = -sin(angle);
 
@@ -161,17 +158,31 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 		}
 	}
 	#ifdef INOVESA_USE_CL
-	__initOpenCL();
+	_hi_buf = cl::Buffer(OCLH::context,
+						 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+						 sizeof(hi)*_ip*_size,
+						 _hinfo);
+	#if INTERPOL_TYPE == 4
+	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
+	applyHM.setArg(0, _in->data_buf);
+	applyHM.setArg(1, _hi_buf);
+	applyHM.setArg(2, _out->data_buf);
+	#else
+	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+	applyHM.setArg(0, _in->data_buf);
+	applyHM.setArg(1, _hi_buf);
+	applyHM.setArg(2, INTERPOL_TYPE*INTERPOL_TYPE);
+	applyHM.setArg(3, _out->data_buf);
 	#endif
+	#endif // INOVESA_USE_CL
 }
 
 void vfps::RotationMap::apply()
 {
 	#ifdef INOVESA_USE_CL
-	OCLH::queue.enqueueWriteBuffer
-				(_in->data_buf, CL_TRUE,
-				 0,sizeof(meshdata_t)*ps_xsize*ps_ysize,
-				_in->getData());
+	#ifdef INOVESA_SYNC_CL
+	_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+	#endif // INOVESA_SYNC_CL
 	OCLH::queue.enqueueNDRangeKernel (
 				applyHM,
 				cl::NullRange,
@@ -181,10 +192,9 @@ void vfps::RotationMap::apply()
 	#else // CL_VERSION_1_2
 	OCLH::queue.enqueueBarrier();
 	#endif // CL_VERSION_1_2
-	OCLH::queue.enqueueReadBuffer
-				(_out->data_buf, CL_TRUE,
-				 0,sizeof(meshdata_t)*_size,
-				_out->getData());
+	#ifdef INOVESA_SYNC_CL
+	_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+	#endif // INOVESA_SYNC_CL
 	#else // INOVESA_USE_CL
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
@@ -208,5 +218,5 @@ void vfps::RotationMap::apply()
 		data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
 		#endif // INTERPOL_SATURATING
 	}
-	#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_CL
 }

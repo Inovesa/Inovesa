@@ -59,14 +59,14 @@ void vfps::WakeKickMap::apply()
 
 				// create vectors containing interpolation coefficiants
 				#if INTERPOL_TYPE == 1
-					icp[0] = 1;
+					hmc[0] = 1;
 				#elif INTERPOL_TYPE == 2
-					icp[0] = interpol_t(1)-xip;
-					icp[1] = xip;
+					hmc[0] = interpol_t(1)-xip;
+					hmc[1] = xip;
 				#elif INTERPOL_TYPE == 3
-					icp[0] = xip*(xip-interpol_t(1))/interpol_t(2);
-					icp[1] = interpol_t(1)-xip*xip;
-					icp[2] = xip*(xip+interpol_t(1))/interpol_t(2);
+					hmc[0] = xip*(xip-interpol_t(1))/interpol_t(2);
+					hmc[1] = interpol_t(1)-xip*xip;
+					hmc[2] = xip*(xip+interpol_t(1))/interpol_t(2);
 				#elif INTERPOL_TYPE == 4
 					hmc[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
 							* interpol_t(-1./6.);

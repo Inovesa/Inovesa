@@ -17,46 +17,33 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#include "HM/HeritageMap.hpp"
+#ifndef IDENTITY_HPP
+#define IDENTITY_HPP
 
-vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
-							   unsigned int xsize, unsigned int ysize,
-							   unsigned int interpoints) :
-	_ip(interpoints),
-	_heritage_map(new hi**[xsize]),
-	_heritage_map1D(new hi*[xsize*ysize]()),
-	_hinfo(new hi[xsize*ysize*interpoints]),
-	_size(xsize*ysize),
-	_xsize(xsize),
-	_ysize(ysize),
-	_in(in),
-	_out(out)
-{
-	for (unsigned int i=0; i<xsize; i++) {
-		for (unsigned int j=0; j<ysize; j++) {
-			_heritage_map1D[i*ysize+j]=&(_hinfo[(i*ysize+j)*interpoints]);
-		}
-		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
-	}
-}
+#include "HeritageMap.hpp"
 
-vfps::HeritageMap::~HeritageMap()
+namespace vfps
 {
-	delete [] _heritage_map1D;
-	delete [] _heritage_map;
-	delete [] _hinfo;
-}
 
-void vfps::HeritageMap::apply()
+class Identity : public HeritageMap
 {
+public:
+	Identity(	PhaseSpace* in, PhaseSpace* out,
+				const unsigned int xsize, const unsigned int ysize) :
+		HeritageMap(in, out, xsize, ysize, 0) {}
+
+	/**
+	 * @brief apply copys data from in to out
+	 */
+	void apply()
+	{
 	#ifdef INOVESA_USE_CL
 	#ifdef INOVESA_SYNC_CL
 	_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
 	#endif // INOVESA_SYNC_CL
-	OCLH::queue.enqueueNDRangeKernel (
-				applyHM,
-				cl::NullRange,
-				cl::NDRange(_size));
+	OCLH::queue.enqueueCopyBuffer(
+				_in->data_buf, _out->data_buf,
+				0,0,sizeof(meshdata_t)*ps_xsize*ps_ysize);
 	#ifdef CL_VERSION_1_2
 	OCLH::queue.enqueueBarrierWithWaitList();
 	#else // CL_VERSION_1_2
@@ -69,12 +56,12 @@ void vfps::HeritageMap::apply()
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
 
-	for (unsigned int i=0; i< _size; i++) {
-		data_out[i] = 0;
-		for (unsigned int j=0; j<_ip; j++) {
-			hi h = _heritage_map1D[i][j];
-			data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-		}
-	}
+	std::copy_n(data_in,sizeof(meshdata_t)*ps_xsize*ps_ysize,data_out);
+
 	#endif // INOVESA_USE_CL
+	}
+};
+
 }
+
+#endif // IDENTITY_HPP
