@@ -81,7 +81,7 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
 	H5::DataSet version_dset = file->createDataSet
 			("INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
-	std::array<int32_t,3> version {{INOVESA_RELEASE,
+	std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
 									INOVESA_VERSION_MINOR,
 									INOVESA_VERSION_FIX}};
 	version_dset.write(version.data(),H5::PredType::NATIVE_INT);

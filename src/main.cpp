@@ -32,20 +32,32 @@
 #include "HM/Identity.hpp"
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
+#include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
 
 int main(int argc, char** argv)
 {
-	#ifdef INOVESA_USE_CL
-	// OpenCL device can be given as command line argument
-	unsigned int device = 0;
-	if (argc == 2 ) {
-		std::stringstream dev(argv[1]);
-		dev >> device;
-		device--;
+	ProgramOptions opts;
+
+	bool cont;
+
+	try {
+		cont = opts.parse(argc,argv);
+	} catch(std::exception& e) {
+		std::cerr << "error: " << e.what() << std::endl;
+		return EXIT_FAILURE;
 	}
-	prepareCLEnvironment(device);
+
+	if (!cont) {
+		return EXIT_SUCCESS;
+	}
+
+	#ifdef INOVESA_USE_CL
+	cont = prepareCLEnvironment(opts.getCLDevice()-1);
+	if (!cont) {
+		return EXIT_SUCCESS;
+	}
 	prepareCLProgs();
 	#endif // INOVESA_USE_CL
 
@@ -63,7 +75,7 @@ int main(int argc, char** argv)
 	// load pattern to start with
 	png::image<png::gray_pixel_16> image;
 	try {
-		image.read(startpngname);
+		image.read(opts.getStartDistPNG());
 	} catch ( const png::std_error &e ) {
 		std::cerr << e.what() << std::endl;
 		return EXIT_FAILURE;

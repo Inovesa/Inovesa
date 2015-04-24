@@ -30,7 +30,7 @@
 /**
  * @brief prepareCLEnvironment
  * @param device
- * @return
+ * @return true on successful initialization
  *
  * Picks the last available platform.
  * If several platforms are available,

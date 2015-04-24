@@ -24,7 +24,7 @@
 
 #include "fixed_point.h"
 
-#define INOVESA_RELEASE			0
+#define INOVESA_VERSION_RELEASE			0
 #define INOVESA_VERSION_MINOR	5
 #define INOVESA_VERSION_FIX		1
 
@@ -65,9 +65,6 @@
 
 namespace vfps
 {
-
-const std::string startpngname = "start.png";
-
 const double rotations = 150;
 const unsigned int steps = 4000;
 
