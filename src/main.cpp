@@ -22,6 +22,7 @@
 #include <png++/png.hpp>
 #include <sstream>
 
+#include "defines.hpp"
 #include "Display.hpp"
 #include "PhaseSpace.hpp"
 #include "Share.hpp"
@@ -59,92 +60,33 @@ int main(int argc, char** argv)
 
 	HDF5File file("results.h5");
 
-	// create pattern to start with
+	// load pattern to start with
+	png::image<png::gray_pixel_16> image;
+	try {
+		image.read(startpngname);
+	} catch ( const png::std_error &e ) {
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+	catch ( const png::error &e ) {
+		std::cerr << "Problem loading start.png: " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 
-	#if TEST_PATTERN == 0
-		png::image<png::gray_pixel_16> image;
-		try {
-			image.read("start.png");
-		} catch ( const png::std_error &e ) {
-			std::cerr << e.what() << std::endl;
-			return EXIT_FAILURE;
+	if (image.get_height() != ps_xsize ||
+		image.get_width()  != ps_ysize ) {
+		std::cerr	<< "Provided start.png has to have "
+					<< ps_ysize << "x" << ps_xsize << " pixels."
+					<< std::endl
+					<< "Will now quit." << std::endl;
+		return EXIT_FAILURE;
+	}
+	for (unsigned int x=0; x<ps_xsize; x++) {
+		for (unsigned int y=0; y<ps_ysize; y++) {
+			mesh[x][y] = pattern_max*(image[ps_ysize-y-1][x]
+									  /float(UINT16_MAX));
 		}
-		catch ( const png::error &e ) {
-			std::cerr << "Problem loading start.png: " << e.what() << std::endl;
-			return EXIT_FAILURE;
-		}
-
-		if (image.get_height() != ps_xsize ||
-			image.get_width()  != ps_ysize ) {
-			std::cerr	<< "Provided start.png has to have "
-						<< ps_ysize << "x" << ps_xsize << " pixels."
-						<< std::endl
-						<< "Will now quit." << std::endl;
-			return EXIT_FAILURE;
-		}
-		for (unsigned int x=0; x<ps_xsize; x++) {
-			for (unsigned int y=0; y<ps_ysize; y++) {
-				mesh[x][y] = pattern_max*(image[ps_ysize-y-1][x]
-										  /float(UINT16_MAX));
-			}
-		}
-	#elif TEST_PATTERN == 1
-		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
-			for (unsigned int y=ps_ysize/4; y<ps_ysize*3/4; y++) {
-				mesh[x][y] = 1.0f*pattern_max;
-			}
-		}
-		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
-				mesh[x][ps_ysize/2] = 0.5f*pattern_max;
-		}
-		for (unsigned int y=ps_ysize/4; y<ps_ysize*3/4; y++) {
-				mesh[ps_xsize/2][y] = 0.5f*pattern_max;
-		}
-		for (unsigned int x=ps_xsize/4; x<ps_xsize*3/4; x++) {
-			mesh[x][x] = 0.0f;
-			mesh[x][ps_ysize-x] = 0.0f;
-		}
-	#elif TEST_PATTERN == 2
-		for (int x=0; x<int(ps_xsize); x++) {
-			for (int y=0; y<int(ps_ysize); y++) {
-				mesh[x][y] = std::exp(-std::pow(x-int(ps_xsize)/2,2)/patterndim_x
-									  -std::pow(y-int(ps_ysize)/2,2)/patterndim_y);
-			}
-		}
-	#elif TEST_PATTERN == 3
-		for (int y=pattern_margin; y<int(ps_ysize-pattern_margin); y++) {
-			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
-				mesh[x][y] = 1.0f*pattern_max;
-			}
-		}
-		for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
-			mesh[x][x] = 0;
-			mesh[x][ps_ysize/2] = 0;
-			mesh[x][ps_ysize-x] = 0;
-		}
-	#elif TEST_PATTERN == 4
-		for (int y=pattern_margin; y<int(ps_ysize/2); y++) {
-			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
-				mesh[x][y] = (float(y-pattern_margin))
-							/float(ps_ysize/2-pattern_margin)*pattern_max;
-			}
-		}
-		for (int y=ps_ysize/2; y<int(ps_ysize-pattern_margin); y++) {
-			for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
-				mesh[x][y] = 1.0f*pattern_max;
-			}
-		}
-		for (int x=pattern_margin; x<int(ps_xsize/2); x++) {
-			mesh[x][ps_ysize-x] = 0.0f*pattern_max;
-		}
-		for (int x=ps_xsize/2; x<int(ps_xsize-pattern_margin); x++) {
-			for (int y=pattern_margin; y<int(ps_ysize/2); y++) {
-				mesh[x][y] = std::exp(-std::pow(x-int(ps_xsize)/2,2)/patterndim_x
-									  -std::pow(y-int(ps_ysize)/2,2)/patterndim_y)
-						*pattern_max;
-			}
-		}
-	#endif
+	}
 
 	PhaseSpace mesh_rotated(mesh);
 

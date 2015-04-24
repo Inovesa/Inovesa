@@ -20,11 +20,13 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
-#define INOVESA_RELEASE			0
-#define INOVESA_VERSION_MINOR	5
-#define INOVESA_VERSION_FIX		0
+#include <string>
 
 #include "fixed_point.h"
+
+#define INOVESA_RELEASE			0
+#define INOVESA_VERSION_MINOR	5
+#define INOVESA_VERSION_FIX		1
 
 #define INOVESA_USE_GUI
 #define INOVESA_USE_CL
@@ -61,38 +63,28 @@
  */
 #define ROTATION_TYPE 2
 
-/**
- * possible choices are:
- * 0: load "start.png"
- * 1: a square
- * 2: a 2D gaussian
- * 3: a rectengle (half)
- * 4: quarters with different patterns
- */
-#define TEST_PATTERN 0
-
 namespace vfps
 {
 
-constexpr double rotations = 1;
-constexpr unsigned int patterndim_x = 512;
-constexpr unsigned int patterndim_y = 4048;
-constexpr unsigned int pattern_margin = 128;
+const std::string startpngname = "start.png";
 
-constexpr unsigned int steps = 4000;
+const double rotations = 150;
+const unsigned int steps = 4000;
 
-constexpr double f_s = 8.5e3;
-constexpr double t_d = 0.01;
+const double f_s = 8.5e3;
+const double t_d = 0.01;
 
 /**
  * @brief ps_xsize horizontal size of the phase space (in mesh points)
  */
-constexpr unsigned int ps_xsize = 512;
+const unsigned int ps_xsize = 512;
 
 /**
  * @brief ps_ysize vertical size of the phase space (in mesh points)
  */
-constexpr unsigned int ps_ysize = 512;
+const unsigned int ps_ysize = 512;
+
+
 
 typedef fpml::fixed_point<int32_t,2,29> fixp32;
 typedef fpml::fixed_point<int64_t,34,29> fixp64;
