@@ -19,13 +19,14 @@
 
 #include "IO/HDF5File.hpp"
 
-vfps::HDF5File::HDF5File(std::string fname) :
+vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
 	file( nullptr ),
 	fname( fname ),
-	bp_dims( {{ 0, ps_xsize }}),
+	bp_dims( {{ 0, ps_size }}),
 	bp_name( "BunchProfile" ),
-	ps_dims( {{ 0, ps_xsize, ps_ysize}} ),
-	ps_name( "PhaseSpace" )
+	ps_dims( {{ 0, ps_size, ps_size}} ),
+	ps_name( "PhaseSpace" ),
+	ps_size(ps_size)
 {
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);
 
@@ -36,14 +37,14 @@ vfps::HDF5File::HDF5File(std::string fname) :
 		bp_datatype = H5::PredType::STD_I64LE;
 	}
 
-	static constexpr std::array<hsize_t,bp_rank> bp_maxdims
-			= {{H5S_UNLIMITED,ps_xsize}};
+	const std::array<hsize_t,bp_rank> bp_maxdims
+			= {{H5S_UNLIMITED,ps_size}};
 
 	bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
 
-	static constexpr std::array<hsize_t,bp_rank> bp_chunkdims
-			= {{1,ps_xsize/8}};
+	const std::array<hsize_t,bp_rank> bp_chunkdims
+			= {{1,ps_size/8U}};
 	bp_prop.setChunk(bp_rank,bp_chunkdims.data());
 	bp_prop.setShuffle();
 	bp_prop.setDeflate(compression);
@@ -60,14 +61,14 @@ vfps::HDF5File::HDF5File(std::string fname) :
 		ps_datatype = H5::PredType::STD_I32LE;
 	}
 
-	static constexpr std::array<hsize_t,ps_rank> ps_maxdims
-			= {{H5S_UNLIMITED,ps_xsize,ps_ysize}};
+	const std::array<hsize_t,ps_rank> ps_maxdims
+			= {{H5S_UNLIMITED,ps_size,ps_size}};
 
 	ps_dataspace = new H5::DataSpace(ps_rank,ps_dims.data(),ps_maxdims.data());
 
 
-	static constexpr std::array<hsize_t,ps_rank> ps_chunkdims
-			= {{1,ps_xsize/8,ps_ysize/8}};
+	const std::array<hsize_t,ps_rank> ps_chunkdims
+			= {{1,ps_size/8U,ps_size/8U}};
 	ps_prop.setChunk(ps_rank,ps_chunkdims.data());
 	ps_prop.setShuffle();
 	ps_prop.setDeflate(compression);
@@ -81,7 +82,7 @@ vfps::HDF5File::HDF5File(std::string fname) :
 	H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
 	H5::DataSet version_dset = file->createDataSet
 			("INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
-	std::array<int32_t,3> version {{INOVESA_RELEASE,
+	std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
 									INOVESA_VERSION_MINOR,
 									INOVESA_VERSION_FIX}};
 	version_dset.write(version.data(),H5::PredType::NATIVE_INT);
@@ -102,8 +103,8 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 	// append PhaseSpace
 	std::array<hsize_t,ps_rank> ps_offset
 			= {{ps_dims[0],0,0}};
-	static constexpr std::array<hsize_t,ps_rank> ps_ext
-			= {{1,ps_xsize,ps_ysize}};
+	const std::array<hsize_t,ps_rank> ps_ext
+			= {{1,ps_size,ps_size}};
 	ps_dims[0]++;
 
 	ps_dataset->extend(ps_dims.data());
@@ -121,8 +122,8 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 	// append BunchProfile
 	std::array<hsize_t,bp_rank> bp_offset
 			= {{bp_dims[0],0}};
-	static constexpr std::array<hsize_t,bp_rank> bp_ext
-			= {{1,ps_xsize}};
+	const std::array<hsize_t,bp_rank> bp_ext
+			= {{1,ps_size}};
 	bp_dims[0]++;
 
 	bp_dataset->extend(bp_dims.data());

@@ -31,7 +31,7 @@ namespace vfps {
 class HDF5File
 {
 public:
-	HDF5File(std::string fname);
+	HDF5File(std::string fname, const uint16_t ps_size);
 
 	~HDF5File();
 
@@ -73,6 +73,8 @@ private:
 	const std::string ps_name;
 
 	H5::DSetCreatPropList ps_prop;
+
+	uint16_t ps_size;
 };
 
 }

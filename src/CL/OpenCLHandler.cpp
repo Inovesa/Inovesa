@@ -58,9 +58,7 @@ bool prepareCLEnvironment(unsigned int device)
                       << OCLH::devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
 					  << ")" << std::endl;
 		}
-		std::cout << "Choose which device to use: ";
-		std::cin >> device;
-		device = (device-1)%OCLH::devices.size();
+		return false;
 	}
     OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
 	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);

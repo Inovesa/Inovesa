@@ -43,7 +43,7 @@ public:
 	#endif // INOVESA_SYNC_CL
 	OCLH::queue.enqueueCopyBuffer(
 				_in->data_buf, _out->data_buf,
-				0,0,sizeof(meshdata_t)*ps_xsize*ps_ysize);
+				0,0,sizeof(meshdata_t)*_size);
 	#ifdef CL_VERSION_1_2
 	OCLH::queue.enqueueBarrierWithWaitList();
 	#else // CL_VERSION_1_2
@@ -56,7 +56,7 @@ public:
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
 
-	std::copy_n(data_in,sizeof(meshdata_t)*ps_xsize*ps_ysize,data_out);
+	std::copy_n(data_in,sizeof(meshdata_t)*_xsize,data_out);
 
 	#endif // INOVESA_USE_CL
 	}

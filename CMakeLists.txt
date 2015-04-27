@@ -11,6 +11,7 @@ set(SRC_LIST
 			./src/HM/RotationMap.cpp
 			./src/HM/WakeKickMap.cpp
 			./src/IO/HDF5File.cpp
+			./src/IO/ProgramOptions.cpp
 			./src/Display.cpp
 			./src/PhaseSpace.cpp
 			./src/main.cpp
@@ -27,6 +28,7 @@ set(INC_LIST
 			./inc/HM/RotationMap.hpp
 			./inc/HM/WakeKickMap.hpp
 			./inc/IO/HDF5File.hpp
+			./inc/IO/ProgramOptions.hpp
 			./inc/Display.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
@@ -54,7 +56,7 @@ find_package(GLEW REQUIRED)
 find_package(GLFW REQUIRED)
 find_package(GSL REQUIRED)
 find_package(GSL COMPONENTS linalg REQUIRED)
-find_package(Boost COMPONENTS filesystem system REQUIRED)
+find_package(Boost COMPONENTS filesystem program_options system REQUIRED)
 find_package(HDF5 COMPONENTS CXX REQUIRED)
 find_package(PNG REQUIRED)
 include_directories(./inc
