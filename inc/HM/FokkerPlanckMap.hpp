@@ -51,11 +51,11 @@ public:
 	 * @param xsize
 	 * @param ysize
 	 * @param fpt
-	 * @param e0 Marit: (deltat*2./(omegas*td))
+	 * @param e1 Marit: (deltat*2./(omegas*td))
 	 */
 	FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 					const unsigned int xsize, const unsigned int ysize,
-					FPType fpt, double e0);
+					FPType fpt, double e1);
 };
 
 }
