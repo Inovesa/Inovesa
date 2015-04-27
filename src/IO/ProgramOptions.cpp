@@ -3,27 +3,55 @@
 vfps::ProgramOptions::ProgramOptions() :
 	_cldevice(0),
 	_startdistpng("start.png"),
-	_configopts("Configuration"),
-	_genericopts("Generic options"),
-	_visibleopts("Possible Options")
+	outsteps(100),
+	steps(4000),
+	rotations(1),
+	f_s(8.5e3),
+	t_d(0.01),
+	_physopts("Physical Parameters for Simulation"),
+	_proginfoopts("Program Information"),
+	_programopts_cli("General Program Parameters"),
+	_simulopts("Non-Physical Parameters for Simulation"),
+	_visibleopts("Possible Parameters")
 {
-	_genericopts.add_options()
+	_proginfoopts.add_options()
 		("help,h", "print help message")
 		("version,v", "print version string")
 	;
-	_configopts.add_options()
+	_physopts.add_options()
+		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
+		("tdamp,T", po::value<double>(&t_d),"Damping time")
+		("initial-dist,I", po::value<std::string>(&_startdistpng),
+			"grayscale png file containing initial particle density")
+	;
+	_programopts_file.add_options()
+		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
+			"OpenCL device to use ('0' lists available devices)")
+	;
+	_programopts_cli.add_options()
+		("config,c", po::value<std::string>(&_configfile),
+			"name of a file containing a configuration.")
 		#ifdef INOVESA_USE_CL
 		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
 			"OpenCL device to use ('0' lists available devices)")
 		#endif // INOVESA_USE_CL
-		("start-dist,S", po::value<std::string>(&_startdistpng),
-			"grayscale png file containing initial particle density")
-		("config,c", po::value<std::string>(&_configfile),
-			"name of a file containing a configuration.")
 	;
-	_commandlineopts.add(_genericopts).add(_configopts);
-	_cfgfileopts.add(_configopts);
-	_visibleopts.add(_genericopts).add(_configopts);
+	_simulopts.add_options()
+		("steps,N", po::value<unsigned int>(&steps),
+			"Number of steps for one revolution (delta t=1/f_s)")
+		("outstep,n", po::value<unsigned int>(&outsteps),
+			"Save results every n steps")
+		("rotations,R", po::value<float>(&rotations),
+			"Number of totations to do")
+	;
+	_cfgfileopts.add(_physopts);
+	_cfgfileopts.add(_programopts_file);
+	_cfgfileopts.add(_simulopts);
+	_commandlineopts.add(_proginfoopts);
+	_commandlineopts.add(_programopts_cli);
+	_commandlineopts.add(_simulopts);
+	_commandlineopts.add(_physopts);
+	_visibleopts.add(_commandlineopts);
 }
 
 bool vfps::ProgramOptions::parse(int ac, char** av)
@@ -46,13 +74,21 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
 	if (_vm.count("config")) {
 		std::ifstream ifs(_configfile.c_str());
 		if (!ifs) {
-			std::cout << "Cannot open config file: " << _configfile << "\n";
+			std::cout << "Cannot open config file: " << _configfile
+					  << std::endl;
 			return false;
 		} else {
-			store(parse_config_file(ifs, _configopts), _vm);
+			store(parse_config_file(ifs, _cfgfileopts), _vm);
 			notify(_vm);
 		}
 	}
+	#ifndef INOVESA_USE_CL
+	if (_vm.count("cldev")) {
+		std::cout	<< "Warning: Defined device for OpenCL "
+					<< "but running Inovesa without OpenCL support."
+					<< std::endl;
+	}
+	#endif
 
 	return true;
 }

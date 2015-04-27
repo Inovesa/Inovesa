@@ -39,28 +39,28 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 		_heritage_map[i][0][2] = {0,0};
 		switch (fpt) {
 		case FPType::none:
-			for (unsigned int j=1; j< _ysize-1; j++) {
+			for (uint16_t j=1; j< _ysize-1; j++) {
 				_heritage_map[i][j][0]={i*_ysize+j,1};
 				_heritage_map[i][j][1]={0,0};
 				_heritage_map[i][j][2]={0,0};
 			}
 			break;
 		case FPType::damping_only:
-			for (unsigned int j=1; j< _ysize-1; j++) {
+			for (uint16_t j=1; j< _ysize-1; j++) {
 				_heritage_map[i][j][0]={i*_ysize+j-1, e02d*in->x(1,j)};
 				_heritage_map[i][j][1]={i*_ysize+j  , daome};
 				_heritage_map[i][j][2]={i*_ysize+j+1,-e02d*in->x(1,j)};
 			}
 			break;
 		case FPType::diffusion_only:
-			for (unsigned int j=1; j< _ysize-1; j++) {
+			for (uint16_t j=1; j< _ysize-1; j++) {
 				_heritage_map[i][j][0]={i*_ysize+j-1,e02d2};
 				_heritage_map[i][j][1]={i*_ysize+j  ,diome};
 				_heritage_map[i][j][2]={i*_ysize+j+1,e02d2};
 			}
 			break;
 		case FPType::full:
-			for (unsigned int j=1; j< _ysize-1; j++) {
+			for (uint16_t j=1; j< _ysize-1; j++) {
 				_heritage_map[i][j][0]={i*_ysize+j-1,e02d2+e02d*in->x(1,j)};
 				_heritage_map[i][j][1]={i*_ysize+j  ,fptme};
 				_heritage_map[i][j][2]={i*_ysize+j+1,e02d2-e02d*in->x(1,j)};

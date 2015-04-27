@@ -47,7 +47,7 @@ public:
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
 			const unsigned int xsize, const unsigned int ysize,
-			const std::array<integral_t,2*ps_xsize> wake);
+			const std::vector<integral_t> wake);
 
 public:
 	/**
@@ -59,12 +59,12 @@ private:
 	/**
 	 * @brief _wake (normalized) wake
 	 */
-	const std::array<vfps::integral_t,2*ps_xsize> _wake;
+	const std::vector<vfps::integral_t> _wake;
 
 	/**
 	 * @brief _wakeforce
 	 */
-	std::array<vfps::meshaxis_t,ps_xsize> _wakeforce;
+	std::vector<vfps::meshaxis_t> _wakeforce;
 };
 
 } // namespace VFPS

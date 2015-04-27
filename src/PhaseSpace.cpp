@@ -64,10 +64,11 @@ vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}})
 {}
 
-vfps::PhaseSpace::PhaseSpace(meshaxis_t xmin, meshaxis_t xmax,
+vfps::PhaseSpace::PhaseSpace(unsigned int ps_size,
+							 meshaxis_t xmin, meshaxis_t xmax,
 							 meshaxis_t ymin, meshaxis_t ymax) :
-	PhaseSpace(Ruler<meshaxis_t>(ps_xsize,xmin,xmax),
-			   Ruler<meshaxis_t>(ps_ysize,ymin,ymax))
+	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax),
+			   Ruler<meshaxis_t>(ps_size,ymin,ymax))
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -183,11 +184,12 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
 	switch (dir) {
 	case clCopyDirection::cpu2dev:
 		OCLH::queue.enqueueWriteBuffer
-			(data_buf,CL_TRUE,0,sizeof(meshdata_t)*ps_xsize*ps_ysize,_data1D);
+			(data_buf,CL_TRUE,0,
+			 sizeof(meshdata_t)*nMeshCells(),_data1D);
 		break;
 	case clCopyDirection::dev2cpu:
 		OCLH::queue.enqueueReadBuffer
-			(data_buf,CL_TRUE,0,sizeof(meshdata_t)*ps_xsize*ps_ysize,_data1D);
+			(data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
 		break;
 	}
 }
