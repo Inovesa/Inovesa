@@ -29,7 +29,9 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	// the following doubles should be interpol_t
 	const double e1_2d = e1/(2.*in->getDelta(1));
 	const double e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
-	const double norm_me = 1-2*e1_d2;
+	const double norm_damp = 1+e1;
+	const double norm_diff = 1-2*e1_d2;
+	const double norm_full = 1+e1-2*e1_d2;
 
 
 	for (unsigned int i=0; i< _xsize; i++) {
@@ -46,23 +48,23 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 			break;
 		case FPType::damping_only:
 			for (uint16_t j=1; j< _ysize-1; j++) {
-				_heritage_map[i][j][0]={i*_ysize+j-1,e1_d2};
-				_heritage_map[i][j][1]={i*_ysize+j  ,norm_me};
-				_heritage_map[i][j][2]={i*_ysize+j+1,e1_d2};
+				_heritage_map[i][j][0]={i*_ysize+j-1,-e1_2d*in->x(1,j)};
+				_heritage_map[i][j][1]={i*_ysize+j  , norm_damp};
+				_heritage_map[i][j][2]={i*_ysize+j+1,+e1_2d*in->x(1,j)};
 			}
 			break;
 		case FPType::diffusion_only:
 			for (uint16_t j=1; j< _ysize-1; j++) {
-				_heritage_map[i][j][0]={i*_ysize+j-1, e1_2d*in->x(1,j)};
-				_heritage_map[i][j][1]={i*_ysize+j  , 1};
-				_heritage_map[i][j][2]={i*_ysize+j+1,-e1_2d*in->x(1,j)};
+				_heritage_map[i][j][0]={i*_ysize+j-1,e1_d2};
+				_heritage_map[i][j][1]={i*_ysize+j  ,norm_diff};
+				_heritage_map[i][j][2]={i*_ysize+j+1,e1_d2};
 			}
 			break;
 		case FPType::full:
 			for (uint16_t j=1; j< _ysize-1; j++) {
-				_heritage_map[i][j][0]={i*_ysize+j-1,e1_d2+e1_2d*in->x(1,j)};
-				_heritage_map[i][j][1]={i*_ysize+j  ,norm_me};
-				_heritage_map[i][j][2]={i*_ysize+j+1,e1_d2-e1_2d*in->x(1,j)};
+				_heritage_map[i][j][0]={i*_ysize+j-1,e1_d2-e1_2d*in->x(1,j)};
+				_heritage_map[i][j][1]={i*_ysize+j  ,norm_full};
+				_heritage_map[i][j][2]={i*_ysize+j+1,e1_d2+e1_2d*in->x(1,j)};
 			}
 			break;
 		default:
