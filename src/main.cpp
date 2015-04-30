@@ -121,8 +121,9 @@ int main(int argc, char** argv)
 
 
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
-						vfps::FokkerPlanckMap::FPType::full,e0);
-	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
+						vfps::FokkerPlanckMap::FPType::damping_only,e0);
+	Identity rm(&mesh,&mesh_rotated,ps_size,ps_size);
+//	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
 
 	#ifdef INOVESA_USE_CL
 	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
