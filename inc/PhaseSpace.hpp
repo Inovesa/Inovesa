@@ -73,6 +73,8 @@ public:
 
 	meshdata_t average(const unsigned int axis);
 
+	integral_t* integral();
+
 	meshdata_t variance(const unsigned int axis);
 
 	integral_t* projectionToX();
@@ -114,6 +116,8 @@ public:
 
 protected:
 	const std::array<Ruler<meshaxis_t>,2> _axis;
+
+	integral_t _integral;
 
 	std::array<integral_t*,2> _projection;
 
