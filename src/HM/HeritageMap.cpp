@@ -32,8 +32,8 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 	_in(in),
 	_out(out)
 {
-	for (unsigned int i=0; i<xsize; i++) {
-		for (unsigned int j=0; j<ysize; j++) {
+	for (meshindex_t i=0; i<xsize; i++) {
+		for (meshindex_t j=0; j<ysize; j++) {
 			_heritage_map1D[i*ysize+j]=&(_hinfo[(i*ysize+j)*interpoints]);
 		}
 		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
@@ -69,9 +69,9 @@ void vfps::HeritageMap::apply()
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
 
-	for (unsigned int i=0; i< _size; i++) {
+	for (meshindex_t i=0; i< _size; i++) {
 		data_out[i] = 0;
-		for (unsigned int j=0; j<_ip; j++) {
+		for (meshindex_t j=0; j<_ip; j++) {
 			hi h = _heritage_map1D[i][j];
 			data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 		}

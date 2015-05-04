@@ -65,9 +65,10 @@
 
 /**
   * possible choices are:
-  * 2: single-sided (only for first derivative, have to use 3 for second)
-  * 3: two-sided (based on quadratic interpolation)
-  * 4: based on cubic interpolation
+  * 1:	single-sided (only for first derivative),
+  *		will "fall back" to 2 for second derivative
+  * 2: two-sided (based on quadratic interpolation)
+  * 3: based on cubic interpolation
   */
 #define DERIVATION_TYPE 3
 
@@ -76,10 +77,17 @@ namespace vfps
 typedef fpml::fixed_point<int32_t,2,29> fixp32;
 typedef fpml::fixed_point<int64_t,34,29> fixp64;
 
+#ifdef INOVESA_USE_CL
+// has to be uint32_t for OpenCL, because there is no uint16_t
+typedef int32_t meshindex_t;
+#else
+typedef int16_t meshindex_t;
+#endif
+
 typedef float meshaxis_t;
-typedef float meshdata_t;
-typedef float interpol_t;
-typedef float integral_t;
+typedef fixp32 meshdata_t;
+typedef fixp32 interpol_t;
+typedef fixp64 integral_t;
 }
 
 #endif // DEFINES_HPP
