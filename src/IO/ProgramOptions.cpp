@@ -22,6 +22,7 @@
 vfps::ProgramOptions::ProgramOptions() :
 	_cldevice(0),
 	_startdistpng("start.png"),
+	_configfile("default.cfg"),
 	outsteps(100),
 	steps(4000),
 	rotations(1),
@@ -90,16 +91,14 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
 				  << std::endl;
 		return false;
 	}
-	if (_vm.count("config")) {
-		std::ifstream ifs(_configfile.c_str());
-		if (!ifs) {
-			std::cout << "Cannot open config file: " << _configfile
-					  << std::endl;
-			return false;
-		} else {
-			store(parse_config_file(ifs, _cfgfileopts), _vm);
-			notify(_vm);
-		}
+	std::ifstream ifs(_configfile.c_str());
+	if (!ifs) {
+		std::cout << "Cannot open config file: " << _configfile
+				  << std::endl;
+		return false;
+	} else {
+		store(parse_config_file(ifs, _cfgfileopts), _vm);
+		notify(_vm);
 	}
 	#ifndef INOVESA_USE_CL
 	if (_vm.count("cldev")) {

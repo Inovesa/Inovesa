@@ -22,6 +22,8 @@
 vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
 	file( nullptr ),
 	fname( fname ),
+	bc_dims(0),
+	bc_name( "BunchCharge" ),
 	bp_dims( {{ 0, ps_size }}),
 	bp_name( "BunchProfile" ),
 	ps_dims( {{ 0, ps_size, ps_size}} ),
@@ -29,6 +31,27 @@ vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
 	ps_size(ps_size)
 {
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);
+
+	// get ready to save BunchCharge
+	if (std::is_same<vfps::integral_t,float>::value) {
+		bc_datatype = H5::PredType::IEEE_F32LE;
+	} else {
+		bc_datatype = H5::PredType::STD_I64LE;
+	}
+
+	hsize_t bc_maxdims = H5S_UNLIMITED;
+
+	bc_dataspace = new H5::DataSpace(bc_rank,&bc_dims,&bc_maxdims);
+
+	const hsize_t bc_chunkdims = 8;
+	bc_prop.setChunk(bc_rank,&bc_chunkdims);
+	bc_prop.setShuffle();
+	bc_prop.setDeflate(compression);
+
+	bc_dataset = new H5::DataSet(
+						file->createDataSet(bc_name,bc_datatype,
+											*bc_dataspace,bc_prop)
+				);
 
 	// get ready to save BunchProfiles
 	if (std::is_same<vfps::integral_t,float>::value) {
@@ -54,7 +77,7 @@ vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
 											*bp_dataspace,bp_prop)
 				);
 
-	// get ready to save PhaseSpace
+// get ready to save PhaseSpace
 	if (std::is_same<vfps::interpol_t,float>::value) {
 		ps_datatype = H5::PredType::IEEE_F32LE;
 	} else {
@@ -92,6 +115,8 @@ vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
 vfps::HDF5File::~HDF5File()
 {
 	delete file;
+	delete bc_dataset;
+	delete bc_dataspace;
 	delete bp_dataset;
 	delete bp_dataspace;
 	delete ps_dataset;
@@ -139,6 +164,27 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 						  *memspace, *filespace);
 	} else {
 		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_INT64,
+						  *memspace, *filespace);
+	}
+
+	// append BunchCharge
+	hsize_t bc_offset = bc_dims;
+	const hsize_t  bc_ext = 1;
+	bc_dims++;
+
+	bc_dataset->extend(&bc_dims);
+
+	delete filespace;
+	filespace = new H5::DataSpace(bc_dataset->getSpace());
+	filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
+
+	delete memspace;
+	memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
+	if (std::is_same<vfps::integral_t,float>::value) {
+		bc_dataset->write(ps->integral(), H5::PredType::NATIVE_FLOAT,
+						  *memspace, *filespace);
+	} else {
+		bc_dataset->write(ps->integral(), H5::PredType::NATIVE_INT64,
 						  *memspace, *filespace);
 	}
 }

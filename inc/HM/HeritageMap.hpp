@@ -20,6 +20,7 @@
 #ifndef HERITAGEMAP_HPP
 #define HERITAGEMAP_HPP
 
+#include "defines.hpp"
 #include "PhaseSpace.hpp"
 
 namespace vfps
@@ -29,7 +30,7 @@ class HeritageMap
 {
 protected:
 	typedef struct {
-		unsigned int index;
+		meshindex_t index;
 		interpol_t weight;
 	} hi;
 

@@ -45,6 +45,21 @@ private:
 	static constexpr unsigned int compression = 6;
 
 private:
+	static constexpr unsigned int bc_rank = 1;
+
+	H5::DataSet* bc_dataset;
+
+	H5::DataSpace* bc_dataspace;
+
+	H5::IntType bc_datatype;
+
+	hsize_t bc_dims;
+
+	const std::string bc_name;
+
+	H5::DSetCreatPropList bc_prop;
+
+private:
 	static constexpr unsigned int bp_rank = 2;
 
 	H5::DataSet* bp_dataset;
