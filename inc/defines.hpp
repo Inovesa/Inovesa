@@ -76,13 +76,10 @@ namespace vfps
 {
 typedef fpml::fixed_point<int32_t,2,29> fixp32;
 typedef fpml::fixed_point<int64_t,34,29> fixp64;
+typedef fpml::fixed_point<int64_t,14,49> fixp064;
 
-#ifdef INOVESA_USE_CL
-// has to be uint32_t for OpenCL, because there is no uint16_t
-typedef int32_t meshindex_t;
-#else
-typedef int16_t meshindex_t;
-#endif
+// has to be uint32_t for OpenCL
+typedef uint32_t meshindex_t;
 
 typedef float meshaxis_t;
 typedef fixp32 meshdata_t;
