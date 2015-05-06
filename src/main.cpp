@@ -119,10 +119,19 @@ int main(int argc, char** argv)
 
 	const double e0 = 2.0/(f_s*t_d*steps);
 
-
+#define FP
+#define RT
+#ifdef FP
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
 						vfps::FokkerPlanckMap::FPType::full,e0);
+#else
+	Identity fpm(&mesh_rotated,&mesh,ps_size,ps_size);
+#endif
+#ifdef RT
 	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
+#else
+	Identity rm(&mesh,&mesh_rotated,ps_size,ps_size);
+#endif
 
 	#ifdef INOVESA_USE_CL
 	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
@@ -137,6 +146,8 @@ int main(int argc, char** argv)
 			display.createTexture(&mesh);
 			display.draw();
 			display.delTexture();
+			#else
+			std::cout << i/steps << '/' << rotations << '\r';
 			#endif // INOVESA_USE_GUI
 		}
 		rm.apply();
@@ -145,6 +156,10 @@ int main(int argc, char** argv)
 	#ifdef INOVESA_USE_CL
 	OCLH::queue.flush();
 	#endif // INOVESA_USE_CL
+
+	#ifndef INOVESA_USE_GUI
+	std::cout << std::endl;
+	#endif
 
 	return EXIT_SUCCESS;
 }
