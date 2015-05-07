@@ -207,8 +207,8 @@ void vfps::RotationMap::apply()
 		}
 		#if INTERPOL_SATURATING == 1
 		// handle overshooting
-		meshdata_t ceil=std::numeric_limits<fixp32>::min();
-		meshdata_t flor=std::numeric_limits<fixp32>::max();
+		meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
+		meshdata_t flor=std::numeric_limits<meshdata_t>::max();
 		for (size_t x=1; x<=2; x++) {
 			for (size_t y=1; y<=2; y++) {
 				ceil = std::max(ceil,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);

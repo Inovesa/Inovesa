@@ -42,6 +42,9 @@ public:
 	inline unsigned int getCLDevice() const
 		{ return _cldevice; }
 
+	inline std::string getOutFile() const
+		{ return _outfile; }
+
 	inline std::string getStartDistPNG() const
 		{ return _startdistpng; }
 
@@ -65,6 +68,8 @@ public:
 
 private: // program parameters
 	unsigned int _cldevice;
+
+	std::string _outfile;
 
 	std::string _startdistpng;
 

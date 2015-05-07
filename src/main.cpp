@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	HDF5File file("results.h5",ps_size);
+	HDF5File file(opts.getOutFile(),ps_size);
 
 	PhaseSpace mesh_rotated(mesh);
 
@@ -147,7 +147,8 @@ int main(int argc, char** argv)
 			display.draw();
 			display.delTexture();
 			#else
-			std::cout << i/steps << '/' << rotations << '\r';
+			std::cout << static_cast<float>(i)/steps << '/'
+					  << rotations << std::endl;
 			#endif // INOVESA_USE_GUI
 		}
 		rm.apply();
@@ -156,10 +157,6 @@ int main(int argc, char** argv)
 	#ifdef INOVESA_USE_CL
 	OCLH::queue.flush();
 	#endif // INOVESA_USE_CL
-
-	#ifndef INOVESA_USE_GUI
-	std::cout << std::endl;
-	#endif
 
 	return EXIT_SUCCESS;
 }

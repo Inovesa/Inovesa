@@ -20,14 +20,14 @@
 #include "Display.hpp"
 
 Display::Display() :
-	#ifdef GLFW3
+	#if GLFW_VERSION_MAJOR == 3
 	window(nullptr),
 	#endif
 	gl2fallback(false)
 {
 	glfwInit();
 
-	#ifdef GLFW3
+	#if GLFW_VERSION_MAJOR == 3
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -41,7 +41,7 @@ Display::Display() :
 
 
 	// Open a window and create its OpenGL context
-	#ifndef GLFW3
+	#if GLFW_VERSION_MAJOR < 3
 	glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
 	glfwSetWindowTitle("Phase Space View");
 	#else // GLFW3
@@ -71,7 +71,7 @@ Display::Display() :
 	}
 
 	// Ensure we can capture the escape key being pressed below
-	#ifdef GLFW3
+	#if GLFW_VERSION_MAJOR == 3
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	#else
 	glfwEnable(GLFW_STICKY_KEYS);
@@ -237,7 +237,7 @@ void Display::draw() {
 	glDisableVertexAttribArray(1);
 
 	// Swap buffers
-	#ifdef GLFW3
+	#if GLFW_VERSION_MAJOR == 3
 	glfwSwapBuffers(window);
 	#else
 	glfwSwapBuffers();

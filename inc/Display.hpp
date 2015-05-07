@@ -29,12 +29,11 @@
 #include <GL/glew.h>
 
 // Include GLFW
-#define GLFW3
-#ifdef GLFW3
+#if GLFW_VERSION_MAJOR == 3
 #include <GLFW/glfw3.h>
-#else // GLFW3
+#else
 #include <GL/glfw.h>
-#endif // GLFW3
+#endif
 
 // Include GLM
 #define GLM_FORCE_RADIANS
@@ -62,7 +61,7 @@ public:
 private:
 	GLuint LoadShaders(const char* vertex_file_path,const char* fragment_file_path);
 
-	#ifdef GLFW3
+	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow* window;
 	#endif
 	bool gl2fallback;

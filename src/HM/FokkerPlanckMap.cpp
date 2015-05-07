@@ -126,7 +126,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 				_heritage_map[i][j][3].weight +=    e1_d2;
 			}
 		}
-		for (meshindex_t j=_ysize/2; j< _ysize-2; j++) {
+		for (meshindex_t j=_ysize/2; j<static_cast<meshindex_t>(_ysize-2);j++) {
 			const double pos = in->x(1,j);
 			_heritage_map[i][j][0]={i*_ysize+j-1,0};
 			_heritage_map[i][j][1]={i*_ysize+j  ,1};

@@ -21,6 +21,7 @@
 
 vfps::ProgramOptions::ProgramOptions() :
 	_cldevice(0),
+	_outfile("results.h5"),
 	_startdistpng("start.png"),
 	_configfile("default.cfg"),
 	outsteps(100),
@@ -47,14 +48,20 @@ vfps::ProgramOptions::ProgramOptions() :
 	_programopts_file.add_options()
 		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
 			"OpenCL device to use ('0' lists available devices)")
+		("output,o",
+			po::value<std::string>(&_outfile)->default_value("results.h5"),
+			"name of file to safe resuults.")
 	;
 	_programopts_cli.add_options()
-		("config,c", po::value<std::string>(&_configfile),
-			"name of a file containing a configuration.")
 		#ifdef INOVESA_USE_CL
 		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
 			"OpenCL device to use ('0' lists available devices)")
 		#endif // INOVESA_USE_CL
+		("config,c", po::value<std::string>(&_configfile),
+			"name of a file containing a configuration.")
+		("output,o",
+			po::value<std::string>(&_outfile)->default_value("results.h5"),
+			"name of file to safe resuults.")
 	;
 	_simulopts.add_options()
 		("steps,N", po::value<unsigned int>(&steps),
