@@ -82,19 +82,11 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	float pattern_max;
-	if (std::is_same<meshdata_t,fixp32>::value) {
-		pattern_max = 1.0;
-	} else {
-		pattern_max = 0.25;
-	}
-
 	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
 
 	for (unsigned int x=0; x<ps_size; x++) {
 		for (unsigned int y=0; y<ps_size; y++) {
-			mesh[x][y] = pattern_max*(image[ps_size-y-1][x]
-									  /float(UINT16_MAX));
+			mesh[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
 		}
 	}
 

@@ -21,9 +21,10 @@
 
 void prepareCLProgApplyHM()
 {
-	const char* code;
+	std::string code;
 
-	if (std::is_same<vfps::meshdata_t,float>::value) {
+	if (std::is_same<vfps::meshdata_t,float>::value ||
+		std::is_same<vfps::meshdata_t,double>::value) {
 		code = R"(
 		typedef struct {
 			uint src;
@@ -88,94 +89,125 @@ void prepareCLProgApplyHM()
 		}
 		)";
 	} else {
-		code = R"(
+		std::stringstream fxp_fracpart;
+		fxp_fracpart << FXP_FRACPART;
+		if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+			code = R"(
+			typedef long meshdata_t;
+			typedef long interpol_t;
+			typedef long integral_t;
+			)";
+		} else {
+			code = R"(
+			typedef int meshdata_t;
+			typedef int interpol_t;
+			typedef long integral_t;
+			)";
+		}
+
+		code += R"(
 		typedef struct {
 			uint src;
-			int weight;
+			interpol_t weight;
 		} hi;
 
-		__kernel void applyHM1D(const __global int* src,
+		__kernel void applyHM1D(const __global meshdata_t* src,
 								const __global hi* hm,
 								const uint hm_len,
-								__global int* dst)
+								__global meshdata_t* dst)
 		{
-			long value = 0;
+			integral_t value = 0;
 			const uint i = get_global_id(0);
 			const uint offset = i*hm_len;
 			for (uint j=0; j<hm_len; j++)
 			{
-				value += (long)(src[hm[offset+j].src])
-						* (long)(hm[offset+j].weight);
+				value += (integral_t)(src[hm[offset+j].src])
+						* (integral_t)(hm[offset+j].weight);
 			}
-			// hardcoded for 1:2:29 bit fixed point data
-			dst[i] = value >> 29;
+			dst[i] = value >>
+		)";
+		code += fxp_fracpart.str();
+		code += R"(
+					;
 		}
-
-		__kernel void applyHM4sat(	const __global int* src,
+		__kernel void applyHM4sat(	const __global meshdata_t* src,
 									const __global hi* hm,
-									__global int* dst)
+									__global meshdata_t* dst)
 		{
-			long value = 0;
-			int result;
+			integral_t value = 0;
+			meshdata_t result;
 			const uint i = get_global_id(0);
 			const uint offset = i*16;
-			int ceil=INT_MIN;
-			int flor=INT_MAX;
-			int tmp;
-			value += (long)(src[hm[offset].src])
-					* (long)(hm[offset].weight);
-			value += (long)(src[hm[offset+1].src])
-					* (long)(hm[offset+1].weight);
-			value += (long)(src[hm[offset+2].src])
-					* (long)(hm[offset+2].weight);
-			value += (long)(src[hm[offset+3].src])
-					* (long)(hm[offset+3].weight);
-			value += (long)(src[hm[offset+4].src])
-					* (long)(hm[offset+4].weight);
+		)";
+		if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+			code += R"(
+				meshdata_t ceil=LONG_MIN;
+				meshdata_t flor=LONG_MAX;
+			)";
+		} else {
+			code += R"(
+				meshdata_t ceil=INT_MIN;
+				meshdata_t flor=INT_MAX;
+			)";
+		}
+		code += R"(
+			meshdata_t tmp;
+			value += (integral_t)(src[hm[offset].src])
+					* (integral_t)(hm[offset].weight);
+			value += (integral_t)(src[hm[offset+1].src])
+					* (integral_t)(hm[offset+1].weight);
+			value += (integral_t)(src[hm[offset+2].src])
+					* (integral_t)(hm[offset+2].weight);
+			value += (integral_t)(src[hm[offset+3].src])
+					* (integral_t)(hm[offset+3].weight);
+			value += (integral_t)(src[hm[offset+4].src])
+					* (integral_t)(hm[offset+4].weight);
 			tmp = src[hm[offset+5].src];
-			value += (long)(tmp)
-					* (long)(hm[offset+5].weight);
+			value += (integral_t)(tmp)
+					* (integral_t)(hm[offset+5].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
 			tmp = src[hm[offset+6].src];
-			value += (long)(tmp)
-					* (long)(hm[offset+6].weight);
+			value += (integral_t)(tmp)
+					* (integral_t)(hm[offset+6].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
-			value += (long)(src[hm[offset+7].src])
-					* (long)(hm[offset+7].weight);
-			value += (long)(src[hm[offset+8].src])
-					* (long)(hm[offset+8].weight);
+			value += (integral_t)(src[hm[offset+7].src])
+					* (integral_t)(hm[offset+7].weight);
+			value += (integral_t)(src[hm[offset+8].src])
+					* (integral_t)(hm[offset+8].weight);
 			tmp = src[hm[offset+9].src];
-			value += (long)(tmp)
-					* (long)(hm[offset+9].weight);
+			value += (integral_t)(tmp)
+					* (integral_t)(hm[offset+9].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
 			tmp = src[hm[offset+10].src];
-			value += (long)(tmp)
-					* (long)(hm[offset+10].weight);
+			value += (integral_t)(tmp)
+					* (integral_t)(hm[offset+10].weight);
 			ceil = max(ceil,tmp);
 			flor = min(flor,tmp);
-			value += (long)(src[hm[offset+11].src])
-					* (long)(hm[offset+11].weight);
-			value += (long)(src[hm[offset+12].src])
-					* (long)(hm[offset+12].weight);
-			value += (long)(src[hm[offset+13].src])
-					* (long)(hm[offset+13].weight);
-			value += (long)(src[hm[offset+14].src])
-					* (long)(hm[offset+14].weight);
-			value += (long)(src[hm[offset+15].src])
-					* (long)(hm[offset+15].weight);
+			value += (integral_t)(src[hm[offset+11].src])
+					* (integral_t)(hm[offset+11].weight);
+			value += (integral_t)(src[hm[offset+12].src])
+					* (integral_t)(hm[offset+12].weight);
+			value += (integral_t)(src[hm[offset+13].src])
+					* (integral_t)(hm[offset+13].weight);
+			value += (integral_t)(src[hm[offset+14].src])
+					* (integral_t)(hm[offset+14].weight);
+			value += (integral_t)(src[hm[offset+15].src])
+					* (integral_t)(hm[offset+15].weight);
 
-			// hardcoded for 1:2:29 bit fixed point data
-			result = value >> 29;
-
+			result = value >>
+		)";
+		code += fxp_fracpart.str();
+		code += R"(
+					;
 			dst[i] = max(min(ceil,result),flor);
 		}
 		)";
 	}
 
-	cl::Program::Sources source(1,std::make_pair(code,strlen(code)));
+	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
 	CLProgApplyHM::p = cl::Program(OCLH::context, source);
     try {
         CLProgApplyHM::p.build(OCLH::devices);

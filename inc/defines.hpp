@@ -53,7 +53,7 @@
   * 0: no saturation
   * 1: crop at maximum neigbouring value
   */
-#define INTERPOL_SATURATING 1
+#define INTERPOL_SATURATING 0
 
 /**
  * possible choices are:
@@ -74,16 +74,18 @@
 
 namespace vfps
 {
-typedef fpml::fixed_point<int32_t,2,29> fixp32;
-typedef fpml::fixed_point<int64_t,34,29> fixp64;
-typedef fpml::fixed_point<int64_t,14,49> fixp064;
+#define FXP_FRACPART 32
+#if FXP_FRACPART < 31
+typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
+#endif
+typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 
 // has to be uint32_t for OpenCL
 typedef uint32_t meshindex_t;
 
 typedef float meshaxis_t;
-typedef fixp32 meshdata_t;
-typedef fixp32 interpol_t;
+typedef fixp64 meshdata_t;
+typedef fixp64 interpol_t;
 typedef fixp64 integral_t;
 }
 

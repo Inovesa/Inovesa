@@ -165,28 +165,18 @@ void Display::createTexture(vfps::PhaseSpace* mesh)
 	glBindTexture(GL_TEXTURE_2D,Texture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-	if (std::is_same<vfps::meshdata_t,float>::value) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-					 mesh->nMeshCells(0), mesh->nMeshCells(1),
-					 0, GL_RED,
-					 GL_FLOAT, mesh->getData());
-	} else if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-					 mesh->nMeshCells(0), mesh->nMeshCells(1),
-					 0, GL_RED,
-					 GL_INT, mesh->getData());
-	} else {
-		size_t npixels = mesh->nMeshCells();
-		float* data = new float[npixels];
-		vfps::meshdata_t* meshdata = mesh->getData();
-		for (vfps::meshindex_t i=0; i<npixels; i++) {
-			data[i] = meshdata[i]/vfps::meshdata_t(1);
-		}
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-					 mesh->nMeshCells(0), mesh->nMeshCells(1),
-					 0, GL_RED, GL_FLOAT, data);
-		delete [] data;
+
+	size_t npixels = mesh->nMeshCells();
+	float* data = new float[npixels];
+	vfps::meshdata_t* meshdata = mesh->getData();
+	for (vfps::meshindex_t i=0; i<npixels; i++) {
+		data[i] = meshdata[i]/vfps::meshdata_t(1);
 	}
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
+				 mesh->nMeshCells(0), mesh->nMeshCells(1),
+				 0, GL_RED, GL_FLOAT, data);
+	delete [] data;
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );
 	glBindTexture(GL_TEXTURE_2D, 0);
