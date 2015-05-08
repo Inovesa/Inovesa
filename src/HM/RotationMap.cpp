@@ -162,7 +162,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 						 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 						 sizeof(hi)*_ip*_size,
 						 _hinfo);
-	#if INTERPOL_TYPE == 4
+	#if INTERPOL_TYPE == 4 and INTERPOL_SATURATING > 0
 	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
 	applyHM.setArg(0, _in->data_buf);
 	applyHM.setArg(1, _hi_buf);
