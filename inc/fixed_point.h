@@ -1064,6 +1064,11 @@ public:
 		return root;
 	}
 
+public:
+	/// Access to internal representation
+	B internalValue() const
+		{ return value_; }
+
 private:
 	/// The value in fixed point format.
 	B value_;

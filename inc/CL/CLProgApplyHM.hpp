@@ -20,6 +20,7 @@
 #ifndef CLPROGAPPLYHM_HPP
 #define CLPROGAPPLYHM_HPP
 
+#include <iomanip>
 #include <sstream>
 
 #include "defines.hpp"
