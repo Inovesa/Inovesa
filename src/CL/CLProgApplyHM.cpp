@@ -26,7 +26,7 @@ void prepareCLProgApplyHM()
 	std::stringstream fxp_fracpart;
 	fxp_fracpart << FXP_FRACPART;
 	std::stringstream fxp_intmask;
-	fxp_intmask << std::hex <<~vfps::fixp64(-1.0).internalValue();
+	fxp_intmask << std::hex << std::numeric_limits<uint32_t>::max();
 
 	code =	"\t__constant int fracpart="+fxp_fracpart.str()+";\n"
 			"\t__constant long intmask=0x"+fxp_intmask.str()+";\n";
@@ -55,18 +55,15 @@ void prepareCLProgApplyHM()
 	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
 	code += R"(
 	typedef long data_t;
-	ulong umult(ulong x, ulong y) {
-		ulong a = x >> fracpart;
+	long mult(long x, long y) {
+		ulong a = x >> (64-fracpart);
 		ulong b = (x & intmask);
-		ulong c = y >> fracpart;
+		ulong c = y >> (64-fracpart);
 		ulong d = (y & intmask);
-		return ((d*b) >> fracpart) + (d*a) + (c*b) + ((c*a) << fracpart);
-	}
-	long mult(long x,long y) {
-		long val = umult(abs(x),abs(y));
-		if ((x<0 && y>0)||(x>0 && y<0))
-			return -val;
-		return val;
+		return		((d*b)  >> (64-fracpart))
+				+	((d*a)/*<< (fracpart-32)*/)
+				+	((c*b)/*<< (fracpart-32)*/)
+				+	((c*a)  << (64-fracpart));
 	}
 
 	)";
@@ -188,7 +185,7 @@ void prepareCLProgApplyHM()
 		code +="result = value;";
 	}
 	code += R"(
-		dst[i] = max(min(ceil,result),flor);
+		dst[i] = clamp(result,flor,ceil);
 	}
 	)";
 */
