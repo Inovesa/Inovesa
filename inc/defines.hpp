@@ -74,7 +74,7 @@
 
 namespace vfps
 {
-#define FXP_FRACPART 24
+#define FXP_FRACPART 48
 #if FXP_FRACPART < 31
 typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
 #endif
