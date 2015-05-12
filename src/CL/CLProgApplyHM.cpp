@@ -183,7 +183,7 @@ void prepareCLProgApplyHM()
 		code +="result = value;";
 	}
 	code += R"(
-		dst[i] = max(min(ceil,result),flor);
+		dst[i] = clamp(result,flor,ceil);
 	}
 	)";
 */

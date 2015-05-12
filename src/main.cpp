@@ -25,7 +25,6 @@
 #include "defines.hpp"
 #include "Display.hpp"
 #include "PhaseSpace.hpp"
-#include "Share.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
