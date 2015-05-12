@@ -53,16 +53,7 @@ void prepareCLProgApplyHM()
 	code += R"(
 	typedef long data_t;
 	long mult(long x, long y) {
-		// try mul_hi
-		long x1 = x >> 32;
-		long y1 = y >> 32;
-		long x2 = (x & UINT_MAX);
-		long y2 = (y & UINT_MAX);
-		return ( ((x1*y1) << (64-fracpart))
-				+((x2*y2) >> (fracpart))
-				+((x1*y2) >> (fracpart-32))
-				+((x2*y1) >> (fracpart-32))
-				);
+		return ((mul_hi(x,y) << (64-fracpart)) + ((x*y) >> fracpart));
 	}
 
 	)";
