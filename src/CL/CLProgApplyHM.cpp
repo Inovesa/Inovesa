@@ -53,6 +53,7 @@ void prepareCLProgApplyHM()
 	code += R"(
 	typedef long data_t;
 	long mult(long x, long y) {
+		// try mul_hi
 		long x1 = x >> 32;
 		long y1 = y >> 32;
 		long x2 = (x & UINT_MAX);
@@ -88,14 +89,13 @@ void prepareCLProgApplyHM()
 		dst[i] = value;
 	}
 	)";
-/*
+
 	code += R"(
 	__kernel void applyHM4sat(	const __global data_t* src,
 								const __global hi* hm,
 								__global data_t* dst)
 	{
 		data_t value = 0;
-		data_t result;
 		const uint i = get_global_id(0);
 		const uint offset = i*16;
 	)";
@@ -126,67 +126,37 @@ void prepareCLProgApplyHM()
 		)";
 	}
 	code += R"(
-		 data_t tmp;
-		value += (data_t)(src[hm[offset].src])
-				* (data_t)(hm[offset].weight);
-		value += (data_t)(src[hm[offset+1].src])
-				* (data_t)(hm[offset+1].weight);
-		value += (data_t)(src[hm[offset+2].src])
-				* (data_t)(hm[offset+2].weight);
-		value += (data_t)(src[hm[offset+3].src])
-				* (data_t)(hm[offset+3].weight);
-		value += (data_t)(src[hm[offset+4].src])
-				* (data_t)(hm[offset+4].weight);
+		data_t tmp;
+		value += mult(src[hm[offset].src],hm[offset].weight);
+		value += mult(src[hm[offset+1].src],hm[offset+1].weight);
+		value += mult(src[hm[offset+2].src],hm[offset+2].weight);
+		value += mult(src[hm[offset+3].src],hm[offset+3].weight);
+		value += mult(src[hm[offset+4].src],hm[offset+4].weight);
 		tmp = src[hm[offset+5].src];
-		value += (data_t)(tmp)
-				* (data_t)(hm[offset+5].weight);
+		value += mult(tmp,hm[offset+5].weight);
 		ceil = max(ceil,tmp);
 		flor = min(flor,tmp);
 		tmp = src[hm[offset+6].src];
-		value += (data_t)(tmp)
-				* (data_t)(hm[offset+6].weight);
+		value += mult(tmp,hm[offset+6].weight);
 		ceil = max(ceil,tmp);
 		flor = min(flor,tmp);
-		value += ( data_t)(src[hm[offset+7].src])
-				* ( data_t)(hm[offset+7].weight);
-		value += ( data_t)(src[hm[offset+8].src])
-				* ( data_t)(hm[offset+8].weight);
+		value += mult(src[hm[offset+7].src],hm[offset+7].weight);
+		value += mult(src[hm[offset+8].src],hm[offset+8].weight);
 		tmp = src[hm[offset+9].src];
-		value += ( data_t)(tmp)
-				* ( data_t)(hm[offset+9].weight);
+		value += mult(tmp,hm[offset+9].weight);
 		ceil = max(ceil,tmp);
 		flor = min(flor,tmp);
 		tmp = src[hm[offset+10].src];
-		value += ( data_t)(tmp)
-				* ( data_t)(hm[offset+10].weight);
+		value += mult(tmp,hm[offset+10].weight);
 		ceil = max(ceil,tmp);
 		flor = min(flor,tmp);
-		value += ( data_t)(src[hm[offset+11].src])
-				* ( data_t)(hm[offset+11].weight);
-		value += ( data_t)(src[hm[offset+12].src])
-				* ( data_t)(hm[offset+12].weight);
-		value += ( data_t)(src[hm[offset+13].src])
-				* ( data_t)(hm[offset+13].weight);
-		value += ( data_t)(src[hm[offset+14].src])
-				* ( data_t)(hm[offset+14].weight);
-		value += ( data_t)(src[hm[offset+15].src])
-				* ( data_t)(hm[offset+15].weight);
-		)";
-
-	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value
-		#if FXP_FRACPART < 31
-		|| std::is_same<vfps::meshdata_t,vfps::fixp32>::value
-		#endif
-		) {
-		code +="result = value >> " + fxp_fracpart.str() + ';';
-	} else {
-		code +="result = value;";
-	}
-	code += R"(
-		dst[i] = clamp(result,flor,ceil);
-	}
-	)";
-*/
+		value += mult(src[hm[offset+11].src],hm[offset+11].weight);
+		value += mult(src[hm[offset+12].src],hm[offset+12].weight);
+		value += mult(src[hm[offset+13].src],hm[offset+13].weight);
+		value += mult(src[hm[offset+14].src],hm[offset+14].weight);
+		value += mult(src[hm[offset+15].src],hm[offset+15].weight);
+		dst[i] = clamp(value,flor,ceil);
+	})";
 
 	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
 	CLProgApplyHM::p = cl::Program(OCLH::context, source);

@@ -26,7 +26,7 @@
 
 #define INOVESA_VERSION_RELEASE	0
 #define INOVESA_VERSION_MINOR	6
-#define INOVESA_VERSION_FIX		0
+#define INOVESA_VERSION_FIX		1
 
 #define INOVESA_USE_GUI
 #define INOVESA_USE_CL
@@ -53,7 +53,7 @@
   * 0: no saturation
   * 1: crop at maximum neigbouring value
   */
-#define INTERPOL_SATURATING 0
+#define INTERPOL_SATURATING 1
 
 /**
  * possible choices are:
@@ -74,7 +74,7 @@
 
 namespace vfps
 {
-#define FXP_FRACPART 48
+#define FXP_FRACPART 54
 #if FXP_FRACPART < 31
 typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
 #endif
