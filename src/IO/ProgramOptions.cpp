@@ -47,6 +47,8 @@ vfps::ProgramOptions::ProgramOptions() :
 	_programopts_file.add_options()
 		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
 			"OpenCL device to use ('0' lists available devices)")
+		("gui", po::value<bool>(&_showphasespace)->default_value(true),
+			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
 			"name of file to safe resuults.")
@@ -58,6 +60,8 @@ vfps::ProgramOptions::ProgramOptions() :
 		#endif // INOVESA_USE_CL
 		("config,c", po::value<std::string>(&_configfile),
 			"name of a file containing a configuration.")
+		("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
 			"name of file to safe resuults.")

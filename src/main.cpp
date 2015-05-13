@@ -94,7 +94,10 @@ int main(int argc, char** argv)
 	PhaseSpace mesh_rotated(mesh);
 
 	#ifdef INOVESA_USE_GUI
-	Display display;
+	Display* display = nullptr;
+	if (opts.showPhaseSpace()) {
+		display = new Display();
+	}
 	#endif
 
 	const unsigned int steps = opts.getSteps();
@@ -134,9 +137,11 @@ int main(int argc, char** argv)
 			#endif // INOVESA_USE_CL
 			file.append(&mesh);
 			#ifdef INOVESA_USE_GUI
-			display.createTexture(&mesh);
-			display.draw();
-			display.delTexture();
+			if (opts.showPhaseSpace()) {
+				display->createTexture(&mesh);
+				display->draw();
+				display->delTexture();
+			}
 			#else
 			std::cout << static_cast<float>(i)/steps << '/'
 					  << rotations << std::endl;

@@ -47,6 +47,9 @@ public:
 	inline std::string getOutFile() const
 		{ return _outfile; }
 
+	inline bool showPhaseSpace() const
+		{ return _showphasespace; }
+
 	inline std::string getStartDistPNG() const
 		{ return _startdistpng; }
 
@@ -72,6 +75,8 @@ private: // program parameters
 	unsigned int _cldevice;
 
 	std::string _outfile;
+
+	bool _showphasespace;
 
 	std::string _startdistpng;
 
