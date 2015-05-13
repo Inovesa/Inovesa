@@ -21,9 +21,11 @@
 #define PROGRAMOPTIONS_HPP
 
 #include <boost/program_options.hpp>
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 #include "defines.hpp"
 
