@@ -13,6 +13,7 @@ set(SRC_LIST
 			./src/IO/HDF5File.cpp
 			./src/IO/ProgramOptions.cpp
 			./src/Display.cpp
+			./src/ElectricField.cpp
 			./src/PhaseSpace.cpp
 			./src/main.cpp
 )
@@ -29,6 +30,7 @@ set(INC_LIST
 			./inc/IO/HDF5File.hpp
 			./inc/IO/ProgramOptions.hpp
 			./inc/Display.hpp
+			./inc/ElectricField.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
 			./inc/defines.hpp

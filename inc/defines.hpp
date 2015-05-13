@@ -20,6 +20,7 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
+#include <complex>
 #include <string>
 
 #include "fixed_point.h"
@@ -29,7 +30,7 @@
 #define INOVESA_VERSION_FIX		1
 
 #define INOVESA_USE_GUI
-#define INOVESA_USE_CL
+//#define INOVESA_USE_CL
 //#define INOVESA_SYNC_CL
 
 /**
@@ -83,10 +84,13 @@ typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 // has to be uint32_t for OpenCL
 typedef uint32_t meshindex_t;
 
-typedef float meshaxis_t;
-typedef fixp64 meshdata_t;
-typedef fixp64 interpol_t;
-typedef fixp64 integral_t;
+typedef double csrpower_t;
+typedef std::complex<csrpower_t> impedance_t;
+
+typedef double meshaxis_t;
+typedef double meshdata_t;
+typedef double interpol_t;
+typedef double integral_t;
 }
 
 #endif // DEFINES_HPP

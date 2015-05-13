@@ -71,15 +71,26 @@ public:
 	inline meshaxis_t getMin(const unsigned int x) const
 	{ return _axis[x].getMin(); }
 
+	/**
+	 * @brief getRuler
+	 * @param x
+	 * @return reference to the Ruler describing mesh in x direction
+	 */
+	inline const Ruler<meshaxis_t>* getRuler(const uint_fast8_t x) const
+	{ return &(_axis[x]); }
+
 	meshdata_t average(const unsigned int axis);
 
 	integral_t* integral();
 
 	meshdata_t variance(const unsigned int axis);
 
-	integral_t* projectionToX();
+	const integral_t* getProjection(const uint_fast8_t x) const
+	{ return _projection[x]; }
 
-	integral_t* projectionToY();
+	integral_t* doProjectionToX();
+
+	integral_t* doProjectionToY();
 
 	inline meshdata_t* operator[](const unsigned int i) const
 	{ return _data[i]; }
@@ -119,7 +130,7 @@ protected:
 
 	integral_t _integral;
 
-	std::array<integral_t*,2> _projection;
+	const std::array<integral_t*,2> _projection;
 
 	meshdata_t** _data;
 

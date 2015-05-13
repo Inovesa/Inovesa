@@ -22,14 +22,15 @@
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_axis(axis),
 	_integral(0),
+	_projection(std::array<integral_t*,2>	{{	new integral_t[nMeshCells(0)],
+												new integral_t[nMeshCells(1)]
+											}}),
 	_data1D(new meshdata_t[nMeshCells(0)*nMeshCells(1)]())
 {
 	_data = new meshdata_t*[nMeshCells(0)];
 	for (unsigned int i=0; i<nMeshCells(0); i++) {
 		_data[i] = &(_data1D[i*nMeshCells(1)]);
 	}
-	_projection[0] = new integral_t[nMeshCells(0)];
-	_projection[1] = new integral_t[nMeshCells(1)];
 	_ws[0] = new meshdata_t[nMeshCells(0)];
 	_ws[1] = new meshdata_t[nMeshCells(1)];
 
@@ -88,7 +89,7 @@ vfps::PhaseSpace::~PhaseSpace()
 
 vfps::integral_t* vfps::PhaseSpace::integral()
 {
-	projectionToX();
+	doProjectionToX();
 	_integral = 0;
 	for (unsigned int x=0; x< nMeshCells(0); x++) {
 		#if INTEGRAL_TYPE == 1
@@ -151,7 +152,7 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
 }
 */
 
-vfps::integral_t* vfps::PhaseSpace::projectionToX() {
+vfps::integral_t* vfps::PhaseSpace::doProjectionToX() {
 	for (unsigned int x=0; x < nMeshCells(0); x++) {
 		_projection[0][x] = 0;
 
@@ -169,7 +170,7 @@ vfps::integral_t* vfps::PhaseSpace::projectionToX() {
 	return _projection[0];
 }
 
-vfps::integral_t* vfps::PhaseSpace::projectionToY() {
+vfps::integral_t* vfps::PhaseSpace::doProjectionToY() {
 	for (unsigned int y=0; y< nMeshCells(1); y++) {
 		_projection[1][y] = 0;
 

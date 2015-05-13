@@ -29,7 +29,7 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 
 void vfps::WakeKickMap::apply()
 {
-	integral_t* density = _in->projectionToX();
+	integral_t* density = _in->doProjectionToX();
 	for (unsigned int i=0;i<_xsize;i++) {
 		_wakeforce[i] = 0;
 		for (unsigned int j=0;j<_xsize;j++) {
