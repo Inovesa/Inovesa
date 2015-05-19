@@ -84,9 +84,9 @@ typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 typedef uint32_t meshindex_t;
 
 typedef float meshaxis_t;
-typedef fixp64 meshdata_t;
-typedef fixp64 interpol_t;
-typedef fixp64 integral_t;
+typedef float meshdata_t;
+typedef float interpol_t;
+typedef float integral_t;
 }
 
 #endif // DEFINES_HPP

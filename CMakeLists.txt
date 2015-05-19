@@ -58,7 +58,6 @@ find_package(GSL REQUIRED)
 find_package(GSL COMPONENTS linalg REQUIRED)
 find_package(Boost COMPONENTS filesystem program_options system REQUIRED)
 find_package(HDF5 COMPONENTS CXX REQUIRED)
-find_package(PNG REQUIRED)
 
 include_directories(./inc
 	${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS}
@@ -70,6 +69,5 @@ SET(LIBS ${LIBS} ${GSL_LIBRARIES} ${Boost_LIBRARIES}
 	${GLM_LIBRARIES} ${GL_LIBRARY}
 	${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES}
 	${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES}
-	${PNG_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME} ${LIBS})

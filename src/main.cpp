@@ -19,7 +19,6 @@
 
 #include <climits>
 #include <iostream>
-#include <png++/png.hpp>
 #include <sstream>
 
 #include "defines.hpp"
@@ -34,6 +33,20 @@
 #include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
+
+constexpr meshaxis_t z0=0;
+constexpr meshaxis_t sz=1;
+constexpr meshaxis_t sd=1;
+
+meshdata_t gaus(meshdata_t x, meshdata_t x0, meshdata_t sx)
+{
+	return std::exp(-(((x-x0)*(x-x0))/(2*sx*sx)));
+}
+meshdata_t gaus2d(meshdata_t x, meshdata_t x0, meshdata_t sx,
+				  meshdata_t y, meshdata_t y0, meshdata_t sy)
+{
+	return std::exp(-(((x-x0)*(x-x0))/(2*sx*sx)+((y-y0)*(y-y0)))/(2*sy*sy));
+}
 
 int main(int argc, char** argv)
 {
@@ -60,32 +73,18 @@ int main(int argc, char** argv)
 	prepareCLProgs();
 	#endif // INOVESA_USE_CL
 
-	// load pattern to start with
-	png::image<png::gray_pixel_16> image;
-	try {
-		image.read(opts.getStartDistPNG());
-	} catch ( const png::std_error &e ) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-	catch ( const png::error &e ) {
-		std::cerr << "Problem loading " << opts.getStartDistPNG()
-				  << ": " << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	uint16_t ps_size = image.get_height();
-	if (image.get_width() != ps_size) {
-		std::cerr << "Phase space has to be quadratic. Please adjust "
-				  << opts.getStartDistPNG() << std::endl;
-		return EXIT_FAILURE;
-	}
+	uint32_t ps_size = 0x19000;
+//	uint32_t ps_size = 0x100;
 
 	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
 
 	for (unsigned int x=0; x<ps_size; x++) {
 		for (unsigned int y=0; y<ps_size; y++) {
-			mesh[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+			meshaxis_t z = mesh.x(0,x);
+			meshaxis_t d = mesh.x(1,y);
+			meshaxis_t dd = 7*gaus(z,0,1e-3);
+			mesh[x][y] = 0.5*gaus2d(z,z0,sz,d, dd,sd)
+					   + 0.5*gaus2d(z,z0,sz,d,-dd,sd);
 		}
 	}
 

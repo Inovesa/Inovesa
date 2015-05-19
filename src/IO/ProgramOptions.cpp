@@ -68,7 +68,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	;
 	_simulopts.add_options()
 		("steps,N", po::value<unsigned int>(&steps),
-			"Number of steps for one revolution (delta t=1/f_s)")
+			"Number of steps for one synchrotron period (delta t=1/f_s)")
 		("outstep,n", po::value<unsigned int>(&outsteps),
 			"Save results every n steps")
 		("rotations,R", po::value<float>(&rotations),
