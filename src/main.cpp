@@ -24,8 +24,6 @@
 #include "defines.hpp"
 #include "Display.hpp"
 #include "PhaseSpace.hpp"
-#include "CL/CLProgs.hpp"
-#include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
 #include "HM/RotationMap.hpp"

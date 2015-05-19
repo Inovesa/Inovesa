@@ -119,6 +119,8 @@ protected:
 
 	integral_t _integral;
 
+	size_t _nmeshcells;
+
 	std::array<integral_t*,2> _projection;
 
 	meshdata_t** _data;

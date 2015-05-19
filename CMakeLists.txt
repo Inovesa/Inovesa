@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 2.8)
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
-			./src/CL/CLProgApplyHM.cpp
-			./src/CL/CLProgs.cpp
-			./src/CL/OpenCLHandler.cpp
 			./src/HM/HeritageMap.cpp
 			./src/HM/FokkerPlanckMap.cpp
 			./src/HM/RotationMap.cpp
@@ -18,9 +15,6 @@ set(SRC_LIST
 )
 
 set(INC_LIST
-			./inc/CL/CLProgApplyHM.hpp
-			./inc/CL/CLProgs.hpp
-			./inc/CL/OpenCLHandler.hpp
 			./inc/HM/HeritageMap.hpp
 			./inc/HM/FokkerPlanckMap.hpp
 			./inc/HM/Identity.hpp
@@ -40,20 +34,22 @@ add_definitions(-std=c++11)
 if(DEFINED CMAKE_BUILD_TYPE)
     if(CMAKE_BUILD_TYPE STREQUAL "Release")
 		add_definitions(-O3 -Wall -Wextra )
-        MESSAGE ("Doing release compile, using optimization flags.")
+		MESSAGE ("Doing release compile, using optimization flags.")
     else()
 		add_definitions(-g -Wall -Wextra -DDEBUG)
-        MESSAGE ("Doing debug compile, including debug symbols.")
+		MESSAGE ("Doing debug compile, including debug symbols.")
     endif()
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake")
-find_package(OpenCL REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-find_package(GLFW REQUIRED)
-add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
-find_package(GLM REQUIRED)
+find_package(OpenCL)
+find_package(OpenGL)
+IF(OpenGL_FOUND)
+	find_package(GLEW REQUIRED)
+	find_package(GLFW REQUIRED)
+	add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
+	find_package(GLM REQUIRED)
+ENDIF()
 find_package(GSL REQUIRED)
 find_package(GSL COMPONENTS linalg REQUIRED)
 find_package(Boost COMPONENTS filesystem program_options system REQUIRED)

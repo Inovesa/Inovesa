@@ -22,7 +22,8 @@
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_axis(axis),
 	_integral(0),
-	_data1D(new meshdata_t[nMeshCells(0)*nMeshCells(1)]())
+	_nmeshcells(nMeshCells(0)*nMeshCells(1)),
+	_data1D(new meshdata_t[_nmeshcells]())
 {
 	_data = new meshdata_t*[nMeshCells(0)];
 	for (unsigned int i=0; i<nMeshCells(0); i++) {
