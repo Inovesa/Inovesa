@@ -44,8 +44,8 @@ public:
 	 * @param interpoints number of points used for interpolation
 	 */
 	HeritageMap(PhaseSpace* in, PhaseSpace* out,
-				uint16_t xsize, uint16_t ysize,
-				uint8_t interpoints);
+				size_t xsize, size_t ysize,
+				uint_fast8_t interpoints);
 
 	~HeritageMap();
 
@@ -67,17 +67,17 @@ protected:
 	/**
 	 * @brief _size size of the HeritageMap (_xsize*_ysize)
 	 */
-	const uint32_t _size;
+	const meshindex_t _size;
 
 	/**
 	 * @brief _xsize horizontal size of the HeritageMap
 	 */
-	const uint16_t _xsize;
+	const meshindex_t _xsize;
 
 	/**
 	 * @brief _ysize vertical size of the HeritageMap
 	 */
-	const uint16_t _ysize;
+	const meshindex_t _ysize;
 
 	#ifdef INOVESA_USE_CL
 	/**

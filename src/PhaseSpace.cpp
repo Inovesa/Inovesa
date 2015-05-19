@@ -66,7 +66,7 @@ vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}})
 {}
 
-vfps::PhaseSpace::PhaseSpace(size_t ps_size,
+vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
 							 meshaxis_t xmin, meshaxis_t xmax,
 							 meshaxis_t ymin, meshaxis_t ymax) :
 	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax),

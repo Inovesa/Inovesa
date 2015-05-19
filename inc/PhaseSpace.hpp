@@ -46,7 +46,7 @@ public:
 
 	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
 
-	PhaseSpace(size_t ps_size,
+	PhaseSpace(meshindex_t ps_size,
 			   meshaxis_t xmin, meshaxis_t xmax,
 			   meshaxis_t ymin, meshaxis_t ymax);
 

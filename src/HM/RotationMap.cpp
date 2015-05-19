@@ -20,16 +20,16 @@
 #include "HM/RotationMap.hpp"
 
 vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
-							   const unsigned int xsize,
-							   const unsigned int ysize,
+							   const meshindex_t xsize,
+							   const meshindex_t ysize,
 							   const meshaxis_t angle) :
 	HeritageMap(in,out,xsize,ysize,INTERPOL_TYPE*INTERPOL_TYPE)
 {
 	const meshaxis_t cos_dt = cos(angle);
 	const meshaxis_t sin_dt = -sin(angle);
 
-	for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-		for(unsigned int p_i=0; p_i< _ysize; p_i++) {
+	for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
+		for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
 			// Cell of inverse image (qp,pp) of grid point i,j.
 			meshaxis_t qp; //q', backward mapping
 			meshaxis_t pp; //p'
@@ -39,8 +39,8 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 			meshaxis_t qq_int;
 			meshaxis_t qp_int;
 			//Scaled arguments of interpolation functions:
-			unsigned int id; //meshpoint smaller q'
-			unsigned int jd; //numper of lower mesh point from p'
+			meshindex_t id; //meshpoint smaller q'
+			meshindex_t jd; //numper of lower mesh point from p'
 			interpol_t xiq; //distance from id
 			interpol_t xip; //distance of p' from lower mesh point
 			#if ROTATION_TYPE == 1
@@ -140,10 +140,10 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 //				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
-				for (unsigned int j1=0; j1<INTERPOL_TYPE; j1++) {
-					unsigned int j0 = jd+j1-(INTERPOL_TYPE-1)/2;
-					for (unsigned int i1=0; i1<INTERPOL_TYPE; i1++) {
-						unsigned int i0 = id+i1-(INTERPOL_TYPE-1)/2;
+				for (uint_fast8_t j1=0; j1<INTERPOL_TYPE; j1++) {
+					 uint_fast8_t j0 = jd+j1-(INTERPOL_TYPE-1)/2;
+					for (uint_fast8_t i1=0; i1<INTERPOL_TYPE; i1++) {
+						 uint_fast8_t i0 = id+i1-(INTERPOL_TYPE-1)/2;
 						if(i0< _xsize && j0 < _ysize ){
 							ph[i1][j1].index = i0*_ysize+j0;
 							ph[i1][j1].weight = hmc[i1*INTERPOL_TYPE+j1];
@@ -199,9 +199,9 @@ void vfps::RotationMap::apply()
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
 
-	for (unsigned int i=0; i< _size; i++) {
+	for (meshindex_t i=0; i< _size; i++) {
 		data_out[i] = 0;
-		for (unsigned int j=0; j<_ip; j++) {
+		for (uint_fast8_t j=0; j<_ip; j++) {
 			hi h = _heritage_map1D[i][j];
 			data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 		}

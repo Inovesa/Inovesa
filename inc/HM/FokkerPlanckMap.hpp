@@ -54,7 +54,7 @@ public:
 	 * @param e1 Marit: (deltat*2./(omegas*td))
 	 */
 	FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
-					const unsigned int xsize, const unsigned int ysize,
+					const meshindex_t xsize, const meshindex_t ysize,
 					FPType fpt, double e1);
 };
 

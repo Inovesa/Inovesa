@@ -20,8 +20,8 @@
 #include "HM/FokkerPlanckMap.hpp"
 
 vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
-									   const unsigned int xsize,
-									   const unsigned int ysize,
+									   const meshindex_t xsize,
+									   const meshindex_t ysize,
 									   FPType fpt, double e1)
 	:
 	#if DERIVATION_TYPE == 1 // have to use type 2 for second derivative
