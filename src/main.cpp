@@ -71,8 +71,7 @@ int main(int argc, char** argv)
 	prepareCLProgs();
 	#endif // INOVESA_USE_CL
 
-//	uint32_t ps_size = 0x19000;
-	uint32_t ps_size = 0x100;
+	uint32_t ps_size = 0x8000;
 
 	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
 

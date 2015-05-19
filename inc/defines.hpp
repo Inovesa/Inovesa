@@ -29,7 +29,6 @@
 #define INOVESA_VERSION_FIX		1
 
 //#define INOVESA_USE_GUI
-//#define INOVESA_USE_CL
 //#define INOVESA_SYNC_CL
 
 /**
@@ -80,8 +79,8 @@ typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
 #endif
 typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 
-// check OpenCL code when changing
-typedef uint64_t meshindex_t;
+// check OpenCL code when changing (OpenCL set to uint32_t)
+typedef uint32_t meshindex_t;
 
 typedef float meshaxis_t;
 typedef float meshdata_t;
