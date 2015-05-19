@@ -112,12 +112,14 @@ int main(int argc, char** argv)
 #define FP
 #define RT
 #ifdef FP
+	std::cout << "Building FokkerPlanckMap." << std::endl;
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
 						vfps::FokkerPlanckMap::FPType::full,e0);
 #else
 	Identity fpm(&mesh_rotated,&mesh,ps_size,ps_size);
 #endif
 #ifdef RT
+	std::cout << "Building RotationMap." << std::endl;
 	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
 #else
 	Identity rm(&mesh,&mesh_rotated,ps_size,ps_size);
@@ -126,6 +128,7 @@ int main(int argc, char** argv)
 	#ifdef INOVESA_USE_CL
 	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	#endif // INOVESA_USE_CL
+	std::cout << "Starting the simulation." << std::endl;
 	for (unsigned int i=0;i<steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
