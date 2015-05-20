@@ -28,6 +28,8 @@ namespace vfps
 /**
  * @brief The FokkerPlanckMap class
  *
+ * Heritage information for the FokkerPlanckMap is one dimensional
+ *
  * @todo Padding for faster memory access
  */
 class FokkerPlanckMap : public HeritageMap
@@ -56,6 +58,20 @@ public:
 	FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 					const meshindex_t xsize, const meshindex_t ysize,
 					FPType fpt, double e1);
+
+	/**
+	 * @brief apply custom apply method needed to handle one dimensional HM
+	 */
+	void apply();
+
+private:
+	/**
+	 * @brief _meshxsize horizontal size of the meshaxis_t
+	 *
+	 * As this HeritageMap itself is one dimensional,
+	 * it has to save the size of the actual mesh seperatly.
+	 */
+	const meshindex_t _meshxsize;
 };
 
 }

@@ -60,8 +60,22 @@ protected:
 	 */
 	const cl_uint _ip;
 
+	/**
+	 * @brief _heritage_map convenient access
+	 *		to _hinfo using x and y coordinates
+	 *
+	 * How is performance compared to _hinfo[(x*_ysize+y)*_ip]?
+	 */
 	hi*** _heritage_map;
+
+	/**
+	 * @brief _heritage_map1D convenient access to _hinfo using 1D coordinates
+	 */
 	hi** const _heritage_map1D;
+
+	/**
+	 * @brief _hinfo
+	 */
 	hi* const _hinfo;
 
 	/**

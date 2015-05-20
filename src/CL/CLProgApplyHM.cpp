@@ -149,6 +149,27 @@ void prepareCLProgApplyHM()
 		dst[i] = clamp(value,flor,ceil);
 	})";
 
+	code += R"(
+	__kernel void applyHM_Y(const __global data_t* src,
+							const __global hi* hm,
+							const uint hm_len,
+							const uint ysize,
+							__global data_t* dst)
+	{
+		data_t value = 0;
+		const uint x = get_global_id(0);
+		const uint y = get_global_id(1);
+		const uint hmoffset = y*hm_len;
+		const uint meshoffs = x*ysize;
+		for (uint j=0; j<hm_len; j++)
+		{
+			value += mult(	src[meshoffs+hm[hmoffset+j].src],
+							hm[hmoffset+j].weight);
+		}
+		dst[meshoffs+y] = value;
+	}
+	)";
+
 	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
 	CLProgApplyHM::p = cl::Program(OCLH::context, source);
     try {

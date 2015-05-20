@@ -183,21 +183,7 @@ void vfps::RotationMap::apply()
 {
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
-		#ifdef INOVESA_SYNC_CL
-		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
-		#endif // INOVESA_SYNC_CL
-		OCLH::queue.enqueueNDRangeKernel (
-					applyHM,
-					cl::NullRange,
-					cl::NDRange(_size));
-		#ifdef CL_VERSION_1_2
-		OCLH::queue.enqueueBarrierWithWaitList();
-		#else // CL_VERSION_1_2
-		OCLH::queue.enqueueBarrier();
-		#endif // CL_VERSION_1_2
-		#ifdef INOVESA_SYNC_CL
-		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
-		#endif // INOVESA_SYNC_CL
+		HeritageMap::apply();
 	} else
 	#endif // INOVESA_USE_CL
 	{
