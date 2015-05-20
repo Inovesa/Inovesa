@@ -158,65 +158,70 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 		}
 	}
 	#ifdef INOVESA_USE_CL
-	_hi_buf = cl::Buffer(OCLH::context,
-						 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-						 sizeof(hi)*_ip*_size,
-						 _hinfo);
-	#if INTERPOL_TYPE == 4 and INTERPOL_SATURATING > 0
-	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
-	applyHM.setArg(0, _in->data_buf);
-	applyHM.setArg(1, _hi_buf);
-	applyHM.setArg(2, _out->data_buf);
-	#else
-	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
-	applyHM.setArg(0, _in->data_buf);
-	applyHM.setArg(1, _hi_buf);
-	applyHM.setArg(2, INTERPOL_TYPE*INTERPOL_TYPE);
-	applyHM.setArg(3, _out->data_buf);
-	#endif
+	if (OCLH::active) {
+		_hi_buf = cl::Buffer(OCLH::context,
+							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+							 sizeof(hi)*_ip*_size,
+							 _hinfo);
+		#if INTERPOL_TYPE == 4 and INTERPOL_SATURATING > 0
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
+		applyHM.setArg(0, _in->data_buf);
+		applyHM.setArg(1, _hi_buf);
+		applyHM.setArg(2, _out->data_buf);
+		#else
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+		applyHM.setArg(0, _in->data_buf);
+		applyHM.setArg(1, _hi_buf);
+		applyHM.setArg(2, INTERPOL_TYPE*INTERPOL_TYPE);
+		applyHM.setArg(3, _out->data_buf);
+		#endif
+	}
 	#endif // INOVESA_USE_CL
 }
 
 void vfps::RotationMap::apply()
 {
 	#ifdef INOVESA_USE_CL
-	#ifdef INOVESA_SYNC_CL
-	_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
-	#endif // INOVESA_SYNC_CL
-	OCLH::queue.enqueueNDRangeKernel (
-				applyHM,
-				cl::NullRange,
-				cl::NDRange(_size));
-	#ifdef CL_VERSION_1_2
-	OCLH::queue.enqueueBarrierWithWaitList();
-	#else // CL_VERSION_1_2
-	OCLH::queue.enqueueBarrier();
-	#endif // CL_VERSION_1_2
-	#ifdef INOVESA_SYNC_CL
-	_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
-	#endif // INOVESA_SYNC_CL
-	#else // INOVESA_USE_CL
-	meshdata_t* data_in = _in->getData();
-	meshdata_t* data_out = _out->getData();
+	if (OCLH::active) {
+		#ifdef INOVESA_SYNC_CL
+		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		#endif // INOVESA_SYNC_CL
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_size));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		#ifdef INOVESA_SYNC_CL
+		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		#endif // INOVESA_SYNC_CL
+	} else
+	#endif // INOVESA_USE_CL
+	{
+		meshdata_t* data_in = _in->getData();
+		meshdata_t* data_out = _out->getData();
 
-	for (meshindex_t i=0; i< _size; i++) {
-		data_out[i] = 0;
-		for (uint_fast8_t j=0; j<_ip; j++) {
-			hi h = _heritage_map1D[i][j];
-			data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-		}
-		#if INTERPOL_SATURATING == 1
-		// handle overshooting
-		meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
-		meshdata_t flor=std::numeric_limits<meshdata_t>::max();
-		for (size_t x=1; x<=2; x++) {
-			for (size_t y=1; y<=2; y++) {
-				ceil = std::max(ceil,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);
-				flor = std::min(flor,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);
+		for (meshindex_t i=0; i< _size; i++) {
+			data_out[i] = 0;
+			for (uint_fast8_t j=0; j<_ip; j++) {
+				hi h = _heritage_map1D[i][j];
+				data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 			}
+			#if INTERPOL_SATURATING == 1
+			// handle overshooting
+			meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
+			meshdata_t flor=std::numeric_limits<meshdata_t>::max();
+			for (size_t x=1; x<=2; x++) {
+				for (size_t y=1; y<=2; y++) {
+					ceil = std::max(ceil,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);
+					flor = std::min(flor,data_in[_heritage_map1D[i][x*INTERPOL_TYPE+y].index]);
+				}
+			}
+			data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
+			#endif // INTERPOL_SATURATING
 		}
-		data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
-		#endif // INTERPOL_SATURATING
 	}
-#endif // INOVESA_USE_CL
 }

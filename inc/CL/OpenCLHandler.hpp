@@ -29,7 +29,6 @@
 
 /**
  * @brief prepareCLEnvironment
- * @param device
  * @return true on successful initialization
  *
  * Picks the last available platform.
@@ -39,11 +38,17 @@
  * @todo: check if OpenCL 1.0 or 2.x do the job
  * (currently "OpenCL 1." is set to be the required version)
  */
-bool prepareCLEnvironment(unsigned int device=0);
+void prepareCLEnvironment();
+
+void prepareCLDevice(unsigned int device);
+
+void listCLDevices();
 
 class OCLH
 {
 public:
+	static bool active;
+
 	static VECTOR_CLASS<cl::Platform> platforms;
 
 	static cl::Context context;

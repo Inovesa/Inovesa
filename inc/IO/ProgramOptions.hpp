@@ -41,7 +41,7 @@ public:
 
 	bool parse(int argc, char** argv);
 
-	inline unsigned int getCLDevice() const
+	inline int getCLDevice() const
 		{ return _cldevice; }
 
 	inline std::string getOutFile() const
@@ -72,7 +72,7 @@ public:
 		{ return t_d; }
 
 private: // program parameters
-	unsigned int _cldevice;
+	int _cldevice;
 
 	std::string _outfile;
 

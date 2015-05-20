@@ -20,7 +20,7 @@
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
-	_cldevice(0),
+	_cldevice(1),
 	_startdistpng("start.png"),
 	_configfile("default.cfg"),
 	outsteps(100),
@@ -45,7 +45,7 @@ vfps::ProgramOptions::ProgramOptions() :
 			"grayscale png file containing initial particle density")
 	;
 	_programopts_file.add_options()
-		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
+		("cldev", po::value<int>(&_cldevice)->default_value(1),
 			"OpenCL device to use ('0' lists available devices)")
 		("gui", po::value<bool>(&_showphasespace)->default_value(true),
 			"Show phase space view")
@@ -55,7 +55,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	;
 	_programopts_cli.add_options()
 		#ifdef INOVESA_USE_CL
-		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
+		("cldev", po::value<int>(&_cldevice)->default_value(1),
 			"OpenCL device to use ('0' lists available devices)")
 		#endif // INOVESA_USE_CL
 		("config,c", po::value<std::string>(&_configfile),

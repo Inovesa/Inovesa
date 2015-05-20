@@ -28,7 +28,6 @@
 #define INOVESA_VERSION_MINOR	6
 #define INOVESA_VERSION_FIX		1
 
-//#define INOVESA_USE_GUI
 //#define INOVESA_SYNC_CL
 
 /**

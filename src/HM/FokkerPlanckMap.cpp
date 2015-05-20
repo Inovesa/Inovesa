@@ -157,15 +157,17 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	#endif
 
 	#ifdef INOVESA_USE_CL
-	_hi_buf = cl::Buffer(OCLH::context,
-						 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-						 sizeof(hi)*_ip*_size,
-						 _hinfo);
-	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
-	applyHM.setArg(0, _in->data_buf);
-	applyHM.setArg(1, _hi_buf);
-	applyHM.setArg(2, _ip);
-	applyHM.setArg(3, _out->data_buf);
+	if (OCLH::active) {
+		_hi_buf = cl::Buffer(OCLH::context,
+							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+							 sizeof(hi)*_ip*_size,
+							 _hinfo);
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+		applyHM.setArg(0, _in->data_buf);
+		applyHM.setArg(1, _hi_buf);
+		applyHM.setArg(2, _ip);
+		applyHM.setArg(3, _out->data_buf);
+	}
 	#endif
 }
 

@@ -50,28 +50,46 @@ int main(int argc, char** argv)
 {
 	ProgramOptions opts;
 
-	bool cont;
-
 	try {
-		cont = opts.parse(argc,argv);
+		if (!opts.parse(argc,argv)) {
+			return EXIT_SUCCESS;
+		}
 	} catch(std::exception& e) {
 		std::cerr << "error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	if (!cont) {
-		return EXIT_SUCCESS;
-	}
-
 	#ifdef INOVESA_USE_CL
-	cont = prepareCLEnvironment(opts.getCLDevice()-1);
-	if (!cont) {
-		return EXIT_SUCCESS;
+	OCLH::active = (opts.getCLDevice() >= 0);
+	if (OCLH::active) {
+		try {
+			prepareCLEnvironment();
+		} catch (cl::Error& e) {
+			std::cerr << e.what() << std::endl;
+			std::cout << "Will fall back to sequential version."
+					  << std::endl;
+			OCLH::active = false;
+		}
 	}
-	prepareCLProgs();
+	if (OCLH::active) {
+		if (opts.getCLDevice() == 0) {
+			listCLDevices();
+			return EXIT_SUCCESS;
+		} else {
+			try {
+				prepareCLDevice(opts.getCLDevice()-1);
+				prepareCLProgs();
+			} catch (cl::Error& e) {
+				std::cerr << e.what() << std::endl;
+				std::cout << "Will fall back to sequential version."
+						  << std::endl;
+				OCLH::active = false;
+			}
+		}
+	}
 	#endif // INOVESA_USE_CL
 
-	uint32_t ps_size = 0x8000;
+	uint32_t ps_size = 256;
 
 	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
 
@@ -109,30 +127,25 @@ int main(int argc, char** argv)
 
 	const double e0 = 2.0/(f_s*t_d*steps);
 
-#define FP
-#define RT
-#ifdef FP
 	std::cout << "Building FokkerPlanckMap." << std::endl;
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
 						vfps::FokkerPlanckMap::FPType::full,e0);
-#else
-	Identity fpm(&mesh_rotated,&mesh,ps_size,ps_size);
-#endif
-#ifdef RT
+
 	std::cout << "Building RotationMap." << std::endl;
 	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
-#else
-	Identity rm(&mesh,&mesh_rotated,ps_size,ps_size);
-#endif
 
 	#ifdef INOVESA_USE_CL
-	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+	if (OCLH::active) {
+		mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+	}
 	#endif // INOVESA_USE_CL
 	std::cout << "Starting the simulation." << std::endl;
 	for (unsigned int i=0;i<steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
-			mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+			if (OCLH::active) {
+				mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+			}
 			#endif // INOVESA_USE_CL
 			file.append(&mesh);
 			#ifdef INOVESA_USE_GUI
@@ -140,17 +153,20 @@ int main(int argc, char** argv)
 				display->createTexture(&mesh);
 				display->draw();
 				display->delTexture();
-			}
-			#else
+			} else
+			#endif
+			{
 			std::cout << static_cast<float>(i)/steps << '/'
 					  << rotations << std::endl;
-			#endif // INOVESA_USE_GUI
+			}
 		}
 		rm.apply();
 		fpm.apply();
 	}
 	#ifdef INOVESA_USE_CL
-	OCLH::queue.flush();
+	if (OCLH::active) {
+		OCLH::queue.flush();
+	}
 	#endif // INOVESA_USE_CL
 
 	return EXIT_SUCCESS;

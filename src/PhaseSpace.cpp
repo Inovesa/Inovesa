@@ -54,10 +54,12 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	}
 	_ws[1][nMeshCells(0)-1] = h13;
 	#ifdef INOVESA_USE_CL
-	data_buf = cl::Buffer(OCLH::context,
+	if (OCLH::active) {
+		data_buf = cl::Buffer(OCLH::context,
 							CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 							sizeof(meshdata_t)*nMeshCells(0)*nMeshCells(1),
 						   _data1D);
+	}
 	#endif
 }
 
