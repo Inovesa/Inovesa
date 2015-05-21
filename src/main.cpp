@@ -133,10 +133,13 @@ int main(int argc, char** argv)
 
 	std::cout << "Building FokkerPlanckMap." << std::endl;
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
-						vfps::FokkerPlanckMap::FPType::full,e0);
+						FokkerPlanckMap::FPType::full,e0,
+						FokkerPlanckMap::DerivationType::cubic);
 
 	std::cout << "Building RotationMap." << std::endl;
-	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
+	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle,
+				   HeritageMap::InterpolationType::cubic,
+				   RotationMap::RotationCoordinates::norm_0_1,true);
 
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {

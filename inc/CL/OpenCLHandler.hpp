@@ -19,6 +19,7 @@
 
 #ifndef OPENCLHANDLER_HPP
 #define OPENCLHANDLER_HPP
+#ifdef INOVESA_USE_CL
 
 #define __CL_ENABLE_EXCEPTIONS
 
@@ -63,4 +64,5 @@ public:
 	static bool ogl_sharing;
 };
 
+#endif // INOVESA_USE_CL
 #endif // OPENCLHANDLER_HPP

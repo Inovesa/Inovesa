@@ -17,6 +17,8 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
+#ifdef INOVESA_USE_CL
+
 #include "CL/OpenCLHandler.hpp"
 
 void prepareCLEnvironment()
@@ -84,3 +86,5 @@ cl::Context OCLH::context;
 VECTOR_CLASS<cl::Device> OCLH::devices;
 cl::CommandQueue OCLH::queue;
 bool OCLH::ogl_sharing;
+
+#endif

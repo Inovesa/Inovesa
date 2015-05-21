@@ -28,6 +28,14 @@ namespace vfps
 
 class HeritageMap
 {
+public:
+	enum InterpolationType : uint_fast8_t {
+		none = 1,
+		linear = 2,
+		quadratic = 3,
+		cubic = 4
+	};
+
 protected:
 	typedef struct {
 		meshindex_t index;
@@ -45,7 +53,7 @@ public:
 	 */
 	HeritageMap(PhaseSpace* in, PhaseSpace* out,
 				size_t xsize, size_t ysize,
-				uint_fast8_t interpoints);
+				uint_fast8_t interpoints, uint_fast8_t intertype);
 
 	~HeritageMap();
 
@@ -56,9 +64,19 @@ public:
 
 protected:
 	/**
-	 * @brief _ip holds the number of points used for interpolation
+	 * @brief _ip holds the total number of points used for interpolation
 	 */
+	#ifdef INOVESA_USE_CL
 	const cl_uint _ip;
+	#else
+	const uint_fast8_t _ip;
+	#endif
+
+	/**
+	 * @brief _ip holds the per dimension number
+	 *			of points used for interpolation
+	 */
+	const uint_fast8_t _it;
 
 	/**
 	 * @brief _heritage_map convenient access

@@ -47,7 +47,7 @@ public:
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
 			const unsigned int xsize, const unsigned int ysize,
-			const std::vector<integral_t> wake);
+			const std::vector<integral_t> wake, const InterpolationType it);
 
 public:
 	/**

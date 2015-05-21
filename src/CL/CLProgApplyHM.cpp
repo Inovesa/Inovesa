@@ -17,6 +17,8 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
+#ifdef INOVESA_USE_CL
+
 #include "CL/CLProgApplyHM.hpp"
 
 void prepareCLProgApplyHM()
@@ -192,3 +194,5 @@ void prepareCLProgApplyHM()
 }
 
 cl::Program CLProgApplyHM::p;
+
+#endif // INOVESA_USE_CL

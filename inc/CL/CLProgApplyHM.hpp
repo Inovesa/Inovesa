@@ -19,6 +19,7 @@
 
 #ifndef CLPROGAPPLYHM_HPP
 #define CLPROGAPPLYHM_HPP
+#ifdef INOVESA_USE_CL
 
 #include <iomanip>
 #include <sstream>
@@ -34,4 +35,5 @@ public:
 	static cl::Program p;
 };
 
+#endif // INOVESA_USE_CL
 #endif // CLPROGAPPLYHM_HPP
