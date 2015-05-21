@@ -167,8 +167,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 						} else {
 							ph[i1][j1] = {0,0};
 						}
-						_heritage_map[q_i][p_i][i1*_it+j1]
-								= ph[i1][j1];
+						_hinfo[(q_i*ysize+p_i)*_ip+i1*_it+j1] = ph[i1][j1];
 					}
 				}
 			}
@@ -219,7 +218,7 @@ void vfps::RotationMap::apply()
 		for (meshindex_t i=0; i< _size; i++) {
 			data_out[i] = 0;
 			for (uint_fast8_t j=0; j<_ip; j++) {
-				hi h = _heritage_map1D[i][j];
+				hi h = _hinfo[i*_ip+j];
 				data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 			}
 			if (_sat) {
@@ -228,8 +227,8 @@ void vfps::RotationMap::apply()
 				meshdata_t flor=std::numeric_limits<meshdata_t>::max();
 				for (size_t x=1; x<=2; x++) {
 					for (size_t y=1; y<=2; y++) {
-						ceil = std::max(ceil,data_in[_heritage_map1D[i][x*_it+y].index]);
-						flor = std::min(flor,data_in[_heritage_map1D[i][x*_it+y].index]);
+						ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
+						flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
 					}
 				}
 				data_out[i] = std::max(std::min(ceil,data_out[i]),flor);

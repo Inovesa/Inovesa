@@ -25,8 +25,6 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 							   uint_fast8_t intertype) :
 	_ip(interpoints),
 	_it(intertype),
-	_heritage_map(new hi**[xsize]),
-	_heritage_map1D(new hi*[xsize*ysize]()),
 	_hinfo(new hi[xsize*ysize*interpoints]),
 	_size(xsize*ysize),
 	_xsize(xsize),
@@ -34,18 +32,10 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 	_in(in),
 	_out(out)
 {
-	for (meshindex_t i=0; i<xsize; i++) {
-		for (meshindex_t j=0; j<ysize; j++) {
-			_heritage_map1D[i*ysize+j]=&(_hinfo[(i*ysize+j)*interpoints]);
-		}
-		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
-	}
 }
 
 vfps::HeritageMap::~HeritageMap()
 {
-	delete [] _heritage_map1D;
-	delete [] _heritage_map;
 	delete [] _hinfo;
 }
 
@@ -77,7 +67,7 @@ void vfps::HeritageMap::apply()
 		for (meshindex_t i=0; i< _size; i++) {
 			data_out[i] = 0;
 			for (meshindex_t j=0; j<_ip; j++) {
-				hi h = _heritage_map1D[i][j];
+				hi h = _hinfo[i*_ip+j];
 				data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 			}
 		}

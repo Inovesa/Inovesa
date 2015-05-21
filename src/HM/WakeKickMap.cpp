@@ -98,8 +98,7 @@ void vfps::WakeKickMap::apply()
 						ph[j0].index = 0;
 						ph[j0].weight = 0;
 					}
-					_heritage_map[q_i][p_i][j1]
-							= ph[j1];
+					_hinfo[(q_i*_ysize+p_i)*_ip+j1] = ph[j1];
 				}
 			}
 		}
