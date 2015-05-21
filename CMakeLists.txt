@@ -18,6 +18,7 @@ set(SRC_LIST
 )
 
 set(INC_LIST
+			./inc/CL/cl.hpp
 			./inc/CL/CLProgApplyHM.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
