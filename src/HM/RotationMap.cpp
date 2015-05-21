@@ -45,7 +45,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	const meshaxis_t cos_dt = cos(angle);
 	const meshaxis_t sin_dt = -sin(angle);
 
-	for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
+	for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
 		for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
 			// Cell of inverse image (qp,pp) of grid point i,j.
 			meshaxis_t qp; //q', backward mapping
@@ -215,11 +215,13 @@ void vfps::RotationMap::apply()
 		meshdata_t* data_in = _in->getData();
 		meshdata_t* data_out = _out->getData();
 
-		for (meshindex_t i=0; i< _size; i++) {
+		for (meshindex_t i=0; i< _size/2; i++) {
 			data_out[i] = 0;
+			data_out[_size-1-i] = 0;
 			for (uint_fast8_t j=0; j<_ip; j++) {
 				hi h = _hinfo[i*_ip+j];
 				data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+				data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
 			}
 			if (_sat) {
 				// handle overshooting
@@ -232,6 +234,17 @@ void vfps::RotationMap::apply()
 					}
 				}
 				data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
+
+
+				ceil=std::numeric_limits<meshdata_t>::min();
+				flor=std::numeric_limits<meshdata_t>::max();
+				for (size_t x=1; x<=2; x++) {
+					for (size_t y=1; y<=2; y++) {
+						ceil = std::max(ceil,data_in[_size-1-_hinfo[i*_ip+x*_it+y].index]);
+						flor = std::min(flor,data_in[_size-1-_hinfo[i*_ip+x*_it+y].index]);
+					}
+				}
+				data_out[_size-1-i] = std::max(std::min(ceil,data_out[_size-1-i]),flor);
 			}
 		}
 	}
