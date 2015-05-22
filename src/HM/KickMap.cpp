@@ -22,6 +22,48 @@
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 					const unsigned int xsize, const unsigned int ysize,
 					const InterpolationType it) :
-	HeritageMap(in,out,xsize,ysize,it,it)
+	HeritageMap(in,out,xsize,ysize,it,it),
+	_force(new meshaxis_t[xsize]())
 {
+}
+
+vfps::KickMap::~KickMap()
+{
+	delete [] _force;
+}
+
+void vfps::KickMap::apply()
+{
+	meshdata_t* data_in = _in->getData();
+	meshdata_t* data_out = _out->getData();
+
+	for (meshindex_t x=0; x< _xsize; x++) {
+		int offset = _force[x];
+		meshindex_t absoffset;
+		if (offset < 0) {
+			absoffset = -offset;
+			for (meshindex_t y=0; y< absoffset; y++) {
+				data_out[x*_ysize+y] = 0;
+			}
+			for (meshindex_t y=absoffset; y< _ysize; y++) {
+				data_out[x*_ysize+y] = data_in[x*_ysize+y-absoffset];
+			}
+		} else {
+			absoffset = offset;
+			for (meshindex_t y=0; y< _ysize-absoffset; y++) {
+				data_out[x*_ysize+y] = data_in[x*_ysize+y+absoffset];
+			}
+			for (meshindex_t y=_ysize-absoffset; y< _ysize; y++) {
+				data_out[x*_ysize+y] = 0;
+			}
+		}
+	}
+}
+
+void vfps::KickMap::laser()
+{
+	for(meshindex_t x=0; x<_xsize; x++) {
+		_force[x] +=std::exp(-std::pow(-(int(x)-int(3*_xsize/8)),2)/100)
+					*0.3*_xsize*std::sin(2*M_PI*x/10);
+	}
 }

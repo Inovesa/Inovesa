@@ -32,11 +32,18 @@ public:
 			const unsigned int xsize, const unsigned int ysize,
 			const InterpolationType it);
 
+	~KickMap();
+
+public:
+	void apply();
+
+	void laser();
+
 protected:
 	/**
 	 * @brief _force
 	 */
-	std::vector<vfps::meshaxis_t> _force;
+	meshaxis_t* _force;
 };
 
 }

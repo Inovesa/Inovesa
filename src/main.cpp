@@ -19,7 +19,9 @@
 
 #include <climits>
 #include <iostream>
+#ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
+#endif
 #include <sstream>
 
 #include "defines.hpp"
@@ -29,6 +31,7 @@
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
+#include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
@@ -78,6 +81,7 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 
+	#ifdef INOVESA_USE_PNG
 	// load pattern to start with
 	png::image<png::gray_pixel_16> image;
 	try {
@@ -92,20 +96,36 @@ int main(int argc, char** argv)
 		return EXIT_FAILURE;
 	}
 
-	uint16_t ps_size = image.get_height();
+	meshindex_t ps_size = image.get_height();
 	if (image.get_width() != ps_size) {
 		std::cerr << "Phase space has to be quadratic. Please adjust "
 				  << opts.getStartDistPNG() << std::endl;
 		return EXIT_FAILURE;
 	}
+	#else // !INOVESA_USE_PNG
+	meshindex_t ps_size = 256;
+	#endif // !INOVESA_USE_PNG
 
 	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
 
+	#ifdef INOVESA_USE_PNG
 	for (unsigned int x=0; x<ps_size; x++) {
 		for (unsigned int y=0; y<ps_size; y++) {
 			mesh[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
 		}
 	}
+	#else // !INOVESA_USE_PNG
+	{
+		for (int x=0; x<int(ps_size); x++) {
+			for (int y=0; y<int(ps_size); y++) {
+				mesh[x][y] = std::exp(-std::pow((x-int(ps_size*3/8))
+												/(ps_size/10.),2)/2
+									  -std::pow((y-int(ps_size/2))
+												/(ps_size/10.),2)/2);
+			}
+		}
+	}
+	#endif // !INOVESA_USE_PNG
 
 	HDF5File file(opts.getOutFile(),ps_size);
 
@@ -147,7 +167,7 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 	std::cout << "Starting the simulation." << std::endl;
-	for (unsigned int i=0;i<steps*rotations;i++) {
+	for (unsigned int i=0;i<=steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
 			if (OCLH::active) {
