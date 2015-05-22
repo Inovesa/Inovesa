@@ -17,13 +17,13 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#ifndef KICKMAP_HPP
-#define KICKMAP_HPP
+#ifndef WAKEKICKMAP_HPP
+#define WAKEKICKMAP_HPP
 
 #include <array>
 
 #include "defines.hpp"
-#include "HeritageMap.hpp"
+#include "KickMap.hpp"
 
 namespace vfps
 {
@@ -33,7 +33,7 @@ namespace vfps
  *
  * @todo implement option to have 1D interpolation with HeritageMap
  */
-class WakeKickMap : public HeritageMap
+class WakeKickMap : public KickMap
 {
 public:
 	/**
@@ -60,13 +60,8 @@ private:
 	 * @brief _wake (normalized) wake
 	 */
 	const std::vector<vfps::integral_t> _wake;
-
-	/**
-	 * @brief _wakeforce
-	 */
-	std::vector<vfps::meshaxis_t> _wakeforce;
 };
 
 } // namespace VFPS
 
-#endif // KICKMAP_HPP
+#endif // WAKEKICKMAP_HPP

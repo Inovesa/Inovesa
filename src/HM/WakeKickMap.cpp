@@ -23,7 +23,7 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 					const unsigned int xsize, const unsigned int ysize,
 					const std::vector<integral_t> wake,
 					const InterpolationType it) :
-	HeritageMap(in,out,xsize,ysize,it,it),
+	KickMap(in,out,xsize,ysize,it),
 	_wake(wake)
 {
 }
@@ -32,9 +32,9 @@ void vfps::WakeKickMap::apply()
 {
 	integral_t* density = _in->projectionToX();
 	for (unsigned int i=0;i<_xsize;i++) {
-		_wakeforce[i] = 0;
+		_force[i] = 0;
 		for (unsigned int j=0;j<_xsize;j++) {
-			_wakeforce[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
+			_force[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
 		}
 	}
 
@@ -53,7 +53,7 @@ void vfps::WakeKickMap::apply()
 			//Scaled arguments of interpolation functions:
 			unsigned int jd; //numper of lower mesh point from p'
 			interpol_t xip; //distance of p' from lower mesh point
-			pcoord = _wakeforce[q_i];
+			pcoord = _force[q_i];
 			xip = std::modf(pcoord, &qp_int);
 			jd = qp_int;
 

@@ -8,6 +8,7 @@ set(SRC_LIST
 			./src/CL/OpenCLHandler.cpp
 			./src/HM/HeritageMap.cpp
 			./src/HM/FokkerPlanckMap.cpp
+			./src/HM/KickMap.cpp
 			./src/HM/RotationMap.cpp
 			./src/HM/WakeKickMap.cpp
 			./src/IO/HDF5File.cpp
@@ -18,11 +19,13 @@ set(SRC_LIST
 )
 
 set(INC_LIST
+			./inc/CL/cl.hpp
 			./inc/CL/CLProgApplyHM.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
 			./inc/HM/HeritageMap.hpp
 			./inc/HM/FokkerPlanckMap.hpp
+			./inc/HM/KickMap.hpp
 			./inc/HM/Identity.hpp
 			./inc/HM/RotationMap.hpp
 			./inc/HM/WakeKickMap.hpp
