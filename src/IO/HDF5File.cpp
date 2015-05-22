@@ -19,7 +19,7 @@
 
 #include "IO/HDF5File.hpp"
 
-vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
+vfps::HDF5File::HDF5File(std::string fname, const meshindex_t ps_size) :
 	file( nullptr ),
 	fname( fname ),
 	bc_dims(0),

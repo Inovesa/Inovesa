@@ -24,6 +24,7 @@
 #include <H5Cpp.h>
 #include <string>
 
+#include "defines.hpp"
 #include "PhaseSpace.hpp"
 
 namespace vfps {
@@ -31,7 +32,7 @@ namespace vfps {
 class HDF5File
 {
 public:
-	HDF5File(std::string fname, const uint16_t ps_size);
+	HDF5File(std::string fname, const meshindex_t ps_size);
 
 	~HDF5File();
 
@@ -89,7 +90,7 @@ private:
 
 	H5::DSetCreatPropList ps_prop;
 
-	uint16_t ps_size;
+	meshdata_t ps_size;
 };
 
 }
