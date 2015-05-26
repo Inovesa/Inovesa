@@ -157,10 +157,10 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 //				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
-				for (uint_fast8_t j1=0; j1<_it; j1++) {
-					 uint_fast8_t j0 = jd+j1-(_it-1)/2;
-					for (uint_fast8_t i1=0; i1<_it; i1++) {
-						 uint_fast8_t i0 = id+i1-(_it-1)/2;
+				for (meshindex_t j1=0; j1<_it; j1++) {
+					 meshindex_t j0 = jd+j1-(_it-1)/2;
+					for (meshindex_t i1=0; i1<_it; i1++) {
+						 meshindex_t i0 = id+i1-(_it-1)/2;
 						if(i0< _xsize && j0 < _ysize ){
 							ph[i1][j1].index = i0*_ysize+j0;
 							ph[i1][j1].weight = hmc[i1*_it+j1];

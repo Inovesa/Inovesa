@@ -37,7 +37,7 @@ public:
 public:
 	void apply();
 
-	void laser();
+	void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);
 
 protected:
 	/**

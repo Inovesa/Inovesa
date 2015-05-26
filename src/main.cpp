@@ -81,51 +81,64 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 
+
+	meshindex_t ps_size;
 	#ifdef INOVESA_USE_PNG
+	bool usepng = true;
 	// load pattern to start with
 	png::image<png::gray_pixel_16> image;
-	try {
-		image.read(opts.getStartDistPNG());
-	} catch ( const png::std_error &e ) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-	catch ( const png::error &e ) {
-		std::cerr << "Problem loading " << opts.getStartDistPNG()
-				  << ": " << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+	if (opts.getStartDistPNG() != "/dev/null") {
+		try {
+			image.read(opts.getStartDistPNG());
+		} catch ( const png::std_error &e ) {
+			std::cerr << e.what() << std::endl;
+			usepng = false;
+		}
+		catch ( const png::error &e ) {
+			std::cerr << "Problem loading " << opts.getStartDistPNG()
+					  << ": " << e.what() << std::endl;
+			usepng = false;
+		}
 
-	meshindex_t ps_size = image.get_height();
-	if (image.get_width() != ps_size) {
-		std::cerr << "Phase space has to be quadratic. Please adjust "
-				  << opts.getStartDistPNG() << std::endl;
-		return EXIT_FAILURE;
+		if (usepng) {
+			if (image.get_width() == image.get_height()) {
+				ps_size = image.get_width();
+			} else {
+				std::cerr << "Phase space has to be quadratic. Please adjust "
+						  << opts.getStartDistPNG() << std::endl;
+				usepng = false;
+			}
+		}
+	} else {
+		usepng = false;
 	}
-	#else // !INOVESA_USE_PNG
-	meshindex_t ps_size = 256;
-	#endif // !INOVESA_USE_PNG
+	if (!usepng)
+	#endif // INOVESA_USE_PNG
+	{
+	}
+	ps_size = 256;
 
 	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
 
 	#ifdef INOVESA_USE_PNG
-	for (unsigned int x=0; x<ps_size; x++) {
-		for (unsigned int y=0; y<ps_size; y++) {
-			mesh[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+	if (usepng) {
+		for (unsigned int x=0; x<ps_size; x++) {
+			for (unsigned int y=0; y<ps_size; y++) {
+				mesh[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+			}
 		}
-	}
-	#else // !INOVESA_USE_PNG
+	} else
+	#endif // INOVESA_USE_PNG
 	{
 		for (int x=0; x<int(ps_size); x++) {
 			for (int y=0; y<int(ps_size); y++) {
-				mesh[x][y] = std::exp(-std::pow((x-int(ps_size*3/8))
+				mesh[x][y] = std::exp(-std::pow((x-int(ps_size/2))
 												/(ps_size/10.),2)/2
 									  -std::pow((y-int(ps_size/2))
 												/(ps_size/10.),2)/2);
 			}
 		}
 	}
-	#endif // !INOVESA_USE_PNG
 
 	HDF5File file(opts.getOutFile(),ps_size);
 
@@ -150,6 +163,13 @@ int main(int argc, char** argv)
 	const double angle = 2*M_PI/steps;
 
 	const double e0 = 2.0/(f_s*t_d*steps);
+
+	if (!usepng) {
+		KickMap km(&mesh_rotated,&mesh,ps_size,ps_size,
+				   HeritageMap::InterpolationType::cubic);
+		km.laser(2.0,4.0,0.2);
+		km.apply();
+	}
 
 	std::cout << "Building FokkerPlanckMap." << std::endl;
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
