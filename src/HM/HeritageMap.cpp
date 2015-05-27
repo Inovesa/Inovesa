@@ -20,17 +20,26 @@
 #include "HM/HeritageMap.hpp"
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
-							   size_t xsize, size_t ysize,
+							   size_t xsize, size_t ysize, size_t memsize,
 							   uint_fast8_t interpoints,
 							   uint_fast8_t intertype) :
 	_ip(interpoints),
 	_it(intertype),
-	_hinfo(new hi[xsize*ysize*interpoints]),
+	_hinfo(new hi[memsize]),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
 	_in(in),
 	_out(out)
+{
+}
+
+vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
+							   size_t xsize, size_t ysize,
+							   uint_fast8_t interpoints,
+							   uint_fast8_t intertype) :
+	HeritageMap(in,out,xsize,ysize,xsize*ysize*interpoints,
+				interpoints,intertype)
 {
 }
 

@@ -26,7 +26,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							   const InterpolationType it,
 							   const RotationCoordinates rt,
 							   bool interpol_saturating) :
-	HeritageMap(in,out,xsize,ysize,it*it,it),
+	HeritageMap(in,out,xsize,ysize,xsize*ysize*it*it/ROTMAP_SIZE,it*it,it),
 	_sat(interpol_saturating)
 {
 	// gridpoint matrix used for interpolation

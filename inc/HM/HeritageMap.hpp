@@ -49,6 +49,20 @@ public:
 	 * @param out
 	 * @param xsize
 	 * @param ysize
+	 * @param memsize number of hi (needed for memory optimization)
+	 * @param interpoints
+	 * @param intertype number of points used for interpolation
+	 */
+	HeritageMap(PhaseSpace* in, PhaseSpace* out,
+				size_t xsize, size_t ysize, size_t memsize,
+				uint_fast8_t interpoints, uint_fast8_t intertype);
+
+	/**
+	 * @brief HeritageMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
 	 * @param interpoints number of points used for interpolation
 	 */
 	HeritageMap(PhaseSpace* in, PhaseSpace* out,
