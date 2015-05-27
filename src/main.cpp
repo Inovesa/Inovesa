@@ -118,7 +118,10 @@ int main(int argc, char** argv)
 	}
 	ps_size = 256;
 
-	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
+	constexpr double qmax = 5.0;
+	constexpr double pmax = 5.0;
+
+	PhaseSpace mesh(ps_size,-qmax,qmax,-pmax,pmax);
 
 	#ifdef INOVESA_USE_PNG
 	if (usepng) {
@@ -133,9 +136,9 @@ int main(int argc, char** argv)
 		for (int x=0; x<int(ps_size); x++) {
 			for (int y=0; y<int(ps_size); y++) {
 				mesh[x][y] = std::exp(-std::pow((x-int(ps_size/2))
-												/(ps_size/10.),2)/2
+												/(ps_size/qmax),2)/2
 									  -std::pow((y-int(ps_size/2))
-												/(ps_size/10.),2)/2);
+												/(ps_size/pmax),2)/2);
 			}
 		}
 	}
@@ -167,7 +170,7 @@ int main(int argc, char** argv)
 	if (!usepng) {
 		KickMap km(&mesh_rotated,&mesh,ps_size,ps_size,
 				   HeritageMap::InterpolationType::cubic);
-		km.laser(2.0,4.0,0.2);
+		km.laser(2.0,0.1,0.2);
 		km.apply();
 	}
 
