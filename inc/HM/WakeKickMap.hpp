@@ -60,11 +60,6 @@ private:
 	 * @brief _wake (normalized) wake
 	 */
 	const std::vector<vfps::integral_t> _wake;
-
-	/**
-	 * @brief _wakeforce
-	 */
-	std::vector<vfps::meshaxis_t> _wakeforce;
 };
 
 } // namespace VFPS
