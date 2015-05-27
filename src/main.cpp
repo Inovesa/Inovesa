@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 	std::cout << "Building RotationMap." << std::endl;
 	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle,
 				   HeritageMap::InterpolationType::cubic,
-				   RotationMap::RotationCoordinates::norm_0_1,true);
+				   RotationMap::RotationCoordinates::norm_pm1,true);
 
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {

@@ -82,19 +82,15 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 				pcoord = (pp+0.5)*_ysize;
 				break;
 			case RotationCoordinates::norm_pm1:
-				qp = cos_dt*meshaxis_t(
-							(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
-							/static_cast<int>(_xsize))
-				   - sin_dt*meshaxis_t(
-							(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
-							/static_cast<int>(_ysize));
+				qp = cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
+							/static_cast<meshaxis_t>(_xsize)
+				   - sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
+							/static_cast<meshaxis_t>(_ysize);
 
-				pp = sin_dt*meshaxis_t(
-							(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
-							/static_cast<int>(_xsize))
-				   + cos_dt*meshaxis_t(
-							(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
-							/static_cast<int>(_ysize));
+				pp = sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
+							/static_cast<meshaxis_t>(_xsize)
+				   + cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
+							/static_cast<meshaxis_t>(_ysize);
 				qcoord = (qp+1)*_xsize/2;
 				pcoord = (pp+1)*_ysize/2;
 				break;
