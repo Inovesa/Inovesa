@@ -32,10 +32,6 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	#endif
 	  _meshxsize(xsize)
 {
-	// this one is 1D, delete 2 dimensional HM
-	delete [] _heritage_map;
-	_heritage_map = nullptr;
-
 	// the following doubles should be interpol_t
 	const double e1_2d = e1/(2.*in->getDelta(1));
 	const double e1_6d = e1/(6.*static_cast<double>(in->getDelta(1)));

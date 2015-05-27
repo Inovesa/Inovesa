@@ -37,6 +37,8 @@
  */
 #define INTEGRAL_TYPE 2
 
+#define ROTMAP_SIZE 2
+
 namespace vfps
 {
 #define FXP_FRACPART 28

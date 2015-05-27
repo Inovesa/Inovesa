@@ -45,7 +45,11 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	const meshaxis_t cos_dt = cos(angle);
 	const meshaxis_t sin_dt = -sin(angle);
 
+	#if ROTMAP_SIZE == 1
+	for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
+	#else // ROTMAP_SIZE == 2/4
 	for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
+	#endif
 		for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
 			// Cell of inverse image (qp,pp) of grid point i,j.
 			meshaxis_t qp; //q', backward mapping
@@ -177,14 +181,22 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	if (OCLH::active) {
 		_hi_buf = cl::Buffer(OCLH::context,
 							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-							 sizeof(hi)*_ip*_size,
+							 sizeof(hi)*_ip*_size/ROTMAP_SIZE,
 							 _hinfo);
 		if (_sat) {
 			if (it == InterpolationType::cubic) {
+				#if ROTMAP_SIZE == 1
 				applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
 				applyHM.setArg(0, _in->data_buf);
 				applyHM.setArg(1, _hi_buf);
 				applyHM.setArg(2, _out->data_buf);
+				#elif ROTMAP_SIZE == 2
+				applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4_2sat");
+				applyHM.setArg(0, _in->data_buf);
+				applyHM.setArg(1, _hi_buf);
+				applyHM.setArg(2, _size);
+				applyHM.setArg(3, _out->data_buf);
+				#endif
 			}
 		} else {
 			applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
@@ -208,20 +220,38 @@ void vfps::RotationMap::apply()
 {
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
-		HeritageMap::apply();
+		#ifdef INOVESA_SYNC_CL
+		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		#endif // INOVESA_SYNC_CL
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_size/ROTMAP_SIZE));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		#ifdef INOVESA_SYNC_CL
+		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		#endif // INOVESA_SYNC_CL
 	} else
 	#endif // INOVESA_USE_CL
 	{
 		meshdata_t* data_in = _in->getData();
 		meshdata_t* data_out = _out->getData();
 
-		for (meshindex_t i=0; i< _size/2; i++) {
+		for (meshindex_t i=0; i< _size/ROTMAP_SIZE; i++) {
 			data_out[i] = 0;
+			#if ROTMAP_SIZE > 1
 			data_out[_size-1-i] = 0;
+			#endif
 			for (uint_fast8_t j=0; j<_ip; j++) {
 				hi h = _hinfo[i*_ip+j];
 				data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+				#if ROTMAP_SIZE > 1
 				data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
+				#endif
 			}
 			if (_sat) {
 				// handle overshooting
@@ -235,7 +265,7 @@ void vfps::RotationMap::apply()
 				}
 				data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
 
-
+				#if ROTMAP_SIZE > 1
 				ceil=std::numeric_limits<meshdata_t>::min();
 				flor=std::numeric_limits<meshdata_t>::max();
 				for (size_t x=1; x<=2; x++) {
@@ -245,6 +275,7 @@ void vfps::RotationMap::apply()
 					}
 				}
 				data_out[_size-1-i] = std::max(std::min(ceil,data_out[_size-1-i]),flor);
+				#endif
 			}
 		}
 	}

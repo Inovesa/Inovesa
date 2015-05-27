@@ -20,6 +20,7 @@
 #ifndef ROTATIONMAP_HPP
 #define ROTATIONMAP_HPP
 
+#include "defines.hpp"
 #include "HeritageMap.hpp"
 
 namespace vfps
