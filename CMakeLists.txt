@@ -8,6 +8,7 @@ set(SRC_LIST
 			./src/CL/OpenCLHandler.cpp
 			./src/HM/HeritageMap.cpp
 			./src/HM/FokkerPlanckMap.cpp
+			./src/HM/KickMap.cpp
 			./src/HM/RotationMap.cpp
 			./src/HM/WakeKickMap.cpp
 			./src/IO/HDF5File.cpp
@@ -18,12 +19,13 @@ set(SRC_LIST
 )
 
 set(INC_LIST
-			./inc/CL/cl.hpp
+			./inc/CL/local_cl.hpp
 			./inc/CL/CLProgApplyHM.hpp
 			./inc/CL/CLProgs.hpp
 			./inc/CL/OpenCLHandler.hpp
 			./inc/HM/HeritageMap.hpp
 			./inc/HM/FokkerPlanckMap.hpp
+			./inc/HM/KickMap.hpp
 			./inc/HM/Identity.hpp
 			./inc/HM/RotationMap.hpp
 			./inc/HM/WakeKickMap.hpp
@@ -52,12 +54,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake")
 find_package(OpenCL)
 IF(OPENCL_FOUND)
 	add_definitions( -DINOVESA_USE_CL)
-	MESSAGE ("Found OpenCL. Will use it")
+	MESSAGE ("Found OpenCL. Will add support.")
 ENDIF()
 find_package(OpenGL)
 IF(OPENGL_FOUND)
 	add_definitions( -DINOVESA_USE_GUI)
-	MESSAGE ("Found OpenGL. Will use it")
+	MESSAGE ("Found OpenGL. Will add support.")
 	find_package(GLEW REQUIRED)
 	find_package(GLFW REQUIRED)
 	add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
@@ -67,7 +69,11 @@ find_package(GSL REQUIRED)
 find_package(GSL COMPONENTS linalg REQUIRED)
 find_package(Boost COMPONENTS filesystem program_options system REQUIRED)
 find_package(HDF5 COMPONENTS CXX REQUIRED)
-find_package(PNG REQUIRED)
+find_package(PNG)
+IF(PNG_FOUND)
+	add_definitions( -DINOVESA_USE_PNG)
+	MESSAGE ("Found PNG. Will add support.")
+ENDIF()
 
 include_directories(./inc
 	${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS}

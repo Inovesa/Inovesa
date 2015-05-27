@@ -45,12 +45,8 @@ typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
 #endif
 typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 
-#ifdef INOVESA_USE_CL
-#include "CL/cl.hpp"
-typedef cl_uint meshindex_t;
-#else
+// has to be uint32_t (same as cl_uint) for OpenCL support
 typedef uint32_t meshindex_t;
-#endif // INOVESA_USE_CL
 
 typedef float meshaxis_t;
 typedef fixp32 meshdata_t;

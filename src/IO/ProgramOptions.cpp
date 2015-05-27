@@ -21,7 +21,7 @@
 
 vfps::ProgramOptions::ProgramOptions() :
 	_cldevice(1),
-	_startdistpng("start.png"),
+	_startdistpng(""),
 	_configfile("default.cfg"),
 	outsteps(100),
 	steps(4000),
@@ -42,7 +42,8 @@ vfps::ProgramOptions::ProgramOptions() :
 		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
 		("tdamp,T", po::value<double>(&t_d),"Damping time")
 		("initial-dist,I", po::value<std::string>(&_startdistpng),
-			"grayscale png file containing initial particle density")
+			"grayscale png file containing initial particle density, "
+			"(choose '/dev/null' to generate initial particle density)")
 	;
 	_programopts_file.add_options()
 		("cldev", po::value<int>(&_cldevice)->default_value(1),
@@ -51,7 +52,7 @@ vfps::ProgramOptions::ProgramOptions() :
 			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
-			"name of file to safe resuults.")
+			"name of file to safe results.")
 	;
 	_programopts_cli.add_options()
 		#ifdef INOVESA_USE_CL
@@ -64,15 +65,15 @@ vfps::ProgramOptions::ProgramOptions() :
 			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
-			"name of file to safe resuults.")
+			"name of file to safe results.")
 	;
 	_simulopts.add_options()
 		("steps,N", po::value<unsigned int>(&steps),
-			"Number of steps for one synchrotron period (delta t=1/f_s)")
+			"Number of steps for one synchrotron period (delta t=1/(N*f_s))")
 		("outstep,n", po::value<unsigned int>(&outsteps),
-			"Save results every n steps")
+			"Save results/ update phase space view every n steps")
 		("rotations,R", po::value<float>(&rotations),
-			"Number of totations to do")
+			"Number of synchrotron periods to simulate")
 	;
 	_cfgfileopts.add(_physopts);
 	_cfgfileopts.add(_programopts_file);

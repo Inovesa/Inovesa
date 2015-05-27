@@ -19,7 +19,9 @@
 
 #include <climits>
 #include <iostream>
+#ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
+#endif
 #include <sstream>
 
 #include "defines.hpp"
@@ -29,6 +31,7 @@
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
+#include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
@@ -131,6 +134,13 @@ int main(int argc, char** argv)
 
 	const double e0 = 2.0/(f_s*t_d*steps);
 
+	if (!usepng) {
+		KickMap km(&mesh_rotated,&mesh,ps_size,ps_size,
+				   HeritageMap::InterpolationType::cubic);
+		km.laser(2.0,4.0,0.2);
+		km.apply();
+	}
+
 	std::cout << "Building FokkerPlanckMap." << std::endl;
 	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
 						FokkerPlanckMap::FPType::full,e0,
@@ -147,7 +157,7 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 	std::cout << "Starting the simulation." << std::endl;
-	for (unsigned int i=0;i<steps*rotations;i++) {
+	for (unsigned int i=0;i<=steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
 			if (OCLH::active) {

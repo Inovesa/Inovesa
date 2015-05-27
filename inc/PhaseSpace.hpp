@@ -81,7 +81,7 @@ public:
 
 	integral_t* projectionToY();
 
-	inline meshdata_t* operator[](const uint_fast8_t i) const
+	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }
 
 	PhaseSpace& operator=(PhaseSpace other);

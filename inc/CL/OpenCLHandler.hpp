@@ -23,7 +23,11 @@
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#include "CL/cl.hpp"
+#if defined(__APPLE__) || defined(__MACOSX)
+#include "CL/local_cl.hpp"
+#else
+#include <CL/cl.hpp>
+#endif
 
 #include <climits>
 #include <iostream>
