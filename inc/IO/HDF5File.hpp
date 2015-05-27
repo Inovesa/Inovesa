@@ -90,7 +90,7 @@ private:
 
 	H5::DSetCreatPropList ps_prop;
 
-	meshdata_t ps_size;
+	meshindex_t ps_size;
 };
 
 }
