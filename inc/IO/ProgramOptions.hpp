@@ -50,8 +50,8 @@ public:
 	inline bool showPhaseSpace() const
 		{ return _showphasespace; }
 
-	inline std::string getStartDistPNG() const
-		{ return _startdistpng; }
+	inline std::string getStartDistFile() const
+		{ return _startdistfile; }
 
 public:
 	inline unsigned int getOutSteps() const
@@ -78,7 +78,7 @@ private: // program parameters
 
 	bool _showphasespace;
 
-	std::string _startdistpng;
+	std::string _startdistfile;
 
 	std::string _configfile;
 

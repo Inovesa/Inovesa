@@ -21,7 +21,7 @@
 
 vfps::ProgramOptions::ProgramOptions() :
 	_cldevice(1),
-	_startdistpng(""),
+	_startdistfile(""),
 	_configfile("default.cfg"),
 	outsteps(100),
 	steps(4000),
@@ -41,9 +41,10 @@ vfps::ProgramOptions::ProgramOptions() :
 	_physopts.add_options()
 		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
 		("tdamp,T", po::value<double>(&t_d),"Damping time")
-		("initial-dist,I", po::value<std::string>(&_startdistpng),
-			"grayscale png file containing initial particle density, "
-			"(choose '/dev/null' to generate initial particle density)")
+		("initial-dist,I", po::value<std::string>(&_startdistfile),
+			"might be:\n"
+			"\tgrayscale png (.png) file containing initial particle density\n"
+			"\ttext file (.dat) containing normalized z/delta of particles")
 	;
 	_programopts_file.add_options()
 		("cldev", po::value<int>(&_cldevice)->default_value(1),
