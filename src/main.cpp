@@ -23,6 +23,7 @@
 #ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
 #endif
+#include <random>
 #include <sstream>
 
 #include "defines.hpp"
@@ -82,104 +83,36 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 
+
+	std::cout << "Generating initial particle distribution." << std::endl;
 	PhaseSpace* mesh;
-	meshindex_t ps_size;
+	meshindex_t ps_size = 512;
 	constexpr double qmax = 5.0;
 	constexpr double pmax = 5.0;
-	#ifdef INOVESA_USE_PNG
-	// load pattern to start with
-	png::image<png::gray_pixel_16> image;
-	std::string startdistfile = opts.getStartDistFile();
+	mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
 
-	if (startdistfile.length() <= 4) {
-		std::cout << "Input file name should have the format 'file.end'."
-				  << std::endl;
-		return EXIT_SUCCESS;
-	} else {
-		std::cout << "Reading in initial distribution from '"
-				  << startdistfile << "'." << std::endl;
-	}
+	std::random_device seed;
+	std::default_random_engine engine(seed());
 
-	// check for file ending .png
-	if (startdistfile.substr(startdistfile.length()-4) == ".png") {
-		try {
-			image.read(opts.getStartDistFile());
-		} catch ( const png::std_error &e ) {
-			std::cerr << e.what() << std::endl;
-			return EXIT_SUCCESS;
+	std::normal_distribution<> x(0.0,1.0);
+	std::normal_distribution<> y(0.0,1.0);
+
+	size_t nParticles = UINT16_MAX;
+
+	float amplitude = 2.0f;
+	float pulselen = 1.90e-3f;
+	float wavelen = 6.42e-5f;
+
+	for (unsigned int i=0; i<nParticles; i++) {
+		float xf = x(engine);
+		float yf = y(engine)
+						+ std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35),2))
+						* amplitude * std::sin(2*M_PI*xf/wavelen);
+		meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
+		meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
+		if (x < ps_size && y < ps_size) {
+			(*mesh)[x][y] += 2*M_PI*ps_size*ps_size/(qmax*pmax)/nParticles;
 		}
-		catch ( const png::error &e ) {
-			std::cerr << "Problem loading " << startdistfile
-					  << ": " << e.what() << std::endl;
-			return EXIT_SUCCESS;
-		}
-
-		if (image.get_width() == image.get_height()) {
-			ps_size = image.get_width();
-
-			mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
-
-			for (unsigned int x=0; x<ps_size; x++) {
-				for (unsigned int y=0; y<ps_size; y++) {
-					(*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
-				}
-			}
-		} else {
-			std::cerr << "Phase space has to be quadratic. Please adjust "
-					  << startdistfile << std::endl;
-
-			return EXIT_SUCCESS;
-		}
-	} else
-	#endif // INOVESA_USE_PNG
-	if (startdistfile.substr(startdistfile.length()-4) == ".dat") {
-		ps_size = 512;
-		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
-
-		std::ifstream ifs;
-		ifs.open(startdistfile);
-
-		ifs.unsetf(std::ios_base::skipws);
-
-		// count the newlines with an algorithm specialized for counting:
-		size_t line_count = std::count(
-			std::istream_iterator<char>(ifs),
-			std::istream_iterator<char>(),
-			'\n');
-
-		ifs.setf(std::ios_base::skipws);
-		ifs.clear();
-		ifs.seekg(0,ifs.beg);
-
-		while (ifs.good()) {
-			float xf,yf;
-			ifs >> xf >> yf;
-			meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
-			meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
-			if (x < ps_size && y < ps_size) {
-				(*mesh)[x][y] += 1.0/line_count;
-			}
-		}
-		ifs.close();
-
-		// normalize to higest peak
-		meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-		for (unsigned int x=0; x<ps_size; x++) {
-			for (unsigned int y=0; y<ps_size; y++) {
-				if ((*mesh)[x][y] > maxval) {
-					maxval = (*mesh)[x][y];
-				}
-			}
-		}
-		for (unsigned int x=0; x<ps_size; x++) {
-			for (unsigned int y=0; y<ps_size; y++) {
-				(*mesh)[x][y] /= maxval;
-			}
-		}
-	} else {
-		std::cout << "Unknown format of input file. Will now quit."
-				  << std::endl;
-		return EXIT_SUCCESS;
 	}
 
 	HDF5File file(opts.getOutFile(),ps_size);
