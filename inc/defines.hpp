@@ -20,6 +20,7 @@
 #ifndef DEFINES_HPP
 #define DEFINES_HPP
 
+#include <chrono>
 #include <string>
 
 #include "fixed_point.h"
@@ -41,6 +42,8 @@
 
 namespace vfps
 {
+static std::chrono::milliseconds start_time;
+
 #define FXP_FRACPART 28
 #if FXP_FRACPART < 31
 typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;

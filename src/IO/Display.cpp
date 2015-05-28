@@ -17,7 +17,7 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#include "Display.hpp"
+#include "IO/Display.hpp"
 #ifdef INOVESA_USE_GUI
 
 Display::Display() :
@@ -246,6 +246,22 @@ void Display::draw() {
 	#endif
 	glfwPollEvents();
 }
+
+#endif // INOVESA_USE_GUI
+
+void Display::printText(std::string txt)
+{
+	std::chrono::milliseconds runtime
+			= std::chrono::system_clock::now().time_since_epoch()
+			- vfps::start_time;
+
+	std::cout << "[ "
+			  << " ]: "
+			  << txt
+			  << std::endl;
+}
+
+#ifdef INOVESA_USE_GUI
 
 GLuint Display::LoadShaders(const char* vertex_file_path,
 							const char* fragment_file_path){

@@ -26,7 +26,7 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "Display.hpp"
+#include "IO/Display.hpp"
 #include "PhaseSpace.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
@@ -41,6 +41,8 @@ using namespace vfps;
 
 int main(int argc, char** argv)
 {
+	start_time = std::chrono::system_clock::now().time_since_epoch();
+
 	ProgramOptions opts;
 
 	try {
@@ -58,9 +60,8 @@ int main(int argc, char** argv)
 		try {
 			prepareCLEnvironment();
 		} catch (cl::Error& e) {
-			std::cerr << e.what() << std::endl;
-			std::cout << "Will fall back to sequential version."
-					  << std::endl;
+			Display::printText(e.what());
+			Display::printText("Will fall back to sequential version.");
 			OCLH::active = false;
 		}
 	}
@@ -73,9 +74,8 @@ int main(int argc, char** argv)
 				prepareCLDevice(opts.getCLDevice()-1);
 				prepareCLProgs();
 			} catch (cl::Error& e) {
-				std::cerr << e.what() << std::endl;
-				std::cout << "Will fall back to sequential version."
-						  << std::endl;
+				Display::printText(e.what());
+				Display::printText("Will fall back to sequential version.");
 				OCLH::active = false;
 			}
 		}
@@ -92,12 +92,11 @@ int main(int argc, char** argv)
 	std::string startdistfile = opts.getStartDistFile();
 
 	if (startdistfile.length() <= 4) {
-		std::cout << "Input file name should have the format 'file.end'."
-				  << std::endl;
+		Display::printText("Input file name should have the format 'file.end'.");
 		return EXIT_SUCCESS;
 	} else {
-		std::cout << "Reading in initial distribution from '"
-				  << startdistfile << "'." << std::endl;
+		Display::printText("Reading in initial distribution from '"
+						   +startdistfile+"'.");
 	}
 
 	// check for file ending .png
@@ -177,8 +176,7 @@ int main(int argc, char** argv)
 			}
 		}
 	} else {
-		std::cout << "Unknown format of input file. Will now quit."
-				  << std::endl;
+		Display::printText("Unknown format of input file. Will now quit.");
 		return EXIT_SUCCESS;
 	}
 
@@ -206,12 +204,12 @@ int main(int argc, char** argv)
 
 	const double e0 = 2.0/(f_s*t_d*steps);
 
-	std::cout << "Building FokkerPlanckMap." << std::endl;
+	Display::printText("Building FokkerPlanckMap.");
 	FokkerPlanckMap fpm(&mesh_rotated,mesh,ps_size,ps_size,
 						FokkerPlanckMap::FPType::full,e0,
 						FokkerPlanckMap::DerivationType::cubic);
 
-	std::cout << "Building RotationMap." << std::endl;
+	Display::printText("Building RotationMap.");
 	RotationMap rm(mesh,&mesh_rotated,ps_size,ps_size,angle,
 				   HeritageMap::InterpolationType::cubic,
 				   RotationMap::RotationCoordinates::norm_pm1,true);
@@ -221,7 +219,7 @@ int main(int argc, char** argv)
 		mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	}
 	#endif // INOVESA_USE_CL
-	std::cout << "Starting the simulation." << std::endl;
+	Display::printText("Starting the simulation.");
 	for (unsigned int i=0;i<=steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
@@ -238,8 +236,9 @@ int main(int argc, char** argv)
 			} else
 			#endif
 			{
-			std::cout << static_cast<float>(i)/steps << '/'
-					  << rotations << std::endl;
+				std::stringstream status;
+				status << static_cast<float>(i)/steps << '/' << rotations;
+				Display::printText(status.str());
 			}
 		}
 		rm.apply();
