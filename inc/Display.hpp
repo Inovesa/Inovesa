@@ -20,6 +20,9 @@
 #ifndef DISPLAY_HPP
 #define DISPLAY_HPP
 
+#include "defines.hpp"
+#ifdef INOVESA_USE_GUI
+
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -76,4 +79,6 @@ private:
 	glm::mat4 MVP;
 };
 
+#endif // INOVESA_USE_GUI
 #endif // DISPLAY_HPP
+

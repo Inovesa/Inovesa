@@ -20,152 +20,160 @@
 #include "HM/FokkerPlanckMap.hpp"
 
 vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
-									   const unsigned int xsize,
-									   const unsigned int ysize,
-									   FPType fpt, double e1)
+									   const meshindex_t xsize,
+									   const meshindex_t ysize,
+									   FPType fpt, double e1,
+									   DerivationType dt)
 	:
 	#if DERIVATION_TYPE == 1 // have to use type 2 for second derivative
-	  HeritageMap(in, out, xsize, ysize, 3)
+	  HeritageMap(in, out, 1, ysize, 3,3),
 	#else
-	  HeritageMap(in, out, xsize, ysize, DERIVATION_TYPE+1)
+	  HeritageMap(in, out, 1, ysize, dt, dt),
 	#endif
+	  _meshxsize(xsize)
 {
-	#if DERIVATION_TYPE == 1
-	// the following doubles should be interpol_t
-	const double e1_1d = e1/(in->getDelta(1));
-	const double e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
-	for (meshindex_t i=0; i< _xsize; i++) {
-		_heritage_map[i][0][0] = {0,0};
-		_heritage_map[i][0][1] = {0,0};
-		_heritage_map[i][0][2] = {0,0};
-		for (meshindex_t j=1; j< _ysize-2; j++) {
-			_heritage_map[i][j][0]={i*_ysize+j-1,0};
-			_heritage_map[i][j][1]={i*_ysize+j  ,1};
-			_heritage_map[i][j][2]={i*_ysize+j+1,0};
-		}
-		if (fpt == FPType::full || fpt == FPType::damping_only) {
-			for (uint16_t j=1; j<_ysize/2; j++) {
-				const double pos = in->x(1,j);
-				_heritage_map[i][j][0].weight +=   -e1_1d*pos;
-				_heritage_map[i][j][1].weight += e1+e1_1d*pos;
-			}
-			for (uint16_t j=_ysize/2; j< _ysize-1; j++) {
-				const double pos = in->x(1,j);
-				_heritage_map[i][j][1].weight += e1-e1_1d*pos;
-				_heritage_map[i][j][2].weight +=    e1_1d*pos;
-			}
-		}
-		for (meshindex_t j=1; j< _ysize-2; j++) {
-			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-				_heritage_map[i][j][0].weight +=    e1_d2;
-				_heritage_map[i][j][1].weight += -2*e1_d2;
-				_heritage_map[i][j][2].weight +=    e1_d2;
-			}
-		}
-		_heritage_map[i][_ysize-1][0] = {0,0};
-		_heritage_map[i][_ysize-1][1] = {0,0};
-		_heritage_map[i][_ysize-1][2] = {0,0};
-	}
-	#elif DERIVATION_TYPE == 2
 	// the following doubles should be interpol_t
 	const double e1_2d = e1/(2.*in->getDelta(1));
-	const double e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
-	for (meshindex_t i=0; i< _xsize; i++) {
-		_heritage_map[i][0][0] = {0,0};
-		_heritage_map[i][0][1] = {0,0};
-		_heritage_map[i][0][2] = {0,0};
-		for (meshindex_t j=1; j< _ysize-1; j++) {
-			_heritage_map[i][j][0]={i*_ysize+j-1,0};
-			_heritage_map[i][j][1]={i*_ysize+j  ,1};
-			_heritage_map[i][j][2]={i*_ysize+j+1,0};
-
-			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				const double pos = in->x(1,j);
-				_heritage_map[i][j][0].weight += -e1_2d*pos;
-				_heritage_map[i][j][1].weight +=  e1;
-				_heritage_map[i][j][2].weight += +e1_2d*pos;
-			}
-			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-				_heritage_map[i][j][0].weight +=    e1_d2;
-				_heritage_map[i][j][1].weight += -2*e1_d2;
-				_heritage_map[i][j][2].weight +=    e1_d2;
-			}
-		}
-		_heritage_map[i][_ysize-1][0] = {0,0};
-		_heritage_map[i][_ysize-1][1] = {0,0};
-		_heritage_map[i][_ysize-1][2] = {0,0};
-	}
-	#elif DERIVATION_TYPE == 3
-	// the following doubles should be interpol_t
 	const double e1_6d = e1/(6.*static_cast<double>(in->getDelta(1)));
 	const double e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
-	for (meshindex_t i=0; i< _xsize; i++) {
-		_heritage_map[i][0][0] = {0,0};
-		_heritage_map[i][0][1] = {0,0};
-		_heritage_map[i][0][2] = {0,0};
-		_heritage_map[i][0][3] = {0,0};
-		_heritage_map[i][1][0] = {0,0};
-		_heritage_map[i][1][1] = {0,0};
-		_heritage_map[i][1][2] = {0,0};
-		_heritage_map[i][1][3] = {0,0};
+
+	switch (dt) {
+	case DerivationType::two_sided:
+		for (meshindex_t i=0; i< _meshxsize; i++) {
+			_hinfo[0] = {0,0};
+			_hinfo[1] = {0,0};
+			_hinfo[2] = {0,0};
+			for (meshindex_t j=1; j< _ysize-1; j++) {
+				_hinfo[j*_ip  ]={j-1,0};
+				_hinfo[j*_ip+1]={j  ,1};
+				_hinfo[j*_ip+2]={j+1,0};
+
+				if (fpt == FPType::full || fpt == FPType::damping_only) {
+					const double pos = in->x(1,j);
+					_hinfo[j*_ip  ].weight += -e1_2d*pos;
+					_hinfo[j*_ip+1].weight +=  e1;
+					_hinfo[j*_ip+2].weight += +e1_2d*pos;
+				}
+				if (fpt == FPType::full || fpt == FPType::diffusion_only) {
+					_hinfo[j*_ip  ].weight +=    e1_d2;
+					_hinfo[j*_ip+1].weight += -2*e1_d2;
+					_hinfo[j*_ip+2].weight +=    e1_d2;
+				}
+			}
+			_hinfo[(_ysize-1)*_ip+0] = {0,0};
+			_hinfo[(_ysize-1)*_ip+1] = {0,0};
+			_hinfo[(_ysize-1)*_ip+2] = {0,0};
+		}
+		break;
+	case DerivationType::cubic:
+		_hinfo[0] = {0,0};
+		_hinfo[1] = {0,0};
+		_hinfo[2] = {0,0};
+		_hinfo[3] = {0,0};
+		_hinfo[_ip+0] = {0,0};
+		_hinfo[_ip+1] = {0,0};
+		_hinfo[_ip+2] = {0,0};
+		_hinfo[_ip+3] = {0,0};
 		for (meshindex_t j=2; j< _ysize/2; j++) {
 			const double pos = in->x(1,j);
-			_heritage_map[i][j][0]={i*_ysize+j-2,0};
-			_heritage_map[i][j][1]={i*_ysize+j-1,0};
-			_heritage_map[i][j][2]={i*_ysize+j  ,1};
-			_heritage_map[i][j][3]={i*_ysize+j+1,0};
+			_hinfo[j*_ip  ]={j-2,0};
+			_hinfo[j*_ip+1]={j-1,0};
+			_hinfo[j*_ip+2]={j  ,1};
+			_hinfo[j*_ip+3]={j+1,0};
 			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				_heritage_map[i][j][0].weight +=    e1_6d*( 1.)*pos;
-				_heritage_map[i][j][1].weight +=    e1_6d*(-6.)*pos;
-				_heritage_map[i][j][2].weight += e1+e1_6d*( 3.)*pos;
-				_heritage_map[i][j][3].weight +=    e1_6d*( 2.)*pos;
+				_hinfo[j*_ip  ].weight +=    e1_6d*( 1.)*pos;
+				_hinfo[j*_ip+1].weight +=    e1_6d*(-6.)*pos;
+				_hinfo[j*_ip+2].weight += e1+e1_6d*( 3.)*pos;
+				_hinfo[j*_ip+3].weight +=    e1_6d*( 2.)*pos;
 			}
 			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-				_heritage_map[i][j][1].weight +=    e1_d2;
-				_heritage_map[i][j][2].weight += -2*e1_d2;
-				_heritage_map[i][j][3].weight +=    e1_d2;
+				_hinfo[j*_ip+1].weight +=    e1_d2;
+				_hinfo[j*_ip+2].weight += -2*e1_d2;
+				_hinfo[j*_ip+3].weight +=    e1_d2;
 			}
 		}
 		for (meshindex_t j=_ysize/2; j<static_cast<meshindex_t>(_ysize-2);j++) {
 			const double pos = in->x(1,j);
-			_heritage_map[i][j][0]={i*_ysize+j-1,0};
-			_heritage_map[i][j][1]={i*_ysize+j  ,1};
-			_heritage_map[i][j][2]={i*_ysize+j+1,0};
-			_heritage_map[i][j][3]={i*_ysize+j+2,0};
+			_hinfo[j*_ip  ]={j-1,0};
+			_hinfo[j*_ip+1]={j  ,1};
+			_hinfo[j*_ip+2]={j+1,0};
+			_hinfo[j*_ip+3]={j+2,0};
 
 			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				_heritage_map[i][j][0].weight +=    e1_6d*(-2.)*pos;
-				_heritage_map[i][j][1].weight += e1+e1_6d*(-3.)*pos;
-				_heritage_map[i][j][2].weight +=    e1_6d*( 6.)*pos;
-				_heritage_map[i][j][3].weight +=    e1_6d*(-1.)*pos;
+				_hinfo[j*_ip  ].weight +=    e1_6d*(-2.)*pos;
+				_hinfo[j*_ip+1].weight += e1+e1_6d*(-3.)*pos;
+				_hinfo[j*_ip+2].weight +=    e1_6d*( 6.)*pos;
+				_hinfo[j*_ip+3].weight +=    e1_6d*(-1.)*pos;
 			}
 			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-				_heritage_map[i][j][0].weight +=    e1_d2;
-				_heritage_map[i][j][1].weight += -2*e1_d2;
-				_heritage_map[i][j][2].weight +=    e1_d2;
+				_hinfo[j*_ip  ].weight +=    e1_d2;
+				_hinfo[j*_ip+1].weight += -2*e1_d2;
+				_hinfo[j*_ip+2].weight +=    e1_d2;
 			}
 		}
-		_heritage_map[i][_ysize-2][0] = {0,0};
-		_heritage_map[i][_ysize-2][1] = {0,0};
-		_heritage_map[i][_ysize-2][2] = {0,0};
-		_heritage_map[i][_ysize-2][3] = {0,0};
-		_heritage_map[i][_ysize-1][0] = {0,0};
-		_heritage_map[i][_ysize-1][1] = {0,0};
-		_heritage_map[i][_ysize-1][2] = {0,0};
-		_heritage_map[i][_ysize-1][3] = {0,0};
+		_hinfo[(_ysize-2)*_ip  ] = {0,0};
+		_hinfo[(_ysize-2)*_ip+1] = {0,0};
+		_hinfo[(_ysize-2)*_ip+2] = {0,0};
+		_hinfo[(_ysize-2)*_ip+3] = {0,0};
+		_hinfo[(_ysize-1)*_ip+0] = {0,0};
+		_hinfo[(_ysize-1)*_ip+1] = {0,0};
+		_hinfo[(_ysize-1)*_ip+2] = {0,0};
+		_hinfo[(_ysize-1)*_ip+3] = {0,0};
+		break;
 	}
-	#endif
 
 	#ifdef INOVESA_USE_CL
-	_hi_buf = cl::Buffer(OCLH::context,
-						 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-						 sizeof(hi)*_ip*_size,
-						 _hinfo);
-	applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
-	applyHM.setArg(0, _in->data_buf);
-	applyHM.setArg(1, _hi_buf);
-	applyHM.setArg(2, _ip);
-	applyHM.setArg(3, _out->data_buf);
-	#endif
+	if (OCLH::active) {
+		_hi_buf = cl::Buffer(OCLH::context,
+							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+							 sizeof(hi)*_ip*_ysize,
+							 _hinfo);
+		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM_Y");
+		applyHM.setArg(0, _in->data_buf);
+		applyHM.setArg(1, _hi_buf);
+		applyHM.setArg(2, _ip);
+		applyHM.setArg(3, _ysize);
+		applyHM.setArg(4, _out->data_buf);
+	}
+#endif
+}
+
+void vfps::FokkerPlanckMap::apply()
+{
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		#ifdef INOVESA_SYNC_CL
+		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		#endif // INOVESA_SYNC_CL
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_meshxsize,_ysize));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		#ifdef INOVESA_SYNC_CL
+		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		#endif // INOVESA_SYNC_CL
+	} else
+	#endif // INOVESA_USE_CL
+	{
+		meshdata_t* data_in = _in->getData();
+		meshdata_t* data_out = _out->getData();
+
+		for (meshindex_t x=0; x< _meshxsize; x++) {
+			const meshindex_t offs = x*_ysize;
+			for (meshindex_t y=0; y< _ysize; y++) {
+				data_out[offs+y] = 0;
+				for (uint_fast8_t j=0; j<_ip; j++) {
+					hi h = _hinfo[y*_ip+j];
+					data_out[offs+y] += data_in[offs+h.index]
+								*static_cast<meshdata_t>(h.weight);
+				}
+			}
+		}
+	}
 }
 

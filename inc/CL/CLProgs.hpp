@@ -19,9 +19,11 @@
 
 #ifndef CLPROGS_HPP
 #define CLPROGS_HPP
+#ifdef INOVESA_USE_CL
 
 #include "CLProgApplyHM.hpp"
 
 void prepareCLProgs();
 
+#endif // INOVESA_USE_CL
 #endif // CLPROGS_HPP

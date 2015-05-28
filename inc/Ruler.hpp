@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "defines.hpp"
+
 namespace vfps
 {
 
@@ -30,7 +32,7 @@ template <class data_t>
 class Ruler
 {
 public:
-    Ruler(unsigned int steps, data_t min, data_t max) :
+	Ruler(meshindex_t steps, data_t min, data_t max) :
         _steps(steps),
         _max(max),
         _min(min),
@@ -41,7 +43,7 @@ public:
         }
         data_t* data_tmp = new data_t[_steps];
 
-        for (unsigned int i=0; i<_steps; i++){
+		for (meshindex_t i=0; i<_steps; i++){
             data_tmp[i] = _min+(i*_delta);
         }
 
@@ -67,19 +69,19 @@ public:
     inline const data_t getMax() const
         {return _max;}
 
-    inline const data_t getMin() const
+	inline const data_t getMin() const
         {return _min;}
 
-	inline unsigned int getNSteps() const
+	inline meshindex_t getNSteps() const
         {return _steps;}
 
-    inline const data_t getDelta() const
+	inline const data_t getDelta() const
         {return _delta;}
 
 	inline const data_t size() const
 		{ return _max - _min; }
 
-    inline const data_t& operator[](unsigned int d) const
+	inline const data_t& operator[](meshindex_t d) const
         {return _data[d];}
 
     /**
@@ -99,13 +101,13 @@ public:
 protected:
     const data_t* _data;
 
-    const unsigned int _steps;
+	const meshindex_t _steps;
 
     const data_t _max;
 
     const data_t _min;
 
-    const data_t _delta;
+	const data_t _delta;
 };
 
 }

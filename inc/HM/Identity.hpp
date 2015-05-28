@@ -29,8 +29,8 @@ class Identity : public HeritageMap
 {
 public:
 	Identity(	PhaseSpace* in, PhaseSpace* out,
-				const unsigned int xsize, const unsigned int ysize) :
-		HeritageMap(in, out, xsize, ysize, 0) {}
+				const meshindex_t xsize, const meshindex_t ysize) :
+		HeritageMap(in, out, xsize, ysize, 0, 0) {}
 
 	/**
 	 * @brief apply copys data from in to out
@@ -38,6 +38,7 @@ public:
 	void apply()
 	{
 	#ifdef INOVESA_USE_CL
+		if (OCLH::active) {
 	#ifdef INOVESA_SYNC_CL
 	_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
 	#endif // INOVESA_SYNC_CL
@@ -52,13 +53,14 @@ public:
 	#ifdef INOVESA_SYNC_CL
 	_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
 	#endif // INOVESA_SYNC_CL
-	#else // INOVESA_USE_CL
-	meshdata_t* data_in = _in->getData();
-	meshdata_t* data_out = _out->getData();
-
-	std::copy_n(data_in,sizeof(meshdata_t)*_xsize,data_out);
-
+		} else
 	#endif // INOVESA_USE_CL
+		{
+			meshdata_t* data_in = _in->getData();
+			meshdata_t* data_out = _out->getData();
+
+			std::copy_n(data_in,sizeof(meshdata_t)*_xsize,data_out);
+		}
 	}
 };
 

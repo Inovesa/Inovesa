@@ -27,10 +27,8 @@
 
 #define INOVESA_VERSION_RELEASE	0
 #define INOVESA_VERSION_MINOR	6
-#define INOVESA_VERSION_FIX		1
+#define INOVESA_VERSION_FIX		2
 
-#define INOVESA_USE_GUI
-//#define INOVESA_USE_CL
 //#define INOVESA_SYNC_CL
 
 /**
@@ -40,48 +38,17 @@
  */
 #define INTEGRAL_TYPE 2
 
-/**
-  * possible choices are:
-  * 1: no interpolation
-  * 2: linear interpolation
-  * 3: quadratic interpolation
-  * 4: cubic interpolation
-  */
-#define INTERPOL_TYPE 4
-
-/**
-  * possible choices are:
-  * 0: no saturation
-  * 1: crop at maximum neigbouring value
-  */
-#define INTERPOL_SATURATING 1
-
-/**
- * possible choices are:
- * 1: rotate on mesh
- * 2: normalized space between 0 and 1
- * 3: normalized space between -1 and +1
- */
-#define ROTATION_TYPE 2
-
-/**
-  * possible choices are:
-  * 1:	single-sided (only for first derivative),
-  *		will "fall back" to 2 for second derivative
-  * 2: two-sided (based on quadratic interpolation)
-  * 3: based on cubic interpolation
-  */
-#define DERIVATION_TYPE 3
+#define ROTMAP_SIZE 2
 
 namespace vfps
 {
-#define FXP_FRACPART 54
+#define FXP_FRACPART 28
 #if FXP_FRACPART < 31
 typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
 #endif
 typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 
-// has to be uint32_t for OpenCL
+// has to be uint32_t (same as cl_uint) for OpenCL support
 typedef uint32_t meshindex_t;
 
 typedef double csrpower_t;

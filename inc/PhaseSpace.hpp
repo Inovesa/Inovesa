@@ -46,7 +46,7 @@ public:
 
 	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
 
-	PhaseSpace(unsigned int ps_size,
+	PhaseSpace(meshindex_t ps_size,
 			   meshaxis_t xmin, meshaxis_t xmax,
 			   meshaxis_t ymin, meshaxis_t ymax);
 
@@ -62,13 +62,13 @@ public:
 	inline meshdata_t* getData() const
 	{ return _data1D; }
 
-	inline meshaxis_t getDelta(const unsigned int x) const
+	inline meshaxis_t getDelta(const uint_fast8_t x) const
 	{ return _axis[x].getDelta(); }
 
-	inline meshaxis_t getMax(const unsigned int x) const
+	inline meshaxis_t getMax(const uint_fast8_t x) const
 	{ return _axis[x].getMax(); }
 
-	inline meshaxis_t getMin(const unsigned int x) const
+	inline meshaxis_t getMin(const uint_fast8_t x) const
 	{ return _axis[x].getMin(); }
 
 	/**
@@ -79,35 +79,35 @@ public:
 	inline const Ruler<meshaxis_t>* getRuler(const uint_fast8_t x) const
 	{ return &(_axis[x]); }
 
-	meshdata_t average(const unsigned int axis);
+	meshdata_t average(const uint_fast8_t axis);
 
 	integral_t* integral();
 
-	meshdata_t variance(const unsigned int axis);
+	meshdata_t variance(const uint_fast8_t axis);
 
 	const integral_t* getProjection(const uint_fast8_t x) const
 	{ return _projection[x]; }
 
-	integral_t* doProjectionToX();
+	integral_t* projectionToX();
 
-	integral_t* doProjectionToY();
+	integral_t* projectionToY();
 
-	inline meshdata_t* operator[](const unsigned int i) const
+	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }
 
 	PhaseSpace& operator=(PhaseSpace other);
 
-	inline unsigned int nMeshCells() const
+	inline size_t nMeshCells() const
 	{ return _axis[0].getNSteps()*_axis[1].getNSteps(); }
 
-	inline unsigned int nMeshCells(const unsigned int x) const
+	inline size_t nMeshCells(const uint_fast8_t x) const
 	{ return _axis[x].getNSteps(); }
 
-	inline meshaxis_t size(const unsigned int x) const
+	inline meshaxis_t size(const uint_fast8_t x) const
 	{ return _axis[x].size(); }
 
-	inline meshaxis_t x(const unsigned int axis,
-							  const unsigned int n) const
+	inline meshaxis_t x(const uint_fast8_t axis,
+						const size_t n) const
 	{ return _axis[axis][n]; }
 
 	/**
@@ -131,6 +131,8 @@ protected:
 	integral_t _integral;
 
 	const std::array<integral_t*,2> _projection;
+
+	size_t _nmeshcells;
 
 	meshdata_t** _data;
 

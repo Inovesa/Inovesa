@@ -19,7 +19,7 @@
 
 #include "IO/HDF5File.hpp"
 
-vfps::HDF5File::HDF5File(std::string fname, const uint16_t ps_size) :
+vfps::HDF5File::HDF5File(std::string fname, const meshindex_t ps_size) :
 	file( nullptr ),
 	fname( fname ),
 	bc_dims(0),
@@ -178,13 +178,13 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 	delete memspace;
 	memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
 	if (std::is_same<vfps::integral_t,float>::value) {
-		bp_dataset->write(ps->doProjectionToX(), H5::PredType::NATIVE_FLOAT,
+		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_FLOAT,
 						  *memspace, *filespace);
 	} else if (std::is_same<vfps::integral_t,fixp64>::value) {
-		bp_dataset->write(ps->doProjectionToX(), H5::PredType::NATIVE_INT64,
+		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_INT64,
 						  *memspace, *filespace);
 	} else if (std::is_same<vfps::integral_t,double>::value) {
-		bp_dataset->write(ps->doProjectionToX(), H5::PredType::NATIVE_DOUBLE,
+		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_DOUBLE,
 						  *memspace, *filespace);
 	}
 

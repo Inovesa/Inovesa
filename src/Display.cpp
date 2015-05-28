@@ -18,6 +18,7 @@
 /******************************************************************************/
 
 #include "Display.hpp"
+#ifdef INOVESA_USE_GUI
 
 Display::Display() :
 	#if GLFW_VERSION_MAJOR == 3
@@ -336,3 +337,7 @@ GLuint Display::LoadShaders(const char* vertex_file_path,
 
 	return ProgramID;
 }
+
+
+#endif // INOVESA_USE_GUI
+

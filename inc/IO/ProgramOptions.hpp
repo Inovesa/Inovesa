@@ -41,14 +41,17 @@ public:
 
 	bool parse(int argc, char** argv);
 
-	inline unsigned int getCLDevice() const
+	inline int getCLDevice() const
 		{ return _cldevice; }
 
 	inline std::string getOutFile() const
 		{ return _outfile; }
 
-	inline std::string getStartDistPNG() const
-		{ return _startdistpng; }
+	inline bool showPhaseSpace() const
+		{ return _showphasespace; }
+
+	inline std::string getStartDistFile() const
+		{ return _startdistfile; }
 
 public:
 	inline unsigned int getOutSteps() const
@@ -69,11 +72,13 @@ public:
 		{ return t_d; }
 
 private: // program parameters
-	unsigned int _cldevice;
+	int _cldevice;
 
 	std::string _outfile;
 
-	std::string _startdistpng;
+	bool _showphasespace;
+
+	std::string _startdistfile;
 
 	std::string _configfile;
 

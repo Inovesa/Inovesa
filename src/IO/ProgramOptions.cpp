@@ -20,8 +20,8 @@
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
-	_cldevice(0),
-	_startdistpng("start.png"),
+	_cldevice(1),
+	_startdistfile(""),
 	_configfile("default.cfg"),
 	outsteps(100),
 	steps(4000),
@@ -41,34 +41,40 @@ vfps::ProgramOptions::ProgramOptions() :
 	_physopts.add_options()
 		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
 		("tdamp,T", po::value<double>(&t_d),"Damping time")
-		("initial-dist,I", po::value<std::string>(&_startdistpng),
-			"grayscale png file containing initial particle density")
+		("initial-dist,I", po::value<std::string>(&_startdistfile),
+			"might be:\n"
+			"\tgrayscale png (.png) file containing initial particle density\n"
+			"\ttext file (.dat) containing normalized z/delta of particles")
 	;
 	_programopts_file.add_options()
-		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
+		("cldev", po::value<int>(&_cldevice)->default_value(1),
 			"OpenCL device to use ('0' lists available devices)")
+		("gui", po::value<bool>(&_showphasespace)->default_value(true),
+			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
-			"name of file to safe resuults.")
+			"name of file to safe results.")
 	;
 	_programopts_cli.add_options()
 		#ifdef INOVESA_USE_CL
-		("cldev", po::value<unsigned int>(&_cldevice)->default_value(0),
+		("cldev", po::value<int>(&_cldevice)->default_value(1),
 			"OpenCL device to use ('0' lists available devices)")
 		#endif // INOVESA_USE_CL
 		("config,c", po::value<std::string>(&_configfile),
 			"name of a file containing a configuration.")
+		("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
-			"name of file to safe resuults.")
+			"name of file to safe results.")
 	;
 	_simulopts.add_options()
 		("steps,N", po::value<unsigned int>(&steps),
-			"Number of steps for one revolution (delta t=1/f_s)")
+			"Number of steps for one synchrotron period (delta t=1/(N*f_s))")
 		("outstep,n", po::value<unsigned int>(&outsteps),
-			"Save results every n steps")
+			"Save results/ update phase space view every n steps")
 		("rotations,R", po::value<float>(&rotations),
-			"Number of totations to do")
+			"Number of synchrotron periods to simulate")
 	;
 	_cfgfileopts.add(_physopts);
 	_cfgfileopts.add(_programopts_file);

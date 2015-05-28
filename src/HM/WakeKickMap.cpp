@@ -21,21 +21,29 @@
 
 vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 					const unsigned int xsize, const unsigned int ysize,
-					const std::vector<integral_t> wake) :
-	HeritageMap(in,out,xsize,ysize,INTERPOL_TYPE),
+					const std::vector<integral_t> wake,
+					const InterpolationType it) :
+	KickMap(in,out,xsize,ysize,it),
 	_wake(wake)
 {
 }
 
 void vfps::WakeKickMap::apply()
 {
-	integral_t* density = _in->doProjectionToX();
+	integral_t* density = _in->projectionToX();
 	for (unsigned int i=0;i<_xsize;i++) {
-		_wakeforce[i] = 0;
+		_force[i] = 0;
 		for (unsigned int j=0;j<_xsize;j++) {
-			_wakeforce[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
+			_force[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
 		}
 	}
+
+	// gridpoint matrix used for interpolation
+	hi* ph = new hi[_it];
+
+	// arrays of interpolation coefficients
+	interpol_t* hmc = new interpol_t[_it];
+
 	// translate force into HM
 	for (unsigned int q_i=0; q_i< _xsize; q_i++) {
 		for(unsigned int p_i=0; p_i< _ysize; p_i++) {
@@ -45,29 +53,27 @@ void vfps::WakeKickMap::apply()
 			//Scaled arguments of interpolation functions:
 			unsigned int jd; //numper of lower mesh point from p'
 			interpol_t xip; //distance of p' from lower mesh point
-			pcoord = _wakeforce[q_i];
+			pcoord = _force[q_i];
 			xip = std::modf(pcoord, &qp_int);
 			jd = qp_int;
 
 			if (jd < _ysize)
 			{
-				// gridpoint matrix used for interpolation
-				std::array<hi,INTERPOL_TYPE> ph;
-
-				// arrays of interpolation coefficients
-				std::array<interpol_t,INTERPOL_TYPE> hmc;
-
 				// create vectors containing interpolation coefficiants
-				#if INTERPOL_TYPE == 1
+				switch (_it) {
+				case InterpolationType::none:
 					hmc[0] = 1;
-				#elif INTERPOL_TYPE == 2
+					break;
+				case InterpolationType::linear:
 					hmc[0] = interpol_t(1)-xip;
 					hmc[1] = xip;
-				#elif INTERPOL_TYPE == 3
+					break;
+				case InterpolationType::quadratic:
 					hmc[0] = xip*(xip-interpol_t(1))/interpol_t(2);
 					hmc[1] = interpol_t(1)-xip*xip;
 					hmc[2] = xip*(xip+interpol_t(1))/interpol_t(2);
-				#elif INTERPOL_TYPE == 4
+					break;
+				case InterpolationType::cubic:
 					hmc[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
 							* interpol_t(-1./6.);
 					hmc[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
@@ -76,14 +82,15 @@ void vfps::WakeKickMap::apply()
 							/ interpol_t(2);
 					hmc[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
 							* interpol_t(1./6.);
-				#endif
+					break;
+				}
 
 				// renormlize to minimize rounding errors
 //				renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
-				for (unsigned int j1=0; j1<INTERPOL_TYPE; j1++) {
-					unsigned int j0 = jd+j1-(INTERPOL_TYPE-1)/2;
+				for (unsigned int j1=0; j1<_it; j1++) {
+					unsigned int j0 = jd+j1-(_it-1)/2;
 					if(j0 < _ysize ) {
 						ph[j0].index = q_i*_ysize+j0;
 						ph[j0].weight = hmc[j1];
@@ -91,12 +98,14 @@ void vfps::WakeKickMap::apply()
 						ph[j0].index = 0;
 						ph[j0].weight = 0;
 					}
-					_heritage_map[q_i][p_i][j1]
-							= ph[j1];
+					_hinfo[(q_i*_ysize+p_i)*_ip+j1] = ph[j1];
 				}
 			}
 		}
 	}
+
+	delete [] ph;
+	delete [] hmc;
 
 	// call original apply method
 	HeritageMap::apply();

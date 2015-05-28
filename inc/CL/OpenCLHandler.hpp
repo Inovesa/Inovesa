@@ -19,17 +19,21 @@
 
 #ifndef OPENCLHANDLER_HPP
 #define OPENCLHANDLER_HPP
+#ifdef INOVESA_USE_CL
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#include "CL/cl.hpp"
+#if defined(__APPLE__) || defined(__MACOSX)
+#include "CL/local_cl.hpp"
+#else
+#include <CL/cl.hpp>
+#endif
 
 #include <climits>
 #include <iostream>
 
 /**
  * @brief prepareCLEnvironment
- * @param device
  * @return true on successful initialization
  *
  * Picks the last available platform.
@@ -39,11 +43,17 @@
  * @todo: check if OpenCL 1.0 or 2.x do the job
  * (currently "OpenCL 1." is set to be the required version)
  */
-bool prepareCLEnvironment(unsigned int device=0);
+void prepareCLEnvironment();
+
+void prepareCLDevice(unsigned int device);
+
+void listCLDevices();
 
 class OCLH
 {
 public:
+	static bool active;
+
 	static VECTOR_CLASS<cl::Platform> platforms;
 
 	static cl::Context context;
@@ -58,4 +68,5 @@ public:
 	static bool ogl_sharing;
 };
 
+#endif // INOVESA_USE_CL
 #endif // OPENCLHANDLER_HPP

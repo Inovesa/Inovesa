@@ -18,8 +18,11 @@
 /******************************************************************************/
 
 #include <climits>
+#include <fstream>
 #include <iostream>
+#ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
+#endif
 #include <sstream>
 
 #include "defines.hpp"
@@ -29,6 +32,7 @@
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
+#include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
@@ -39,62 +43,154 @@ int main(int argc, char** argv)
 {
 	ProgramOptions opts;
 
-	bool cont;
-
 	try {
-		cont = opts.parse(argc,argv);
+		if (!opts.parse(argc,argv)) {
+			return EXIT_SUCCESS;
+		}
 	} catch(std::exception& e) {
 		std::cerr << "error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
 
-	if (!cont) {
-		return EXIT_SUCCESS;
-	}
-
 	#ifdef INOVESA_USE_CL
-	cont = prepareCLEnvironment(opts.getCLDevice()-1);
-	if (!cont) {
-		return EXIT_SUCCESS;
+	OCLH::active = (opts.getCLDevice() >= 0);
+	if (OCLH::active) {
+		try {
+			prepareCLEnvironment();
+		} catch (cl::Error& e) {
+			std::cerr << e.what() << std::endl;
+			std::cout << "Will fall back to sequential version."
+					  << std::endl;
+			OCLH::active = false;
+		}
 	}
-	prepareCLProgs();
+	if (OCLH::active) {
+		if (opts.getCLDevice() == 0) {
+			listCLDevices();
+			return EXIT_SUCCESS;
+		} else {
+			try {
+				prepareCLDevice(opts.getCLDevice()-1);
+				prepareCLProgs();
+			} catch (cl::Error& e) {
+				std::cerr << e.what() << std::endl;
+				std::cout << "Will fall back to sequential version."
+						  << std::endl;
+				OCLH::active = false;
+			}
+		}
+	}
 	#endif // INOVESA_USE_CL
 
+	PhaseSpace* mesh;
+	meshindex_t ps_size;
+	constexpr double qmax = 5.0;
+	constexpr double pmax = 5.0;
+	#ifdef INOVESA_USE_PNG
 	// load pattern to start with
 	png::image<png::gray_pixel_16> image;
-	try {
-		image.read(opts.getStartDistPNG());
-	} catch ( const png::std_error &e ) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-	catch ( const png::error &e ) {
-		std::cerr << "Problem loading " << opts.getStartDistPNG()
-				  << ": " << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+	std::string startdistfile = opts.getStartDistFile();
 
-	uint16_t ps_size = image.get_height();
-	if (image.get_width() != ps_size) {
-		std::cerr << "Phase space has to be quadratic. Please adjust "
-				  << opts.getStartDistPNG() << std::endl;
-		return EXIT_FAILURE;
+	if (startdistfile.length() <= 4) {
+		std::cout << "Input file name should have the format 'file.end'."
+				  << std::endl;
+		return EXIT_SUCCESS;
+	} else {
+		std::cout << "Reading in initial distribution from '"
+				  << startdistfile << "'." << std::endl;
 	}
 
-	PhaseSpace mesh(ps_size,-10.0,10.0,-10.0,10.0);
-
-	for (unsigned int x=0; x<ps_size; x++) {
-		for (unsigned int y=0; y<ps_size; y++) {
-			mesh[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+	// check for file ending .png
+	if (startdistfile.substr(startdistfile.length()-4) == ".png") {
+		try {
+			image.read(opts.getStartDistFile());
+		} catch ( const png::std_error &e ) {
+			std::cerr << e.what() << std::endl;
+			return EXIT_SUCCESS;
 		}
+		catch ( const png::error &e ) {
+			std::cerr << "Problem loading " << startdistfile
+					  << ": " << e.what() << std::endl;
+			return EXIT_SUCCESS;
+		}
+
+		if (image.get_width() == image.get_height()) {
+			ps_size = image.get_width();
+
+			mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+
+			for (unsigned int x=0; x<ps_size; x++) {
+				for (unsigned int y=0; y<ps_size; y++) {
+					(*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+				}
+			}
+		} else {
+			std::cerr << "Phase space has to be quadratic. Please adjust "
+					  << startdistfile << std::endl;
+
+			return EXIT_SUCCESS;
+		}
+	} else
+	#endif // INOVESA_USE_PNG
+	if (startdistfile.substr(startdistfile.length()-4) == ".dat") {
+		ps_size = 512;
+		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+
+		std::ifstream ifs;
+		ifs.open(startdistfile);
+
+		ifs.unsetf(std::ios_base::skipws);
+
+		// count the newlines with an algorithm specialized for counting:
+		size_t line_count = std::count(
+			std::istream_iterator<char>(ifs),
+			std::istream_iterator<char>(),
+			'\n');
+
+		ifs.setf(std::ios_base::skipws);
+		ifs.clear();
+		ifs.seekg(0,ifs.beg);
+
+		while (ifs.good()) {
+			float xf,yf;
+			ifs >> xf >> yf;
+			meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
+			meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
+			if (x < ps_size && y < ps_size) {
+				(*mesh)[x][y] += 1.0/line_count;
+			}
+		}
+		ifs.close();
+
+		// normalize to higest peak
+		meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+		for (unsigned int x=0; x<ps_size; x++) {
+			for (unsigned int y=0; y<ps_size; y++) {
+				if ((*mesh)[x][y] > maxval) {
+					maxval = (*mesh)[x][y];
+				}
+			}
+		}
+		for (unsigned int x=0; x<ps_size; x++) {
+			for (unsigned int y=0; y<ps_size; y++) {
+				(*mesh)[x][y] /= maxval;
+			}
+		}
+	} else {
+		std::cout << "Unknown format of input file. Will now quit."
+				  << std::endl;
+		return EXIT_SUCCESS;
 	}
 
 	HDF5File file(opts.getOutFile(),ps_size);
 
-	PhaseSpace mesh_rotated(mesh);
+	PhaseSpace mesh_rotated(*mesh);
 
 	#ifdef INOVESA_USE_GUI
-	Display display;
+	Display* display = nullptr;
+	if (opts.showPhaseSpace()) {
+		display = new Display();
+	}
 	#endif
 
 	const unsigned int steps = opts.getSteps();
@@ -110,44 +206,52 @@ int main(int argc, char** argv)
 
 	const double e0 = 2.0/(f_s*t_d*steps);
 
-#define FP
-#define RT
-#ifdef FP
-	FokkerPlanckMap fpm(&mesh_rotated,&mesh,ps_size,ps_size,
-						vfps::FokkerPlanckMap::FPType::full,e0);
-#else
-	Identity fpm(&mesh_rotated,&mesh,ps_size,ps_size);
-#endif
-#ifdef RT
-	RotationMap rm(&mesh,&mesh_rotated,ps_size,ps_size,angle);
-#else
-	Identity rm(&mesh,&mesh_rotated,ps_size,ps_size);
-#endif
+	std::cout << "Building FokkerPlanckMap." << std::endl;
+	FokkerPlanckMap fpm(&mesh_rotated,mesh,ps_size,ps_size,
+						FokkerPlanckMap::FPType::full,e0,
+						FokkerPlanckMap::DerivationType::cubic);
+
+	std::cout << "Building RotationMap." << std::endl;
+	RotationMap rm(mesh,&mesh_rotated,ps_size,ps_size,angle,
+				   HeritageMap::InterpolationType::cubic,
+				   RotationMap::RotationCoordinates::norm_pm1,true);
 
 	#ifdef INOVESA_USE_CL
-	mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+	if (OCLH::active) {
+		mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+	}
 	#endif // INOVESA_USE_CL
-	for (unsigned int i=0;i<steps*rotations;i++) {
+	std::cout << "Starting the simulation." << std::endl;
+	for (unsigned int i=0;i<=steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
-			mesh.syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+			if (OCLH::active) {
+				mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+			}
 			#endif // INOVESA_USE_CL
-			file.append(&mesh);
+			file.append(mesh);
 			#ifdef INOVESA_USE_GUI
-			display.createTexture(&mesh);
-			display.draw();
-			display.delTexture();
-			#else
+			if (opts.showPhaseSpace()) {
+				display->createTexture(mesh);
+				display->draw();
+				display->delTexture();
+			} else
+			#endif
+			{
 			std::cout << static_cast<float>(i)/steps << '/'
 					  << rotations << std::endl;
-			#endif // INOVESA_USE_GUI
+			}
 		}
 		rm.apply();
 		fpm.apply();
 	}
 	#ifdef INOVESA_USE_CL
-	OCLH::queue.flush();
+	if (OCLH::active) {
+		OCLH::queue.flush();
+	}
 	#endif // INOVESA_USE_CL
+
+	delete mesh;
 
 	return EXIT_SUCCESS;
 }

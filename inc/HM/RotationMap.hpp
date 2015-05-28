@@ -20,6 +20,7 @@
 #ifndef ROTATIONMAP_HPP
 #define ROTATIONMAP_HPP
 
+#include "defines.hpp"
 #include "HeritageMap.hpp"
 
 namespace vfps
@@ -28,9 +29,17 @@ namespace vfps
 class RotationMap : public HeritageMap
 {
 public:
+	enum class RotationCoordinates : uint_fast8_t {
+		mesh = 1, // rotate on mesh
+		norm_0_1 = 2, // normalized space between 0 and 1
+		norm_pm1 = 3 // normalized space between -1 and +1
+	};
+
+public:
 	RotationMap(PhaseSpace* in, PhaseSpace* out,
-				const unsigned int xsize, const unsigned int ysize,
-				const meshaxis_t angle);
+				const meshindex_t xsize, const meshindex_t ysize,
+				const meshaxis_t angle, const InterpolationType it,
+				const RotationCoordinates rt, bool interpol_saturating);
 
 	/**
 	 * @brief apply
@@ -39,6 +48,9 @@ public:
 	 * Enabling it with linear (or without) currently crashes the program.
 	 */
 	void apply();
+
+private:
+	const bool _sat;
 };
 
 }

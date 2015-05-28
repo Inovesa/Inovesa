@@ -25,10 +25,11 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_projection(std::array<integral_t*,2>	{{	new integral_t[nMeshCells(0)],
 												new integral_t[nMeshCells(1)]
 											}}),
-	_data1D(new meshdata_t[nMeshCells(0)*nMeshCells(1)]())
+	_nmeshcells(nMeshCells(0)*nMeshCells(1)),
+	_data1D(new meshdata_t[_nmeshcells]())
 {
 	_data = new meshdata_t*[nMeshCells(0)];
-	for (unsigned int i=0; i<nMeshCells(0); i++) {
+	for (size_t i=0; i<nMeshCells(0); i++) {
 		_data[i] = &(_data1D[i*nMeshCells(1)]);
 	}
 	_ws[0] = new meshdata_t[nMeshCells(0)];
@@ -39,7 +40,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 
 	const integral_t h03 = getDelta(0)/3.;
 	_ws[0][0] = h03;
-	for (unsigned int x=1; x< nMeshCells(0)-1; x++){
+	for (size_t x=1; x< nMeshCells(0)-1; x++){
 		_ws[0][x] = h03 * (ca+dc);
 		dc = -dc;
 	}
@@ -48,16 +49,18 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 
 	const integral_t h13 = getDelta(1)/3.;
 	_ws[1][0] = h13;
-	for (unsigned int x=1; x< nMeshCells(1)-1; x++){
+	for (size_t x=1; x< nMeshCells(1)-1; x++){
 		_ws[1][x] = h13 * (ca+dc);
 		dc = -dc;
 	}
 	_ws[1][nMeshCells(0)-1] = h13;
 	#ifdef INOVESA_USE_CL
-	data_buf = cl::Buffer(OCLH::context,
+	if (OCLH::active) {
+		data_buf = cl::Buffer(OCLH::context,
 							CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
 							sizeof(meshdata_t)*nMeshCells(0)*nMeshCells(1),
 						   _data1D);
+	}
 	#endif
 }
 
@@ -66,7 +69,7 @@ vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
 	PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}})
 {}
 
-vfps::PhaseSpace::PhaseSpace(unsigned int ps_size,
+vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
 							 meshaxis_t xmin, meshaxis_t xmax,
 							 meshaxis_t ymin, meshaxis_t ymax) :
 	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax),
@@ -89,9 +92,9 @@ vfps::PhaseSpace::~PhaseSpace()
 
 vfps::integral_t* vfps::PhaseSpace::integral()
 {
-	doProjectionToX();
+	projectionToX();
 	_integral = 0;
-	for (unsigned int x=0; x< nMeshCells(0); x++) {
+	for (size_t x=0; x< nMeshCells(0); x++) {
 		#if INTEGRAL_TYPE == 1
 			_projection[0][x] += _projection[0][x];
 		#elif INTEGRAL_TYPE == 2
@@ -102,7 +105,7 @@ vfps::integral_t* vfps::PhaseSpace::integral()
 }
 
 /*
-vfps::meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
+vfps::meshdata_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
 	if (axis == 0) {
 		projectionToX();
@@ -115,7 +118,7 @@ vfps::meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
 	}
 
 	meshdata_t avg = 0;
-	for (unsigned int i=0; i<size(axis); i++) {
+	for (size_t i=0; i<size(axis); i++) {
 		avg += meshdata_t(i)*_projection[axis][i];
 	}
 	avg = avg/meshdata_t(size(axis));
@@ -125,7 +128,7 @@ vfps::meshdata_t vfps::PhaseSpace::average(const unsigned int axis)
 	return x(axis,avg);
 }
 
-vfps::meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
+vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 {
 	if (axis == 0) {
 		projectionToX();
@@ -141,7 +144,7 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
 
 	meshdata_t avg = _moment[axis][0];
 	meshdata_t var = 0;
-	for (unsigned int i=0; i<size(axis); i++) {
+	for (size_t i=0; i<size(axis); i++) {
 		var += (meshdata_t(i)-avg)*_projection[axis][i];
 	}
 	var = var/meshdata_t(size(axis));
@@ -152,11 +155,11 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const unsigned int axis)
 }
 */
 
-vfps::integral_t* vfps::PhaseSpace::doProjectionToX() {
-	for (unsigned int x=0; x < nMeshCells(0); x++) {
+vfps::integral_t* vfps::PhaseSpace::projectionToX() {
+	for (size_t x=0; x < nMeshCells(0); x++) {
 		_projection[0][x] = 0;
 
-		for (unsigned int y=0; y< nMeshCells(1); y++) {
+		for (size_t y=0; y< nMeshCells(1); y++) {
 			#if INTEGRAL_TYPE == 1
 				_projection[0][x] += _data[x][y];
 			#elif INTEGRAL_TYPE == 2
@@ -170,11 +173,11 @@ vfps::integral_t* vfps::PhaseSpace::doProjectionToX() {
 	return _projection[0];
 }
 
-vfps::integral_t* vfps::PhaseSpace::doProjectionToY() {
-	for (unsigned int y=0; y< nMeshCells(1); y++) {
+vfps::integral_t* vfps::PhaseSpace::projectionToY() {
+	for (size_t y=0; y< nMeshCells(1); y++) {
 		_projection[1][y] = 0;
 
-		for (unsigned int x=0; x< nMeshCells(0); x++) {
+		for (size_t x=0; x< nMeshCells(0); x++) {
 			#if INTEGRAL_TYPE == 1
 				_projection[1][y] += _data[x][y];
 			#elif INTEGRAL_TYPE == 2

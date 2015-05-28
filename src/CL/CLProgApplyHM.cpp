@@ -17,6 +17,8 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
+#ifdef INOVESA_USE_CL
+
 #include "CL/CLProgApplyHM.hpp"
 
 void prepareCLProgApplyHM()
@@ -149,6 +151,155 @@ void prepareCLProgApplyHM()
 		dst[i] = clamp(value,flor,ceil);
 	})";
 
+	code += R"(
+	__kernel void applyHM4_2sat(const __global data_t* src,
+								const __global hi* hm,
+								const uint size,
+								__global data_t* dst)
+	{
+		const uint i = get_global_id(0);
+		const uint offset = i*16;
+		data_t tmp;
+		data_t value;
+	)";
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		code += R"(
+		data_t ceil=0.0f;
+		data_t flor=10.0f;
+		)";
+	}
+	if (std::is_same<vfps::meshdata_t,double>::value) {
+		code += R"(
+		data_t ceil=0.0;
+		data_t flor=10.0;
+		)";
+	}
+	#if FXP_FRACPART < 31
+	if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
+		code += R"(
+		data_t ceil=INT_MIN;
+		data_t flor=INT_MAX;
+		)";
+	}
+	#endif
+	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+		code += R"(
+		data_t ceil=LONG_MIN;
+		data_t flor=LONG_MAX;
+		)";
+	}
+	code += R"(
+		value = mult(src[hm[offset].src],hm[offset].weight);
+		value += mult(src[hm[offset+1].src],hm[offset+1].weight);
+		value += mult(src[hm[offset+2].src],hm[offset+2].weight);
+		value += mult(src[hm[offset+3].src],hm[offset+3].weight);
+		value += mult(src[hm[offset+4].src],hm[offset+4].weight);
+		tmp = src[hm[offset+5].src];
+		value += mult(tmp,hm[offset+5].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[hm[offset+6].src];
+		value += mult(tmp,hm[offset+6].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[hm[offset+7].src],hm[offset+7].weight);
+		value += mult(src[hm[offset+8].src],hm[offset+8].weight);
+		tmp = src[hm[offset+9].src];
+		value += mult(tmp,hm[offset+9].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[hm[offset+10].src];
+		value += mult(tmp,hm[offset+10].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[hm[offset+11].src],hm[offset+11].weight);
+		value += mult(src[hm[offset+12].src],hm[offset+12].weight);
+		value += mult(src[hm[offset+13].src],hm[offset+13].weight);
+		value += mult(src[hm[offset+14].src],hm[offset+14].weight);
+		value += mult(src[hm[offset+15].src],hm[offset+15].weight);
+		dst[i] = clamp(value,flor,ceil);
+	)";
+
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		code += R"(
+		ceil=0.0f;
+		flor=10.0f;
+		)";
+	}
+	if (std::is_same<vfps::meshdata_t,double>::value) {
+		code += R"(
+		ceil=0.0;
+		flor=10.0;
+		)";
+	}
+	#if FXP_FRACPART < 31
+	if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
+		code += R"(
+		ceil=INT_MIN;
+		flor=INT_MAX;
+		)";
+	}
+	#endif
+	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+		code += R"(
+		ceil=LONG_MIN;
+		flor=LONG_MAX;
+		)";
+	}
+
+	code += R"(
+		value = mult(src[size-1-hm[offset].src],hm[offset].weight);
+		value += mult(src[size-1-hm[offset+1].src],hm[offset+1].weight);
+		value += mult(src[size-1-hm[offset+2].src],hm[offset+2].weight);
+		value += mult(src[size-1-hm[offset+3].src],hm[offset+3].weight);
+		value += mult(src[size-1-hm[offset+4].src],hm[offset+4].weight);
+		tmp = src[size-1-hm[offset+5].src];
+		value += mult(tmp,hm[offset+5].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[size-1-hm[offset+6].src];
+		value += mult(tmp,hm[offset+6].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[size-1-hm[offset+7].src],hm[offset+7].weight);
+		value += mult(src[size-1-hm[offset+8].src],hm[offset+8].weight);
+		tmp = src[size-1-hm[offset+9].src];
+		value += mult(tmp,hm[offset+9].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[size-1-hm[offset+10].src];
+		value += mult(tmp,hm[offset+10].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[size-1-hm[offset+11].src],hm[offset+11].weight);
+		value += mult(src[size-1-hm[offset+12].src],hm[offset+12].weight);
+		value += mult(src[size-1-hm[offset+13].src],hm[offset+13].weight);
+		value += mult(src[size-1-hm[offset+14].src],hm[offset+14].weight);
+		value += mult(src[size-1-hm[offset+15].src],hm[offset+15].weight);
+		dst[size-1-i] = clamp(value,flor,ceil);
+	})";
+
+	code += R"(
+	__kernel void applyHM_Y(const __global data_t* src,
+							const __global hi* hm,
+							const uint hm_len,
+							const uint ysize,
+							__global data_t* dst)
+	{
+		data_t value = 0;
+		const uint x = get_global_id(0);
+		const uint y = get_global_id(1);
+		const uint hmoffset = y*hm_len;
+		const uint meshoffs = x*ysize;
+		for (uint j=0; j<hm_len; j++)
+		{
+			value += mult(	src[meshoffs+hm[hmoffset+j].src],
+							hm[hmoffset+j].weight);
+		}
+		dst[meshoffs+y] = value;
+	}
+	)";
+
 	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
 	CLProgApplyHM::p = cl::Program(OCLH::context, source);
     try {
@@ -171,3 +322,5 @@ void prepareCLProgApplyHM()
 }
 
 cl::Program CLProgApplyHM::p;
+
+#endif // INOVESA_USE_CL

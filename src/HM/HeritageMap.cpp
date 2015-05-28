@@ -20,61 +20,66 @@
 #include "HM/HeritageMap.hpp"
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
-							   uint16_t xsize, uint16_t ysize,
-							   uint8_t interpoints) :
+							   meshindex_t xsize, meshindex_t ysize,
+							   size_t memsize,
+							   uint_fast8_t interpoints,
+							   uint_fast8_t intertype) :
 	_ip(interpoints),
-	_heritage_map(new hi**[xsize]),
-	_heritage_map1D(new hi*[xsize*ysize]()),
-	_hinfo(new hi[xsize*ysize*interpoints]),
+	_it(intertype),
+	_hinfo(new hi[memsize]),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
 	_in(in),
 	_out(out)
 {
-	for (meshindex_t i=0; i<xsize; i++) {
-		for (meshindex_t j=0; j<ysize; j++) {
-			_heritage_map1D[i*ysize+j]=&(_hinfo[(i*ysize+j)*interpoints]);
-		}
-		_heritage_map[i] = &(_heritage_map1D[i*ysize]);
-	}
+}
+
+vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
+							   size_t xsize, size_t ysize,
+							   uint_fast8_t interpoints,
+							   uint_fast8_t intertype) :
+	HeritageMap(in,out,xsize,ysize,xsize*ysize*interpoints,
+				interpoints,intertype)
+{
 }
 
 vfps::HeritageMap::~HeritageMap()
 {
-	delete [] _heritage_map1D;
-	delete [] _heritage_map;
 	delete [] _hinfo;
 }
 
 void vfps::HeritageMap::apply()
 {
 	#ifdef INOVESA_USE_CL
-	#ifdef INOVESA_SYNC_CL
-	_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
-	#endif // INOVESA_SYNC_CL
-	OCLH::queue.enqueueNDRangeKernel (
-				applyHM,
-				cl::NullRange,
-				cl::NDRange(_size));
-	#ifdef CL_VERSION_1_2
-	OCLH::queue.enqueueBarrierWithWaitList();
-	#else // CL_VERSION_1_2
-	OCLH::queue.enqueueBarrier();
-	#endif // CL_VERSION_1_2
-	#ifdef INOVESA_SYNC_CL
-	_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
-	#endif // INOVESA_SYNC_CL
-	#else // INOVESA_USE_CL
-	meshdata_t* data_in = _in->getData();
-	meshdata_t* data_out = _out->getData();
+	if (OCLH::active) {
+		#ifdef INOVESA_SYNC_CL
+		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		#endif // INOVESA_SYNC_CL
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_size));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		#ifdef INOVESA_SYNC_CL
+		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		#endif // INOVESA_SYNC_CL
+	} else
+	#endif // INOVESA_USE_CL
+	{
+		meshdata_t* data_in = _in->getData();
+		meshdata_t* data_out = _out->getData();
 
-	for (meshindex_t i=0; i< _size; i++) {
-		data_out[i] = 0;
-		for (meshindex_t j=0; j<_ip; j++) {
-			hi h = _heritage_map1D[i][j];
-			data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+		for (meshindex_t i=0; i< _size; i++) {
+			data_out[i] = 0;
+			for (meshindex_t j=0; j<_ip; j++) {
+				hi h = _hinfo[i*_ip+j];
+				data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+			}
 		}
 	}
-	#endif // INOVESA_USE_CL
 }

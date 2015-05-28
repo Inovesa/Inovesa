@@ -28,6 +28,14 @@ namespace vfps
 
 class HeritageMap
 {
+public:
+	enum InterpolationType : uint_fast8_t {
+		none = 1,
+		linear = 2,
+		quadratic = 3,
+		cubic = 4
+	};
+
 protected:
 	typedef struct {
 		meshindex_t index;
@@ -41,11 +49,25 @@ public:
 	 * @param out
 	 * @param xsize
 	 * @param ysize
+	 * @param memsize number of hi (needed for memory optimization)
+	 * @param interpoints
+	 * @param intertype number of points used for interpolation
+	 */
+	HeritageMap(PhaseSpace* in, PhaseSpace* out,
+				meshindex_t xsize, meshindex_t ysize, size_t memsize,
+				uint_fast8_t interpoints, uint_fast8_t intertype);
+
+	/**
+	 * @brief HeritageMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
 	 * @param interpoints number of points used for interpolation
 	 */
 	HeritageMap(PhaseSpace* in, PhaseSpace* out,
-				uint16_t xsize, uint16_t ysize,
-				uint8_t interpoints);
+				size_t xsize, size_t ysize,
+				uint_fast8_t interpoints, uint_fast8_t intertype);
 
 	~HeritageMap();
 
@@ -56,28 +78,39 @@ public:
 
 protected:
 	/**
-	 * @brief _ip holds the number of points used for interpolation
+	 * @brief _ip holds the total number of points used for interpolation
 	 */
+	#ifdef INOVESA_USE_CL
 	const cl_uint _ip;
+	#else
+	const uint_fast8_t _ip;
+	#endif
 
-	hi*** _heritage_map;
-	hi** const _heritage_map1D;
+	/**
+	 * @brief _ip holds the per dimension number
+	 *			of points used for interpolation
+	 */
+	const uint_fast8_t _it;
+
+	/**
+	 * @brief _hinfo
+	 */
 	hi* const _hinfo;
 
 	/**
 	 * @brief _size size of the HeritageMap (_xsize*_ysize)
 	 */
-	const uint32_t _size;
+	const meshindex_t _size;
 
 	/**
 	 * @brief _xsize horizontal size of the HeritageMap
 	 */
-	const uint16_t _xsize;
+	const meshindex_t _xsize;
 
 	/**
 	 * @brief _ysize vertical size of the HeritageMap
 	 */
-	const uint16_t _ysize;
+	const meshindex_t _ysize;
 
 	#ifdef INOVESA_USE_CL
 	/**
