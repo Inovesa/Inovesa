@@ -138,16 +138,31 @@ int main(int argc, char** argv)
 
 		std::ifstream ifs;
 		ifs.open(startdistfile);
+
+		ifs.unsetf(std::ios_base::skipws);
+
+		// count the newlines with an algorithm specialized for counting:
+		size_t line_count = std::count(
+			std::istream_iterator<char>(ifs),
+			std::istream_iterator<char>(),
+			'\n');
+
+		ifs.setf(std::ios_base::skipws);
+		ifs.clear();
+		ifs.seekg(0,ifs.beg);
+
 		while (ifs.good()) {
 			float xf,yf;
 			ifs >> xf >> yf;
 			meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
 			meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
 			if (x < ps_size && y < ps_size) {
-				(*mesh)[x][y] += 1;
+				(*mesh)[x][y] += 1.0/line_count;
 			}
 		}
 		ifs.close();
+
+		// normalize to higest peak
 		meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
 		for (unsigned int x=0; x<ps_size; x++) {
 			for (unsigned int y=0; y<ps_size; y++) {
