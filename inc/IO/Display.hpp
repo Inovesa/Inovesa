@@ -45,10 +45,10 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#endif // INOVESA_USE_GUI
 
 #include "PhaseSpace.hpp"
 
-#endif // INOVESA_USE_GUI
 class Display
 {
 public:
