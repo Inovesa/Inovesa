@@ -58,7 +58,7 @@ void prepareCLDevice(unsigned int device)
 				"_gl_sharing") != std::string::npos;
 	std::string devicename;
 	OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
-	std::cout << "Using " << devicename << " for OpenCL." << std::endl;
+	Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
 }
 
 void listCLDevices()

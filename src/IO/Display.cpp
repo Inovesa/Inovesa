@@ -17,7 +17,8 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#include "Display.hpp"
+#include "IO/Display.hpp"
+
 #ifdef INOVESA_USE_GUI
 
 Display::Display() :
@@ -247,6 +248,23 @@ void Display::draw() {
 	glfwPollEvents();
 }
 
+#endif // INOVESA_USE_GUI
+
+void Display::printText(std::string txt)
+{
+	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+	std::cout.setf( std::ios::fixed, std:: ios::floatfield );
+	std::cout.precision(3);
+	std::cout
+				<< "[ " << std::setw(9)
+				<< std::chrono::duration<double>(now-start_time).count()
+				<< " ]: "
+				<< txt
+				<< std::endl;
+}
+
+#ifdef INOVESA_USE_GUI
+
 GLuint Display::LoadShaders(const char* vertex_file_path,
 							const char* fragment_file_path){
 
@@ -340,4 +358,6 @@ GLuint Display::LoadShaders(const char* vertex_file_path,
 
 
 #endif // INOVESA_USE_GUI
+
+std::chrono::system_clock::time_point Display::start_time;
 

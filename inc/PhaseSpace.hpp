@@ -25,11 +25,16 @@
 #include <cfloat>
 #include <cmath>
 #include <fstream>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <list>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
+
+namespace vfps {
+	class PhaseSpace; // forward declaration
+}
 
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"

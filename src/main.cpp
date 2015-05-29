@@ -17,8 +17,11 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
+#include <chrono>
 #include <climits>
+#include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
@@ -27,7 +30,7 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "Display.hpp"
+#include "IO/Display.hpp"
 #include "PhaseSpace.hpp"
 #include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
@@ -42,6 +45,23 @@ using namespace vfps;
 
 int main(int argc, char** argv)
 {
+	Display::start_time = std::chrono::system_clock::now();
+
+	std::time_t start_ctime
+			= std::chrono::system_clock::to_time_t(Display::start_time);
+	std::stringstream sstream;
+	sstream << std::ctime(&start_ctime);
+	std::string timestring = sstream.str();
+	timestring.resize(timestring.size()-1);
+
+	sstream.str("");
+	sstream << INOVESA_VERSION_RELEASE << '.'
+			<< INOVESA_VERSION_MINOR << '.'
+			<< INOVESA_VERSION_FIX;
+
+	Display::printText("Started Inovesa (v"
+					   +sstream.str()+") at "+timestring+".");
+
 	ProgramOptions opts;
 
 	try {
@@ -59,9 +79,8 @@ int main(int argc, char** argv)
 		try {
 			prepareCLEnvironment();
 		} catch (cl::Error& e) {
-			std::cerr << e.what() << std::endl;
-			std::cout << "Will fall back to sequential version."
-					  << std::endl;
+			Display::printText(e.what());
+			Display::printText("Will fall back to sequential version.");
 			OCLH::active = false;
 		}
 	}
@@ -74,9 +93,8 @@ int main(int argc, char** argv)
 				prepareCLDevice(opts.getCLDevice()-1);
 				prepareCLProgs();
 			} catch (cl::Error& e) {
-				std::cerr << e.what() << std::endl;
-				std::cout << "Will fall back to sequential version."
-						  << std::endl;
+				Display::printText(e.what());
+				Display::printText("Will fall back to sequential version.");
 				OCLH::active = false;
 			}
 		}
@@ -84,7 +102,13 @@ int main(int argc, char** argv)
 	#endif // INOVESA_USE_CL
 
 
-	std::cout << "Generating initial particle distribution." << std::endl;
+
+	size_t nParticles = UINT16_MAX;
+	sstream.str("");
+	sstream << nParticles;
+
+	Display::printText("Generating initial particle distribution (using "+
+					   sstream.str()+" patricles).");
 	PhaseSpace* mesh;
 	meshindex_t ps_size = 512;
 	constexpr double qmax = 5.0;
@@ -96,8 +120,6 @@ int main(int argc, char** argv)
 
 	std::normal_distribution<> x(0.0,1.0);
 	std::normal_distribution<> y(0.0,1.0);
-
-	size_t nParticles = UINT16_MAX;
 
 	float amplitude = 2.0f;
 	float pulselen = 1.90e-3f;
@@ -116,6 +138,7 @@ int main(int argc, char** argv)
 	}
 
 	HDF5File file(opts.getOutFile(),ps_size);
+	Display::printText("Will save reults to "+opts.getOutFile()+".");
 
 	PhaseSpace mesh_rotated(*mesh);
 
@@ -139,12 +162,12 @@ int main(int argc, char** argv)
 
 	const double e0 = 2.0/(f_s*t_d*steps);
 
-	std::cout << "Building FokkerPlanckMap." << std::endl;
+	Display::printText("Building FokkerPlanckMap.");
 	FokkerPlanckMap fpm(&mesh_rotated,mesh,ps_size,ps_size,
 						FokkerPlanckMap::FPType::full,e0,
 						FokkerPlanckMap::DerivationType::cubic);
 
-	std::cout << "Building RotationMap." << std::endl;
+	Display::printText("Building RotationMap.");
 	RotationMap rm(mesh,&mesh_rotated,ps_size,ps_size,angle,
 				   HeritageMap::InterpolationType::cubic,
 				   RotationMap::RotationCoordinates::norm_pm1,true);
@@ -154,7 +177,7 @@ int main(int argc, char** argv)
 		mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	}
 	#endif // INOVESA_USE_CL
-	std::cout << "Starting the simulation." << std::endl;
+	Display::printText("Starting the simulation.");
 	for (unsigned int i=0;i<=steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
@@ -171,8 +194,9 @@ int main(int argc, char** argv)
 			} else
 			#endif
 			{
-			std::cout << static_cast<float>(i)/steps << '/'
-					  << rotations << std::endl;
+				std::stringstream status;
+				status << static_cast<float>(i)/steps << '/' << rotations;
+				Display::printText(status.str());
 			}
 		}
 		rm.apply();
