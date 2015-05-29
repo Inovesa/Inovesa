@@ -17,8 +17,11 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
+#include <chrono>
 #include <climits>
+#include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
@@ -41,7 +44,22 @@ using namespace vfps;
 
 int main(int argc, char** argv)
 {
-	start_time = std::chrono::system_clock::now().time_since_epoch();
+	Display::start_time = std::chrono::system_clock::now();
+
+	std::time_t start_ctime
+			= std::chrono::system_clock::to_time_t(Display::start_time);
+	std::stringstream sstream;
+	sstream << std::ctime(&start_ctime);
+	std::string timestring = sstream.str();
+	timestring.resize(timestring.size()-1);
+
+	sstream.str("");
+	sstream << INOVESA_VERSION_RELEASE << '.'
+			<< INOVESA_VERSION_MINOR << '.'
+			<< INOVESA_VERSION_FIX;
+
+	Display::printText("Started Inovesa (v"
+					   +sstream.str()+") at "+timestring+".");
 
 	ProgramOptions opts;
 
@@ -181,6 +199,7 @@ int main(int argc, char** argv)
 	}
 
 	HDF5File file(opts.getOutFile(),ps_size);
+	Display::printText("Will save reults to "+opts.getOutFile()+".");
 
 	PhaseSpace mesh_rotated(*mesh);
 

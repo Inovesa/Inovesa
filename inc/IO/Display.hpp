@@ -25,6 +25,7 @@
 #include <array>
 #include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <type_traits>
 
@@ -50,6 +51,9 @@
 #endif // INOVESA_USE_GUI
 class Display
 {
+public:
+	static std::chrono::system_clock::time_point start_time;
+
 public:
 	Display();
 

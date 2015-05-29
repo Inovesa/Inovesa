@@ -21,6 +21,8 @@
 #define OPENCLHANDLER_HPP
 #ifdef INOVESA_USE_CL
 
+#include <GL/glew.h>
+
 #define __CL_ENABLE_EXCEPTIONS
 
 #if defined(__APPLE__) || defined(__MACOSX)
@@ -31,6 +33,9 @@
 
 #include <climits>
 #include <iostream>
+
+#include "IO/Display.hpp"
+
 
 /**
  * @brief prepareCLEnvironment
