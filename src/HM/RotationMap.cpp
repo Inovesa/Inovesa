@@ -67,33 +67,33 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 			interpol_t xip; //distance of p' from lower mesh point
 			switch (rt) {
 			case RotationCoordinates::mesh:
-				qp = cos_dt*(q_i-_xsize/2.0)
-						- sin_dt*(p_i-_ysize/2.0)+_xsize/2.0;
-				pp = sin_dt*(q_i-_xsize/2.0)
-						+ cos_dt*(p_i-_ysize/2.0)+_ysize/2.0;
+				qp = cos_dt*(q_i-(_xsize-1)/2.0)
+						- sin_dt*(p_i-(_ysize-1)/2.0)+(_xsize-1)/2.0;
+				pp = sin_dt*(q_i-(_xsize-1)/2.0)
+						+ cos_dt*(p_i-(_ysize-1)/2.0)+(_ysize-1)/2.0;
 				qcoord = qp;
 				pcoord = pp;
 				break;
 			case RotationCoordinates::norm_0_1:
-				qp = cos_dt*((q_i-_xsize/2.0)/_xsize)
-						- sin_dt*((p_i-_ysize/2.0)/_ysize);
-				pp = sin_dt*((q_i-_xsize/2.0)/_xsize)
-						+ cos_dt*((p_i-_ysize/2.0)/_ysize);
-				qcoord = (qp+0.5)*_xsize;
-				pcoord = (pp+0.5)*_ysize;
+				qp = cos_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
+						- sin_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
+				pp = sin_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
+						+ cos_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
+				qcoord = (qp+0.5)*(_xsize-1);
+				pcoord = (pp+0.5)*(_ysize-1);
 				break;
 			case RotationCoordinates::norm_pm1:
-				qp = cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
-							/static_cast<meshaxis_t>(_xsize)
-				   - sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
-							/static_cast<meshaxis_t>(_ysize);
+				qp = cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
+							/static_cast<meshaxis_t>(_xsize-1)
+				   - sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
+							/static_cast<meshaxis_t>(_ysize-1);
 
-				pp = sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize))
-							/static_cast<meshaxis_t>(_xsize)
-				   + cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize))
-							/static_cast<meshaxis_t>(_ysize);
-				qcoord = (qp+1)*_xsize/2;
-				pcoord = (pp+1)*_ysize/2;
+				pp = sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
+							/static_cast<meshaxis_t>(_xsize-1)
+				   + cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
+							/static_cast<meshaxis_t>(_ysize-1);
+				qcoord = (qp+1)*(_xsize-1)/2;
+				pcoord = (pp+1)*(_ysize-1)/2;
 				break;
 			}
 			xiq = std::modf(qcoord, &qq_int);
