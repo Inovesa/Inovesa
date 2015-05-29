@@ -21,12 +21,15 @@
 #define DISPLAY_HPP
 
 #include "defines.hpp"
-#ifdef INOVESA_USE_GUI
 
 #include <array>
+#include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <type_traits>
+
+#ifdef INOVESA_USE_GUI
 
 // Include GLEW
 #include <GL/glew.h>
@@ -45,8 +48,12 @@
 
 #include "PhaseSpace.hpp"
 
+#endif // INOVESA_USE_GUI
 class Display
 {
+public:
+	static std::chrono::system_clock::time_point start_time;
+
 public:
 	Display();
 
@@ -58,6 +65,9 @@ public:
 
 	void draw();
 
+	static void printText(std::string txt);
+
+#ifdef INOVESA_USE_GUI
 	GLuint getTexture() const
 		{ return Texture; }
 
@@ -77,8 +87,8 @@ private:
 	GLuint Texture;
 	GLuint TextureID;
 	glm::mat4 MVP;
+#endif // INOVESA_USE_GUI
 };
 
-#endif // INOVESA_USE_GUI
 #endif // DISPLAY_HPP
 

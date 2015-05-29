@@ -11,9 +11,9 @@ set(SRC_LIST
 			./src/HM/KickMap.cpp
 			./src/HM/RotationMap.cpp
 			./src/HM/WakeKickMap.cpp
+			./src/IO/Display.cpp
 			./src/IO/HDF5File.cpp
 			./src/IO/ProgramOptions.cpp
-			./src/Display.cpp
 			./src/ElectricField.cpp
 			./src/PhaseSpace.cpp
 			./src/main.cpp
@@ -30,9 +30,9 @@ set(INC_LIST
 			./inc/HM/Identity.hpp
 			./inc/HM/RotationMap.hpp
 			./inc/HM/WakeKickMap.hpp
+			./inc/IO/Display.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/IO/ProgramOptions.hpp
-			./inc/Display.hpp
 			./inc/ElectricField.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
