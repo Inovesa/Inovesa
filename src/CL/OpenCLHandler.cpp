@@ -21,7 +21,7 @@
 
 #include "CL/OpenCLHandler.hpp"
 
-void prepareCLEnvironment()
+void OCLH::prepareCLEnvironment()
 {
 	cl::Platform::get(&OCLH::platforms);
 
@@ -49,7 +49,8 @@ void prepareCLEnvironment()
 	OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 }
 
-void prepareCLDevice(unsigned int device)
+void
+OCLH::prepareCLDevice(unsigned int device)
 {
 	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
 	// cl_VENDOR_gl_sharing is present, when string contains the substring
@@ -61,7 +62,32 @@ void prepareCLDevice(unsigned int device)
 	Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
 }
 
-void listCLDevices()
+cl::Program OCLH::prepareCLProg(std::string code)
+{
+	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
+	cl::Program p(OCLH::context, source);
+	try {
+		p.build(OCLH::devices);
+	} catch (cl::Error &e) {
+		e.what();
+	#ifdef DEBUG
+	// in debug builds, CL code and build log should always be displayed
+	}
+	#endif  // DEBUG
+		std::cout	<< "===== OpenCL Code =====\n"
+					<< code << std::endl;
+		std::cout	<< "===== OpenCL Build Log =====\n"
+					<< p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
+					<< std::endl;
+	#ifndef DEBUG
+	// in release builds show CL code and build log only when error occured
+	}
+	#endif // DEBUG
+
+	return p;
+}
+
+void OCLH::listCLDevices()
 {
 	std::cout << "Available OpenCL Devices:" << std::endl;
 	for (unsigned int p=0; p<OCLH::platforms.size(); p++) {

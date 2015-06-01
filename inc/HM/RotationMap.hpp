@@ -51,6 +51,10 @@ public:
 
 private:
 	const bool _sat;
+
+	void genCode4HM4_2sat();
+
+	void genCode4HM4sat();
 };
 
 }

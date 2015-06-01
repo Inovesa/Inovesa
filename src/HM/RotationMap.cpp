@@ -183,12 +183,19 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 		if (_sat) {
 			if (it == InterpolationType::cubic) {
 				#if ROTMAP_SIZE == 1
-				applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4sat");
+				genCode4HM4sat();
+				_cl_prog  = OCLH::prepareCLProg(_cl_code);
+
+				applyHM = cl::Kernel(_cl_prog, "applyHM4sat");
 				applyHM.setArg(0, _in->data_buf);
 				applyHM.setArg(1, _hi_buf);
 				applyHM.setArg(2, _out->data_buf);
 				#elif ROTMAP_SIZE == 2
-				applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM4_2sat");
+
+				genCode4HM4_2sat();
+				_cl_prog  = OCLH::prepareCLProg(_cl_code);
+
+				applyHM = cl::Kernel(_cl_prog, "applyHM4_2sat");
 				applyHM.setArg(0, _in->data_buf);
 				applyHM.setArg(1, _hi_buf);
 				applyHM.setArg(2, _size);
@@ -196,10 +203,13 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 				#endif
 			}
 		} else {
-			applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM1D");
+			genCode4HM1D();
+			_cl_prog  = OCLH::prepareCLProg(_cl_code);
+
+			applyHM = cl::Kernel(_cl_prog, "applyHM1D");
 			applyHM.setArg(0, _in->data_buf);
 			applyHM.setArg(1, _hi_buf);
-			applyHM.setArg(2, it*it);
+			applyHM.setArg(2, _size);
 			applyHM.setArg(3, _out->data_buf);
 		}
 	}
@@ -276,4 +286,207 @@ void vfps::RotationMap::apply()
 			}
 		}
 	}
+}
+
+void vfps::RotationMap::genCode4HM4_2sat()
+{
+	_cl_code += R"(
+	__kernel void applyHM4_2sat(const __global data_t* src,
+								const __global hi* hm,
+								const uint size,
+								__global data_t* dst)
+	{
+		const uint i = get_global_id(0);
+		const uint offset = i*16;
+		data_t tmp;
+		data_t value;
+	)";
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		_cl_code += R"(
+		data_t ceil=0.0f;
+		data_t flor=10.0f;
+		)";
+	}
+	if (std::is_same<vfps::meshdata_t,double>::value) {
+		_cl_code += R"(
+		data_t ceil=0.0;
+		data_t flor=10.0;
+		)";
+	}
+	#if FXP_FRACPART < 31
+	if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
+		_cl_code += R"(
+		data_t ceil=INT_MIN;
+		data_t flor=INT_MAX;
+		)";
+	}
+	#endif
+	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+		_cl_code += R"(
+		data_t ceil=LONG_MIN;
+		data_t flor=LONG_MAX;
+		)";
+	}
+	_cl_code += R"(
+		value = mult(src[hm[offset].src],hm[offset].weight);
+		value += mult(src[hm[offset+1].src],hm[offset+1].weight);
+		value += mult(src[hm[offset+2].src],hm[offset+2].weight);
+		value += mult(src[hm[offset+3].src],hm[offset+3].weight);
+		value += mult(src[hm[offset+4].src],hm[offset+4].weight);
+		tmp = src[hm[offset+5].src];
+		value += mult(tmp,hm[offset+5].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[hm[offset+6].src];
+		value += mult(tmp,hm[offset+6].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[hm[offset+7].src],hm[offset+7].weight);
+		value += mult(src[hm[offset+8].src],hm[offset+8].weight);
+		tmp = src[hm[offset+9].src];
+		value += mult(tmp,hm[offset+9].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[hm[offset+10].src];
+		value += mult(tmp,hm[offset+10].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[hm[offset+11].src],hm[offset+11].weight);
+		value += mult(src[hm[offset+12].src],hm[offset+12].weight);
+		value += mult(src[hm[offset+13].src],hm[offset+13].weight);
+		value += mult(src[hm[offset+14].src],hm[offset+14].weight);
+		value += mult(src[hm[offset+15].src],hm[offset+15].weight);
+		dst[i] = clamp(value,flor,ceil);
+	)";
+
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		_cl_code += R"(
+		ceil=0.0f;
+		flor=10.0f;
+		)";
+	}
+	if (std::is_same<vfps::meshdata_t,double>::value) {
+		_cl_code += R"(
+		ceil=0.0;
+		flor=10.0;
+		)";
+	}
+	#if FXP_FRACPART < 31
+	if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
+		_cl_code += R"(
+		ceil=INT_MIN;
+		flor=INT_MAX;
+		)";
+	}
+	#endif
+	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+		_cl_code += R"(
+		ceil=LONG_MIN;
+		flor=LONG_MAX;
+		)";
+	}
+
+	_cl_code += R"(
+		value = mult(src[size-1-hm[offset].src],hm[offset].weight);
+		value += mult(src[size-1-hm[offset+1].src],hm[offset+1].weight);
+		value += mult(src[size-1-hm[offset+2].src],hm[offset+2].weight);
+		value += mult(src[size-1-hm[offset+3].src],hm[offset+3].weight);
+		value += mult(src[size-1-hm[offset+4].src],hm[offset+4].weight);
+		tmp = src[size-1-hm[offset+5].src];
+		value += mult(tmp,hm[offset+5].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[size-1-hm[offset+6].src];
+		value += mult(tmp,hm[offset+6].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[size-1-hm[offset+7].src],hm[offset+7].weight);
+		value += mult(src[size-1-hm[offset+8].src],hm[offset+8].weight);
+		tmp = src[size-1-hm[offset+9].src];
+		value += mult(tmp,hm[offset+9].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[size-1-hm[offset+10].src];
+		value += mult(tmp,hm[offset+10].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[size-1-hm[offset+11].src],hm[offset+11].weight);
+		value += mult(src[size-1-hm[offset+12].src],hm[offset+12].weight);
+		value += mult(src[size-1-hm[offset+13].src],hm[offset+13].weight);
+		value += mult(src[size-1-hm[offset+14].src],hm[offset+14].weight);
+		value += mult(src[size-1-hm[offset+15].src],hm[offset+15].weight);
+		dst[size-1-i] = clamp(value,flor,ceil);
+	})";
+
+}
+
+void vfps::RotationMap::genCode4HM4sat()
+{
+	_cl_code+= R"(
+	__kernel void applyHM4sat(	const __global data_t* src,
+								const __global hi* hm,
+								__global data_t* dst)
+	{
+		data_t value = 0;
+		const uint i = get_global_id(0);
+		const uint offset = i*16;
+	)";
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		_cl_code += R"(
+			data_t ceil=0.0f;
+			data_t flor=1.0f;
+		)";
+	}
+	if (std::is_same<vfps::meshdata_t,double>::value) {
+		_cl_code += R"(
+			data_t ceil=0.0;
+			data_t flor=1.0;
+		)";
+	}
+	#if FXP_FRACPART < 31
+	if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
+		_cl_code += R"(
+			data_t ceil=INT_MIN;
+			data_t flor=INT_MAX;
+		)";
+	}
+	#endif
+	if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+		_cl_code += R"(
+			data_t ceil=LONG_MIN;
+			data_t flor=LONG_MAX;
+		)";
+	}
+	_cl_code += R"(
+		data_t tmp;
+		value += mult(src[hm[offset].src],hm[offset].weight);
+		value += mult(src[hm[offset+1].src],hm[offset+1].weight);
+		value += mult(src[hm[offset+2].src],hm[offset+2].weight);
+		value += mult(src[hm[offset+3].src],hm[offset+3].weight);
+		value += mult(src[hm[offset+4].src],hm[offset+4].weight);
+		tmp = src[hm[offset+5].src];
+		value += mult(tmp,hm[offset+5].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[hm[offset+6].src];
+		value += mult(tmp,hm[offset+6].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[hm[offset+7].src],hm[offset+7].weight);
+		value += mult(src[hm[offset+8].src],hm[offset+8].weight);
+		tmp = src[hm[offset+9].src];
+		value += mult(tmp,hm[offset+9].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		tmp = src[hm[offset+10].src];
+		value += mult(tmp,hm[offset+10].weight);
+		ceil = max(ceil,tmp);
+		flor = min(flor,tmp);
+		value += mult(src[hm[offset+11].src],hm[offset+11].weight);
+		value += mult(src[hm[offset+12].src],hm[offset+12].weight);
+		value += mult(src[hm[offset+13].src],hm[offset+13].weight);
+		value += mult(src[hm[offset+14].src],hm[offset+14].weight);
+		value += mult(src[hm[offset+15].src],hm[offset+15].weight);
+		dst[i] = clamp(value,flor,ceil);
+	})";
 }
