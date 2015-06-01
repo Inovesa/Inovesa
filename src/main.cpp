@@ -32,7 +32,6 @@
 #include "defines.hpp"
 #include "IO/Display.hpp"
 #include "PhaseSpace.hpp"
-#include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
@@ -60,7 +59,7 @@ int main(int argc, char** argv)
 			<< INOVESA_VERSION_FIX;
 
 	Display::printText("Started Inovesa (v"
-					   +sstream.str()+") at "+timestring+".");
+					   +sstream.str()+") at "+timestring);
 
 	ProgramOptions opts;
 
@@ -77,7 +76,7 @@ int main(int argc, char** argv)
 	OCLH::active = (opts.getCLDevice() >= 0);
 	if (OCLH::active) {
 		try {
-			prepareCLEnvironment();
+			OCLH::prepareCLEnvironment();
 		} catch (cl::Error& e) {
 			Display::printText(e.what());
 			Display::printText("Will fall back to sequential version.");
@@ -86,12 +85,11 @@ int main(int argc, char** argv)
 	}
 	if (OCLH::active) {
 		if (opts.getCLDevice() == 0) {
-			listCLDevices();
+			OCLH::listCLDevices();
 			return EXIT_SUCCESS;
 		} else {
 			try {
-				prepareCLDevice(opts.getCLDevice()-1);
-				prepareCLProgs();
+				OCLH::prepareCLDevice(opts.getCLDevice()-1);
 			} catch (cl::Error& e) {
 				Display::printText(e.what());
 				Display::printText("Will fall back to sequential version.");
@@ -100,8 +98,6 @@ int main(int argc, char** argv)
 		}
 	}
 	#endif // INOVESA_USE_CL
-
-
 
 	size_t nParticles = UINT16_MAX;
 	sstream.str("");
@@ -138,7 +134,7 @@ int main(int argc, char** argv)
 	}
 
 	HDF5File file(opts.getOutFile(),ps_size);
-	Display::printText("Will save reults to "+opts.getOutFile()+".");
+	Display::printText("Will save reults to: \""+opts.getOutFile()+'\"');
 
 	PhaseSpace mesh_rotated(*mesh);
 
@@ -209,6 +205,8 @@ int main(int argc, char** argv)
 	#endif // INOVESA_USE_CL
 
 	delete mesh;
+
+	Display::printText("Finished.");
 
 	return EXIT_SUCCESS;
 }
