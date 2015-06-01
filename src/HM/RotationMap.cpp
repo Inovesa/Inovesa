@@ -30,6 +30,21 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 				size_t(xsize)*size_t(ysize)*it*it/ROTMAP_SIZE,it*it,it),
 	_sat(interpol_saturating)
 {
+	const meshaxis_t cos_dt = cos(angle);
+	const meshaxis_t sin_dt = -sin(angle);
+#if ROTMAP_SIZE == 0
+	rot = {{cos_dt,sin_dt}};
+	imgsize = {{_xsize,_ysize}};
+
+	genCode4Rotation();
+	_cl_prog  = OCLH::prepareCLProg(_cl_code);
+
+	applyHM = cl::Kernel(_cl_prog, "rotate");
+	applyHM.setArg(0, _in->data_buf);
+	applyHM.setArg(1, imgsize);
+	applyHM.setArg(2, rot);
+	applyHM.setArg(3, _out->data_buf);
+#else
 	// gridpoint matrix used for interpolation
 	hi* ph1D = new hi[_ip];
 	hi** ph = new hi*[_it];
@@ -42,9 +57,6 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	interpol_t* icp = new interpol_t[_it];
 
 	interpol_t* hmc = new interpol_t[_ip];
-
-	const meshaxis_t cos_dt = cos(angle);
-	const meshaxis_t sin_dt = -sin(angle);
 
 	#if ROTMAP_SIZE == 1
 	for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
@@ -155,7 +167,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 
 
 				// renormlize to minimize rounding errors
-//				renormalize(hmc.size(),hmc.data());
+				// renormalize(hmc.size(),hmc.data());
 
 				// write heritage map
 				for (meshindex_t j1=0; j1<_it; j1++) {
@@ -221,6 +233,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 
 	delete [] ph;
 	delete [] ph1D;
+#endif // ROTMAP_SIZE > 0
 }
 
 void vfps::RotationMap::apply()
@@ -488,5 +501,55 @@ void vfps::RotationMap::genCode4HM4sat()
 		value += mult(src[hm[offset+14].src],hm[offset+14].weight);
 		value += mult(src[hm[offset+15].src],hm[offset+15].weight);
 		dst[i] = clamp(value,flor,ceil);
+})";
+}
+
+void vfps::RotationMap::genCode4Rotation()
+{
+	_cl_code+= R"(
+	__kernel void rotate(	const __global data_t* src,
+							const uint2 imgSize,
+							const float2 rot,
+							__global data_t* dst)
+	{
+		int x = get_global_id(0);
+		int y = get_global_id(1);
+
+		float4 value;
+		int2 center = (int2)(imgSize.x/2,imgSize.y/2);
+
+		int2 dstpos = (int2)(x,y);
+
+		x -= center.x;
+		y -= center.y;
+
+		float srcx = (rot.x*(x) - rot.y*(y) + center.x);
+		float srcy = (rot.y*(x) + rot.x*(y) + center.y);
+		int2 srcpos = (int2)(srcx,srcy);
+		float xf = srcx-srcpos.x;
+		float yf = srcy-srcpos.y;
+
+		const sampler_t sampler
+				= CLK_NORMALIZED_COORDS_FALSE
+				| CLK_ADDRESS_CLAMP_TO_EDGE
+				| CLK_FILTER_NEAREST;
+
+		value = (
+				xf*(xf-1)*(
+					+yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(-1,-1))
+					+2*(1-yf*yf)*read_imagef(src,sampler,srcpos+(int2)(-1,0))
+					+yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(-1,1))
+				) +
+				2*(1-xf*xf)*(
+					+yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(0,-1))
+					+2*(1-yf*yf)*read_imagef(src,sampler,srcpos)
+					+yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(0,1))
+				) +
+				xf*(xf+1)*(
+					+yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(1,-1))
+					+2*(1-yf*yf)*read_imagef(src,sampler,srcpos+(int2)(1,0))
+					+yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(1,1))
+				))/4;
+		write_imagef(dst,dstpos,value);
 	})";
 }
