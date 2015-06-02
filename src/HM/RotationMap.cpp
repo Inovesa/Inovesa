@@ -26,20 +26,24 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							   const InterpolationType it,
 							   const RotationCoordinates rt,
 							   bool interpol_saturating) :
+#if ROTMAP_SIZE == 0 // no heritage map is saved
+	HeritageMap(in,out,xsize,ysize,0,it*it,it),
+#else
 	HeritageMap(in,out,xsize,ysize,
 				size_t(xsize)*size_t(ysize)*it*it/ROTMAP_SIZE,it*it,it),
+#endif
 	_sat(interpol_saturating)
 {
 	const meshaxis_t cos_dt = cos(angle);
 	const meshaxis_t sin_dt = -sin(angle);
 #if ROTMAP_SIZE == 0
 	rot = {{cos_dt,sin_dt}};
-	imgsize = {{_xsize,_ysize}};
+	imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
 
 	genCode4Rotation();
 	_cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-	applyHM = cl::Kernel(_cl_prog, "rotate");
+	applyHM = cl::Kernel(_cl_prog, "applyRotation");
 	applyHM.setArg(0, _in->data_buf);
 	applyHM.setArg(1, imgsize);
 	applyHM.setArg(2, rot);
@@ -73,10 +77,10 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 			meshaxis_t qq_int;
 			meshaxis_t qp_int;
 			//Scaled arguments of interpolation functions:
-			meshindex_t id; //meshpoint smaller q'
-			meshindex_t jd; //numper of lower mesh point from p'
-			interpol_t xiq; //distance from id
-			interpol_t xip; //distance of p' from lower mesh point
+			meshindex_t xi; //meshpoint smaller q'
+			meshindex_t yi; //numper of lower mesh point from p'
+			interpol_t xf; //distance from id
+			interpol_t yf; //distance of p' from lower mesh point
 			switch (rt) {
 			case RotationCoordinates::mesh:
 				qp = cos_dt*(q_i-(_xsize-1)/2.0)
@@ -108,12 +112,12 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 				pcoord = (pp+1)*(_ysize-1)/2;
 				break;
 			}
-			xiq = std::modf(qcoord, &qq_int);
-			xip = std::modf(pcoord, &qp_int);
-			id = qq_int;
-			jd = qp_int;
+			xf = std::modf(qcoord, &qq_int);
+			yf = std::modf(pcoord, &qp_int);
+			xi = qq_int;
+			yi = qp_int;
 
-			if (id <  _xsize && jd < _ysize)
+			if (xi <  _xsize && yi < _ysize)
 			{
 				// create vectors containing interpolation coefficiants
 				switch(_it) {
@@ -123,42 +127,46 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 					icp[0] = 1;
 					break;
 				case InterpolationType::linear:
-					icq[0] = interpol_t(1)-xiq;
-					icq[1] = xiq;
+					icq[0] = interpol_t(1)-xf;
+					icq[1] = xf;
 
-					icp[0] = interpol_t(1)-xip;
-					icp[1] = xip;
+					icp[0] = interpol_t(1)-yf;
+					icp[1] = yf;
 					break;
 				case InterpolationType::quadratic:
-					icq[0] = xiq*(xiq-interpol_t(1))/interpol_t(2);
-					icq[1] = interpol_t(1)-xiq*xiq;
-					icq[2] = xiq*(xiq+interpol_t(1))/interpol_t(2);
+					icq[0] = xf*(xf-interpol_t(1))/interpol_t(2);
+					icq[1] = interpol_t(1)-xf*xf;
+					icq[2] = xf*(xf+interpol_t(1))/interpol_t(2);
 
-					icp[0] = xip*(xip-interpol_t(1))/interpol_t(2);
-					icp[1] = interpol_t(1)-xip*xip;
-					icp[2] = xip*(xip+interpol_t(1))/interpol_t(2);
+					icp[0] = yf*(yf-interpol_t(1))/interpol_t(2);
+					icp[1] = interpol_t(1)-yf*yf;
+					icp[2] = yf*(yf+interpol_t(1))/interpol_t(2);
 					break;
 				case InterpolationType::cubic:
-					icq[0] = (xiq-interpol_t(1))*(xiq-interpol_t(2))*xiq
+					icq[0] = (xf-interpol_t(1))*(xf-interpol_t(2))*xf
 							* interpol_t(-1./6.);
-					icq[1] = (xiq+interpol_t(1))*(xiq-interpol_t(1))
-							* (xiq-interpol_t(2)) / interpol_t(2);
-					icq[2] = (interpol_t(2)-xiq)*xiq*(xiq+interpol_t(1))
+					icq[1] = (xf+interpol_t(1))*(xf-interpol_t(1))
+							* (xf-interpol_t(2)) / interpol_t(2);
+					icq[2] = (interpol_t(2)-xf)*xf*(xf+interpol_t(1))
 							/ interpol_t(2);
-					icq[3] = xiq*(xiq+interpol_t(1))*(xiq-interpol_t(1))
+					icq[3] = xf*(xf+interpol_t(1))*(xf-interpol_t(1))
 							* interpol_t(1./6.);
 
-					icp[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
+					icp[0] = (yf-interpol_t(1))*(yf-interpol_t(2))*yf
 							* interpol_t(-1./6.);
-					icp[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
-							* (xip-interpol_t(2)) / interpol_t(2);
-					icp[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))
+					icp[1] = (yf+interpol_t(1))*(yf-interpol_t(1))
+							* (yf-interpol_t(2)) / interpol_t(2);
+					icp[2] = (interpol_t(2)-yf)*yf*(yf+interpol_t(1))
 							/ interpol_t(2);
-					icp[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
+					icp[3] = yf*(yf+interpol_t(1))*(yf-interpol_t(1))
 							* interpol_t(1./6.);
 					break;
 				}
-				//  Assemble interpolation
+
+				/*  Assemble interpolation
+				 * (using size_t although _it is mush smaller,
+				 * so that product won't overflow)
+				 */
 				for (size_t hmq=0; hmq<_it; hmq++) {
 					for (size_t hmp=0; hmp<_it; hmp++){
 						hmc[hmp*_it+hmq] = icq[hmp]*icp[hmq];
@@ -171,9 +179,9 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 
 				// write heritage map
 				for (meshindex_t j1=0; j1<_it; j1++) {
-					 meshindex_t j0 = jd+j1-(_it-1)/2;
+					 meshindex_t j0 = yi+j1-(_it-1)/2;
 					for (meshindex_t i1=0; i1<_it; i1++) {
-						 meshindex_t i0 = id+i1-(_it-1)/2;
+						 meshindex_t i0 = xi+i1-(_it-1)/2;
 						if(i0< _xsize && j0 < _ysize ){
 							ph[i1][j1].index = i0*_ysize+j0;
 							ph[i1][j1].weight = hmc[i1*_it+j1];
@@ -243,10 +251,17 @@ void vfps::RotationMap::apply()
 		#ifdef INOVESA_SYNC_CL
 		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
 		#endif // INOVESA_SYNC_CL
+		#if ROTMAP_SIZE == 0
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_xsize,_ysize));
+		#else // ROTMAP_SIZE > 0
 		OCLH::queue.enqueueNDRangeKernel (
 					applyHM,
 					cl::NullRange,
 					cl::NDRange(_size/ROTMAP_SIZE));
+		#endif // ROTMAP_SIZE > 0
 		#ifdef CL_VERSION_1_2
 		OCLH::queue.enqueueBarrierWithWaitList();
 		#else // CL_VERSION_1_2
@@ -261,6 +276,8 @@ void vfps::RotationMap::apply()
 		meshdata_t* data_in = _in->getData();
 		meshdata_t* data_out = _out->getData();
 
+		#if ROTMAP_SIZE == 0
+		#else // ROTMAP_SIZE > 0
 		for (meshindex_t i=0; i< _size/ROTMAP_SIZE; i++) {
 			data_out[i] = 0;
 			#if ROTMAP_SIZE > 1
@@ -298,6 +315,7 @@ void vfps::RotationMap::apply()
 				#endif
 			}
 		}
+		#endif
 	}
 }
 
@@ -506,50 +524,93 @@ void vfps::RotationMap::genCode4HM4sat()
 
 void vfps::RotationMap::genCode4Rotation()
 {
-	_cl_code+= R"(
-	__kernel void rotate(	const __global data_t* src,
-							const uint2 imgSize,
-							const float2 rot,
-							__global data_t* dst)
+	if (_sat) {
+		Display::printText("\tSaturation not implemented for ROTMAP_SIZE == 0");
+	}
+	_cl_code += R"(
+	__kernel void applyRotation(	const __global data_t* src,
+									const int2 imgSize,
+									const float2 rot,
+									__global data_t* dst)
 	{
-		int x = get_global_id(0);
-		int y = get_global_id(1);
+		const int x = get_global_id(0);
+		const int y = get_global_id(1);
 
-		float4 value;
-		int2 center = (int2)(imgSize.x/2,imgSize.y/2);
+		const float srcx = rot.x*(x-(imgSize.x+1)/2)-rot.y*(y-(imgSize.y+1)/2)
+								+(imgSize.x+1)/2;
+		const float srcy = rot.y*(x-(imgSize.x+1)/2)+rot.x*(y-(imgSize.y+1)/2)
+								+(imgSize.y+1)/2;
+		const int xi = floor(srcx);
+		const int yi = floor(srcy);
+		const float xf = srcx - xi;
+		const float yf = srcy - yi;
+	)";
 
-		int2 dstpos = (int2)(x,y);
-
-		x -= center.x;
-		y -= center.y;
-
-		float srcx = (rot.x*(x) - rot.y*(y) + center.x);
-		float srcy = (rot.y*(x) + rot.x*(y) + center.y);
-		int2 srcpos = (int2)(srcx,srcy);
-		float xf = srcx-srcpos.x;
-		float yf = srcy-srcpos.y;
-
-		const sampler_t sampler
-				= CLK_NORMALIZED_COORDS_FALSE
-				| CLK_ADDRESS_CLAMP_TO_EDGE
-				| CLK_FILTER_NEAREST;
-
-		value = (
-				xf*(xf-1)*(
-					+yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(-1,-1))
-					+2*(1-yf*yf)*read_imagef(src,sampler,srcpos+(int2)(-1,0))
-					+yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(-1,1))
+	switch (_it) {
+	case InterpolationType::quadratic:
+		_cl_code += R"(
+		const float3 icq = (float3)(xf*(xf-1)/2,(1-xf*xf),xf*(xf+1)/2);
+		const float3 icp = (float3)(yf*(yf-1)/2,(1-yf*yf),yf*(yf+1)/2);
+		dst[x*imgSize.y+y] =
+				icq.s0*(
+					+icp.s0*src[(xi-1)*imgSize.y+yi-1]
+					+icp.s1*src[(xi-1)*imgSize.y+yi]
+					+icp.s2*src[(xi-1)*imgSize.y+yi+1]
 				) +
-				2*(1-xf*xf)*(
-					+yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(0,-1))
-					+2*(1-yf*yf)*read_imagef(src,sampler,srcpos)
-					+yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(0,1))
+				icq.s1*(
+					+icp.s0*src[(xi)*imgSize.y+yi-1]
+					+icp.s1*src[(xi)*imgSize.y+yi]
+					+icp.s2*src[(xi)*imgSize.y+yi+1]
 				) +
-				xf*(xf+1)*(
-					+yf*(yf-1)*read_imagef(src,sampler,srcpos+(int2)(1,-1))
-					+2*(1-yf*yf)*read_imagef(src,sampler,srcpos+(int2)(1,0))
-					+yf*(yf+1)*read_imagef(src,sampler,srcpos+(int2)(1,1))
-				))/4;
-		write_imagef(dst,dstpos,value);
-	})";
+				icq.s2*(
+					+icp.s0*src[(xi+1)*imgSize.y+yi-1]
+					+icp.s1*src[(xi+1)*imgSize.y+yi]
+					+icp.s2*src[(xi+1)*imgSize.y+yi+1]
+				);
+		})";
+		break;
+	case InterpolationType::cubic:
+		_cl_code += R"(
+		const float4 icq = (float4)(
+								(xf  )*(xf-1)*(xf-2)/(-6),
+								(xf+1)*(xf-1)*(xf-2)/( 2),
+								(xf+1)*(xf  )*(xf-2)/(-2),
+								(xf+1)*(xf  )*(xf-1)/( 6)
+							);
+
+		const float4 icp = (float4)(
+								(yf  )*(yf-1)*(yf-2)/(-6),
+								(yf+1)*(yf-1)*(yf-2)/( 2),
+								(yf+1)*(yf  )*(yf-2)/(-2),
+								(yf+1)*(yf  )*(yf-1)/( 6)
+							);
+
+		dst[x*imgSize.y+y] =
+				icq.s0*(
+					+icp.s0*src[(xi-1)*imgSize.y+yi-1]
+					+icp.s1*src[(xi-1)*imgSize.y+yi  ]
+					+icp.s2*src[(xi-1)*imgSize.y+yi+1]
+					+icp.s3*src[(xi-1)*imgSize.y+yi+2]
+				) +
+				icq.s1*(
+					+icp.s0*src[(xi  )*imgSize.y+yi-1]
+					+icp.s1*src[(xi  )*imgSize.y+yi  ]
+					+icp.s2*src[(xi  )*imgSize.y+yi+1]
+					+icp.s3*src[(xi  )*imgSize.y+yi+2]
+				) +
+				icq.s2*(
+					+icp.s0*src[(xi+1)*imgSize.y+yi-1]
+					+icp.s1*src[(xi+1)*imgSize.y+yi  ]
+					+icp.s2*src[(xi+1)*imgSize.y+yi+1]
+					+icp.s3*src[(xi+1)*imgSize.y+yi+2]
+				) +
+				icq.s3*(
+					+icp.s0*src[(xi+2)*imgSize.y+yi-1]
+					+icp.s1*src[(xi+2)*imgSize.y+yi  ]
+					+icp.s2*src[(xi+2)*imgSize.y+yi+1]
+					+icp.s3*src[(xi+2)*imgSize.y+yi+2]
+				);
+		})";
+		break;
+	}
 }
