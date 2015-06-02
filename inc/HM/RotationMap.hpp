@@ -61,7 +61,7 @@ private:
 
 	void genCode4Rotation();
 
-	cl_uint2 imgsize;
+	cl_int2 imgsize;
 
 	cl_float2 rot;
 	#endif

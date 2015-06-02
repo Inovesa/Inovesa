@@ -37,7 +37,7 @@
  */
 #define INTEGRAL_TYPE 2
 
-#define ROTMAP_SIZE 2
+#define ROTMAP_SIZE 0
 
 namespace vfps
 {
