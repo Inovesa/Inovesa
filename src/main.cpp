@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 	#endif // INOVESA_USE_CL
 
 	constexpr meshindex_t ps_size = 0x2000;
-	size_t nParticles = UINT16_MAX;
+	size_t nParticles = UINT32_MAX;
 	sstream.str("");
 	sstream << nParticles/ps_size;
 
