@@ -26,18 +26,21 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 							   const InterpolationType it,
 							   const RotationCoordinates rt,
 							   bool interpol_saturating) :
-#if ROTMAP_SIZE == 0 // no heritage map is saved
-	HeritageMap(in,out,xsize,ysize,0,it*it,it),
+#if ROTMAP_SIZE == 0 // no heritage map is saved, just hi for one mesh cell
+	HeritageMap(in,out,xsize,ysize,1,it*it,it),
 #else
 	HeritageMap(in,out,xsize,ysize,
 				size_t(xsize)*size_t(ysize)*it*it/ROTMAP_SIZE,it*it,it),
 #endif
-	_sat(interpol_saturating)
+	_sat(interpol_saturating),
+	_rt(rt),
+	_cos_dt(cos(angle)),
+	_sin_dt(sin(angle))
 {
-	const meshaxis_t cos_dt = cos(angle);
-	const meshaxis_t sin_dt = -sin(angle);
 #if ROTMAP_SIZE == 0
-	rot = {{cos_dt,sin_dt}};
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+	rot = {{_cos_dt,_sin_dt}};
 	imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
 
 	genCode4Rotation();
@@ -48,150 +51,16 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	applyHM.setArg(1, imgsize);
 	applyHM.setArg(2, rot);
 	applyHM.setArg(3, _out->data_buf);
-#else
-	// gridpoint matrix used for interpolation
-	hi* ph1D = new hi[_ip];
-	hi** ph = new hi*[_it];
-	for (uint_fast8_t i=0; i<_it;i++) {
-		ph[i] = &ph1D[i*_it];
 	}
-
-	// arrays of interpolation coefficients
-	interpol_t* icq = new interpol_t[_it];
-	interpol_t* icp = new interpol_t[_it];
-
-	interpol_t* hmc = new interpol_t[_ip];
-
+	#endif
+#else
 	#if ROTMAP_SIZE == 1
 	for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
 	#else // ROTMAP_SIZE == 2/4
 	for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
 	#endif
 		for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
-			// Cell of inverse image (qp,pp) of grid point i,j.
-			meshaxis_t qp; //q', backward mapping
-			meshaxis_t pp; //p'
-			// interpolation type specific q and p coordinates
-			meshaxis_t pcoord;
-			meshaxis_t qcoord;
-			meshaxis_t qq_int;
-			meshaxis_t qp_int;
-			//Scaled arguments of interpolation functions:
-			meshindex_t xi; //meshpoint smaller q'
-			meshindex_t yi; //numper of lower mesh point from p'
-			interpol_t xf; //distance from id
-			interpol_t yf; //distance of p' from lower mesh point
-			switch (rt) {
-			case RotationCoordinates::mesh:
-				qp = cos_dt*(q_i-(_xsize-1)/2.0)
-						- sin_dt*(p_i-(_ysize-1)/2.0)+(_xsize-1)/2.0;
-				pp = sin_dt*(q_i-(_xsize-1)/2.0)
-						+ cos_dt*(p_i-(_ysize-1)/2.0)+(_ysize-1)/2.0;
-				qcoord = qp;
-				pcoord = pp;
-				break;
-			case RotationCoordinates::norm_0_1:
-				qp = cos_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
-						- sin_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
-				pp = sin_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
-						+ cos_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
-				qcoord = (qp+0.5)*(_xsize-1);
-				pcoord = (pp+0.5)*(_ysize-1);
-				break;
-			case RotationCoordinates::norm_pm1:
-				qp = cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
-							/static_cast<meshaxis_t>(_xsize-1)
-				   - sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
-							/static_cast<meshaxis_t>(_ysize-1);
-
-				pp = sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
-							/static_cast<meshaxis_t>(_xsize-1)
-				   + cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
-							/static_cast<meshaxis_t>(_ysize-1);
-				qcoord = (qp+1)*(_xsize-1)/2;
-				pcoord = (pp+1)*(_ysize-1)/2;
-				break;
-			}
-			xf = std::modf(qcoord, &qq_int);
-			yf = std::modf(pcoord, &qp_int);
-			xi = qq_int;
-			yi = qp_int;
-
-			if (xi <  _xsize && yi < _ysize)
-			{
-				// create vectors containing interpolation coefficiants
-				switch(_it) {
-				case InterpolationType::none:
-					icq[0] = 1;
-
-					icp[0] = 1;
-					break;
-				case InterpolationType::linear:
-					icq[0] = interpol_t(1)-xf;
-					icq[1] = xf;
-
-					icp[0] = interpol_t(1)-yf;
-					icp[1] = yf;
-					break;
-				case InterpolationType::quadratic:
-					icq[0] = xf*(xf-interpol_t(1))/interpol_t(2);
-					icq[1] = interpol_t(1)-xf*xf;
-					icq[2] = xf*(xf+interpol_t(1))/interpol_t(2);
-
-					icp[0] = yf*(yf-interpol_t(1))/interpol_t(2);
-					icp[1] = interpol_t(1)-yf*yf;
-					icp[2] = yf*(yf+interpol_t(1))/interpol_t(2);
-					break;
-				case InterpolationType::cubic:
-					icq[0] = (xf-interpol_t(1))*(xf-interpol_t(2))*xf
-							* interpol_t(-1./6.);
-					icq[1] = (xf+interpol_t(1))*(xf-interpol_t(1))
-							* (xf-interpol_t(2)) / interpol_t(2);
-					icq[2] = (interpol_t(2)-xf)*xf*(xf+interpol_t(1))
-							/ interpol_t(2);
-					icq[3] = xf*(xf+interpol_t(1))*(xf-interpol_t(1))
-							* interpol_t(1./6.);
-
-					icp[0] = (yf-interpol_t(1))*(yf-interpol_t(2))*yf
-							* interpol_t(-1./6.);
-					icp[1] = (yf+interpol_t(1))*(yf-interpol_t(1))
-							* (yf-interpol_t(2)) / interpol_t(2);
-					icp[2] = (interpol_t(2)-yf)*yf*(yf+interpol_t(1))
-							/ interpol_t(2);
-					icp[3] = yf*(yf+interpol_t(1))*(yf-interpol_t(1))
-							* interpol_t(1./6.);
-					break;
-				}
-
-				/*  Assemble interpolation
-				 * (using size_t although _it is mush smaller,
-				 * so that product won't overflow)
-				 */
-				for (size_t hmq=0; hmq<_it; hmq++) {
-					for (size_t hmp=0; hmp<_it; hmp++){
-						hmc[hmp*_it+hmq] = icq[hmp]*icp[hmq];
-					}
-				}
-
-
-				// renormlize to minimize rounding errors
-				// renormalize(hmc.size(),hmc.data());
-
-				// write heritage map
-				for (meshindex_t j1=0; j1<_it; j1++) {
-					 meshindex_t j0 = yi+j1-(_it-1)/2;
-					for (meshindex_t i1=0; i1<_it; i1++) {
-						 meshindex_t i0 = xi+i1-(_it-1)/2;
-						if(i0< _xsize && j0 < _ysize ){
-							ph[i1][j1].index = i0*_ysize+j0;
-							ph[i1][j1].weight = hmc[i1*_it+j1];
-						} else {
-							ph[i1][j1] = {0,0};
-						}
-						_hinfo[(q_i*ysize+p_i)*_ip+i1*_it+j1] = ph[i1][j1];
-					}
-				}
-			}
+			genHInfo(q_i,p_i,&_hinfo[(q_i*ysize+p_i)*_ip]);
 		}
 	}
 	#ifdef INOVESA_USE_CL
@@ -234,13 +103,6 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 		}
 	}
 	#endif // INOVESA_USE_CL
-
-	delete [] icp;
-	delete [] icq;
-	delete [] hmc;
-
-	delete [] ph;
-	delete [] ph1D;
 #endif // ROTMAP_SIZE > 0
 }
 
@@ -277,6 +139,17 @@ void vfps::RotationMap::apply()
 		meshdata_t* data_out = _out->getData();
 
 		#if ROTMAP_SIZE == 0
+			for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
+				for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
+					genHInfo(q_i,p_i,_hinfo);
+					for (uint_fast8_t j=0; j<_ip; j++) {
+						hi h = _hinfo[j];
+						meshindex_t i = q_i*_ysize+p_i;
+						data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+						data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
+					}
+				}
+			}
 		#else // ROTMAP_SIZE > 0
 		for (meshindex_t i=0; i< _size/ROTMAP_SIZE; i++) {
 			data_out[i] = 0;
@@ -317,6 +190,156 @@ void vfps::RotationMap::apply()
 		}
 		#endif
 	}
+}
+
+void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
+								 vfps::meshindex_t p_i,
+								 vfps::HeritageMap::hi* myhinfo)
+{
+	// gridpoint matrix used for interpolation
+	hi* ph1D = new hi[_ip];
+	hi** ph = new hi*[_it];
+	for (uint_fast8_t i=0; i<_it;i++) {
+		ph[i] = &ph1D[i*_it];
+	}
+
+	// arrays of interpolation coefficients
+	interpol_t* icq = new interpol_t[_it];
+	interpol_t* icp = new interpol_t[_it];
+
+	interpol_t* hmc = new interpol_t[_ip];
+
+	// Cell of inverse image (qp,pp) of grid point i,j.
+	meshaxis_t qp; //q', backward mapping
+	meshaxis_t pp; //p'
+	// interpolation type specific q and p coordinates
+	meshaxis_t pcoord;
+	meshaxis_t qcoord;
+	meshaxis_t qq_int;
+	meshaxis_t qp_int;
+	//Scaled arguments of interpolation functions:
+	meshindex_t xi; //meshpoint smaller q'
+	meshindex_t yi; //numper of lower mesh point from p'
+	interpol_t xf; //distance from id
+	interpol_t yf; //distance of p' from lower mesh point
+	switch (_rt) {
+	case RotationCoordinates::mesh:
+		qp = _cos_dt*(q_i-(_xsize-1)/2.0)
+				- _sin_dt*(p_i-(_ysize-1)/2.0)+(_xsize-1)/2.0;
+		pp = _sin_dt*(q_i-(_xsize-1)/2.0)
+				+ _cos_dt*(p_i-(_ysize-1)/2.0)+(_ysize-1)/2.0;
+		qcoord = qp;
+		pcoord = pp;
+		break;
+	case RotationCoordinates::norm_0_1:
+		qp = _cos_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
+				- _sin_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
+		pp = _sin_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
+				+ _cos_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
+		qcoord = (qp+0.5)*(_xsize-1);
+		pcoord = (pp+0.5)*(_ysize-1);
+		break;
+	case RotationCoordinates::norm_pm1:
+		qp = _cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
+					/static_cast<meshaxis_t>(_xsize-1)
+		   - _sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
+					/static_cast<meshaxis_t>(_ysize-1);
+
+		pp = _sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
+					/static_cast<meshaxis_t>(_xsize-1)
+		   + _cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
+					/static_cast<meshaxis_t>(_ysize-1);
+		qcoord = (qp+1)*(_xsize-1)/2;
+		pcoord = (pp+1)*(_ysize-1)/2;
+		break;
+	}
+	xf = std::modf(qcoord, &qq_int);
+	yf = std::modf(pcoord, &qp_int);
+	xi = qq_int;
+	yi = qp_int;
+
+	if (xi <  _xsize && yi < _ysize)
+	{
+		// create vectors containing interpolation coefficiants
+		switch(_it) {
+		case InterpolationType::none:
+			icq[0] = 1;
+
+			icp[0] = 1;
+			break;
+		case InterpolationType::linear:
+			icq[0] = interpol_t(1)-xf;
+			icq[1] = xf;
+
+			icp[0] = interpol_t(1)-yf;
+			icp[1] = yf;
+			break;
+		case InterpolationType::quadratic:
+			icq[0] = xf*(xf-interpol_t(1))/interpol_t(2);
+			icq[1] = interpol_t(1)-xf*xf;
+			icq[2] = xf*(xf+interpol_t(1))/interpol_t(2);
+
+			icp[0] = yf*(yf-interpol_t(1))/interpol_t(2);
+			icp[1] = interpol_t(1)-yf*yf;
+			icp[2] = yf*(yf+interpol_t(1))/interpol_t(2);
+			break;
+		case InterpolationType::cubic:
+			icq[0] = (xf-interpol_t(1))*(xf-interpol_t(2))*xf
+					* interpol_t(-1./6.);
+			icq[1] = (xf+interpol_t(1))*(xf-interpol_t(1))
+					* (xf-interpol_t(2)) / interpol_t(2);
+			icq[2] = (interpol_t(2)-xf)*xf*(xf+interpol_t(1))
+					/ interpol_t(2);
+			icq[3] = xf*(xf+interpol_t(1))*(xf-interpol_t(1))
+					* interpol_t(1./6.);
+
+			icp[0] = (yf-interpol_t(1))*(yf-interpol_t(2))*yf
+					* interpol_t(-1./6.);
+			icp[1] = (yf+interpol_t(1))*(yf-interpol_t(1))
+					* (yf-interpol_t(2)) / interpol_t(2);
+			icp[2] = (interpol_t(2)-yf)*yf*(yf+interpol_t(1))
+					/ interpol_t(2);
+			icp[3] = yf*(yf+interpol_t(1))*(yf-interpol_t(1))
+					* interpol_t(1./6.);
+			break;
+		}
+
+		/*  Assemble interpolation
+		 * (using size_t although _it is mush smaller,
+		 * so that product won't overflow)
+		 */
+		for (size_t hmq=0; hmq<_it; hmq++) {
+			for (size_t hmp=0; hmp<_it; hmp++){
+				hmc[hmp*_it+hmq] = icq[hmp]*icp[hmq];
+			}
+		}
+
+
+		// renormlize to minimize rounding errors
+		// renormalize(hmc.size(),hmc.data());
+
+		// write heritage map
+		for (meshindex_t j1=0; j1<_it; j1++) {
+			 meshindex_t j0 = yi+j1-(_it-1)/2;
+			for (meshindex_t i1=0; i1<_it; i1++) {
+				 meshindex_t i0 = xi+i1-(_it-1)/2;
+				if(i0< _xsize && j0 < _ysize ){
+					ph[i1][j1].index = i0*_ysize+j0;
+					ph[i1][j1].weight = hmc[i1*_it+j1];
+				} else {
+					ph[i1][j1] = {0,0};
+				}
+				myhinfo[i1*_it+j1] = ph[i1][j1];
+			}
+		}
+	}
+
+	delete [] icp;
+	delete [] icq;
+	delete [] hmc;
+
+	delete [] ph;
+	delete [] ph1D;
 }
 
 void vfps::RotationMap::genCode4HM4_2sat()

@@ -96,12 +96,15 @@ void OCLH::listCLDevices()
 		cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
 		VECTOR_CLASS<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
 		for (unsigned int d=0; d<OCLH::devices.size(); d++) {
-			std::cout << tmp_devices[d].getInfo<CL_DEVICE_NAME>()
-					  << " (on \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\")"
-					  << " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"'
-					  << " offering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
-					  << " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
-					  << std::endl;
+			std::cout	<< "=> " << d+1 << ": "
+						<< tmp_devices[d].getInfo<CL_DEVICE_NAME>() << " ("
+						<< tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
+						<< tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>()
+						<< " CU on \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\")"
+						<< " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"' << std::endl
+						<< " offering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
+						<< " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
+						<< std::endl;
 		}
 	}
 }

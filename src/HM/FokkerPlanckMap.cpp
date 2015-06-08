@@ -123,7 +123,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	}
 
 	#ifdef INOVESA_USE_CL
-
+	if (OCLH::active) {
 	_cl_code += R"(
 	__kernel void applyHM_Y(const __global data_t* src,
 							const __global hi* hm,
@@ -159,7 +159,8 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 		applyHM.setArg(3, _ysize);
 		applyHM.setArg(4, _out->data_buf);
 	}
-#endif
+	}
+	#endif
 }
 
 void vfps::FokkerPlanckMap::apply()
