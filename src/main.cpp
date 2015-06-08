@@ -99,14 +99,14 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 
+	constexpr meshindex_t ps_size = 0x2000;
 	size_t nParticles = UINT16_MAX;
 	sstream.str("");
-	sstream << nParticles;
+	sstream << nParticles/ps_size;
 
 	Display::printText("Generating initial particle distribution (using "+
-					   sstream.str()+" patricles).");
+					   sstream.str()+" patricles per mesh cell).");
 	PhaseSpace* mesh;
-	meshindex_t ps_size = 512;
 	constexpr double qmax = 5.0;
 	constexpr double pmax = 5.0;
 	mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
