@@ -26,7 +26,7 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 							   uint_fast8_t intertype) :
 	_ip(interpoints),
 	_it(intertype),
-	_hinfo(new hi[memsize]),
+	_hinfo(new hi[std::max(memsize,static_cast<size_t>(16))]),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),

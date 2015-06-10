@@ -197,7 +197,7 @@ int main(int argc, char** argv)
 	}
 
 	HDF5File file(opts.getOutFile(),ps_size);
-	Display::printText("Will save reults to: \""+opts.getOutFile()+'\"');
+	Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 
 	PhaseSpace mesh_rotated(*mesh);
 
