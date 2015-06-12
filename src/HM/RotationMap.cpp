@@ -34,8 +34,8 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 #endif
 	_sat(interpol_saturating),
 	_rt(rt),
-	_cos_dt(cos(angle)),
-	_sin_dt(sin(angle))
+	_cos_dt(cos(-angle)),
+	_sin_dt(sin(-angle))
 {
 #if ROTMAP_SIZE == 0
 	#ifdef INOVESA_USE_CL
@@ -114,10 +114,11 @@ void vfps::RotationMap::apply()
 		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
 		#endif // INOVESA_SYNC_CL
 		#if ROTMAP_SIZE == 0
+		 // stay away from mesh borders
 		OCLH::queue.enqueueNDRangeKernel (
 					applyHM,
-					cl::NullRange,
-					cl::NDRange(_xsize,_ysize));
+					cl::NDRange(1,1),
+					cl::NDRange(_xsize-_it+1,_ysize-_it+1));
 		#else // ROTMAP_SIZE > 0
 		OCLH::queue.enqueueNDRangeKernel (
 					applyHM,
@@ -141,10 +142,12 @@ void vfps::RotationMap::apply()
 		#if ROTMAP_SIZE == 0
 			for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
 				for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
+					meshindex_t i = q_i*_ysize+p_i;
+					data_out[i] = 0;
+					data_out[_size-1-i] = 0;
 					genHInfo(q_i,p_i,_hinfo);
 					for (uint_fast8_t j=0; j<_ip; j++) {
 						hi h = _hinfo[j];
-						meshindex_t i = q_i*_ysize+p_i;
 						data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
 						data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
 					}
@@ -556,8 +559,8 @@ void vfps::RotationMap::genCode4Rotation()
 									const float2 rot,
 									__global data_t* dst)
 	{
-		const int x = get_global_id(0);
-		const int y = get_global_id(1);
+		const int x = get_global_id(0)+1;
+		const int y = get_global_id(1)+1;
 
 		const float srcx = rot.x*(x-(imgSize.x+1)/2)-rot.y*(y-(imgSize.y+1)/2)
 								+(imgSize.x+1)/2;
