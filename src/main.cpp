@@ -139,6 +139,9 @@ int main(int argc, char** argv)
 					(*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
 				}
 			}
+			std::stringstream imgsize;
+			imgsize << ps_size;
+			Display::printText("Read phase space (a="+imgsize.str()+" px).");
 		} else {
 			std::cerr << "Phase space has to be quadratic. Please adjust "
 					  << startdistfile << std::endl;
