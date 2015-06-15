@@ -261,8 +261,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 	xi = qq_int;
 	yi = qp_int;
 
-	if (xi <  _xsize && yi < _ysize)
-	{
+	if (xi <  _xsize && yi < _ysize) {
 		// create vectors containing interpolation coefficiants
 		switch(_it) {
 		case InterpolationType::none:
@@ -334,6 +333,10 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 				}
 				myhinfo[i1*_it+j1] = ph[i1][j1];
 			}
+		}
+	} else {
+		for (uint_fast8_t i=0; i<_ip; i++) {
+			myhinfo[i] = {0,0};
 		}
 	}
 
