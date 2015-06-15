@@ -51,8 +51,14 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	applyHM.setArg(1, imgsize);
 	applyHM.setArg(2, rot);
 	applyHM.setArg(3, _out->data_buf);
-	}
+	} else
 	#endif
+	{
+		if (_sat) {
+			Display::printText("\tSaturation for ROTMAP_SIZE==0"
+							   "only implemented when using OpenCL.");
+		}
+	}
 #else
 	#if ROTMAP_SIZE == 1
 	for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
@@ -553,9 +559,6 @@ void vfps::RotationMap::genCode4HM4sat()
 
 void vfps::RotationMap::genCode4Rotation()
 {
-	if (_sat) {
-		Display::printText("\tSaturation not implemented for ROTMAP_SIZE == 0");
-	}
 	_cl_code += R"(
 	__kernel void applyRotation(	const __global data_t* src,
 									const int2 imgSize,
@@ -580,41 +583,64 @@ void vfps::RotationMap::genCode4Rotation()
 		_cl_code += R"(
 		const float3 icq = (float3)(xf*(xf-1)/2,(1-xf*xf),xf*(xf+1)/2);
 		const float3 icp = (float3)(yf*(yf-1)/2,(1-yf*yf),yf*(yf+1)/2);
-		dst[x*imgSize.y+y] =
+		)";
+		break;
+	case InterpolationType::cubic:
+			_cl_code += R"(
+			const float4 icq = (float4)(
+									(xf  )*(xf-1)*(xf-2)/(-6),
+									(xf+1)*(xf-1)*(xf-2)/( 2),
+									(xf+1)*(xf  )*(xf-2)/(-2),
+									(xf+1)*(xf  )*(xf-1)/( 6)
+								);
+
+			const float4 icp = (float4)(
+									(yf  )*(yf-1)*(yf-2)/(-6),
+									(yf+1)*(yf-1)*(yf-2)/( 2),
+									(yf+1)*(yf  )*(yf-2)/(-2),
+									(yf+1)*(yf  )*(yf-1)/( 6)
+								);
+			)";
+			break;
+	}
+
+	if (_sat) {
+	_cl_code += R"(
+		float hi = max(max(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
+					   max(src[(xi+1)*imgSize.y+yi],src[(xi+1)*imgSize.y+yi+1]));
+		float lo = min(min(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
+					   min(src[(xi+1)*imgSize.y+yi],src[(xi+1)*imgSize.y+yi+1]));
+		dst[x*imgSize.y+y] = clamp(
+		)";
+	} else {
+		_cl_code += R"(
+			dst[x*imgSize.y+y] =
+			)";
+	}
+
+
+	switch (_it) {
+	case InterpolationType::quadratic:
+		_cl_code += R"(
 				icq.s0*(
 					+icp.s0*src[(xi-1)*imgSize.y+yi-1]
-					+icp.s1*src[(xi-1)*imgSize.y+yi]
+					+icp.s1*src[(xi-1)*imgSize.y+yi  ]
 					+icp.s2*src[(xi-1)*imgSize.y+yi+1]
 				) +
 				icq.s1*(
-					+icp.s0*src[(xi)*imgSize.y+yi-1]
-					+icp.s1*src[(xi)*imgSize.y+yi]
-					+icp.s2*src[(xi)*imgSize.y+yi+1]
+					+icp.s0*src[(xi  )*imgSize.y+yi-1]
+					+icp.s1*src[(xi  )*imgSize.y+yi  ]
+					+icp.s2*src[(xi  )*imgSize.y+yi+1]
 				) +
 				icq.s2*(
 					+icp.s0*src[(xi+1)*imgSize.y+yi-1]
-					+icp.s1*src[(xi+1)*imgSize.y+yi]
+					+icp.s1*src[(xi+1)*imgSize.y+yi  ]
 					+icp.s2*src[(xi+1)*imgSize.y+yi+1]
-				);
-		})";
+				)
+		)";
 		break;
 	case InterpolationType::cubic:
 		_cl_code += R"(
-		const float4 icq = (float4)(
-								(xf  )*(xf-1)*(xf-2)/(-6),
-								(xf+1)*(xf-1)*(xf-2)/( 2),
-								(xf+1)*(xf  )*(xf-2)/(-2),
-								(xf+1)*(xf  )*(xf-1)/( 6)
-							);
-
-		const float4 icp = (float4)(
-								(yf  )*(yf-1)*(yf-2)/(-6),
-								(yf+1)*(yf-1)*(yf-2)/( 2),
-								(yf+1)*(yf  )*(yf-2)/(-2),
-								(yf+1)*(yf  )*(yf-1)/( 6)
-							);
-
-		dst[x*imgSize.y+y] =
 				icq.s0*(
 					+icp.s0*src[(xi-1)*imgSize.y+yi-1]
 					+icp.s1*src[(xi-1)*imgSize.y+yi  ]
@@ -638,8 +664,15 @@ void vfps::RotationMap::genCode4Rotation()
 					+icp.s1*src[(xi+2)*imgSize.y+yi  ]
 					+icp.s2*src[(xi+2)*imgSize.y+yi+1]
 					+icp.s3*src[(xi+2)*imgSize.y+yi+2]
-				);
-		})";
+				)
+		)";
 		break;
+	}
+	if (_sat) {
+	_cl_code += R"(
+		,lo,hi);})";
+	} else {
+	_cl_code += R"(
+		;})";
 	}
 }
