@@ -239,8 +239,9 @@ int main(int argc, char** argv)
 		mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	}
 	#endif // INOVESA_USE_CL
+
 	Display::printText("Starting the simulation.");
-	for (unsigned int i=0;i<=steps*rotations;i++) {
+	for (unsigned int i=0;i<steps*rotations;i++) {
 		if (i%outstep == 0) {
 			#ifdef INOVESA_USE_CL
 			if (OCLH::active) {
@@ -264,6 +265,15 @@ int main(int argc, char** argv)
 		rm.apply();
 		fpm.apply();
 	}
+
+	// save final result
+	file.append(mesh);
+	if (!opts.showPhaseSpace()) {
+		std::stringstream status;
+		status << rotations << '/' << rotations;
+		Display::printText(status.str());
+	}
+
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
 		OCLH::queue.flush();

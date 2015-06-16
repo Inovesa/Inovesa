@@ -55,7 +55,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	#endif
 	{
 		if (_sat) {
-			Display::printText("\tSaturation for ROTMAP_SIZE==0"
+			Display::printText("\tSaturation for \"ROTMAP_SIZE==0\" "
 							   "only implemented when using OpenCL.");
 		}
 	}
