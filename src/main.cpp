@@ -217,11 +217,6 @@ int main(int argc, char** argv)
 	const double f_s = opts.getSyncFreq();
 	const double t_d = opts.getDampingTime();
 
-	/* angle of one rotation step (in rad)
-	 * (angle = 2*pi corresponds to 1 synchrotron period)
-	 */
-	const double angle = 2*M_PI/steps;
-
 	const double e0 = 2.0/(f_s*t_d*steps);
 
 	Display::printText("Building FokkerPlanckMap.");
@@ -229,10 +224,21 @@ int main(int argc, char** argv)
 						FokkerPlanckMap::FPType::full,e0,
 						FokkerPlanckMap::DerivationType::cubic);
 
-	Display::printText("Building RotationMap.");
-	RotationMap rm(mesh,&mesh_rotated,ps_size,ps_size,angle,
-				   HeritageMap::InterpolationType::cubic,
-				   RotationMap::RotationCoordinates::norm_pm1,true);
+
+	HeritageMap* rm;
+	if (steps > 1) {
+		/* angle of one rotation step (in rad)
+		 * (angle = 2*pi corresponds to 1 synchrotron period)
+		 */
+		const double angle = 2*M_PI/steps;
+
+		Display::printText("Building RotationMap.");
+		rm = new RotationMap(mesh,&mesh_rotated,ps_size,ps_size,angle,
+							 HeritageMap::InterpolationType::cubic,
+							 RotationMap::RotationCoordinates::norm_pm1,true);
+	} else {
+		rm = new Identity(mesh,&mesh_rotated,ps_size,ps_size);
+	}
 
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
@@ -262,7 +268,7 @@ int main(int argc, char** argv)
 				Display::printText(status.str());
 			}
 		}
-		rm.apply();
+		rm->apply();
 		fpm.apply();
 	}
 
@@ -281,6 +287,8 @@ int main(int argc, char** argv)
 	#endif // INOVESA_USE_CL
 
 	delete mesh;
+
+	delete rm;
 
 	Display::printText("Finished.");
 
