@@ -20,6 +20,8 @@
 #ifndef HERITAGEMAP_HPP
 #define HERITAGEMAP_HPP
 
+#include <sstream>
+
 #include "defines.hpp"
 #include "PhaseSpace.hpp"
 
@@ -123,10 +125,20 @@ protected:
 	 */
 	cl::Kernel applyHM;
 
+	std::string _cl_code;
+
+	cl::Program _cl_prog;
+
 	#endif // INOVESA_USE_CL
 
 	PhaseSpace* _in;
 	PhaseSpace* _out;
+
+protected:
+	/**
+	 * @brief genCode4HM1D generates OpenCL code for a generic heritage map
+	 */
+	void genCode4HM1D();
 };
 
 }

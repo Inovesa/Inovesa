@@ -21,7 +21,7 @@
 
 #include "CL/OpenCLHandler.hpp"
 
-void prepareCLEnvironment()
+void OCLH::prepareCLEnvironment()
 {
 	cl::Platform::get(&OCLH::platforms);
 
@@ -49,7 +49,8 @@ void prepareCLEnvironment()
 	OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 }
 
-void prepareCLDevice(unsigned int device)
+void
+OCLH::prepareCLDevice(unsigned int device)
 {
 	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
 	// cl_VENDOR_gl_sharing is present, when string contains the substring
@@ -61,7 +62,32 @@ void prepareCLDevice(unsigned int device)
 	Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
 }
 
-void listCLDevices()
+cl::Program OCLH::prepareCLProg(std::string code)
+{
+	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
+	cl::Program p(OCLH::context, source);
+	try {
+		p.build(OCLH::devices);
+	} catch (cl::Error &e) {
+		e.what();
+	#ifdef DEBUG
+	// in debug builds, CL code and build log should always be displayed
+	}
+	#endif  // DEBUG
+		std::cout	<< "===== OpenCL Code =====\n"
+					<< code << std::endl;
+		std::cout	<< "===== OpenCL Build Log =====\n"
+					<< p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
+					<< std::endl;
+	#ifndef DEBUG
+	// in release builds show CL code and build log only when error occured
+	}
+	#endif // DEBUG
+
+	return p;
+}
+
+void OCLH::listCLDevices()
 {
 	std::cout << "Available OpenCL Devices:" << std::endl;
 	for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
@@ -70,12 +96,15 @@ void listCLDevices()
 		cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
 		VECTOR_CLASS<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
 		for (unsigned int d=0; d<OCLH::devices.size(); d++) {
-			std::cout << tmp_devices[d].getInfo<CL_DEVICE_NAME>()
-					  << " (on \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\")"
-					  << " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"'
-					  << " offering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
-					  << " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
-					  << std::endl;
+			std::cout	<< "=> " << d+1 << ": "
+						<< tmp_devices[d].getInfo<CL_DEVICE_NAME>() << " ("
+						<< tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
+						<< tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>()
+						<< " CU on \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\")"
+						<< " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"' << std::endl
+						<< " offering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
+						<< " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
+						<< std::endl;
 		}
 	}
 }

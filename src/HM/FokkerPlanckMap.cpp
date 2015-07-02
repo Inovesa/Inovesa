@@ -124,18 +124,43 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
+	_cl_code += R"(
+	__kernel void applyHM_Y(const __global data_t* src,
+							const __global hi* hm,
+							const uint hm_len,
+							const uint ysize,
+							__global data_t* dst)
+	{
+		data_t value = 0;
+		const uint x = get_global_id(0);
+		const uint y = get_global_id(1);
+		const uint hmoffset = y*hm_len;
+		const uint meshoffs = x*ysize;
+		for (uint j=0; j<hm_len; j++)
+		{
+			value += mult(	src[meshoffs+hm[hmoffset+j].src],
+							hm[hmoffset+j].weight);
+		}
+		dst[meshoffs+y] = value;
+	}
+	)";
+
+	_cl_prog = OCLH::prepareCLProg(_cl_code);
+
+	if (OCLH::active) {
 		_hi_buf = cl::Buffer(OCLH::context,
 							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 							 sizeof(hi)*_ip*_ysize,
 							 _hinfo);
-		applyHM = cl::Kernel(CLProgApplyHM::p, "applyHM_Y");
+		applyHM = cl::Kernel(_cl_prog, "applyHM_Y");
 		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _hi_buf);
 		applyHM.setArg(2, _ip);
 		applyHM.setArg(3, _ysize);
 		applyHM.setArg(4, _out->data_buf);
 	}
-#endif
+	}
+	#endif
 }
 
 void vfps::FokkerPlanckMap::apply()

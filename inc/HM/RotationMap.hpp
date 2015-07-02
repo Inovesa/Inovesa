@@ -20,6 +20,8 @@
 #ifndef ROTATIONMAP_HPP
 #define ROTATIONMAP_HPP
 
+#include <array>
+
 #include "defines.hpp"
 #include "HeritageMap.hpp"
 
@@ -51,6 +53,24 @@ public:
 
 private:
 	const bool _sat;
+
+	void genHInfo(meshindex_t q_i, meshindex_t p_i, hi* myhinfo);
+
+	const RotationCoordinates _rt;
+	const meshaxis_t _cos_dt;
+	const meshaxis_t _sin_dt;
+
+	#ifdef INOVESA_USE_CL
+	void genCode4HM4_2sat();
+
+	void genCode4HM4sat();
+
+	void genCode4Rotation();
+
+	cl_int2 imgsize;
+
+	cl_float2 rot;
+	#endif
 };
 
 }

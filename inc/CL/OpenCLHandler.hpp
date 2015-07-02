@@ -48,15 +48,17 @@
  * @todo: check if OpenCL 1.0 or 2.x do the job
  * (currently "OpenCL 1." is set to be the required version)
  */
-void prepareCLEnvironment();
-
-void prepareCLDevice(unsigned int device);
-
-void listCLDevices();
-
 class OCLH
 {
 public:
+	static void prepareCLEnvironment();
+
+	static void prepareCLDevice(unsigned int device);
+
+	static cl::Program prepareCLProg(std::string);
+
+	static void listCLDevices();
+
 	static bool active;
 
 	static VECTOR_CLASS<cl::Platform> platforms;

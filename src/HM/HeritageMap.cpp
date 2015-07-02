@@ -26,13 +26,43 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 							   uint_fast8_t intertype) :
 	_ip(interpoints),
 	_it(intertype),
-	_hinfo(new hi[memsize]),
+	_hinfo(new hi[std::max(memsize,static_cast<size_t>(16))]),
 	_size(xsize*ysize),
 	_xsize(xsize),
 	_ysize(ysize),
 	_in(in),
 	_out(out)
 {
+	#ifdef INOVESA_USE_CL
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+	_cl_code =
+		"typedef float data_t;\n"
+		"float mult(float x, float y) { return x*y; }\n";
+	} else  if (std::is_same<vfps::meshdata_t,double>::value) {
+	_cl_code =
+		"typedef double data_t;\n"
+		"double mult(double x, double y) { return x*y; }\n";
+	} else {
+		std::stringstream fxp_fracpart;
+		fxp_fracpart << FXP_FRACPART;
+
+		_cl_code =	"__constant int fracpart="+fxp_fracpart.str()+";\n";
+		#if FXP_FRACPART < 31
+		if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
+		_cl_code +=
+			"typedef int data_t;\n"
+			"int mult(int x, int y){return ((long)(x)*(long)(y))>>fracpart;}\n";
+		} else
+		#endif
+		if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
+		_cl_code +=
+			"typedef long data_t;\n"
+			"long mult(long x, long y) {"
+			"return ((mul_hi(x,y) << (64-fracpart)) + ((x*y) >> fracpart));}\n";
+		}
+	}
+	_cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
+	#endif // INOVESA_USE_CL
 }
 
 vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
@@ -82,4 +112,24 @@ void vfps::HeritageMap::apply()
 			}
 		}
 	}
+}
+
+void vfps::HeritageMap::genCode4HM1D()
+{
+	_cl_code += R"(
+	__kernel void applyHM1D(const __global data_t* src,
+							const __global hi* hm,
+							const uint hm_len,
+							__global data_t* dst)
+	{
+		data_t value = 0;
+		const uint i = get_global_id(0);
+		const uint offset = i*hm_len;
+		for (uint j=0; j<hm_len; j++)
+		{
+			value += mult(src[hm[offset+j].src],hm[offset+j].weight);
+		}
+		dst[i] = value;
+	}
+	)";
 }

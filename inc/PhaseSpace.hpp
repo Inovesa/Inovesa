@@ -36,7 +36,6 @@ namespace vfps {
 	class PhaseSpace; // forward declaration
 }
 
-#include "CL/CLProgs.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
