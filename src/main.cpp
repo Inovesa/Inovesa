@@ -211,7 +211,7 @@ int main(int argc, char** argv)
 	}
 	#endif
 
-	const unsigned int steps = opts.getSteps();
+	const unsigned int steps = std::max(opts.getSteps(),1u);
 	const unsigned int outstep = opts.getOutSteps();
 	const float rotations = opts.getNRotations();
 	const double f_s = opts.getSyncFreq();
