@@ -249,6 +249,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 		pcoord = (pp+0.5)*(_ysize-1);
 		break;
 	case RotationCoordinates::norm_pm1:
+	default:
 		qp = _cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
 					/static_cast<meshaxis_t>(_xsize-1)
 		   - _sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
@@ -562,39 +563,39 @@ void vfps::RotationMap::genCode4Rotation()
 	_cl_code += R"(
 	__kernel void applyRotation(	const __global data_t* src,
 									const int2 imgSize,
-									const float2 rot,
+									const data2_t rot,
 									__global data_t* dst)
 	{
 		const int x = get_global_id(0)+1;
 		const int y = get_global_id(1)+1;
 
-		const float srcx = rot.x*(x-(imgSize.x+1)/2)-rot.y*(y-(imgSize.y+1)/2)
+		const data_t srcx = rot.x*(x-(imgSize.x+1)/2)-rot.y*(y-(imgSize.y+1)/2)
 								+(imgSize.x+1)/2;
-		const float srcy = rot.y*(x-(imgSize.x+1)/2)+rot.x*(y-(imgSize.y+1)/2)
+		const data_t srcy = rot.y*(x-(imgSize.x+1)/2)+rot.x*(y-(imgSize.y+1)/2)
 								+(imgSize.y+1)/2;
 		const int xi = floor(srcx);
 		const int yi = floor(srcy);
-		const float xf = srcx - xi;
-		const float yf = srcy - yi;
+		const data_t xf = srcx - xi;
+		const data_t yf = srcy - yi;
 	)";
 
 	switch (_it) {
 	case InterpolationType::quadratic:
 		_cl_code += R"(
-		const float3 icq = (float3)(xf*(xf-1)/2,(1-xf*xf),xf*(xf+1)/2);
-		const float3 icp = (float3)(yf*(yf-1)/2,(1-yf*yf),yf*(yf+1)/2);
+		const data3_t icq = (data3_t)(xf*(xf-1)/2,(1-xf*xf),xf*(xf+1)/2);
+		const data3_t icp = (data3_t)(yf*(yf-1)/2,(1-yf*yf),yf*(yf+1)/2);
 		)";
 		break;
 	case InterpolationType::cubic:
 			_cl_code += R"(
-			const float4 icq = (float4)(
+			const data4_t icq = (data4_t)(
 									(xf  )*(xf-1)*(xf-2)/(-6),
 									(xf+1)*(xf-1)*(xf-2)/( 2),
 									(xf+1)*(xf  )*(xf-2)/(-2),
 									(xf+1)*(xf  )*(xf-1)/( 6)
 								);
 
-			const float4 icp = (float4)(
+			const data4_t icp = (data4_t)(
 									(yf  )*(yf-1)*(yf-2)/(-6),
 									(yf+1)*(yf-1)*(yf-2)/( 2),
 									(yf+1)*(yf  )*(yf-2)/(-2),
@@ -606,9 +607,9 @@ void vfps::RotationMap::genCode4Rotation()
 
 	if (_sat) {
 	_cl_code += R"(
-		float hi = max(max(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
+		data_t hi = max(max(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
 					   max(src[(xi+1)*imgSize.y+yi],src[(xi+1)*imgSize.y+yi+1]));
-		float lo = min(min(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
+		data_t lo = min(min(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
 					   min(src[(xi+1)*imgSize.y+yi],src[(xi+1)*imgSize.y+yi+1]));
 		dst[x*imgSize.y+y] = clamp(
 		)";

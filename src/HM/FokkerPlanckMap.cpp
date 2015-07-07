@@ -22,7 +22,7 @@
 vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 									   const meshindex_t xsize,
 									   const meshindex_t ysize,
-									   FPType fpt, double e1,
+									   FPType fpt, timeaxis_t e1,
 									   DerivationType dt)
 	:
 	#if DERIVATION_TYPE == 1 // have to use type 2 for second derivative
@@ -33,9 +33,9 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	  _meshxsize(xsize)
 {
 	// the following doubles should be interpol_t
-	const double e1_2d = e1/(2.*in->getDelta(1));
-	const double e1_6d = e1/(6.*static_cast<double>(in->getDelta(1)));
-	const double e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
+	const interpol_t e1_2d = e1/(interpol_t(2)*in->getDelta(1));
+	const interpol_t e1_6d = e1/(interpol_t(6)*in->getDelta(1));
+	const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
 
 	switch (dt) {
 	case DerivationType::two_sided:
@@ -49,15 +49,15 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 				_hinfo[j*_ip+2]={j+1,0};
 
 				if (fpt == FPType::full || fpt == FPType::damping_only) {
-					const double pos = in->x(1,j);
+					const meshaxis_t pos = in->x(1,j);
 					_hinfo[j*_ip  ].weight += -e1_2d*pos;
 					_hinfo[j*_ip+1].weight +=  e1;
-					_hinfo[j*_ip+2].weight += +e1_2d*pos;
+					_hinfo[j*_ip+2].weight +=  e1_2d*pos;
 				}
 				if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-					_hinfo[j*_ip  ].weight +=    e1_d2;
-					_hinfo[j*_ip+1].weight += -2*e1_d2;
-					_hinfo[j*_ip+2].weight +=    e1_d2;
+					_hinfo[j*_ip  ].weight +=				 e1_d2;
+					_hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
+					_hinfo[j*_ip+2].weight +=				 e1_d2;
 				}
 			}
 			_hinfo[(_ysize-1)*_ip+0] = {0,0};
@@ -75,40 +75,40 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 		_hinfo[_ip+2] = {0,0};
 		_hinfo[_ip+3] = {0,0};
 		for (meshindex_t j=2; j< _ysize/2; j++) {
-			const double pos = in->x(1,j);
+			const meshaxis_t pos = in->x(1,j);
 			_hinfo[j*_ip  ]={j-2,0};
 			_hinfo[j*_ip+1]={j-1,0};
 			_hinfo[j*_ip+2]={j  ,1};
 			_hinfo[j*_ip+3]={j+1,0};
 			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				_hinfo[j*_ip  ].weight +=    e1_6d*( 1.)*pos;
-				_hinfo[j*_ip+1].weight +=    e1_6d*(-6.)*pos;
-				_hinfo[j*_ip+2].weight += e1+e1_6d*( 3.)*pos;
-				_hinfo[j*_ip+3].weight +=    e1_6d*( 2.)*pos;
+				_hinfo[j*_ip  ].weight +=    e1_6d*interpol_t( 1)*pos;
+				_hinfo[j*_ip+1].weight +=    e1_6d*interpol_t(-6)*pos;
+				_hinfo[j*_ip+2].weight += e1+e1_6d*interpol_t( 3)*pos;
+				_hinfo[j*_ip+3].weight +=    e1_6d*interpol_t( 2)*pos;
 			}
 			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
 				_hinfo[j*_ip+1].weight +=    e1_d2;
-				_hinfo[j*_ip+2].weight += -2*e1_d2;
+				_hinfo[j*_ip+2].weight += interpol_t(-2)*e1_d2;
 				_hinfo[j*_ip+3].weight +=    e1_d2;
 			}
 		}
 		for (meshindex_t j=_ysize/2; j<static_cast<meshindex_t>(_ysize-2);j++) {
-			const double pos = in->x(1,j);
+			const meshaxis_t pos = in->x(1,j);
 			_hinfo[j*_ip  ]={j-1,0};
 			_hinfo[j*_ip+1]={j  ,1};
 			_hinfo[j*_ip+2]={j+1,0};
 			_hinfo[j*_ip+3]={j+2,0};
 
 			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				_hinfo[j*_ip  ].weight +=    e1_6d*(-2.)*pos;
-				_hinfo[j*_ip+1].weight += e1+e1_6d*(-3.)*pos;
-				_hinfo[j*_ip+2].weight +=    e1_6d*( 6.)*pos;
-				_hinfo[j*_ip+3].weight +=    e1_6d*(-1.)*pos;
+				_hinfo[j*_ip  ].weight +=    e1_6d*interpol_t(-2)*pos;
+				_hinfo[j*_ip+1].weight += e1+e1_6d*interpol_t(-3)*pos;
+				_hinfo[j*_ip+2].weight +=    e1_6d*interpol_t( 6)*pos;
+				_hinfo[j*_ip+3].weight +=    e1_6d*interpol_t(-1)*pos;
 			}
 			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-				_hinfo[j*_ip  ].weight +=    e1_d2;
-				_hinfo[j*_ip+1].weight += -2*e1_d2;
-				_hinfo[j*_ip+2].weight +=    e1_d2;
+				_hinfo[j*_ip  ].weight +=				 e1_d2;
+				_hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
+				_hinfo[j*_ip+2].weight +=				 e1_d2;
 			}
 		}
 		_hinfo[(_ysize-2)*_ip  ] = {0,0};
@@ -152,6 +152,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 							 sizeof(hi)*_ip*_ysize,
 							 _hinfo);
+		std::cout << sizeof(hi)*_ip*_ysize << std::endl;
 		applyHM = cl::Kernel(_cl_prog, "applyHM_Y");
 		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _hi_buf);

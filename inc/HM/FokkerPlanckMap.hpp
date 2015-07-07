@@ -62,7 +62,7 @@ public:
 	 */
 	FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 					const meshindex_t xsize, const meshindex_t ysize,
-					FPType fpt, double e1, DerivationType dt);
+					FPType fpt, timeaxis_t e1, DerivationType dt);
 
 	/**
 	 * @brief apply custom apply method needed to handle one dimensional HM
