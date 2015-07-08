@@ -233,34 +233,36 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 	interpol_t yf; //distance of p' from lower mesh point
 	switch (_rt) {
 	case RotationCoordinates::mesh:
-		qp = _cos_dt*(q_i-(_xsize-1)/2.0)
-				- _sin_dt*(p_i-(_ysize-1)/2.0)+(_xsize-1)/2.0;
-		pp = _sin_dt*(q_i-(_xsize-1)/2.0)
-				+ _cos_dt*(p_i-(_ysize-1)/2.0)+(_ysize-1)/2.0;
+		qp = _cos_dt*meshaxis_t(q_i-(_xsize-1)/2.0)
+				- _sin_dt*meshaxis_t(p_i-(_ysize-1)/2.0)
+				+ meshaxis_t((_xsize-1)/2.0);
+		pp = _sin_dt*meshaxis_t(q_i-(_xsize-1)/2.0)
+				+ _cos_dt*meshaxis_t(p_i-(_ysize-1)/2.0)
+				+meshaxis_t((_ysize-1)/2.0);
 		qcoord = qp;
 		pcoord = pp;
 		break;
 	case RotationCoordinates::norm_0_1:
-		qp = _cos_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
-				- _sin_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
-		pp = _sin_dt*((q_i-(_xsize-1)/2.0)/(_xsize-1))
-				+ _cos_dt*((p_i-(_ysize-1)/2.0)/(_ysize-1));
-		qcoord = (qp+0.5)*(_xsize-1);
-		pcoord = (pp+0.5)*(_ysize-1);
+		qp = _cos_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
+		   - _sin_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
+		pp = _sin_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
+		   + _cos_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
+		qcoord = (qp+meshaxis_t(0.5))*meshaxis_t(_xsize-1);
+		pcoord = (pp+meshaxis_t(0.5))*meshaxis_t(_ysize-1);
 		break;
 	case RotationCoordinates::norm_pm1:
 	default:
-		qp = _cos_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
-					/static_cast<meshaxis_t>(_xsize-1)
-		   - _sin_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
-					/static_cast<meshaxis_t>(_ysize-1);
+		qp = _cos_dt*meshaxis_t(2*int(q_i)-(_xsize-1))
+					/meshaxis_t(_xsize-1)
+		   - _sin_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
+					/meshaxis_t(_ysize-1);
 
-		pp = _sin_dt*(2*static_cast<int>(q_i)-static_cast<int>(_xsize-1))
-					/static_cast<meshaxis_t>(_xsize-1)
-		   + _cos_dt*(2*static_cast<int>(p_i)-static_cast<int>(_ysize-1))
-					/static_cast<meshaxis_t>(_ysize-1);
-		qcoord = (qp+1)*(_xsize-1)/2;
-		pcoord = (pp+1)*(_ysize-1)/2;
+		pp = _sin_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
+					/meshaxis_t(_xsize-1)
+		   + _cos_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
+					/meshaxis_t(_ysize-1);
+		qcoord = (qp+meshaxis_t(1))*meshaxis_t((_xsize-1)/2);
+		pcoord = (pp+meshaxis_t(1))*meshaxis_t((_ysize-1)/2);
 		break;
 	}
 	xf = std::modf(qcoord, &qq_int);

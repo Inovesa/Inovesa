@@ -1359,6 +1359,12 @@ public:
 	}
 };
 
+template<typename B,unsigned char I,
+		 unsigned char F = std::numeric_limits<B>::digits - I>
+fpml::fixed_point<B,I,F> modf(fpml::fixed_point<B,I,F>& x,
+							  fpml::fixed_point<B,I,F>* intpart) {
+	;
+}
 
 } // namespace std
 

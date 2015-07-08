@@ -37,7 +37,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	const integral_t ca = 3.;
 	integral_t dc = 1;
 
-	const integral_t h03 = getDelta(0)/3.;
+	const integral_t h03 = getDelta(0)/integral_t(3);
 	_ws[0][0] = h03;
 	for (size_t x=1; x< nMeshCells(0)-1; x++){
 		_ws[0][x] = h03 * (ca+dc);
@@ -46,7 +46,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 	_ws[0][nMeshCells(0)-1] = h03;
 
 
-	const integral_t h13 = getDelta(1)/3.;
+	const integral_t h13 = getDelta(1)/integral_t(3);
 	_ws[1][0] = h13;
 	for (size_t x=1; x< nMeshCells(1)-1; x++){
 		_ws[1][x] = h13 * (ca+dc);

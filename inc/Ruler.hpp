@@ -28,26 +28,26 @@
 namespace vfps
 {
 
-template <class data_t>
+template <class meshaxis_t>
 class Ruler
 {
 public:
-	Ruler(meshindex_t steps, data_t min, data_t max) :
+	Ruler(meshindex_t steps, meshaxis_t min, meshaxis_t max) :
         _steps(steps),
         _max(max),
         _min(min),
-        _delta((max-min)/(steps-1))
+		_delta((max-min)/meshaxis_t(steps-1))
     {
         if (min >= max) {
             throw std::invalid_argument("Tried to set up Ruler with min >= max.");
         }
-        data_t* data_tmp = new data_t[_steps];
+		meshaxis_t* meshaxis_tmp = new meshaxis_t[_steps];
 
 		for (meshindex_t i=0; i<_steps; i++){
-            data_tmp[i] = _min+(i*_delta);
+			meshaxis_tmp[i] = _min+(meshaxis_t(i)*_delta);
         }
 
-        _data = data_tmp;
+		_data = meshaxis_tmp;
     }
 
     Ruler(const Ruler& other) :
@@ -56,9 +56,9 @@ public:
         _min(other._min),
         _delta(other._delta)
     {
-        data_t* data_tmp = new data_t[_steps];
-        std::copy_n(other._data,_steps,data_tmp);
-        _data = data_tmp;
+		meshaxis_t* meshaxis_tmp = new meshaxis_t[_steps];
+		std::copy_n(other._data,_steps,meshaxis_tmp);
+		_data = meshaxis_tmp;
     }
 
     ~Ruler()
@@ -66,22 +66,22 @@ public:
         delete [] _data;
     }
 
-    inline const data_t getMax() const
+	inline const meshaxis_t getMax() const
         {return _max;}
 
-	inline const data_t getMin() const
+	inline const meshaxis_t getMin() const
         {return _min;}
 
 	inline meshindex_t getNSteps() const
         {return _steps;}
 
-	inline const data_t getDelta() const
+	inline const meshaxis_t getDelta() const
         {return _delta;}
 
-	inline const data_t size() const
+	inline const meshaxis_t size() const
 		{ return _max - _min; }
 
-	inline const data_t& operator[](meshindex_t d) const
+	inline const meshaxis_t& operator[](meshindex_t d) const
         {return _data[d];}
 
     /**
@@ -99,15 +99,15 @@ public:
     }
 
 protected:
-    const data_t* _data;
+	const meshaxis_t* _data;
 
 	const meshindex_t _steps;
 
-    const data_t _max;
+	const meshaxis_t _max;
 
-    const data_t _min;
+	const meshaxis_t _min;
 
-	const data_t _delta;
+	const meshaxis_t _delta;
 };
 
 }
