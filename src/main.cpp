@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 	HDF5File file(opts.getOutFile(),ps_size);
 	Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 
-	PhaseSpace mesh_rotated(*mesh);
+	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;
@@ -211,28 +211,44 @@ int main(int argc, char** argv)
 	}
 	#endif
 
-	const unsigned int steps = opts.getSteps();
+	const unsigned int steps = std::max(opts.getSteps(),1u);
 	const unsigned int outstep = opts.getOutSteps();
 	const float rotations = opts.getNRotations();
 	const double f_s = opts.getSyncFreq();
 	const double t_d = opts.getDampingTime();
 
-	/* angle of one rotation step (in rad)
-	 * (angle = 2*pi corresponds to 1 synchrotron period)
-	 */
-	const double angle = 2*M_PI/steps;
-
-	const double e0 = 2.0/(f_s*t_d*steps);
+	double e0;
+	if (t_d > 0) {
+		e0 = 2.0/(f_s*t_d*steps);
+	} else {
+		e0=0;
+	}
 
 	Display::printText("Building FokkerPlanckMap.");
-	FokkerPlanckMap fpm(&mesh_rotated,mesh,ps_size,ps_size,
-						FokkerPlanckMap::FPType::full,e0,
-						FokkerPlanckMap::DerivationType::cubic);
+	HeritageMap* fpm;
+	if (e0 > 0) {
+		fpm = new FokkerPlanckMap(	mesh_rotated,mesh,ps_size,ps_size,
+									FokkerPlanckMap::FPType::full,e0,
+									FokkerPlanckMap::DerivationType::cubic);
+	} else {
+		fpm = new Identity(mesh_rotated,mesh,ps_size,ps_size);
+	}
 
-	Display::printText("Building RotationMap.");
-	RotationMap rm(mesh,&mesh_rotated,ps_size,ps_size,angle,
-				   HeritageMap::InterpolationType::cubic,
-				   RotationMap::RotationCoordinates::norm_pm1,true);
+
+	HeritageMap* rm;
+	if (steps > 1) {
+		/* angle of one rotation step (in rad)
+		 * (angle = 2*pi corresponds to 1 synchrotron period)
+		 */
+		const double angle = 2*M_PI/steps;
+
+		Display::printText("Building RotationMap.");
+		rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
+							 HeritageMap::InterpolationType::cubic,
+							 RotationMap::RotationCoordinates::norm_pm1,true);
+	} else {
+		rm = new Identity(mesh,mesh_rotated,ps_size,ps_size);
+	}
 
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
@@ -262,8 +278,8 @@ int main(int argc, char** argv)
 				Display::printText(status.str());
 			}
 		}
-		rm.apply();
-		fpm.apply();
+		rm->apply();
+		fpm->apply();
 	}
 
 	// save final result
@@ -281,6 +297,9 @@ int main(int argc, char** argv)
 	#endif // INOVESA_USE_CL
 
 	delete mesh;
+	delete mesh_rotated;
+
+	delete rm;
 
 	Display::printText("Finished.");
 

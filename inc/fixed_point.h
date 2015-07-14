@@ -1359,7 +1359,6 @@ public:
 	}
 };
 
-
 } // namespace std
 
 #ifdef __FPML_DEFINED_USE_MATH_DEFINES__

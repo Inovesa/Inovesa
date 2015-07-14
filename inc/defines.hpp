@@ -51,13 +51,18 @@ typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 // has to be uint32_t (same as cl_uint) for OpenCL support
 typedef uint32_t meshindex_t;
 
-typedef double csrpower_t;
+/* currently all of the below types have to be the same for fixpNN
+ * use this to switch them all */
+typedef double data_t;
+
+typedef data_t csrpower_t;
 typedef std::complex<csrpower_t> impedance_t;
 
-typedef double meshaxis_t;
-typedef double meshdata_t;
-typedef double interpol_t;
-typedef double integral_t;
+typedef data_t meshaxis_t;
+typedef data_t meshdata_t;
+typedef data_t interpol_t;
+typedef data_t integral_t;
+typedef data_t timeaxis_t;
 }
 
 #endif // DEFINES_HPP

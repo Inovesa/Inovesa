@@ -64,11 +64,12 @@ void vfps::KickMap::laser(meshaxis_t amplitude,
 						  meshaxis_t pulselen,
 						  meshaxis_t wavelen)
 {
-	amplitude = amplitude*_ysize/(2*_in->getMax(1));
-	meshaxis_t sinarg = 2*M_PI/(wavelen*_xsize/_in->getMax(0));
-	pulselen = pulselen*_xsize/_in->getMax(0)/2.35;
+	amplitude = amplitude*meshaxis_t(_ysize/2)/_in->getMax(1);
+	meshaxis_t sinarg = meshaxis_t(2*M_PI)/(wavelen*meshaxis_t(_xsize)/_in->getMax(0));
+	pulselen = pulselen*meshaxis_t(_xsize)/_in->getMax(0)/meshaxis_t(2.35);
 	for(meshindex_t x=0; x<_xsize; x++) {
-		_force[x] +=std::exp(-std::pow(-(int(x)-int(_xsize/2)),2)/(2*pulselen*pulselen))
-				*amplitude*std::sin(sinarg*x);
+		_force[x] +=meshaxis_t(std::exp(-std::pow(-(int(x)-int(_xsize/2)),2)))
+							 /(meshaxis_t(2)*pulselen*pulselen)
+				*amplitude*meshaxis_t(std::sin(double(sinarg)*x));
 	}
 }

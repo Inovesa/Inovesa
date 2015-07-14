@@ -25,6 +25,8 @@
 #include "defines.hpp"
 #include "HeritageMap.hpp"
 
+using std::modf;
+
 namespace vfps
 {
 
@@ -69,7 +71,7 @@ private:
 
 	cl_int2 imgsize;
 
-	cl_float2 rot;
+	cl_double2 rot;
 	#endif
 };
 
