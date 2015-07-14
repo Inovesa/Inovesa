@@ -25,6 +25,8 @@
 #include "defines.hpp"
 #include "KickMap.hpp"
 
+using std::modf;
+
 namespace vfps
 {
 

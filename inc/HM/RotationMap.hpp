@@ -25,6 +25,8 @@
 #include "defines.hpp"
 #include "HeritageMap.hpp"
 
+using std::modf;
+
 namespace vfps
 {
 

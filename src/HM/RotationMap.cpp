@@ -252,7 +252,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 		break;
 	case RotationCoordinates::norm_pm1:
 	default:
-		qp = _cos_dt*meshaxis_t(2*int(q_i)-(_xsize-1))
+		qp = _cos_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
 					/meshaxis_t(_xsize-1)
 		   - _sin_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
 					/meshaxis_t(_ysize-1);
@@ -261,12 +261,12 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 					/meshaxis_t(_xsize-1)
 		   + _cos_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
 					/meshaxis_t(_ysize-1);
-		qcoord = (qp+meshaxis_t(1))*meshaxis_t((_xsize-1)/2);
-		pcoord = (pp+meshaxis_t(1))*meshaxis_t((_ysize-1)/2);
+		qcoord = (qp+meshaxis_t(1))*meshaxis_t(_xsize-1)/meshaxis_t(2);
+		pcoord = (pp+meshaxis_t(1))*meshaxis_t(_ysize-1)/meshaxis_t(2);
 		break;
 	}
-	xf = std::modf(qcoord, &qq_int);
-	yf = std::modf(pcoord, &qp_int);
+	xf = modf(qcoord, &qq_int);
+	yf = modf(pcoord, &qp_int);
 	xi = qq_int;
 	yi = qp_int;
 
@@ -565,7 +565,7 @@ void vfps::RotationMap::genCode4Rotation()
 	_cl_code += R"(
 	__kernel void applyRotation(	const __global data_t* src,
 									const int2 imgSize,
-									const data2_t rot,
+									const double2 rot,
 									__global data_t* dst)
 	{
 		const int x = get_global_id(0)+1;

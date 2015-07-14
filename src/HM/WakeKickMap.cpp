@@ -54,7 +54,7 @@ void vfps::WakeKickMap::apply()
 			unsigned int jd; //numper of lower mesh point from p'
 			interpol_t xip; //distance of p' from lower mesh point
 			pcoord = _force[q_i];
-			xip = std::modf(pcoord, &qp_int);
+			xip = modf(pcoord, &qp_int);
 			jd = qp_int;
 
 			if (jd < _ysize)
