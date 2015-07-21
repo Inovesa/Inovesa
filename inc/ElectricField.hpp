@@ -1,12 +1,15 @@
 #ifndef ELECTRICFIELD_HPP
 #define ELECTRICFIELD_HPP
 
+#include <algorithm>
 #include <fftw3.h>
 #include <sstream>
 
 #include "defines.hpp"
 #include "PhaseSpace.hpp"
 #include "Ruler.hpp"
+
+#include "IO/Display.hpp"
 
 namespace vfps {
 
@@ -25,21 +28,22 @@ public:
 	csrpower_t* updateCSRSpectrum();
 
 private:
-	fftw_plan prepareFFT(   unsigned int n, double* in,
-							int direction, fftw_complex* out = nullptr);
+	fftw_plan prepareFFT(unsigned int n, csrpower_t* in, impedance_t* out);
 
 private:
 	size_t _nmax;
 
 	const meshdata_t* _bunchprofile;
 
+	impedance_t* _csrimpedance;
+
 	csrpower_t* _csrspectrum;
 
 	impedance_t* _impedance;
 
-	meshdata_t* _bp_padded;
+	integral_t* _bp_padded;
 
-	meshdata_t* _bp_padded_fftw;
+	integral_t* _bp_padded_fftw;
 
 	impedance_t* _bp_fourier;
 
