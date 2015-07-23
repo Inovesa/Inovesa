@@ -3,7 +3,6 @@
 vfps::ElectricField::ElectricField(const PhaseSpace* phasespace) :
 	_nmax(phasespace->nMeshCells(0)),
 	_bunchprofile(phasespace->getProjection(0)),
-	_phasespace(phasespace),
 	_spaceinfo(phasespace->getRuler(0))
 {
 	_bp_padded_fftw = fftw_alloc_real(2*_nmax);
@@ -26,9 +25,8 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-	for (unsigned int i=0; i< _nmax; i++) {
-		_bp_padded[i] = _bunchprofile[i];
-	}
+	std::copy_n(_bunchprofile,_nmax,_bp_padded);
+
 	//FFT charge density
 	fftw_execute(_ft_bunchprofile);
 

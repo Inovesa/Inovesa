@@ -33,9 +33,7 @@ private:
 private:
 	size_t _nmax;
 
-	const meshdata_t* _bunchprofile;
-
-	impedance_t* _csrimpedance;
+	const integral_t* _bunchprofile;
 
 	csrpower_t* _csrspectrum;
 
@@ -50,8 +48,6 @@ private:
 	fftw_complex* _bp_fourier_fftw;
 
 	fftw_plan _ft_bunchprofile;
-
-	const PhaseSpace* _phasespace;
 
 	const Ruler<meshaxis_t>* _spaceinfo;
 };
