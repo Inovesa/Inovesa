@@ -44,7 +44,10 @@ vfps::ProgramOptions::ProgramOptions() :
 		("initial-dist,I", po::value<std::string>(&_startdistfile),
 			"might be:\n"
 			"\tgrayscale png (.png) file containing initial particle density\n"
-			"\ttext file (.dat) containing normalized z/delta of particles")
+			"\ttext file (.txt) containing normalized z/delta of particles")
+		("impedance,Z", po::value<std::string>(&_impedancefile),
+			"File containing impedance information. Might be:\n"
+			"\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
 	;
 	_programopts_file.add_options()
 		("cldev", po::value<int>(&_cldevice)->default_value(1),

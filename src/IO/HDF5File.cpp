@@ -19,13 +19,18 @@
 
 #include "IO/HDF5File.hpp"
 
-vfps::HDF5File::HDF5File(std::string fname, const meshindex_t ps_size) :
+vfps::HDF5File::HDF5File(std::string fname,
+						 const meshindex_t ps_size,
+						 const size_t maxn) :
 	file( nullptr ),
 	fname( fname ),
 	bc_dims(0),
 	bc_name( "BunchCharge" ),
 	bp_dims( {{ 0, ps_size }}),
 	bp_name( "BunchProfile" ),
+	csr_dims( {{ 0, maxn }} ),
+	csr_name( "CSR Spectrum" ),
+	maxn(maxn),
 	ps_dims( {{ 0, ps_size, ps_size}} ),
 	ps_name( "PhaseSpace" ),
 	ps_size(ps_size)
@@ -71,7 +76,7 @@ vfps::HDF5File::HDF5File(std::string fname, const meshindex_t ps_size) :
 
 
 	const std::array<hsize_t,bp_rank> bp_chunkdims
-			= {{1,ps_size/8U}};
+			= {{8U,ps_size/8U}};
 	bp_prop.setChunk(bp_rank,bp_chunkdims.data());
 	bp_prop.setShuffle();
 	bp_prop.setDeflate(compression);
@@ -80,8 +85,32 @@ vfps::HDF5File::HDF5File(std::string fname, const meshindex_t ps_size) :
 						file->createDataSet(bp_name,bp_datatype,
 											*bp_dataspace,bp_prop)
 				);
+	// get ready to save CSR Spectrum
+	if (std::is_same<vfps::csrpower_t,float>::value) {
+		csr_datatype = H5::PredType::IEEE_F32LE;
+	} else if (std::is_same<vfps::csrpower_t,double>::value) {
+		csr_datatype = H5::PredType::IEEE_F64LE;
+	}
 
-// get ready to save PhaseSpace
+	const std::array<hsize_t,csr_rank> csr_maxdims
+			= {{H5S_UNLIMITED,maxn}};
+
+	csr_dataspace = new H5::DataSpace(csr_rank,csr_dims.data(),
+									 csr_maxdims.data());
+
+
+	const std::array<hsize_t,csr_rank> csr_chunkdims
+			= {{8U,ps_size/8U}};
+	csr_prop.setChunk(csr_rank,csr_chunkdims.data());
+	csr_prop.setShuffle();
+	csr_prop.setDeflate(compression);
+
+	csr_dataset = new H5::DataSet(
+						file->createDataSet(csr_name,csr_datatype,
+											*csr_dataspace,csr_prop)
+				);
+
+	// get ready to save PhaseSpace
 	if (std::is_same<vfps::meshdata_t,float>::value) {
 		ps_datatype = H5::PredType::IEEE_F32LE;
 #if FXP_FRACPART < 31
@@ -101,7 +130,7 @@ vfps::HDF5File::HDF5File(std::string fname, const meshindex_t ps_size) :
 
 
 	const std::array<hsize_t,ps_rank> ps_chunkdims
-			= {{1,ps_size/8U,ps_size/8U}};
+			= {{8U,ps_size/8U,ps_size/8U}};
 	ps_prop.setChunk(ps_rank,ps_chunkdims.data());
 	ps_prop.setShuffle();
 	ps_prop.setDeflate(compression);
@@ -131,6 +160,36 @@ vfps::HDF5File::~HDF5File()
 	delete bp_dataspace;
 	delete ps_dataset;
 	delete ps_dataspace;
+}
+
+void vfps::HDF5File::append(ElectricField* ef)
+{
+	// append CSR Field
+	std::array<hsize_t,csr_rank> csr_offset
+			= {{csr_dims[0],0}};
+	const std::array<hsize_t,csr_rank> csr_ext
+			= {{1,maxn}};
+	csr_dims[0]++;
+
+	csr_dataset->extend(csr_dims.data());
+	H5::DataSpace* filespace = new H5::DataSpace(csr_dataset->getSpace());
+	filespace->selectHyperslab(H5S_SELECT_SET, csr_ext.data(), csr_offset.data());
+	H5::DataSpace* memspace = new H5::DataSpace(csr_rank,csr_ext.data(),nullptr);
+	if (std::is_same<vfps::meshdata_t,float>::value) {
+		csr_dataset->write(ef->getData(), H5::PredType::NATIVE_FLOAT,
+						  *memspace, *filespace);
+#if FXP_FRACPART < 31
+	} else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
+		csr_dataset->write(ef->getData(), H5::PredType::NATIVE_INT32,
+						  *memspace, *filespace);
+#endif
+	} else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
+		csr_dataset->write(ef->getData(), H5::PredType::NATIVE_INT64,
+						  *memspace, *filespace);
+	} else if (std::is_same<vfps::meshdata_t,double>::value) {
+		csr_dataset->write(ef->getData(), H5::PredType::NATIVE_DOUBLE,
+						  *memspace, *filespace);
+	}
 }
 
 void vfps::HDF5File::append(PhaseSpace* ps)

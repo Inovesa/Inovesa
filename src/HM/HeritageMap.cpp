@@ -35,14 +35,14 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 {
 	#ifdef INOVESA_USE_CL
 	if (std::is_same<vfps::meshdata_t,float>::value) {
-	_cl_code =
+	_cl_code +=
 		"typedef float data_t;\n"
 		"typedef float2 data2_t;\n"
 		"typedef float3 data3_t;\n"
 		"typedef float4 data4_t;\n"
 		"float mult(float x, float y) { return x*y; }\n";
 	} else  if (std::is_same<vfps::meshdata_t,double>::value) {
-	_cl_code =
+	_cl_code +=
 		"typedef double data_t;\n"
 		"typedef double2 data2_t;\n"
 		"typedef double3 data3_t;\n"
@@ -52,7 +52,7 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 		std::stringstream fxp_fracpart;
 		fxp_fracpart << FXP_FRACPART;
 
-		_cl_code =	"__constant int fracpart="+fxp_fracpart.str()+";\n";
+		_cl_code +=	"__constant int fracpart="+fxp_fracpart.str()+";\n";
 		#if FXP_FRACPART < 31
 		if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
 		_cl_code +=

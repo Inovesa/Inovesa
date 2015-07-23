@@ -71,7 +71,7 @@ private:
 
 	cl_int2 imgsize;
 
-	cl_double2 rot;
+	cl_float2 rot;
 	#endif
 };
 

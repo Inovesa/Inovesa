@@ -565,7 +565,7 @@ void vfps::RotationMap::genCode4Rotation()
 	_cl_code += R"(
 	__kernel void applyRotation(	const __global data_t* src,
 									const int2 imgSize,
-									const double2 rot,
+									const float2 rot,
 									__global data_t* dst)
 	{
 		const int x = get_global_id(0)+1;

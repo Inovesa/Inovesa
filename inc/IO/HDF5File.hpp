@@ -25,6 +25,7 @@
 #include <string>
 
 #include "defines.hpp"
+#include "ElectricField.hpp"
 #include "PhaseSpace.hpp"
 
 namespace vfps {
@@ -32,9 +33,17 @@ namespace vfps {
 class HDF5File
 {
 public:
-	HDF5File(std::string fname, const meshindex_t ps_size);
+	/**
+	 * @brief HDF5File
+	 * @param fname file name to save HDF5 file to
+	 * @param ps_size size of one mesh dimension
+	 * @param maxn maximum index (==wavenumber?) of CSR spectrum
+	 */
+	HDF5File(std::string fname, const meshindex_t ps_size, const size_t maxn);
 
 	~HDF5File();
+
+	void append(ElectricField* ef);
 
 	void append(PhaseSpace* ps);
 
@@ -43,10 +52,10 @@ private:
 
 	std::string fname;
 
-	static constexpr unsigned int compression = 6;
+	static constexpr uint_fast8_t compression = 6;
 
 private:
-	static constexpr unsigned int bc_rank = 1;
+	static constexpr uint_fast8_t bc_rank = 1;
 
 	H5::DataSet* bc_dataset;
 
@@ -61,7 +70,7 @@ private:
 	H5::DSetCreatPropList bc_prop;
 
 private:
-	static constexpr unsigned int bp_rank = 2;
+	static constexpr uint_fast8_t bp_rank = 2;
 
 	H5::DataSet* bp_dataset;
 
@@ -76,7 +85,24 @@ private:
 	H5::DSetCreatPropList bp_prop;
 
 private:
-	static constexpr unsigned int ps_rank = 3;
+	static constexpr uint_fast8_t csr_rank = 2;
+
+	H5::DataSet* csr_dataset;
+
+	H5::DataSpace* csr_dataspace;
+
+	H5::IntType csr_datatype;
+
+	std::array<hsize_t,csr_rank> csr_dims;
+
+	const std::string csr_name;
+
+	H5::DSetCreatPropList csr_prop;
+
+	size_t maxn;
+
+private:
+	static constexpr uint_fast8_t ps_rank = 3;
 
 	H5::DataSet* ps_dataset;
 

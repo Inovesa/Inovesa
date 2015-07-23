@@ -44,6 +44,9 @@ public:
 	inline int getCLDevice() const
 		{ return _cldevice; }
 
+	inline std::string getImpedanceFile() const
+		{ return _impedancefile; }
+
 	inline std::string getOutFile() const
 		{ return _outfile; }
 
@@ -73,6 +76,8 @@ public:
 
 private: // program parameters
 	int _cldevice;
+
+	std::string _impedancefile;
 
 	std::string _outfile;
 

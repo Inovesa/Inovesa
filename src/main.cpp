@@ -31,6 +31,7 @@
 #include "defines.hpp"
 #include "IO/Display.hpp"
 #include "PhaseSpace.hpp"
+#include "Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
@@ -98,6 +99,13 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 
+	Display::printText("Reading impedance from: \""+opts.getImpedanceFile()+"\"");
+	Impedance impedance(opts.getImpedanceFile());
+	if (impedance.maxN() == 0) {
+		Display::printText("No valid impedance file. Will now quit.");
+		return EXIT_SUCCESS;
+	}
+
 	PhaseSpace* mesh;
 	meshindex_t ps_size;
 	constexpr double qmax = 5.0;
@@ -150,7 +158,7 @@ int main(int argc, char** argv)
 		}
 	} else
 	#endif // INOVESA_USE_PNG
-	if (startdistfile.substr(startdistfile.length()-4) == ".dat") {
+	if (startdistfile.substr(startdistfile.length()-4) == ".txt") {
 		ps_size = 512;
 		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
 
@@ -199,10 +207,12 @@ int main(int argc, char** argv)
 		return EXIT_SUCCESS;
 	}
 
-	HDF5File file(opts.getOutFile(),ps_size);
+	HDF5File file(opts.getOutFile(),ps_size,impedance.maxN());
 	Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
+
+	ElectricField field(mesh,&impedance);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;
@@ -264,7 +274,9 @@ int main(int argc, char** argv)
 				mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
 			}
 			#endif // INOVESA_USE_CL
+			field.updateCSRSpectrum();
 			file.append(mesh);
+			file.append(&field);
 			#ifdef INOVESA_USE_GUI
 			if (opts.showPhaseSpace()) {
 				display->createTexture(mesh);

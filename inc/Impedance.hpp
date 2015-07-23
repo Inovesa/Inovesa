@@ -1,8 +1,9 @@
 #ifndef IMPEDANCE_HPP
 #define IMPEDANCE_HPP
 
-#include <iostream>
+#include <fstream>
 #include <string>
+#include <vector>
 
 #include "defines.hpp"
 
@@ -15,13 +16,16 @@ public:
 	Impedance(std::string datafile);
 
 	inline const impedance_t* data() const
-		{ return _data; }
+		{ return _data.data(); }
 
 	inline const impedance_t operator[](size_t n) const
 		{ return _data[n]; }
 
+	inline size_t maxN() const
+		{ return _data.size(); }
+
 private:
-	const impedance_t* _data;
+	std::vector<impedance_t> _data;
 };
 
 } // namespace vfps

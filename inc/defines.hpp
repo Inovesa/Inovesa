@@ -53,7 +53,7 @@ typedef uint32_t meshindex_t;
 
 /* currently all of the below types have to be the same for fixpNN
  * use this to switch them all */
-typedef double data_t;
+typedef float data_t;
 
 typedef data_t csrpower_t;
 typedef std::complex<csrpower_t> impedance_t;
