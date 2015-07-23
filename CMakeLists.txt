@@ -13,6 +13,7 @@ set(SRC_LIST
 			./src/IO/HDF5File.cpp
 			./src/IO/ProgramOptions.cpp
 			./src/ElectricField.cpp
+			./src/Impedance.cpp
 			./src/PhaseSpace.cpp
 			./src/main.cpp
 )
@@ -30,6 +31,7 @@ set(INC_LIST
 			./inc/IO/HDF5File.hpp
 			./inc/IO/ProgramOptions.hpp
 			./inc/ElectricField.hpp
+			./inc/Impedance.hpp
 			./inc/PhaseSpace.hpp
 			./inc/Ruler.hpp
 			./inc/defines.hpp

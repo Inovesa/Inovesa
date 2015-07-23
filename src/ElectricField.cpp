@@ -1,8 +1,10 @@
 #include "ElectricField.hpp"
 
-vfps::ElectricField::ElectricField(const PhaseSpace* phasespace) :
+vfps::ElectricField::ElectricField(const PhaseSpace* phasespace,
+								   const Impedance* impedance) :
 	_nmax(phasespace->nMeshCells(0)),
 	_bunchprofile(phasespace->getProjection(0)),
+	_impedance(impedance),
 	_spaceinfo(phasespace->getRuler(0))
 {
 	_bp_padded_fftw = fftw_alloc_real(2*_nmax);
@@ -32,7 +34,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 
 	for (unsigned int i=0; i<_nmax; i++) {
 		// norm = squared magnitude
-		_csrspectrum[i] = (_impedance[i]*std::norm(_bp_fourier[i])).real();
+		_csrspectrum[i] = ((*_impedance)[i]*std::norm(_bp_fourier[i])).real();
 	}
 
 	return _csrspectrum;

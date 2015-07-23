@@ -8,6 +8,7 @@
 #include "defines.hpp"
 #include "PhaseSpace.hpp"
 #include "Ruler.hpp"
+#include "Impedance.hpp"
 
 #include "IO/Display.hpp"
 
@@ -21,7 +22,7 @@ public:
 	 *
 	 * @param phasespace this electric field is assigned to
 	 */
-	ElectricField(const PhaseSpace* phasespace);
+	ElectricField(const PhaseSpace* phasespace, const Impedance* impedance);
 
 	~ElectricField();
 
@@ -37,7 +38,7 @@ private:
 
 	csrpower_t* _csrspectrum;
 
-	impedance_t* _impedance;
+	const Impedance* _impedance;
 
 	integral_t* _bp_padded;
 
