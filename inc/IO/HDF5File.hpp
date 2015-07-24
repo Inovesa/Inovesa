@@ -43,9 +43,9 @@ public:
 
 	~HDF5File();
 
-	void append(ElectricField* ef);
+	void append(const ElectricField* ef);
 
-	void append(PhaseSpace* ps);
+	void append(const PhaseSpace* ps);
 
 private:
 	H5::H5File* file;

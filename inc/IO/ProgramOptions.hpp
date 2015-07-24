@@ -68,11 +68,14 @@ public:
 
 
 public:
-	inline double getSyncFreq()
+	inline double getSyncFreq() const
 		{ return f_s; }
 
-	inline double getDampingTime()
+	inline double getDampingTime() const
 		{ return t_d; }
+
+	inline double getPhaseSpaceSize() const
+		{ return pq_max; }
 
 private: // program parameters
 	int _cldevice;
@@ -95,6 +98,7 @@ private: // simulation parameters
 private: // phsical parameters
 	double f_s;
 	double t_d;
+	double pq_max;
 
 private:
 	po::options_description _cfgfileopts;

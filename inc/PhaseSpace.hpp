@@ -85,7 +85,10 @@ public:
 
 	meshdata_t average(const uint_fast8_t axis);
 
-	integral_t* integral();
+	integral_t integral();
+
+	integral_t getCharge() const
+	{ return _integral; }
 
 	meshdata_t variance(const uint_fast8_t axis);
 

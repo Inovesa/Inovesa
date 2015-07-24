@@ -1,10 +1,30 @@
+/******************************************************************************/
+/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
+/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
+/*                                                                            */
+/* This file is part of Inovesa.                                              */
+/* Inovesa is free software: you can redistribute it and/or modify            */
+/* it under the terms of the GNU General Public License as published by       */
+/* the Free Software Foundation, either version 3 of the License, or          */
+/* (at your option) any later version.                                        */
+/*                                                                            */
+/* Inovesa is distributed in the hope that it will be useful,                 */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
+/* GNU General Public License for more details.                               */
+/*                                                                            */
+/* You should have received a copy of the GNU General Public License          */
+/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
+/******************************************************************************/
+
 #include "ElectricField.hpp"
 
-vfps::ElectricField::ElectricField(const PhaseSpace* phasespace,
+vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 								   const Impedance* impedance) :
 	_nmax(impedance->maxN()),
-	_bunchprofile(phasespace->getProjection(0)),
+	_phasespace(phasespace),
 	_bpmeshcells(phasespace->nMeshCells(0)),
+	_csrspectrum(new csrpower_t[_nmax]),
 	_impedance(impedance),
 	_spaceinfo(phasespace->getRuler(0))
 {
@@ -22,6 +42,8 @@ vfps::ElectricField::ElectricField(const PhaseSpace* phasespace,
 
 vfps::ElectricField::~ElectricField()
 {
+	delete [] _csrspectrum;
+
 	fftwf_free(_bp_padded_fftw);
 	fftwf_free(_bp_fourier_fftw);
 	fftwf_destroy_plan(_ft_bunchprofile);
@@ -30,7 +52,9 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-	std::copy_n(_bunchprofile,_nmax,_bp_padded);
+	std::copy_n(_phasespace->projectionToX(),
+				_spaceinfo->getNSteps(),
+				_bp_padded);
 
 	//FFT charge density
 	fftwf_execute(_ft_bunchprofile);

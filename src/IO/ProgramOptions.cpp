@@ -28,6 +28,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	rotations(1),
 	f_s(8.5e3),
 	t_d(0.01),
+	pq_max(5.0),
 	_physopts("Physical Parameters for Simulation"),
 	_proginfoopts("Program Information"),
 	_programopts_cli("General Program Parameters"),
@@ -41,6 +42,8 @@ vfps::ProgramOptions::ProgramOptions() :
 	_physopts.add_options()
 		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
 		("tdamp,T", po::value<double>(&t_d),"Damping time")
+		("PhaseSpaceSize,s", po::value<double>(&pq_max),
+			"Size of phase Space (+/- sigma_{p,q})")
 		("initial-dist,I", po::value<std::string>(&_startdistfile),
 			"might be:\n"
 			"\tgrayscale png (.png) file containing initial particle density\n"

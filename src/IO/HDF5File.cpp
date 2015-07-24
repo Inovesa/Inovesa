@@ -29,7 +29,7 @@ vfps::HDF5File::HDF5File(std::string fname,
 	bp_dims( {{ 0, ps_size }}),
 	bp_name( "BunchProfile" ),
 	csr_dims( {{ 0, maxn }} ),
-	csr_name( "CSR Spectrum" ),
+	csr_name( "CSR-Spectrum" ),
 	maxn(maxn),
 	ps_dims( {{ 0, ps_size, ps_size}} ),
 	ps_name( "PhaseSpace" ),
@@ -76,7 +76,7 @@ vfps::HDF5File::HDF5File(std::string fname,
 
 
 	const std::array<hsize_t,bp_rank> bp_chunkdims
-			= {{8U,ps_size/8U}};
+			= {{1U,ps_size/8U}};
 	bp_prop.setChunk(bp_rank,bp_chunkdims.data());
 	bp_prop.setShuffle();
 	bp_prop.setDeflate(compression);
@@ -100,7 +100,7 @@ vfps::HDF5File::HDF5File(std::string fname,
 
 
 	const std::array<hsize_t,csr_rank> csr_chunkdims
-			= {{8U,ps_size/8U}};
+			= {{1U,ps_size/8U}};
 	csr_prop.setChunk(csr_rank,csr_chunkdims.data());
 	csr_prop.setShuffle();
 	csr_prop.setDeflate(compression);
@@ -130,7 +130,7 @@ vfps::HDF5File::HDF5File(std::string fname,
 
 
 	const std::array<hsize_t,ps_rank> ps_chunkdims
-			= {{8U,ps_size/8U,ps_size/8U}};
+			= {{1U,ps_size/8U,ps_size/8U}};
 	ps_prop.setChunk(ps_rank,ps_chunkdims.data());
 	ps_prop.setShuffle();
 	ps_prop.setDeflate(compression);
@@ -162,7 +162,7 @@ vfps::HDF5File::~HDF5File()
 	delete ps_dataspace;
 }
 
-void vfps::HDF5File::append(ElectricField* ef)
+void vfps::HDF5File::append(const ElectricField* ef)
 {
 	// append CSR Field
 	std::array<hsize_t,csr_rank> csr_offset
@@ -192,7 +192,7 @@ void vfps::HDF5File::append(ElectricField* ef)
 	}
 }
 
-void vfps::HDF5File::append(PhaseSpace* ps)
+void vfps::HDF5File::append(const PhaseSpace* ps)
 {
 	// append PhaseSpace
 	std::array<hsize_t,ps_rank> ps_offset
@@ -237,19 +237,19 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 	delete memspace;
 	memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
 	if (std::is_same<vfps::integral_t,float>::value) {
-		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_FLOAT,
+		bp_dataset->write(ps->getProjection(0), H5::PredType::NATIVE_FLOAT,
 						  *memspace, *filespace);
 	} else if (std::is_same<vfps::integral_t,fixp64>::value) {
-		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_INT64,
+		bp_dataset->write(ps->getProjection(0), H5::PredType::NATIVE_INT64,
 						  *memspace, *filespace);
 	} else if (std::is_same<vfps::integral_t,double>::value) {
-		bp_dataset->write(ps->projectionToX(), H5::PredType::NATIVE_DOUBLE,
+		bp_dataset->write(ps->getProjection(0), H5::PredType::NATIVE_DOUBLE,
 						  *memspace, *filespace);
 	}
 
 	// append BunchCharge
 	hsize_t bc_offset = bc_dims;
-	const hsize_t  bc_ext = 1;
+	const hsize_t bc_ext = 1;
 	bc_dims++;
 
 	bc_dataset->extend(&bc_dims);
@@ -260,14 +260,15 @@ void vfps::HDF5File::append(PhaseSpace* ps)
 
 	delete memspace;
 	memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
+	integral_t bunchcharge = ps->getCharge();
 	if (std::is_same<vfps::integral_t,float>::value) {
-		bc_dataset->write(ps->integral(), H5::PredType::NATIVE_FLOAT,
+		bc_dataset->write(&bunchcharge, H5::PredType::NATIVE_FLOAT,
 						  *memspace, *filespace);
 	} else if (std::is_same<vfps::integral_t,fixp64>::value) {
-		bc_dataset->write(ps->integral(), H5::PredType::NATIVE_INT64,
+		bc_dataset->write(&bunchcharge, H5::PredType::NATIVE_INT64,
 						  *memspace, *filespace);
 	} else if (std::is_same<vfps::integral_t,double>::value) {
-		bc_dataset->write(ps->integral(), H5::PredType::NATIVE_DOUBLE,
+		bc_dataset->write(&bunchcharge, H5::PredType::NATIVE_DOUBLE,
 						  *memspace, *filespace);
 	}
 }

@@ -90,7 +90,7 @@ vfps::PhaseSpace::~PhaseSpace()
 	delete [] _ws[1];
 }
 
-vfps::integral_t* vfps::PhaseSpace::integral()
+vfps::integral_t vfps::PhaseSpace::integral()
 {
 	projectionToX();
 	_integral = 0;
@@ -101,7 +101,7 @@ vfps::integral_t* vfps::PhaseSpace::integral()
 			_integral += _projection[0][x]*static_cast<integral_t>(_ws[0][x]);
 		#endif
 	}
-	return &_integral;
+	return _integral;
 }
 
 /*

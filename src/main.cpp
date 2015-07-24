@@ -108,8 +108,8 @@ int main(int argc, char** argv)
 
 	PhaseSpace* mesh;
 	meshindex_t ps_size;
-	constexpr double qmax = 5.0;
-	constexpr double pmax = 5.0;
+	const double qmax = opts.getPhaseSpaceSize();
+	const double pmax = qmax;
 	#ifdef INOVESA_USE_PNG
 	// load pattern to start with
 	png::image<png::gray_pixel_16> image;
@@ -207,8 +207,16 @@ int main(int argc, char** argv)
 		return EXIT_SUCCESS;
 	}
 
-	HDF5File file(opts.getOutFile(),ps_size,impedance.maxN());
-	Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
+	HDF5File* file = nullptr;
+	std::string h5ending = ".h5";
+	if ( h5ending.size() < opts.getOutFile().size() &&
+		 std::equal(h5ending.rbegin(), h5ending.rend(),
+					opts.getOutFile().rbegin())) {
+		file = new HDF5File(opts.getOutFile(),ps_size,impedance.maxN());
+		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
+	} else {
+		Display::printText("Will not save results.");
+	}
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
 
@@ -274,9 +282,12 @@ int main(int argc, char** argv)
 				mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
 			}
 			#endif // INOVESA_USE_CL
-			field.updateCSRSpectrum();
-			file.append(mesh);
-			file.append(&field);
+			if (file != nullptr) {
+				mesh->integral();
+				file->append(mesh);
+				field.updateCSRSpectrum();
+				file->append(&field);
+			}
 			#ifdef INOVESA_USE_GUI
 			if (opts.showPhaseSpace()) {
 				display->createTexture(mesh);
@@ -295,7 +306,12 @@ int main(int argc, char** argv)
 	}
 
 	// save final result
-	file.append(mesh);
+	if (file != nullptr) {
+		mesh->integral();
+		file->append(mesh);
+		field.updateCSRSpectrum();
+		file->append(&field);
+	}
 	if (!opts.showPhaseSpace()) {
 		std::stringstream status;
 		status << rotations << '/' << rotations;
@@ -317,4 +333,3 @@ int main(int argc, char** argv)
 
 	return EXIT_SUCCESS;
 }
-
