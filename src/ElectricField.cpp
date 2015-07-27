@@ -61,7 +61,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 
 	for (unsigned int i=0; i<_nmax; i++) {
 		// norm = squared magnitude
-		_csrspectrum[i] = ((*_impedance)[i]*std::norm(_bp_fourier[i])).real();
+		_csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_bp_fourier[i]);
 	}
 
 	return _csrspectrum;

@@ -13,6 +13,13 @@ namespace vfps
 class Impedance
 {
 public:
+	enum class ImpedanceModel : uint_fast8_t {
+		FreeSpace = 0
+	};
+
+public:
+	Impedance(ImpedanceModel model, size_t n);
+
 	Impedance(std::string datafile);
 
 	inline const impedance_t* data() const

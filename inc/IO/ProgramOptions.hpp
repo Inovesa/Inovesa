@@ -68,6 +68,12 @@ public:
 
 
 public:
+	inline double getBendingRadius() const
+		{ return r_bend; }
+
+	inline double getNaturalBunchLength() const
+		{ return s_0; }
+
 	inline double getSyncFreq() const
 		{ return f_s; }
 
@@ -99,6 +105,8 @@ private: // phsical parameters
 	double f_s;
 	double t_d;
 	double pq_max;
+	double r_bend;
+	double s_0;
 
 private:
 	po::options_description _cfgfileopts;

@@ -29,6 +29,8 @@ vfps::ProgramOptions::ProgramOptions() :
 	f_s(8.5e3),
 	t_d(0.01),
 	pq_max(5.0),
+	r_bend(1.0),
+	s_0(1.0e-3),
 	_physopts("Physical Parameters for Simulation"),
 	_proginfoopts("Program Information"),
 	_programopts_cli("General Program Parameters"),
@@ -41,13 +43,17 @@ vfps::ProgramOptions::ProgramOptions() :
 	;
 	_physopts.add_options()
 		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
-		("tdamp,T", po::value<double>(&t_d),"Damping time")
+		("tdamp,d", po::value<double>(&t_d),"Damping time")
 		("PhaseSpaceSize,s", po::value<double>(&pq_max),
-			"Size of phase Space (+/- sigma_{p,q})")
+			"Size of phase Space (+/- sigma_{p/q}/(mesh cells))")
+		("NaturalBunchLength,l", po::value<double>(&s_0),
+			"Naural Bunch Length (+/- sigma_{z,0}/m)")
 		("initial-dist,I", po::value<std::string>(&_startdistfile),
 			"might be:\n"
 			"\tgrayscale png (.png) file containing initial particle density\n"
 			"\ttext file (.txt) containing normalized z/delta of particles")
+		("bendingradius,R", po::value<double>(&r_bend),
+			"bending radius of accelerator")
 		("impedance,Z", po::value<std::string>(&_impedancefile),
 			"File containing impedance information. Might be:\n"
 			"\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
@@ -79,8 +85,8 @@ vfps::ProgramOptions::ProgramOptions() :
 			"Number of steps for one synchrotron period (delta t=1/(N*f_s))")
 		("outstep,n", po::value<unsigned int>(&outsteps),
 			"Save results/ update phase space view every n steps")
-		("rotations,R", po::value<float>(&rotations),
-			"Number of synchrotron periods to simulate")
+		("rotations,T", po::value<float>(&rotations),
+			"Simulated time (in number of synchrotron periods)")
 	;
 	_cfgfileopts.add(_physopts);
 	_cfgfileopts.add(_programopts_file);

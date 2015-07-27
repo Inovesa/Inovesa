@@ -99,13 +99,6 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 
-	Display::printText("Reading impedance from: \""+opts.getImpedanceFile()+"\"");
-	Impedance impedance(opts.getImpedanceFile());
-	if (impedance.maxN() == 0) {
-		Display::printText("No valid impedance file. Will now quit.");
-		return EXIT_SUCCESS;
-	}
-
 	PhaseSpace* mesh;
 	meshindex_t ps_size;
 	const double qmax = opts.getPhaseSpaceSize();
@@ -207,12 +200,34 @@ int main(int argc, char** argv)
 		return EXIT_SUCCESS;
 	}
 
+	Impedance* impedance = nullptr;
+	size_t zmax = std::ceil(M_PI*opts.getBendingRadius()*ps_size
+							/(2*qmax)
+							/opts.getNaturalBunchLength());
+	if (opts.getImpedanceFile() == "") {
+		Display::printText("No impedance file given. "
+						   "Will use free space impedance.");
+		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,zmax);
+	} else {
+		Display::printText("Reading impedance from: \""
+						   +opts.getImpedanceFile()+"\"");
+		impedance = new Impedance(opts.getImpedanceFile());
+		if (impedance->maxN() != zmax) {
+			std::stringstream zmaxstr;
+			zmaxstr << zmax;
+			Display::printText("No valid impedance file: Need N="
+							   +zmaxstr.str()+ " points."
+							   +"Will now quit.");
+			return EXIT_SUCCESS;
+		}
+	}
+
 	HDF5File* file = nullptr;
 	std::string h5ending = ".h5";
 	if ( h5ending.size() < opts.getOutFile().size() &&
 		 std::equal(h5ending.rbegin(), h5ending.rend(),
 					opts.getOutFile().rbegin())) {
-		file = new HDF5File(opts.getOutFile(),ps_size,impedance.maxN());
+		file = new HDF5File(opts.getOutFile(),ps_size,impedance->maxN());
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
 		Display::printText("Will not save results.");
@@ -220,7 +235,7 @@ int main(int argc, char** argv)
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
 
-	ElectricField field(mesh,&impedance);
+	ElectricField field(mesh,impedance);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;
