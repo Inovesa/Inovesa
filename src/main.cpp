@@ -50,16 +50,6 @@ int main(int argc, char** argv)
 			= std::chrono::system_clock::to_time_t(Display::start_time);
 	std::stringstream sstream;
 	sstream << std::ctime(&start_ctime);
-	std::string timestring = sstream.str();
-	timestring.resize(timestring.size()-1);
-
-	sstream.str("");
-	sstream << INOVESA_VERSION_RELEASE << '.'
-			<< INOVESA_VERSION_MINOR << '.'
-			<< INOVESA_VERSION_FIX;
-
-	Display::printText("Started Inovesa (v"
-					   +sstream.str()+") at "+timestring);
 
 	ProgramOptions opts;
 
@@ -71,6 +61,17 @@ int main(int argc, char** argv)
 		std::cerr << "error: " << e.what() << std::endl;
 		return EXIT_FAILURE;
 	}
+
+	std::string timestring = sstream.str();
+	timestring.resize(timestring.size()-1);
+
+	sstream.str("");
+	sstream << INOVESA_VERSION_RELEASE << '.'
+			<< INOVESA_VERSION_MINOR << '.'
+			<< INOVESA_VERSION_FIX;
+
+	Display::printText("Started Inovesa (v"
+					   +sstream.str()+") at "+timestring);
 
 	#ifdef INOVESA_USE_CL
 	OCLH::active = (opts.getCLDevice() >= 0);
@@ -256,9 +257,9 @@ int main(int argc, char** argv)
 		e0=0;
 	}
 
-	Display::printText("Building FokkerPlanckMap.");
 	HeritageMap* fpm;
 	if (e0 > 0) {
+		Display::printText("Building FokkerPlanckMap.");
 		fpm = new FokkerPlanckMap(	mesh_rotated,mesh,ps_size,ps_size,
 									FokkerPlanckMap::FPType::full,e0,
 									FokkerPlanckMap::DerivationType::cubic);

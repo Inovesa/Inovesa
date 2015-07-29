@@ -21,7 +21,7 @@
 
 #ifdef INOVESA_USE_GUI
 
-Display::Display() :
+vfps::Display::Display() :
 	#if GLFW_VERSION_MAJOR == 3
 	window(nullptr),
 	#endif
@@ -146,7 +146,7 @@ Display::Display() :
 				 g_uv_buffer_data, GL_STATIC_DRAW);
 }
 
-Display::~Display()
+vfps::Display::~Display()
 {
 	delTexture();
 
@@ -160,7 +160,7 @@ Display::~Display()
 	glfwTerminate();
 }
 
-void Display::createTexture(vfps::PhaseSpace* mesh)
+void vfps::Display::createTexture(vfps::PhaseSpace* mesh)
 {
 	glGenTextures (1, &Texture);
 	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
@@ -187,13 +187,13 @@ void Display::createTexture(vfps::PhaseSpace* mesh)
 	TextureID = glGetUniformLocation(programID, "myTextureSampler");
 }
 
-void Display::delTexture()
+void vfps::Display::delTexture()
 {
 	glDeleteTextures(1, &TextureID);
 	glDeleteTextures(1, &Texture);
 }
 
-void Display::draw() {
+void vfps::Display::draw() {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -250,7 +250,7 @@ void Display::draw() {
 
 #endif // INOVESA_USE_GUI
 
-void Display::printText(std::string txt)
+void vfps::Display::printText(std::string txt)
 {
 	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 	std::cout.setf( std::ios::fixed, std:: ios::floatfield );
@@ -265,8 +265,8 @@ void Display::printText(std::string txt)
 
 #ifdef INOVESA_USE_GUI
 
-GLuint Display::LoadShaders(const char* vertex_file_path,
-							const char* fragment_file_path){
+GLuint vfps::Display::LoadShaders(	const char* vertex_file_path,
+									const char* fragment_file_path){
 
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -359,5 +359,5 @@ GLuint Display::LoadShaders(const char* vertex_file_path,
 
 #endif // INOVESA_USE_GUI
 
-std::chrono::system_clock::time_point Display::start_time;
+std::chrono::system_clock::time_point vfps::Display::start_time;
 

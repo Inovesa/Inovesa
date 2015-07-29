@@ -10,6 +10,7 @@ set(SRC_LIST
 			./src/HM/RotationMap.cpp
 			./src/HM/WakeKickMap.cpp
 			./src/IO/Display.cpp
+			./src/IO/GUI/GUIElement.cpp
 			./src/IO/HDF5File.cpp
 			./src/IO/ProgramOptions.cpp
 			./src/ElectricField.cpp
@@ -28,6 +29,7 @@ set(INC_LIST
 			./inc/HM/RotationMap.hpp
 			./inc/HM/WakeKickMap.hpp
 			./inc/IO/Display.hpp
+			./inc/IO/GUI/GUIElement.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/IO/ProgramOptions.hpp
 			./inc/ElectricField.hpp

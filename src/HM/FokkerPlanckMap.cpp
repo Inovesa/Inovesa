@@ -152,7 +152,6 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 							 sizeof(hi)*_ip*_ysize,
 							 _hinfo);
-		std::cout << sizeof(hi)*_ip*_ysize << std::endl;
 		applyHM = cl::Kernel(_cl_prog, "applyHM_Y");
 		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _hi_buf);

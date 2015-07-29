@@ -42,12 +42,12 @@ vfps::ProgramOptions::ProgramOptions() :
 		("version,v", "print version string")
 	;
 	_physopts.add_options()
-		("syncfreq,F", po::value<double>(&f_s),"Syncrotron frequency")
+		("syncfreq,F", po::value<double>(&f_s),"Synchrotron frequency")
 		("tdamp,d", po::value<double>(&t_d),"Damping time")
 		("PhaseSpaceSize,s", po::value<double>(&pq_max),
-			"Size of phase Space (+/- sigma_{p/q}/(mesh cells))")
+			"Size of phase Space (maximum sigma_{p/q})")
 		("NaturalBunchLength,l", po::value<double>(&s_0),
-			"Naural Bunch Length (+/- sigma_{z,0}/m)")
+			"Naural RMS Bunch Length /m)")
 		("initial-dist,I", po::value<std::string>(&_startdistfile),
 			"might be:\n"
 			"\tgrayscale png (.png) file containing initial particle density\n"

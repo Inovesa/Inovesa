@@ -17,84 +17,38 @@
 /* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
 /******************************************************************************/
 
-#ifndef DISPLAY_HPP
-#define DISPLAY_HPP
-
-#include "defines.hpp"
-
-#include <array>
-#include <chrono>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <type_traits>
+#ifndef GUIELEMENT_HPP
+#define GUIELEMENT_HPP
 
 #ifdef INOVESA_USE_GUI
 
-// Include GLEW
-#include <GL/glew.h>
+#include <exception>
+#include <fstream>
+#include <string>
+#include <vector>
 
-// Include GLFW
+#include <GL/glew.h>
 #if GLFW_VERSION_MAJOR == 3
 #include <GLFW/glfw3.h>
 #else
 #include <GL/glfw.h>
 #endif
 
-// Include GLM
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#endif // INOVESA_USE_GUI
+namespace vfps
+{
 
-#include "PhaseSpace.hpp"
-#include "IO/GUI/GUIElement.hpp"
-
-namespace vfps {
-
-class Display
+class GUIElement
 {
 public:
-	static std::chrono::system_clock::time_point start_time;
+	GUIElement();
 
-public:
-	Display();
-
-	~Display();
-
-	void createTexture(PhaseSpace* mesh);
-
-	void delTexture();
-
-	void draw();
-
-	static void printText(std::string txt);
-
-#ifdef INOVESA_USE_GUI
-	GLuint getTexture() const
-		{ return Texture; }
-
-private:
-	GLuint LoadShaders(const char* vertex_file_path,
-					   const char* fragment_file_path);
-
-	#if GLFW_VERSION_MAJOR == 3
-	GLFWwindow* window;
-	#endif
-	bool gl2fallback;
-
-	GLuint vertexbuffer;
-	GLuint uvbuffer;
-	GLuint programID;
-	GLuint VertexArrayID;
-	GLuint MatrixID;
-	GLuint Texture;
-	GLuint TextureID;
-	glm::mat4 MVP;
-#endif // INOVESA_USE_GUI
+protected:
+	GLuint LoadShaders(std::string vertex_file_path,
+					   std::string fragment_file_path);
 };
 
 } // namespace vfps
 
-#endif // DISPLAY_HPP
+#endif // INOVESA_USE_GUI
 
+#endif // GUIELEMENT_HPP

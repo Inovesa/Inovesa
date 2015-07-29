@@ -119,6 +119,6 @@ private:
 	meshindex_t ps_size;
 };
 
-}
+} // namespace vfps
 
 #endif // HDF5FILE_HPP
