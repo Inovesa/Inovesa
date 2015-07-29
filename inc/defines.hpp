@@ -63,6 +63,8 @@ typedef data_t meshdata_t;
 typedef data_t interpol_t;
 typedef data_t integral_t;
 typedef data_t timeaxis_t;
+
+typedef integral_t projection_t;
 }
 
 #endif // DEFINES_HPP

@@ -155,7 +155,7 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 }
 */
 
-vfps::integral_t* vfps::PhaseSpace::projectionToX() {
+vfps::projection_t *vfps::PhaseSpace::projectionToX() {
 	for (size_t x=0; x < nMeshCells(0); x++) {
 		_projection[0][x] = 0;
 
@@ -173,7 +173,7 @@ vfps::integral_t* vfps::PhaseSpace::projectionToX() {
 	return _projection[0];
 }
 
-vfps::integral_t* vfps::PhaseSpace::projectionToY() {
+vfps::projection_t *vfps::PhaseSpace::projectionToY() {
 	for (size_t y=0; y< nMeshCells(1); y++) {
 		_projection[1][y] = 0;
 

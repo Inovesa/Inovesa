@@ -18,7 +18,13 @@ public:
 	};
 
 public:
-	Impedance(ImpedanceModel model, size_t n);
+	/**
+	 * @brief Impedance
+	 * @param model
+	 * @param n
+	 * @param roundup round to next 2^N
+	 */
+	Impedance(ImpedanceModel model, size_t n, bool roundup=true);
 
 	Impedance(std::string datafile);
 
@@ -33,6 +39,19 @@ public:
 
 private:
 	std::vector<impedance_t> _data;
+
+	size_t _nmax;
+
+	/**
+	 * @brief upper_power_of_two
+	 * @param v
+	 * @return
+	 *
+	 * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+	 */
+	uint64_t upper_power_of_two(uint64_t v);
+
+
 };
 
 } // namespace vfps

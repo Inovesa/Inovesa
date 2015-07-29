@@ -92,12 +92,12 @@ public:
 
 	meshdata_t variance(const uint_fast8_t axis);
 
-	const integral_t* getProjection(const uint_fast8_t x) const
+	const projection_t* getProjection(const uint_fast8_t x) const
 	{ return _projection[x]; }
 
-	integral_t* projectionToX();
+	projection_t* projectionToX();
 
-	integral_t* projectionToY();
+	projection_t* projectionToY();
 
 	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }
@@ -137,7 +137,7 @@ protected:
 
 	integral_t _integral;
 
-	const std::array<integral_t*,2> _projection;
+	const std::array<projection_t*,2> _projection;
 
 	size_t _nmeshcells;
 

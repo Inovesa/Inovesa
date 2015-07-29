@@ -201,23 +201,22 @@ int main(int argc, char** argv)
 	}
 
 	Impedance* impedance = nullptr;
+	/* this would do zero padding araound the hole ring
 	size_t zmax = std::ceil(M_PI*opts.getBendingRadius()*ps_size
 							/(2*qmax)
 							/opts.getNaturalBunchLength());
+	*/
 	if (opts.getImpedanceFile() == "") {
 		Display::printText("No impedance file given. "
 						   "Will use free space impedance.");
-		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,zmax);
+		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,ps_size);
 	} else {
 		Display::printText("Reading impedance from: \""
 						   +opts.getImpedanceFile()+"\"");
 		impedance = new Impedance(opts.getImpedanceFile());
-		if (impedance->maxN() != zmax) {
-			std::stringstream zmaxstr;
-			zmaxstr << zmax;
-			Display::printText("No valid impedance file: Need N="
-							   +zmaxstr.str()+ " points."
-							   +"Will now quit.");
+		if (impedance->maxN() < ps_size) {
+			Display::printText("No valid impedance file. "
+							   "Will now quit.");
 			return EXIT_SUCCESS;
 		}
 	}
