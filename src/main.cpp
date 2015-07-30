@@ -30,6 +30,7 @@
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
+#include "IO/GUI/Plot2D.hpp"
 #include "PhaseSpace.hpp"
 #include "Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
@@ -288,6 +289,13 @@ int main(int argc, char** argv)
 		mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	}
 	#endif // INOVESA_USE_CL
+	#ifdef INOVESA_USE_GUI
+	Plot2D* psv = nullptr;;
+	if (opts.showPhaseSpace()) {
+		psv = new Plot2D();
+		display->addElement(psv);
+	}
+	#endif
 
 	Display::printText("Starting the simulation.");
 	for (unsigned int i=0;i<steps*rotations;i++) {
@@ -305,9 +313,9 @@ int main(int argc, char** argv)
 			}
 			#ifdef INOVESA_USE_GUI
 			if (opts.showPhaseSpace()) {
-				display->createTexture(mesh);
+				psv->createTexture(mesh);
 				display->draw();
-				display->delTexture();
+				psv->delTexture();
 			} else
 			#endif
 			{
@@ -338,6 +346,11 @@ int main(int argc, char** argv)
 		OCLH::queue.flush();
 	}
 	#endif // INOVESA_USE_CL
+
+	#ifdef INOVESA_USE_GUI
+	delete display;
+	delete psv;
+	#endif
 
 	delete mesh;
 	delete mesh_rotated;

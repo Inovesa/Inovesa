@@ -11,6 +11,7 @@ set(SRC_LIST
 			./src/HM/WakeKickMap.cpp
 			./src/IO/Display.cpp
 			./src/IO/GUI/GUIElement.cpp
+			./src/IO/GUI/Plot2D.cpp
 			./src/IO/HDF5File.cpp
 			./src/IO/ProgramOptions.cpp
 			./src/ElectricField.cpp
@@ -30,6 +31,7 @@ set(INC_LIST
 			./inc/HM/WakeKickMap.hpp
 			./inc/IO/Display.hpp
 			./inc/IO/GUI/GUIElement.hpp
+			./inc/IO/GUI/Plot2D.hpp
 			./inc/IO/HDF5File.hpp
 			./inc/IO/ProgramOptions.hpp
 			./inc/ElectricField.hpp

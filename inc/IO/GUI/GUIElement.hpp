@@ -22,6 +22,11 @@
 
 #ifdef INOVESA_USE_GUI
 
+//forward declaration
+namespace vfps {
+class GUIElement;
+}
+
 #include <exception>
 #include <fstream>
 #include <string>
@@ -37,6 +42,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "PhaseSpace.hpp"
+
 namespace vfps
 {
 
@@ -45,15 +52,16 @@ class GUIElement
 public:
 	GUIElement();
 
+	virtual ~GUIElement();
+
+	virtual void draw() =0;
+
+	static uint_fast8_t glversion;
+
 protected:
-	void createTexture(PhaseSpace* mesh);
-
-	void delTexture();
-
 	GLuint LoadShaders(std::string vertex_file_path,
 					   std::string fragment_file_path);
 
-private:
 	GLuint vertexbuffer;
 	GLuint uvbuffer;
 	GLuint programID;

@@ -46,6 +46,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #endif // INOVESA_USE_GUI
+#include <vector>
 
 #include "PhaseSpace.hpp"
 #include "IO/GUI/GUIElement.hpp"
@@ -62,6 +63,8 @@ public:
 
 	~Display();
 
+	void addElement(GUIElement* newitem);
+
 	void draw();
 
 	static void printText(std::string txt);
@@ -71,9 +74,9 @@ private:
 	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow* window;
 	#endif
-
-	static bool gl2fallback;
 	#endif // INOVESA_USE_GUI
+
+	std::vector<GUIElement*> item;
 };
 
 } // namespace vfps
