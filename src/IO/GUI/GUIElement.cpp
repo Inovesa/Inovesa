@@ -19,6 +19,43 @@
 
 #include "IO/GUI/GUIElement.hpp"
 
+vfps::GUIElement::GUIElement()
+{
+
+}
+
+void vfps::GUIElement::createTexture(vfps::PhaseSpace* mesh)
+{
+	glGenTextures (1, &Texture);
+	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+	glBindTexture(GL_TEXTURE_2D,Texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+	size_t npixels = mesh->nMeshCells();
+	float* data = new float[npixels];
+	vfps::meshdata_t* meshdata = mesh->getData();
+	for (vfps::meshindex_t i=0; i<npixels; i++) {
+		data[i] = meshdata[i]/vfps::meshdata_t(1);
+	}
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
+				 mesh->nMeshCells(0), mesh->nMeshCells(1),
+				 0, GL_RED, GL_FLOAT, data);
+	delete [] data;
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Get a handle for our "myTextureSampler" uniform
+	TextureID = glGetUniformLocation(programID, "myTextureSampler");
+}
+
+void vfps::GUIElement::delTexture()
+{
+	glDeleteTextures(1, &TextureID);
+	glDeleteTextures(1, &Texture);
+}
 
 GLuint vfps::GUIElement::LoadShaders(std::string vertex_file_path,
 									 std::string fragment_file_path)

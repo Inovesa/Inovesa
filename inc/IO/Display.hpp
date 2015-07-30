@@ -62,36 +62,18 @@ public:
 
 	~Display();
 
-	void createTexture(PhaseSpace* mesh);
-
-	void delTexture();
-
 	void draw();
 
 	static void printText(std::string txt);
 
-#ifdef INOVESA_USE_GUI
-	GLuint getTexture() const
-		{ return Texture; }
-
 private:
-	GLuint LoadShaders(const char* vertex_file_path,
-					   const char* fragment_file_path);
-
+	#ifdef INOVESA_USE_GUI
 	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow* window;
 	#endif
-	bool gl2fallback;
 
-	GLuint vertexbuffer;
-	GLuint uvbuffer;
-	GLuint programID;
-	GLuint VertexArrayID;
-	GLuint MatrixID;
-	GLuint Texture;
-	GLuint TextureID;
-	glm::mat4 MVP;
-#endif // INOVESA_USE_GUI
+	static bool gl2fallback;
+	#endif // INOVESA_USE_GUI
 };
 
 } // namespace vfps

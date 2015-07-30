@@ -23,9 +23,8 @@
 
 vfps::Display::Display() :
 	#if GLFW_VERSION_MAJOR == 3
-	window(nullptr),
+	window(nullptr)
 	#endif
-	gl2fallback(false)
 {
 	glfwInit();
 
@@ -45,12 +44,12 @@ vfps::Display::Display() :
 	// Open a window and create its OpenGL context
 	#if GLFW_VERSION_MAJOR < 3
 	glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
-	glfwSetWindowTitle("Phase Space View");
+	glfwSetWindowTitle("Inovesa");
 	#else // GLFW3
-	window = glfwCreateWindow( 512, 512, "Phase Space View", NULL, NULL);
+	window = glfwCreateWindow( 512, 512, "Inovesa", NULL, NULL);
 	if( window == nullptr ) {
 		glfwTerminate();
-		std::cout << "Failed to open OpenGl 3 window, will try OpenGL 2." << std::endl;
+		printText("Failed to open OpenGl 3 window, will try OpenGL 2.");
 		gl2fallback = true;
 		glfwInit();
 		glfwWindowHint(GLFW_SAMPLES, 4);
@@ -59,9 +58,11 @@ vfps::Display::Display() :
 		window = glfwCreateWindow( 512, 512, "Phace Space View", NULL, NULL);
 
 		if( window == nullptr ) {
-			std::cerr << "Failed to initialize GLFW" << std::endl;
+			std::cerr << "Failed to initialize GLFW." << std::endl;
 			glfwTerminate();
 		}
+	} else {
+		gl2fallback = false;
 	}
 	glfwMakeContextCurrent(window);
 	#endif // GLFW3
@@ -160,39 +161,6 @@ vfps::Display::~Display()
 	glfwTerminate();
 }
 
-void vfps::Display::createTexture(vfps::PhaseSpace* mesh)
-{
-	glGenTextures (1, &Texture);
-	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	glBindTexture(GL_TEXTURE_2D,Texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-	size_t npixels = mesh->nMeshCells();
-	float* data = new float[npixels];
-	vfps::meshdata_t* meshdata = mesh->getData();
-	for (vfps::meshindex_t i=0; i<npixels; i++) {
-		data[i] = meshdata[i]/vfps::meshdata_t(1);
-	}
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-				 mesh->nMeshCells(0), mesh->nMeshCells(1),
-				 0, GL_RED, GL_FLOAT, data);
-	delete [] data;
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// Get a handle for our "myTextureSampler" uniform
-	TextureID = glGetUniformLocation(programID, "myTextureSampler");
-}
-
-void vfps::Display::delTexture()
-{
-	glDeleteTextures(1, &TextureID);
-	glDeleteTextures(1, &Texture);
-}
-
 void vfps::Display::draw() {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -263,101 +231,7 @@ void vfps::Display::printText(std::string txt)
 				<< std::endl;
 }
 
-#ifdef INOVESA_USE_GUI
-
-GLuint vfps::Display::LoadShaders(	const char* vertex_file_path,
-									const char* fragment_file_path){
-
-	// Create the shaders
-	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Read the Vertex Shader code from the file
-	std::string VertexShaderCode;
-	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if(VertexShaderStream.is_open()){
-		std::string Line = "";
-		while(getline(VertexShaderStream, Line))
-			VertexShaderCode += "\n" + Line;
-		VertexShaderStream.close();
-	}else{
-		std::cout << "Impossible to open" << vertex_file_path
-				  << "Are you in the right directory?" << std::endl;
-		return 0;
-	}
-
-	// Read the Fragment Shader code from the file
-	std::string FragmentShaderCode;
-	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if(FragmentShaderStream.is_open()){
-		std::string Line = "";
-		while(getline(FragmentShaderStream, Line))
-			FragmentShaderCode += "\n" + Line;
-		FragmentShaderStream.close();
-	}
-
-
-
-	GLint Result = GL_FALSE;
-	GLint InfoLogLength;
-
-
-
-	// Compile Vertex Shader
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
-	glCompileShader(VertexShaderID);
-
-	// Check Vertex Shader
-	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 1 ){
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		std::cout << "Error:" << VertexShaderErrorMessage.data() << std::endl;
-	}
-
-
-
-	// Compile Fragment Shader
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
-	glCompileShader(FragmentShaderID);
-
-	// Check Fragment Shader
-	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 1 ){
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		std::cout << "Error:" << FragmentShaderErrorMessage.data() << std::endl;
-	}
-
-
-
-	// Link the program
-	GLuint ProgramID = glCreateProgram();
-	glAttachShader(ProgramID, VertexShaderID);
-	glAttachShader(ProgramID, FragmentShaderID);
-	glLinkProgram(ProgramID);
-
-	// Check the program
-	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 1 ){
-		std::vector<char> ProgramErrorMessage(InfoLogLength+1);
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		std::cout << "Error:" << ProgramErrorMessage.data() << std::endl;
-	}
-
-	glDeleteShader(VertexShaderID);
-	glDeleteShader(FragmentShaderID);
-
-	return ProgramID;
-}
-
-
-#endif // INOVESA_USE_GUI
-
 std::chrono::system_clock::time_point vfps::Display::start_time;
+
+bool vfps::Display::gl2fallback;
 

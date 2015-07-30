@@ -33,6 +33,9 @@
 #else
 #include <GL/glfw.h>
 #endif
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace vfps
 {
@@ -43,8 +46,22 @@ public:
 	GUIElement();
 
 protected:
+	void createTexture(PhaseSpace* mesh);
+
+	void delTexture();
+
 	GLuint LoadShaders(std::string vertex_file_path,
 					   std::string fragment_file_path);
+
+private:
+	GLuint vertexbuffer;
+	GLuint uvbuffer;
+	GLuint programID;
+	GLuint VertexArrayID;
+	GLuint MatrixID;
+	GLuint Texture;
+	GLuint TextureID;
+	glm::mat4 MVP;
 };
 
 } // namespace vfps
