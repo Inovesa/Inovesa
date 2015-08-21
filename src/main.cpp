@@ -228,7 +228,7 @@ int main(int argc, char** argv)
 	if ( h5ending.size() < opts.getOutFile().size() &&
 		 std::equal(h5ending.rbegin(), h5ending.rend(),
 					opts.getOutFile().rbegin())) {
-		file = new HDF5File(opts.getOutFile(),ps_size,impedance->maxN());
+		file = new HDF5File(opts.getOutFile(),mesh,impedance->maxN());
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
 		Display::printText("Will not save results.");
@@ -290,9 +290,15 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 	#ifdef INOVESA_USE_GUI
-	Plot2D* psv = nullptr;;
+	Plot2D* psv = nullptr;
 	if (opts.showPhaseSpace()) {
-		psv = new Plot2D();
+		try {
+			psv = new Plot2D();
+		} catch (std::string e) {
+			std::cerr << e << std::endl;
+
+			return EXIT_SUCCESS;
+		};
 		display->addElement(psv);
 	}
 	#endif

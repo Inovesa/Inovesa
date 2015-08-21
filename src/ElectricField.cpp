@@ -53,7 +53,7 @@ vfps::ElectricField::~ElectricField()
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
 	std::copy_n(_phasespace->projectionToX(),
-				_spaceinfo->getNSteps(),
+				_spaceinfo->steps(),
 				_bp_padded);
 
 	//FFT charge density

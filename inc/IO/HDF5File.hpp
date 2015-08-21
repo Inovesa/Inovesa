@@ -39,7 +39,7 @@ public:
 	 * @param ps_size size of one mesh dimension
 	 * @param maxn maximum index (==wavenumber?) of CSR spectrum
 	 */
-	HDF5File(std::string fname, const meshindex_t ps_size, const size_t maxn);
+	HDF5File(std::string fname, const PhaseSpace* ps, const size_t maxn);
 
 	~HDF5File();
 
@@ -54,10 +54,36 @@ private:
 
 	static constexpr uint_fast8_t compression = 6;
 
-private:
+	const std::string info_name;
+
+private: // values for ps axis
+	static constexpr uint_fast8_t psa_rank = 2;
+
+	H5::DataSet psa0_dataset;
+
+	H5::DataSet psa1_dataset;
+
+	H5::DataSpace* psa0_dataspace;
+
+	H5::DataSpace* psa1_dataspace;
+
+	H5::IntType psa_datatype;
+
+	std::array<hsize_t,psa_rank> psa0_dims;
+
+	std::array<hsize_t,psa_rank> psa1_dims;
+
+	const std::string psa0_name;
+
+	const std::string psa1_name;
+
+	H5::DSetCreatPropList psa_prop;
+
+
+private: // bunch charge
 	static constexpr uint_fast8_t bc_rank = 1;
 
-	H5::DataSet* bc_dataset;
+	H5::DataSet bc_dataset;
 
 	H5::DataSpace* bc_dataspace;
 
@@ -69,10 +95,10 @@ private:
 
 	H5::DSetCreatPropList bc_prop;
 
-private:
+private: // bunch profile
 	static constexpr uint_fast8_t bp_rank = 2;
 
-	H5::DataSet* bp_dataset;
+	H5::DataSet bp_dataset;
 
 	H5::DataSpace* bp_dataspace;
 
@@ -84,10 +110,10 @@ private:
 
 	H5::DSetCreatPropList bp_prop;
 
-private:
+private: // csr spectrum
 	static constexpr uint_fast8_t csr_rank = 2;
 
-	H5::DataSet* csr_dataset;
+	H5::DataSet csr_dataset;
 
 	H5::DataSpace* csr_dataspace;
 
@@ -101,10 +127,10 @@ private:
 
 	size_t maxn;
 
-private:
+private: // phase space
 	static constexpr uint_fast8_t ps_rank = 3;
 
-	H5::DataSet* ps_dataset;
+	H5::DataSet ps_dataset;
 
 	H5::DataSpace* ps_dataspace;
 

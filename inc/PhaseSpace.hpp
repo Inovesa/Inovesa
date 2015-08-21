@@ -67,13 +67,13 @@ public:
 	{ return _data1D; }
 
 	inline meshaxis_t getDelta(const uint_fast8_t x) const
-	{ return _axis[x].getDelta(); }
+	{ return _axis[x].delta(); }
 
 	inline meshaxis_t getMax(const uint_fast8_t x) const
-	{ return _axis[x].getMax(); }
+	{ return _axis[x].max(); }
 
 	inline meshaxis_t getMin(const uint_fast8_t x) const
-	{ return _axis[x].getMin(); }
+	{ return _axis[x].min(); }
 
 	/**
 	 * @brief getRuler
@@ -105,10 +105,10 @@ public:
 	PhaseSpace& operator=(PhaseSpace other);
 
 	inline size_t nMeshCells() const
-	{ return _axis[0].getNSteps()*_axis[1].getNSteps(); }
+	{ return _axis[0].steps()*_axis[1].steps(); }
 
 	inline size_t nMeshCells(const uint_fast8_t x) const
-	{ return _axis[x].getNSteps(); }
+	{ return _axis[x].steps(); }
 
 	inline meshaxis_t size(const uint_fast8_t x) const
 	{ return _axis[x].size(); }

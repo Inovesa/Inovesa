@@ -48,9 +48,9 @@ GLuint vfps::GUIElement::LoadShaders(std::string vertex_file_path,
 			VertexShaderCode += "\n" + Line;
 		VertexShaderStream.close();
 	}else{
-		throw ("Impossible to open"
+        throw ("Cannot open \""
 				+vertex_file_path
-				+"Are you in the right directory?");
+                +"\". Are you in the right directory?");
 		return 0;
 	}
 
