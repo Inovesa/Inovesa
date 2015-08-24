@@ -21,6 +21,8 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 								   const Impedance* impedance) :
+	_axis(Ruler<meshaxis_t>(impedance->maxN(),0,
+							meshaxis_t(1)/phasespace->size(0))),
 	_nmax(impedance->maxN()),
 	_phasespace(phasespace),
 	_bpmeshcells(phasespace->nMeshCells(0)),

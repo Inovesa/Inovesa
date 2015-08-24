@@ -48,12 +48,20 @@ public:
 	inline csrpower_t* getData() const
 		{ return _csrspectrum; }
 
+	inline const Impedance* getImpedance() const
+		{ return _impedance; }
+
+	inline const Ruler<meshaxis_t>* getRuler() const
+		{ return &_axis; }
+
 	csrpower_t* updateCSRSpectrum();
 
 private:
 	fftwf_plan prepareFFT(unsigned int n, csrpower_t* in, impedance_t* out);
 
 private:
+	const Ruler<meshaxis_t> _axis;
+
 	size_t _nmax;
 
 	PhaseSpace* _phasespace;

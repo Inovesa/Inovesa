@@ -24,6 +24,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	_startdistfile(""),
 	_configfile("default.cfg"),
 	outsteps(100),
+	padding(0),
 	steps(4000),
 	rotations(1),
 	f_s(8.5e3),
@@ -85,6 +86,8 @@ vfps::ProgramOptions::ProgramOptions() :
 			"Number of steps for one synchrotron period (delta t=1/(N*f_s))")
 		("outstep,n", po::value<unsigned int>(&outsteps),
 			"Save results/ update phase space view every n steps")
+		("padding,p", po::value<unsigned int>(&padding),
+			"Factor to use for zero padding of bunch profile, 0/1: no padding")
 		("rotations,T", po::value<float>(&rotations),
 			"Simulated time (in number of synchrotron periods)")
 	;

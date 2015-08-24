@@ -39,7 +39,10 @@ public:
 	 * @param ps_size size of one mesh dimension
 	 * @param maxn maximum index (==wavenumber?) of CSR spectrum
 	 */
-	HDF5File(std::string fname, const PhaseSpace* ps, const size_t maxn);
+	HDF5File(const std::string fname,
+			 const PhaseSpace* ps,
+			 const ElectricField* radiation,
+			 const size_t maxn);
 
 	~HDF5File();
 
@@ -54,24 +57,35 @@ private:
 
 	static constexpr uint_fast8_t compression = 6;
 
-private: // values for ps axis
-	static constexpr uint_fast8_t psa_rank = 2;
-
 	H5::DataType datatype_integral;
 
 	H5::DataType datatype_meshdata;
 
-	H5::DataSet psa0_dataset;
+private: // values for phase space axis
+	static constexpr uint_fast8_t axps_rank = 2;
 
-	H5::DataSet psa1_dataset;
+	H5::DataSet ax0ps_dataset;
 
-	H5::DataSpace* psa0_dataspace;
+	H5::DataSet ax1ps_dataset;
 
-	H5::DataSpace* psa1_dataspace;
+	H5::DataSpace* ax0ps_dataspace;
 
-	H5::IntType psa_datatype;
+	H5::DataSpace* ax1ps_dataspace;
 
-	H5::DSetCreatPropList psa_prop;
+	H5::IntType axps_datatype;
+
+	H5::DSetCreatPropList axps_prop;
+
+private: // values for frequency axis
+	static constexpr uint_fast8_t axfreq_rank = 2;
+
+	H5::DataSet axfreq_dataset;
+
+	H5::DataSpace* axfreq_dataspace;
+
+	H5::IntType axfreq_datatype;
+
+	H5::DSetCreatPropList axfreq_prop;
 
 
 private: // bunch charge

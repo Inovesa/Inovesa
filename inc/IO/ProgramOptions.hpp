@@ -60,6 +60,9 @@ public:
 	inline unsigned int getOutSteps() const
 		{ return outsteps; }
 
+	inline unsigned int getPadding() const
+		{ return padding; }
+
 	inline unsigned int getSteps() const
 		{ return steps; }
 
@@ -98,6 +101,7 @@ private: // program parameters
 
 private: // simulation parameters
 	unsigned int outsteps;
+	unsigned int padding;
 	unsigned int steps;
 	float rotations;
 

@@ -211,7 +211,8 @@ int main(int argc, char** argv)
 	if (opts.getImpedanceFile() == "") {
 		Display::printText("No impedance file given. "
 						   "Will use free space impedance.");
-		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,ps_size);
+		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
+								  ps_size*std::max(opts.getPadding(),1u));
 	} else {
 		Display::printText("Reading impedance from: \""
 						   +opts.getImpedanceFile()+"\"");
@@ -223,20 +224,20 @@ int main(int argc, char** argv)
 		}
 	}
 
+	ElectricField field(mesh,impedance);
+
 	HDF5File* file = nullptr;
 	std::string h5ending = ".h5";
 	if ( h5ending.size() < opts.getOutFile().size() &&
 		 std::equal(h5ending.rbegin(), h5ending.rend(),
 					opts.getOutFile().rbegin())) {
-		file = new HDF5File(opts.getOutFile(),mesh,impedance->maxN());
+		file = new HDF5File(opts.getOutFile(),mesh,&field,impedance->maxN());
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
 		Display::printText("Will not save results.");
 	}
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
-
-	ElectricField field(mesh,impedance);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;

@@ -19,8 +19,9 @@
 
 #include "IO/HDF5File.hpp"
 
-vfps::HDF5File::HDF5File(std::string fname,
+vfps::HDF5File::HDF5File(const std::string fname,
 						 const PhaseSpace* ps,
+						 const ElectricField* radiation,
 						 const size_t maxn) :
 	file( nullptr ),
 	fname( fname ),
@@ -34,43 +35,67 @@ vfps::HDF5File::HDF5File(std::string fname,
 	file = new H5::H5File(fname,H5F_ACC_TRUNC);
 
 	file->createGroup("Info");
-
-	// save Values of Axis
+	// save Values of Phase Space Axis
 	if (std::is_same<vfps::meshaxis_t,float>::value) {
-		psa_datatype = H5::PredType::IEEE_F32LE;
+		axps_datatype = H5::PredType::IEEE_F32LE;
 	} else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
-		psa_datatype = H5::PredType::STD_I64LE;
+		axps_datatype = H5::PredType::STD_I64LE;
 	} else if (std::is_same<vfps::meshaxis_t,double>::value) {
-		psa_datatype = H5::PredType::IEEE_F64LE;
+		axps_datatype = H5::PredType::IEEE_F64LE;
 	}
 
-	const std::array<hsize_t,psa_rank> psa_dims
+	const std::array<hsize_t,axps_rank> psa_dims
+			= {{ 1, ps_size }};
+	const std::array<hsize_t,axps_rank> psa_maxdims
 			= {{ 1, ps_size }};
 
-	const std::array<hsize_t,psa_rank> psa_maxdims
-			= {{ 1, ps_size }};
-
-	psa0_dataspace = new H5::DataSpace(psa_rank,psa_dims.data(),
+	ax0ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
 									   psa_maxdims.data());
-	psa1_dataspace = new H5::DataSpace(psa_rank,psa_dims.data(),
+	ax1ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
 									   psa_maxdims.data());
 
 
-	const std::array<hsize_t,bp_rank> psa_chunkdims
+	const std::array<hsize_t,axps_rank> psa_chunkdims
 			= {{1U,ps_size/8U}};
-	psa_prop.setChunk(psa_rank,psa_chunkdims.data());
-	psa_prop.setShuffle();
-	psa_prop.setDeflate(compression);
+	axps_prop.setChunk(axps_rank,psa_chunkdims.data());
+	axps_prop.setShuffle();
+	axps_prop.setDeflate(compression);
 
-	psa0_dataset = file->createDataSet("/Info/AxisValues_z",psa_datatype,
-											*psa0_dataspace,psa_prop);
+	ax0ps_dataset = file->createDataSet("/Info/AxisValues_z",axps_datatype,
+											*ax0ps_dataspace,axps_prop);
+	ax1ps_dataset = file->createDataSet("/Info/AxisValues_E",axps_datatype,
+											*ax1ps_dataspace,axps_prop);
+	ax0ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
+	ax1ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
 
-	psa0_dataset.write(ps->getRuler(0)->data(),psa_datatype);
+	// save Values of Frequency Axis
+	if (std::is_same<vfps::meshaxis_t,float>::value) {
+		axfreq_datatype = H5::PredType::IEEE_F32LE;
+	} else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+		axfreq_datatype = H5::PredType::STD_I64LE;
+	} else if (std::is_same<vfps::meshaxis_t,double>::value) {
+		axfreq_datatype = H5::PredType::IEEE_F64LE;
+	}
 
-	psa1_dataset = file->createDataSet("/Info/AxisValues_E",psa_datatype,
-											*psa1_dataspace,psa_prop);
+	const std::array<hsize_t,axfreq_rank> axfreq_dims
+			= {{ 1, maxn }};
+	const std::array<hsize_t,axfreq_rank> axfreq_maxdims
+			= {{ 1, maxn }};
 
-	psa1_dataset.write(ps->getRuler(0)->data(),psa_datatype);
+	axfreq_dataspace = new H5::DataSpace(axfreq_rank,axfreq_dims.data(),
+									   axfreq_maxdims.data());
+
+
+	const std::array<hsize_t,bp_rank> axfreq_chunkdims
+			= {{1U,ps_size/8U}};
+	axfreq_prop.setChunk(axps_rank,axfreq_chunkdims.data());
+	axfreq_prop.setShuffle();
+	axfreq_prop.setDeflate(compression);
+
+	axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
+											*axfreq_dataspace,axfreq_prop);
+	axfreq_dataset.write(radiation->getRuler()->data(),axfreq_datatype);
+
 
 	// get ready to save BunchCharge
 	file->createGroup("BunchCharge");
@@ -123,6 +148,7 @@ vfps::HDF5File::HDF5File(std::string fname,
 
 	// get ready to save CSR Spectrum
 	file->createGroup("CSR-Spectrum");
+	file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSR-Spectrum/axis0" );
 
 	if (std::is_same<vfps::csrpower_t,float>::value) {
 		csr_datatype = H5::PredType::IEEE_F32LE;
@@ -192,8 +218,9 @@ vfps::HDF5File::HDF5File(std::string fname,
 vfps::HDF5File::~HDF5File()
 {
 	delete file;
-	delete psa0_dataspace;
-	delete psa1_dataspace;
+	delete axfreq_dataspace;
+	delete ax0ps_dataspace;
+	delete ax1ps_dataspace;
 	delete bc_dataspace;
 	delete bp_dataspace;
 	delete ps_dataspace;
