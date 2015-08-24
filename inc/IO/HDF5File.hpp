@@ -54,10 +54,12 @@ private:
 
 	static constexpr uint_fast8_t compression = 6;
 
-	const std::string info_name;
-
 private: // values for ps axis
 	static constexpr uint_fast8_t psa_rank = 2;
+
+	H5::DataType datatype_integral;
+
+	H5::DataType datatype_meshdata;
 
 	H5::DataSet psa0_dataset;
 
@@ -68,14 +70,6 @@ private: // values for ps axis
 	H5::DataSpace* psa1_dataspace;
 
 	H5::IntType psa_datatype;
-
-	std::array<hsize_t,psa_rank> psa0_dims;
-
-	std::array<hsize_t,psa_rank> psa1_dims;
-
-	const std::string psa0_name;
-
-	const std::string psa1_name;
 
 	H5::DSetCreatPropList psa_prop;
 
@@ -91,8 +85,6 @@ private: // bunch charge
 
 	hsize_t bc_dims;
 
-	const std::string bc_name;
-
 	H5::DSetCreatPropList bc_prop;
 
 private: // bunch profile
@@ -106,8 +98,6 @@ private: // bunch profile
 
 	std::array<hsize_t,bp_rank> bp_dims;
 
-	const std::string bp_name;
-
 	H5::DSetCreatPropList bp_prop;
 
 private: // csr spectrum
@@ -120,8 +110,6 @@ private: // csr spectrum
 	H5::IntType csr_datatype;
 
 	std::array<hsize_t,csr_rank> csr_dims;
-
-	const std::string csr_name;
 
 	H5::DSetCreatPropList csr_prop;
 
@@ -137,8 +125,6 @@ private: // phase space
 	H5::IntType ps_datatype;
 
 	std::array<hsize_t,ps_rank> ps_dims;
-
-	const std::string ps_name;
 
 	H5::DSetCreatPropList ps_prop;
 
