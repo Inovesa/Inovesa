@@ -71,9 +71,10 @@ vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
 							 meshaxis_t xmin, meshaxis_t xmax,
-							 meshaxis_t ymin, meshaxis_t ymax) :
-	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax),
-			   Ruler<meshaxis_t>(ps_size,ymin,ymax))
+							 meshaxis_t ymin, meshaxis_t ymax,
+							 double xscale, double yscale) :
+	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
+			   Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale))
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :

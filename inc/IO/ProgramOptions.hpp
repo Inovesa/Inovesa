@@ -69,6 +69,9 @@ public:
 	inline float getNRotations() const
 		{ return rotations; }
 
+	inline double getPhaseSpaceSize() const
+		{ return pq_max; }
+
 
 public:
 	inline double getBendingRadius() const
@@ -82,9 +85,6 @@ public:
 
 	inline double getDampingTime() const
 		{ return t_d; }
-
-	inline double getPhaseSpaceSize() const
-		{ return pq_max; }
 
 private: // program parameters
 	int _cldevice;
@@ -102,13 +102,13 @@ private: // program parameters
 private: // simulation parameters
 	unsigned int outsteps;
 	unsigned int padding;
+	double pq_max;
 	unsigned int steps;
 	float rotations;
 
 private: // phsical parameters
 	double f_s;
 	double t_d;
-	double pq_max;
 	double r_bend;
 	double s_0;
 

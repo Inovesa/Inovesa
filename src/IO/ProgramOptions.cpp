@@ -25,11 +25,11 @@ vfps::ProgramOptions::ProgramOptions() :
 	_configfile("default.cfg"),
 	outsteps(100),
 	padding(0),
+	pq_max(5.0),
 	steps(4000),
 	rotations(1),
 	f_s(8.5e3),
 	t_d(0.01),
-	pq_max(5.0),
 	r_bend(1.0),
 	s_0(1.0e-3),
 	_physopts("Physical Parameters for Simulation"),
@@ -43,18 +43,16 @@ vfps::ProgramOptions::ProgramOptions() :
 		("version,v", "print version string")
 	;
 	_physopts.add_options()
-		("syncfreq,F", po::value<double>(&f_s),"Synchrotron frequency")
-		("tdamp,d", po::value<double>(&t_d),"Damping time")
-		("PhaseSpaceSize,s", po::value<double>(&pq_max),
-			"Size of phase Space (maximum sigma_{p/q})")
+		("syncfreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
+		("tdamp,d", po::value<double>(&t_d),"Damping time (s)")
 		("NaturalBunchLength,l", po::value<double>(&s_0),
-			"Naural RMS Bunch Length /m)")
+			"Naural RMS Bunch Length (m)")
 		("initial-dist,I", po::value<std::string>(&_startdistfile),
 			"might be:\n"
 			"\tgrayscale png (.png) file containing initial particle density\n"
 			"\ttext file (.txt) containing normalized z/delta of particles")
 		("bendingradius,R", po::value<double>(&r_bend),
-			"bending radius of accelerator")
+			"Bending radius of accelerator (m)")
 		("impedance,Z", po::value<std::string>(&_impedancefile),
 			"File containing impedance information. Might be:\n"
 			"\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
@@ -62,7 +60,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	_programopts_file.add_options()
 		("cldev", po::value<int>(&_cldevice)->default_value(1),
 			"OpenCL device to use ('0' lists available devices)")
-		("gui", po::value<bool>(&_showphasespace)->default_value(true),
+		("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
 			"Show phase space view")
 		("output,o",
 			po::value<std::string>(&_outfile),
@@ -88,6 +86,8 @@ vfps::ProgramOptions::ProgramOptions() :
 			"Save results/ update phase space view every n steps")
 		("padding,p", po::value<unsigned int>(&padding),
 			"Factor to use for zero padding of bunch profile, 0/1: no padding")
+		("PhaseSpaceSize,s", po::value<double>(&pq_max),
+			"Size of phase Space (maximum sigma_{p/q})")
 		("rotations,T", po::value<float>(&rotations),
 			"Simulated time (in number of synchrotron periods)")
 	;

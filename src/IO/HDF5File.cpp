@@ -21,14 +21,13 @@
 
 vfps::HDF5File::HDF5File(const std::string fname,
 						 const PhaseSpace* ps,
-						 const ElectricField* radiation,
-						 const size_t maxn) :
+						 const ElectricField* ef) :
 	file( nullptr ),
 	fname( fname ),
 	bc_dims( 0 ),
 	bp_dims( {{ 0, ps->nMeshCells(0) }} ),
-	csr_dims( {{ 0, maxn }} ),
-	maxn(maxn),
+	csr_dims( {{ 0, ef->getNMax() }} ),
+	maxn(ef->getNMax()),
 	ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
 	ps_size( ps->nMeshCells(0) )
 {
@@ -94,7 +93,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 	axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
 											*axfreq_dataspace,axfreq_prop);
-	axfreq_dataset.write(radiation->getRuler()->data(),axfreq_datatype);
+	axfreq_dataset.write(ef->getRuler()->data(),axfreq_datatype);
 
 
 	// get ready to save BunchCharge

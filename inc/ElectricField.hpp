@@ -51,6 +51,9 @@ public:
 	inline const Impedance* getImpedance() const
 		{ return _impedance; }
 
+	inline size_t getNMax() const
+		{ return _nmax; }
+
 	inline const Ruler<meshaxis_t>* getRuler() const
 		{ return &_axis; }
 

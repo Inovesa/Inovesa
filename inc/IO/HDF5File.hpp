@@ -41,8 +41,7 @@ public:
 	 */
 	HDF5File(const std::string fname,
 			 const PhaseSpace* ps,
-			 const ElectricField* radiation,
-			 const size_t maxn);
+			 const ElectricField* ef);
 
 	~HDF5File();
 

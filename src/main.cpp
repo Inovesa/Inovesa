@@ -231,7 +231,7 @@ int main(int argc, char** argv)
 	if ( h5ending.size() < opts.getOutFile().size() &&
 		 std::equal(h5ending.rbegin(), h5ending.rend(),
 					opts.getOutFile().rbegin())) {
-		file = new HDF5File(opts.getOutFile(),mesh,&field,impedance->maxN());
+		file = new HDF5File(opts.getOutFile(),mesh,&field);
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
 		Display::printText("Will not save results.");

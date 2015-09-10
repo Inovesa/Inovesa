@@ -52,7 +52,8 @@ public:
 
 	PhaseSpace(meshindex_t ps_size,
 			   meshaxis_t xmin, meshaxis_t xmax,
-			   meshaxis_t ymin, meshaxis_t ymax);
+			   meshaxis_t ymin, meshaxis_t ymax,
+			   double xscale=0, double yscale=0);
 
 	PhaseSpace(const PhaseSpace& other);
 

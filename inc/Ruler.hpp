@@ -32,11 +32,12 @@ template <class meshaxis_t>
 class Ruler
 {
 public:
-	Ruler(meshindex_t steps, meshaxis_t min, meshaxis_t max) :
+	Ruler(meshindex_t steps, meshaxis_t min, meshaxis_t max, double scale=0) :
 		_steps(steps),
 		_max(max),
 		_min(min),
-		_delta((max-min)/meshaxis_t(steps-1))
+		_delta((max-min)/meshaxis_t(steps-1)),
+		_scale(scale)
 	{
 		if (min >= max) {
 			throw std::invalid_argument("Tried to set up Ruler with min >= max.");
@@ -54,7 +55,8 @@ public:
 		_steps(other._steps),
 		_max(other._max),
 		_min(other._min),
-		_delta(other._delta)
+		_delta(other._delta),
+		_scale(other._scale)
 	{
 		meshaxis_t* meshaxis_tmp = new meshaxis_t[_steps];
 		std::copy_n(other._data,_steps,meshaxis_tmp);
@@ -74,6 +76,9 @@ public:
 
 	inline const meshaxis_t min() const
 		{return _min;}
+
+	inline double scale() const
+		{ return _scale; }
 
 	inline meshindex_t steps() const
 		{return _steps;}
@@ -111,6 +116,8 @@ protected:
 	const meshaxis_t _min;
 
 	const meshaxis_t _delta;
+
+	const double _scale;
 };
 
 }
