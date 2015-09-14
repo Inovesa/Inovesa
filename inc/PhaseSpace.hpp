@@ -76,6 +76,9 @@ public:
 	inline meshaxis_t getMin(const uint_fast8_t x) const
 	{ return _axis[x].min(); }
 
+	inline double getScale(const uint_fast8_t x) const
+	{ return _axis[x].scale(); }
+
 	/**
 	 * @brief getRuler
 	 * @param x

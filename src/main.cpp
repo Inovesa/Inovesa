@@ -135,7 +135,8 @@ int main(int argc, char** argv)
 		if (image.get_width() == image.get_height()) {
 			ps_size = image.get_width();
 
-			mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+			mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+								  opts.getNaturalBunchLength());
 
 			for (unsigned int x=0; x<ps_size; x++) {
 				for (unsigned int y=0; y<ps_size; y++) {
@@ -155,7 +156,8 @@ int main(int argc, char** argv)
 	#endif // INOVESA_USE_PNG
 	if (startdistfile.substr(startdistfile.length()-4) == ".txt") {
 		ps_size = 512;
-		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+							  opts.getNaturalBunchLength());
 
 		std::ifstream ifs;
 		ifs.open(startdistfile);

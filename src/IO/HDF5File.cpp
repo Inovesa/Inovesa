@@ -62,8 +62,14 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 	ax0ps_dataset = file->createDataSet("/Info/AxisValues_z",axps_datatype,
 											*ax0ps_dataspace,axps_prop);
+	const double ax0scale = ps->getScale(0);
+	ax0ps_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+		H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale);
 	ax1ps_dataset = file->createDataSet("/Info/AxisValues_E",axps_datatype,
 											*ax1ps_dataspace,axps_prop);
+	const double ax1scale = ps->getScale(1);
+	ax1ps_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+		H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax1scale);
 	ax0ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
 	ax1ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
 
@@ -93,6 +99,9 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 	axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
 											*axfreq_dataspace,axfreq_prop);
+	const double axfreqscale = GSL_CONST_MKS_SPEED_OF_LIGHT/ax0scale;
+	axfreq_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+		H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
 	axfreq_dataset.write(ef->getRuler()->data(),axfreq_datatype);
 
 
