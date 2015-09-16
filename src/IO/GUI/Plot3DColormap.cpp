@@ -1,6 +1,6 @@
-#include "IO/GUI/Plot2D.hpp"
+#include "IO/GUI/Plot3DColormap.hpp"
 
-vfps::Plot2D::Plot2D()
+vfps::Plot3DColormap::Plot3DColormap()
 {
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
@@ -65,13 +65,13 @@ vfps::Plot2D::Plot2D()
 				 g_uv_buffer_data, GL_STATIC_DRAW);
 }
 
-vfps::Plot2D::~Plot2D()
+vfps::Plot3DColormap::~Plot3DColormap()
 {
 	delTexture();
 }
 
 
-void vfps::Plot2D::createTexture(vfps::PhaseSpace* mesh)
+void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
 {
 	glGenTextures (1, &Texture);
 	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
@@ -98,13 +98,13 @@ void vfps::Plot2D::createTexture(vfps::PhaseSpace* mesh)
 	TextureID = glGetUniformLocation(programID, "myTextureSampler");
 }
 
-void vfps::Plot2D::delTexture()
+void vfps::Plot3DColormap::delTexture()
 {
 	glDeleteTextures(1, &TextureID);
 	glDeleteTextures(1, &Texture);
 }
 
-void vfps::Plot2D::draw()
+void vfps::Plot3DColormap::draw()
 {
 	// Use our shader
 	glUseProgram(programID);

@@ -7,12 +7,12 @@
 namespace vfps
 {
 
-class Plot2D : public GUIElement
+class Plot3DColormap : public GUIElement
 {
 public:
-	Plot2D();
+	Plot3DColormap();
 
-	~Plot2D();
+	~Plot3DColormap();
 
 	void createTexture(PhaseSpace* mesh);
 

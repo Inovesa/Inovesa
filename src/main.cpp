@@ -30,7 +30,7 @@
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
-#include "IO/GUI/Plot2D.hpp"
+#include "IO/GUI/Plot3DColormap.hpp"
 #include "PhaseSpace.hpp"
 #include "Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
@@ -293,10 +293,10 @@ int main(int argc, char** argv)
 	}
 	#endif // INOVESA_USE_CL
 	#ifdef INOVESA_USE_GUI
-	Plot2D* psv = nullptr;
+	Plot3DColormap* psv = nullptr;
 	if (opts.showPhaseSpace()) {
 		try {
-			psv = new Plot2D();
+			psv = new Plot3DColormap();
 		} catch (std::string e) {
 			std::cerr << e << std::endl;
 
