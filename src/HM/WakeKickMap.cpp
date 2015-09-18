@@ -20,12 +20,37 @@
 #include "HM/WakeKickMap.hpp"
 
 vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-					const unsigned int xsize, const unsigned int ysize,
-					const std::vector<integral_t> wake,
-					const InterpolationType it) :
+				const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
+				const std::pair<vfps::meshindex_t,double>* wakefunction,
+				const size_t wakesize, const InterpolationType it) :
 	KickMap(in,out,xsize,ysize,it),
-	_wake(wake)
+	_wakefunction(new meshaxis_t[2*xsize])
 {
+	for (size_t i=0; i<wakesize && i < 2*xsize; i++) {
+		_wakefunction[i] = wakefunction[i].second;
+	}
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		genCode4HM1D();
+		_cl_prog  = OCLH::prepareCLProg(_cl_code);
+
+		_hi_buf = cl::Buffer(OCLH::context,
+							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+							 sizeof(hi)*_ip*_size,
+							 _hinfo);
+
+		applyHM = cl::Kernel(_cl_prog, "applyHM1D");
+		applyHM.setArg(0, _in->data_buf);
+		applyHM.setArg(1, _hi_buf);
+		applyHM.setArg(2, _size);
+		applyHM.setArg(3, _out->data_buf);
+	}
+	#endif // INOVESA_USE_CL
+}
+
+vfps::WakeKickMap::~WakeKickMap()
+{
+	delete [] _wakefunction;
 }
 
 void vfps::WakeKickMap::apply()
@@ -34,7 +59,7 @@ void vfps::WakeKickMap::apply()
 	for (unsigned int i=0;i<_xsize;i++) {
 		_force[i] = 0;
 		for (unsigned int j=0;j<_xsize;j++) {
-			_force[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
+			_force[i] += meshaxis_t(density[j]*_wakefunction[_xsize+i-j]);
 		}
 	}
 
@@ -53,7 +78,7 @@ void vfps::WakeKickMap::apply()
 			//Scaled arguments of interpolation functions:
 			unsigned int jd; //numper of lower mesh point from p'
 			interpol_t xip; //distance of p' from lower mesh point
-			pcoord = _force[q_i];
+			pcoord = p_i+_force[q_i];
 			xip = modf(pcoord, &qp_int);
 			jd = qp_int;
 
@@ -92,17 +117,24 @@ void vfps::WakeKickMap::apply()
 				for (unsigned int j1=0; j1<_it; j1++) {
 					unsigned int j0 = jd+j1-(_it-1)/2;
 					if(j0 < _ysize ) {
-						ph[j0].index = q_i*_ysize+j0;
-						ph[j0].weight = hmc[j1];
+						ph[j1].index = q_i*_ysize+j0;
+						ph[j1].weight = hmc[j1];
 					} else {
-						ph[j0].index = 0;
-						ph[j0].weight = 0;
+						ph[j1].index = 0;
+						ph[j1].weight = 0;
 					}
 					_hinfo[(q_i*_ysize+p_i)*_ip+j1] = ph[j1];
 				}
 			}
 		}
 	}
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		OCLH::queue.enqueueWriteBuffer
+			(_hi_buf,CL_TRUE,0,
+			 sizeof(meshdata_t)*_size,_hinfo);
+	}
+	#endif // INOVESA_USE_CL
 
 	delete [] ph;
 	delete [] hmc;

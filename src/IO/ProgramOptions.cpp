@@ -23,6 +23,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	_cldevice(1),
 	_startdistfile(""),
 	_configfile("default.cfg"),
+	_wakefile(""),
 	outsteps(100),
 	padding(0),
 	pq_max(5.0),
@@ -56,6 +57,8 @@ vfps::ProgramOptions::ProgramOptions() :
 		("impedance,Z", po::value<std::string>(&_impedancefile),
 			"File containing impedance information. Might be:\n"
 			"\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
+		("wakefunction,w", po::value<std::string>(&_wakefile),
+			"File containing information on wake function.")
 	;
 	_programopts_file.add_options()
 		("cldev", po::value<int>(&_cldevice)->default_value(1),

@@ -38,10 +38,17 @@
 #include "HM/Identity.hpp"
 #include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
+#include "HM/WakeKickMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
+
+inline bool isOfFileType(std::string ending, std::string fname)
+{
+	return ( fname.size() > ending.size() &&
+			std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+}
 
 int main(int argc, char** argv)
 {
@@ -119,7 +126,7 @@ int main(int argc, char** argv)
 	}
 
 	// check for file ending .png
-	if (startdistfile.substr(startdistfile.length()-4) == ".png") {
+	if (isOfFileType(".png",startdistfile)) {
 		try {
 			image.read(opts.getStartDistFile());
 		} catch ( const png::std_error &e ) {
@@ -154,7 +161,7 @@ int main(int argc, char** argv)
 		}
 	} else
 	#endif // INOVESA_USE_PNG
-	if (startdistfile.substr(startdistfile.length()-4) == ".txt") {
+	if (isOfFileType(".txt",startdistfile)) {
 		ps_size = 512;
 		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
 							  opts.getNaturalBunchLength());
@@ -229,10 +236,7 @@ int main(int argc, char** argv)
 	ElectricField field(mesh,impedance);
 
 	HDF5File* file = nullptr;
-	std::string h5ending = ".h5";
-	if ( h5ending.size() < opts.getOutFile().size() &&
-		 std::equal(h5ending.rbegin(), h5ending.rend(),
-					opts.getOutFile().rbegin())) {
+	if ( isOfFileType(".h5",opts.getOutFile())) {
 		file = new HDF5File(opts.getOutFile(),mesh,&field);
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
@@ -240,6 +244,7 @@ int main(int argc, char** argv)
 	}
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
+	PhaseSpace* mesh_kicked = new PhaseSpace(*mesh);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;
@@ -285,6 +290,26 @@ int main(int argc, char** argv)
 							 RotationMap::RotationCoordinates::norm_pm1,true);
 	} else {
 		rm = new Identity(mesh,mesh_rotated,ps_size,ps_size);
+	}
+
+	HeritageMap* wkm = nullptr;
+	std::vector<std::pair<meshindex_t,double>> wake;
+	if (opts.getWakeFile().size() > 4) {
+		std::ifstream ifs;
+		ifs.open(opts.getWakeFile());
+
+		while (ifs.good()) {
+			double q,f;
+			ifs >> q >> f;
+			wake.push_back(std::pair<meshindex_t,double>(q,f));
+		}
+		ifs.close();
+
+		wkm = new WakeKickMap(mesh_rotated,mesh_kicked,ps_size,ps_size,
+							  wake.data(),wake.size(),
+							  WakeKickMap::InterpolationType::cubic);
+	} else {
+		wkm = new Identity(mesh_rotated,mesh_kicked,ps_size,ps_size);
 	}
 
 	#ifdef INOVESA_USE_CL
@@ -335,6 +360,7 @@ int main(int argc, char** argv)
 		}
 		rm->apply();
 		fpm->apply();
+		wkm->apply();
 	}
 
 	// save final result
@@ -363,8 +389,10 @@ int main(int argc, char** argv)
 
 	delete mesh;
 	delete mesh_rotated;
+	delete mesh_kicked;
 
 	delete rm;
+	delete wkm;
 
 	Display::printText("Finished.");
 

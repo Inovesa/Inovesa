@@ -44,12 +44,15 @@ public:
 	 * @param out
 	 * @param xsize
 	 * @param ysize
-	 * @param wake has to be normalized in a way,
+	 * @param wakefunction from -xsize to xsize-1, normalized in a way
 	 *	      that plain multiplication with density gives the force
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
-			const unsigned int xsize, const unsigned int ysize,
-			const std::vector<integral_t> wake, const InterpolationType it);
+				const meshindex_t xsize, const meshindex_t ysize,
+				const std::pair<meshindex_t,double>* wake,
+				const size_t wakesize, const InterpolationType it);
+
+	~WakeKickMap();
 
 public:
 	/**
@@ -59,9 +62,10 @@ public:
 
 private:
 	/**
-	 * @brief _wake (normalized) wake
+	 * @brief _wakefunktion (normalized single particle) wake,
+	 *		  sampled at 2*xsize positions [-xsize:+xsize]
 	 */
-	const std::vector<vfps::integral_t> _wake;
+	meshaxis_t* const _wakefunction;
 };
 
 } // namespace VFPS

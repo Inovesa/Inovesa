@@ -56,6 +56,9 @@ public:
 	inline std::string getStartDistFile() const
 		{ return _startdistfile; }
 
+	inline std::string getWakeFile() const
+		{ return _wakefile; }
+
 public:
 	inline unsigned int getOutSteps() const
 		{ return outsteps; }
@@ -98,6 +101,8 @@ private: // program parameters
 	std::string _startdistfile;
 
 	std::string _configfile;
+
+	std::string _wakefile;
 
 private: // simulation parameters
 	unsigned int outsteps;
