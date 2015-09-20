@@ -25,6 +25,11 @@
 namespace vfps
 {
 
+/**
+ * @brief The KickMap class allows to apply position dependent forces
+ *
+ * @todo change to use 1D HeritageMap
+ */
 class KickMap : public HeritageMap
 {
 public:

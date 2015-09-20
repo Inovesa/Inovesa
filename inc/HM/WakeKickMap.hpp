@@ -31,10 +31,7 @@ namespace vfps
 {
 
 /**
- * @brief The KickMap class offers an option for one-dimensional kicks
- *
- * @todo implement option to have 1D interpolation with HeritageMap
- * @todo change to use 1D HeritageMap
+ * @brief The WakeKickMap class offers an option for one-dimensional kicks
  */
 class WakeKickMap : public KickMap
 {
@@ -47,6 +44,8 @@ public:
 	 * @param ysize
 	 * @param wakefunction from -xsize to xsize-1, normalized in a way
 	 *	      that plain multiplication with density gives the force
+	 *
+	 * @todo interpolation when wake does not match PhaseSpace
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
 				const meshindex_t xsize, const meshindex_t ysize,
