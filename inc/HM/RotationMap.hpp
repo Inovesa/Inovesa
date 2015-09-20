@@ -69,10 +69,12 @@ private:
 
 	void genCode4Rotation();
 
+	#if ROTMAP_SIZE == 0
 	cl_int2 imgsize;
 
 	cl_float2 rot;
-	#endif
+	#endif // ROTMAP_SIZE == 0
+	#endif // INOVESA_USE_CL
 };
 
 }

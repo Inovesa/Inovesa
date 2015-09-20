@@ -34,6 +34,12 @@ vfps::KickMap::~KickMap()
 
 void vfps::KickMap::apply()
 {
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		_in->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+		_out->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+	}
+	#endif // INOVESA_USE_CL
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
 
@@ -42,6 +48,7 @@ void vfps::KickMap::apply()
 		meshindex_t absoffset;
 		if (offset < 0) {
 			absoffset = -offset;
+			absoffset = std::min(absoffset,_ysize);
 			for (meshindex_t y=0; y< absoffset; y++) {
 				data_out[x*_ysize+y] = 0;
 			}
@@ -50,6 +57,7 @@ void vfps::KickMap::apply()
 			}
 		} else {
 			absoffset = offset;
+			absoffset = std::min(absoffset,_ysize);
 			for (meshindex_t y=0; y< _ysize-absoffset; y++) {
 				data_out[x*_ysize+y] = data_in[x*_ysize+y+absoffset];
 			}
@@ -58,6 +66,12 @@ void vfps::KickMap::apply()
 			}
 		}
 	}
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		_in->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+		_out->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+	}
+	#endif // INOVESA_USE_CL
 }
 
 void vfps::KickMap::laser(meshaxis_t amplitude,

@@ -244,7 +244,7 @@ int main(int argc, char** argv)
 	}
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
-	PhaseSpace* mesh_kicked = new PhaseSpace(*mesh);
+	PhaseSpace* mesh_damdiff = new PhaseSpace(*mesh);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;
@@ -258,24 +258,6 @@ int main(int argc, char** argv)
 	const float rotations = opts.getNRotations();
 	const double f_s = opts.getSyncFreq();
 	const double t_d = opts.getDampingTime();
-
-	double e0;
-	if (t_d > 0) {
-		e0 = 2.0/(f_s*t_d*steps);
-	} else {
-		e0=0;
-	}
-
-	HeritageMap* fpm;
-	if (e0 > 0) {
-		Display::printText("Building FokkerPlanckMap.");
-		fpm = new FokkerPlanckMap(	mesh_rotated,mesh,ps_size,ps_size,
-									FokkerPlanckMap::FPType::full,e0,
-									FokkerPlanckMap::DerivationType::cubic);
-	} else {
-		fpm = new Identity(mesh_rotated,mesh,ps_size,ps_size);
-	}
-
 
 	HeritageMap* rm;
 	if (steps > 1) {
@@ -292,6 +274,23 @@ int main(int argc, char** argv)
 		rm = new Identity(mesh,mesh_rotated,ps_size,ps_size);
 	}
 
+	double e0;
+	if (t_d > 0) {
+		e0 = 2.0/(f_s*t_d*steps);
+	} else {
+		e0=0;
+	}
+
+	HeritageMap* fpm;
+	if (e0 > 0) {
+		Display::printText("Building FokkerPlanckMap.");
+		fpm = new FokkerPlanckMap(	mesh_rotated,mesh_damdiff,ps_size,ps_size,
+									FokkerPlanckMap::FPType::full,e0,
+									FokkerPlanckMap::DerivationType::cubic);
+	} else {
+		fpm = new Identity(mesh_rotated,mesh_damdiff,ps_size,ps_size);
+	}
+
 	HeritageMap* wkm = nullptr;
 	std::vector<std::pair<meshindex_t,double>> wake;
 	if (opts.getWakeFile().size() > 4) {
@@ -305,11 +304,12 @@ int main(int argc, char** argv)
 		}
 		ifs.close();
 
-		wkm = new WakeKickMap(mesh_rotated,mesh_kicked,ps_size,ps_size,
+		Display::printText("Building WakeKickMap.");
+		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
 							  wake.data(),wake.size(),
 							  WakeKickMap::InterpolationType::cubic);
 	} else {
-		wkm = new Identity(mesh_rotated,mesh_kicked,ps_size,ps_size);
+		wkm = new Identity(mesh_damdiff,mesh,ps_size,ps_size);
 	}
 
 	#ifdef INOVESA_USE_CL
@@ -389,7 +389,7 @@ int main(int argc, char** argv)
 
 	delete mesh;
 	delete mesh_rotated;
-	delete mesh_kicked;
+	delete mesh_damdiff;
 
 	delete rm;
 	delete wkm;

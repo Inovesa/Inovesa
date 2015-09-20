@@ -34,6 +34,7 @@ namespace vfps
  * @brief The KickMap class offers an option for one-dimensional kicks
  *
  * @todo implement option to have 1D interpolation with HeritageMap
+ * @todo change to use 1D HeritageMap
  */
 class WakeKickMap : public KickMap
 {
