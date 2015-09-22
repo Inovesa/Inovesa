@@ -49,6 +49,8 @@ protected:
 	 * @brief _force
 	 */
 	meshaxis_t* _force;
+
+	const meshindex_t _meshysize;
 };
 
 }

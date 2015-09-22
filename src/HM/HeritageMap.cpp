@@ -40,6 +40,7 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
 		"typedef float2 data2_t;\n"
 		"typedef float3 data3_t;\n"
 		"typedef float4 data4_t;\n"
+		"float mult(float x, float y);"
 		"float mult(float x, float y) { return x*y; }\n";
 	} else  if (std::is_same<vfps::meshdata_t,double>::value) {
 	_cl_code +=

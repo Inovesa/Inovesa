@@ -22,9 +22,27 @@
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 					const unsigned int xsize, const unsigned int ysize,
 					const InterpolationType it) :
-	HeritageMap(in,out,xsize,ysize,it,it),
-	_force(new meshaxis_t[xsize]())
+	HeritageMap(in,out,xsize,1,it,it),
+	_force(new meshaxis_t[xsize]()),
+	_meshysize(ysize)
 {
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		genCode4HM1D();
+		_cl_prog  = OCLH::prepareCLProg(_cl_code);
+
+		_hi_buf = cl::Buffer(OCLH::context,
+							 CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+							 sizeof(hi)*_ip*_size,
+							 _hinfo);
+
+		applyHM = cl::Kernel(_cl_prog, "applyHM1D");
+		applyHM.setArg(0, _in->data_buf);
+		applyHM.setArg(1, _hi_buf);
+		applyHM.setArg(2, _size);
+		applyHM.setArg(3, _out->data_buf);
+	}
+	#endif // INOVESA_USE_CL
 }
 
 vfps::KickMap::~KickMap()
@@ -42,60 +60,63 @@ void vfps::KickMap::apply()
 
 	// translate force into HM
 	for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-		for(unsigned int p_i=0; p_i< _ysize; p_i++) {
-			// interpolation type specific q and p coordinates
-			meshaxis_t pcoord;
-			meshaxis_t qp_int;
-			//Scaled arguments of interpolation functions:
-			unsigned int jd; //numper of lower mesh point from p'
-			interpol_t xip; //distance of p' from lower mesh point
-			pcoord = p_i+_force[q_i];
-			xip = std::modf(pcoord, &qp_int);
-			jd = qp_int;
+		meshaxis_t poffs;
+		meshaxis_t qp_int;
+		//Scaled arguments of interpolation functions:
+		meshindex_t jd; //numper of lower mesh point from p'
+		interpol_t xip; //distance of p' from lower mesh point
+		poffs = _meshysize/2+_force[q_i];
+		xip = std::modf(poffs, &qp_int);
+		jd = qp_int;
 
-			if (jd < _ysize)
-			{
-				// create vectors containing interpolation coefficiants
-				switch (_it) {
-				case InterpolationType::none:
-					hmc[0] = 1;
-					break;
-				case InterpolationType::linear:
-					hmc[0] = interpol_t(1)-xip;
-					hmc[1] = xip;
-					break;
-				case InterpolationType::quadratic:
-					hmc[0] = xip*(xip-interpol_t(1))/interpol_t(2);
-					hmc[1] = interpol_t(1)-xip*xip;
-					hmc[2] = xip*(xip+interpol_t(1))/interpol_t(2);
-					break;
-				case InterpolationType::cubic:
-					hmc[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
-							* interpol_t(-1./6.);
-					hmc[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
-							* (xip-interpol_t(2)) / interpol_t(2);
-					hmc[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))
-							/ interpol_t(2);
-					hmc[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
-							* interpol_t(1./6.);
-					break;
+		if (jd < _meshysize)
+		{
+			// create vectors containing interpolation coefficiants
+			switch (_it) {
+			case InterpolationType::none:
+				hmc[0] = 1;
+				break;
+			case InterpolationType::linear:
+				hmc[0] = interpol_t(1)-xip;
+				hmc[1] = xip;
+				break;
+			case InterpolationType::quadratic:
+				hmc[0] = xip*(xip-interpol_t(1))/interpol_t(2);
+				hmc[1] = interpol_t(1)-xip*xip;
+				hmc[2] = xip*(xip+interpol_t(1))/interpol_t(2);
+				break;
+			case InterpolationType::cubic:
+				hmc[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
+						* interpol_t(-1./6.);
+				hmc[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
+						* (xip-interpol_t(2)) / interpol_t(2);
+				hmc[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))
+						/ interpol_t(2);
+				hmc[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
+						* interpol_t(1./6.);
+				break;
+			}
+
+			// renormlize to minimize rounding errors
+			// renormalize(hmc.size(),hmc.data());
+
+			// write heritage map
+			for (unsigned int j1=0; j1<_it; j1++) {
+				unsigned int j0 = jd+j1-(_it-1)/2;
+				if(j0 < _meshysize ) {
+					ph[j1].index = j0;
+					ph[j1].weight = hmc[j1];
+				} else {
+					ph[j1].index = _meshysize/2;
+					ph[j1].weight = 0;
 				}
-
-				// renormlize to minimize rounding errors
-	//				renormalize(hmc.size(),hmc.data());
-
-				// write heritage map
-				for (unsigned int j1=0; j1<_it; j1++) {
-					unsigned int j0 = jd+j1-(_it-1)/2;
-					if(j0 < _ysize ) {
-						ph[j1].index = q_i*_ysize+j0;
-						ph[j1].weight = hmc[j1];
-					} else {
-						ph[j1].index = 0;
-						ph[j1].weight = 0;
-					}
-					_hinfo[(q_i*_ysize+p_i)*_ip+j1] = ph[j1];
-				}
+				_hinfo[q_i*_ip+j1] = ph[j1];
+			}
+		} else {
+			for (unsigned int j1=0; j1<_it; j1++) {
+				ph[j1].index = _meshysize/2;
+				ph[j1].weight = 0;
+				_hinfo[q_i*_ip+j1] = ph[j1];
 			}
 		}
 	}
@@ -110,15 +131,32 @@ void vfps::KickMap::apply()
 	delete [] ph;
 	delete [] hmc;
 
-	// call original apply method
-	HeritageMap::apply();
+	meshdata_t* data_in = _in->getData();
+	meshdata_t* data_out = _out->getData();
+
+
+	for (meshindex_t x=0; x< _xsize; x++) {
+		const meshindex_t offs = x*_meshysize;
+		for (meshindex_t y=0; y< _meshysize; y++) {
+			data_out[offs+y] = 0;
+			for (uint_fast8_t j=0; j<_ip; j++) {
+				hi h = _hinfo[x*_ip+j];
+				meshindex_t ysrc = static_cast<int32_t>(y+h.index)
+								 - static_cast<int32_t>(_meshysize/2);
+				if (ysrc < _meshysize) {
+					data_out[offs+y] += data_in[offs+ysrc]
+								*static_cast<meshdata_t>(h.weight);
+				}
+			}
+		}
+	}
 }
 
 void vfps::KickMap::laser(meshaxis_t amplitude,
 						  meshaxis_t pulselen,
 						  meshaxis_t wavelen)
 {
-	amplitude = amplitude*meshaxis_t(_ysize/2)/_in->getMax(1);
+	amplitude = amplitude*meshaxis_t(_meshysize/2)/_in->getMax(1);
 	meshaxis_t sinarg = meshaxis_t(2*M_PI)/(wavelen*meshaxis_t(_xsize)/_in->getMax(0));
 	pulselen = pulselen*meshaxis_t(_xsize)/_in->getMax(0)/meshaxis_t(2.35);
 	for(meshindex_t x=0; x<_xsize; x++) {
