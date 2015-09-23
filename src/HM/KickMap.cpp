@@ -20,15 +20,44 @@
 #include "HM/KickMap.hpp"
 
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-					const unsigned int xsize, const unsigned int ysize,
+					const meshindex_t xsize, const meshindex_t ysize,
 					const InterpolationType it) :
 	HeritageMap(in,out,xsize,1,it,it),
 	_force(new meshaxis_t[xsize]()),
 	_meshysize(ysize)
 {
+	#ifdef INOVESA_INIT_KICKMAP
+	for (meshindex_t q_i=0; q_i<xsize; q_i++) {
+		_hinfo[q_i*_ip].index = _meshysize/2;
+		_hinfo[q_i*_ip].weight = 1;
+		for (unsigned int j1=1; j1<_it; j1++) {
+			_hinfo[q_i*_ip+j1].index = 0;
+			_hinfo[q_i*_ip+j1].weight = 0;
+		}
+	}
+	#endif
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
-		genCode4HM1D();
+		_cl_code += R"(
+		__kernel void applyHM_Kick(	const __global data_t* src,
+									const __global hi* hm,
+									const uint hm_len,
+									const uint ysize,
+									__global data_t* dst)
+		{
+			data_t value = 0;
+			const uint x = get_global_id(0);
+			const uint y = get_global_id(1);
+			const uint hmoffset = x*hm_len;
+			const uint meshoffs = x*ysize;
+			for (uint j=0; j<hm_len; j++)
+			{
+				value += mult(	src[meshoffs+y+hm[hmoffset+j].src-ysize/2],
+								hm[hmoffset+j].weight);
+			}
+			dst[meshoffs+y] = value;
+		}
+		)";
 		_cl_prog  = OCLH::prepareCLProg(_cl_code);
 
 		_hi_buf = cl::Buffer(OCLH::context,
@@ -36,11 +65,12 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 							 sizeof(hi)*_ip*_size,
 							 _hinfo);
 
-		applyHM = cl::Kernel(_cl_prog, "applyHM1D");
+		applyHM = cl::Kernel(_cl_prog, "applyHM_Kick");
 		applyHM.setArg(0, _in->data_buf);
 		applyHM.setArg(1, _hi_buf);
-		applyHM.setArg(2, _size);
-		applyHM.setArg(3, _out->data_buf);
+		applyHM.setArg(2, _ip);
+		applyHM.setArg(3, _meshysize);
+		applyHM.setArg(4, _out->data_buf);
 	}
 	#endif // INOVESA_USE_CL
 }
@@ -120,17 +150,33 @@ void vfps::KickMap::apply()
 			}
 		}
 	}
-	#ifdef INOVESA_USE_CL
-	if (OCLH::active) {
-		OCLH::queue.enqueueWriteBuffer
-			(_hi_buf,CL_TRUE,0,
-			 sizeof(meshdata_t)*_size,_hinfo);
-	}
-	#endif // INOVESA_USE_CL
 
 	delete [] ph;
 	delete [] hmc;
 
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		OCLH::queue.enqueueWriteBuffer
+			(_hi_buf,CL_TRUE,0,
+			 sizeof(hi)*_ip*_size,_hinfo);
+		#ifdef INOVESA_SYNC_CL
+		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		#endif // INOVESA_SYNC_CL
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_xsize,_meshysize));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		#ifdef INOVESA_SYNC_CL
+		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		#endif // INOVESA_SYNC_CL
+	} else
+	#endif // INOVESA_USE_CL
+	{
 	meshdata_t* data_in = _in->getData();
 	meshdata_t* data_out = _out->getData();
 
@@ -149,6 +195,7 @@ void vfps::KickMap::apply()
 				}
 			}
 		}
+	}
 	}
 }
 

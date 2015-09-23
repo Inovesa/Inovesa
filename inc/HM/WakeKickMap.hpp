@@ -56,7 +56,9 @@ public:
 
 public:
 	/**
-	 * @brief overloads HeritageMap::apply() to have a variable HeritageMap
+	 * @brief overloads KickMap::apply() to have a variable HeritageMap
+	 *
+	 * @todo currently uses phasespace in CPU Ram
 	 */
 	void apply();
 

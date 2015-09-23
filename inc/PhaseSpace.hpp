@@ -26,7 +26,11 @@
 #include <cmath>
 #include <fstream>
 #include <GL/glew.h>
+#ifdef MACOS
 #include <GL/gl.h>
+#else
+#include <OpenGL/gl.h>
+#endif
 #include <list>
 #include <stdexcept>
 #include <tuple>

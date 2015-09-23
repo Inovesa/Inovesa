@@ -34,7 +34,7 @@ class KickMap : public HeritageMap
 {
 public:
 	KickMap(PhaseSpace* in, PhaseSpace* out,
-			const unsigned int xsize, const unsigned int ysize,
+			const meshindex_t xsize, const meshindex_t ysize,
 			const InterpolationType it);
 
 	~KickMap();
