@@ -21,13 +21,37 @@
 
 vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 				const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
-				const std::pair<vfps::meshindex_t,double>* wakefunction,
-				const size_t wakesize, const InterpolationType it) :
+				const std::vector<std::pair<meshaxis_t, double>> wakefunction,
+				const InterpolationType it) :
 	KickMap(in,out,xsize,ysize,it),
-	_wakefunction(new meshaxis_t[2*xsize])
+	_wakefunction(new meshaxis_t[2*xsize]),
+	_wakesize(2*xsize)
 {
-	for (size_t i=0; i<wakesize && i < 2*xsize; i++) {
-		_wakefunction[i] = 100*wakefunction[i].second;
+	const Ruler<meshaxis_t> xaxis(_wakesize,2*in->getMin(0),2*in->getMax(0));
+	size_t x_other=1;
+	size_t x_mine=0;
+	std::array<interpol_t,4> qic;
+
+	if (xaxis[0] < wakefunction[1].first) {
+		Display::printText("Warning: Given wake to small.");
+	}
+
+	while (x_mine < _wakesize) {
+		while (xaxis[x_mine] > wakefunction[x_other+1].first) {
+			if (x_other+3 < wakefunction.size()) {
+				x_other++;
+			} else {
+				Display::printText("Warning: Given wake to small.");
+				break;
+			}
+		}
+		calcCoefficiants(qic.data(),
+						 xaxis[x_mine]-wakefunction[x_other].first,4);
+		_wakefunction[x_mine]	= qic[0]*wakefunction[x_other-1].second
+								+ qic[1]*wakefunction[x_other  ].second
+								+ qic[2]*wakefunction[x_other+1].second
+								+ qic[3]*wakefunction[x_other+2].second;
+		x_mine++;
 	}
 }
 

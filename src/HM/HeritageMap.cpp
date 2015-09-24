@@ -144,5 +144,35 @@ void vfps::HeritageMap::genCode4HM1D()
 		}
 		dst[i] = value;
 	}
-	)";
+)";
+}
+
+void vfps::HeritageMap::calcCoefficiants(vfps::interpol_t* ic,
+										 const vfps::interpol_t f,
+										 const uint_fast8_t it) const
+{
+	switch (it) {
+	case InterpolationType::none:
+		ic[0] = 1;
+		break;
+	case InterpolationType::linear:
+		ic[0] = interpol_t(1)-f;
+		ic[1] = f;
+		break;
+	case InterpolationType::quadratic:
+		ic[0] = f*(f-interpol_t(1))/interpol_t(2);
+		ic[1] = interpol_t(1)-f*f;
+		ic[2] = f*(f+interpol_t(1))/interpol_t(2);
+		break;
+	case InterpolationType::cubic:
+		ic[0] = (f-interpol_t(1))*(f-interpol_t(2))*f
+				* interpol_t(-1./6.);
+		ic[1] = (f+interpol_t(1))*(f-interpol_t(1))
+				* (f-interpol_t(2)) / interpol_t(2);
+		ic[2] = (interpol_t(2)-f)*f*(f+interpol_t(1))
+				/ interpol_t(2);
+		ic[3] = f*(f+interpol_t(1))*(f-interpol_t(1))
+				* interpol_t(1./6.);
+		break;
+	}
 }

@@ -139,6 +139,15 @@ protected:
 	 * @brief genCode4HM1D generates OpenCL code for a generic heritage map
 	 */
 	void genCode4HM1D();
+
+	/**
+	 * @brief calcCoefficiants
+	 * @param ic array to store interpolation coefficiants
+	 * @param f distance from lower mesh point
+	 * @param it number of interpolation coefficiants (size of ic)
+	 */
+	void calcCoefficiants(interpol_t* ic, const interpol_t f,
+						  const uint_fast8_t it) const;
 };
 
 }

@@ -23,7 +23,9 @@
 #include <array>
 
 #include "defines.hpp"
+#include "IO/Display.hpp"
 #include "KickMap.hpp"
+#include "Ruler.hpp"
 
 using std::modf;
 
@@ -49,8 +51,8 @@ public:
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
 				const meshindex_t xsize, const meshindex_t ysize,
-				const std::pair<meshindex_t,double>* wake,
-				const size_t wakesize, const InterpolationType it);
+				const std::vector<std::pair<meshaxis_t,double>> wake,
+				const InterpolationType it);
 
 	~WakeKickMap();
 
@@ -68,6 +70,8 @@ private:
 	 *		  sampled at 2*xsize positions [-xsize:+xsize]
 	 */
 	meshaxis_t* const _wakefunction;
+
+	const size_t _wakesize;
 };
 
 } // namespace VFPS

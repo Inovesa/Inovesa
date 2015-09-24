@@ -102,30 +102,7 @@ void vfps::KickMap::apply()
 		if (jd < _meshysize)
 		{
 			// create vectors containing interpolation coefficiants
-			switch (_it) {
-			case InterpolationType::none:
-				hmc[0] = 1;
-				break;
-			case InterpolationType::linear:
-				hmc[0] = interpol_t(1)-xip;
-				hmc[1] = xip;
-				break;
-			case InterpolationType::quadratic:
-				hmc[0] = xip*(xip-interpol_t(1))/interpol_t(2);
-				hmc[1] = interpol_t(1)-xip*xip;
-				hmc[2] = xip*(xip+interpol_t(1))/interpol_t(2);
-				break;
-			case InterpolationType::cubic:
-				hmc[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
-						* interpol_t(-1./6.);
-				hmc[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
-						* (xip-interpol_t(2)) / interpol_t(2);
-				hmc[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))
-						/ interpol_t(2);
-				hmc[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
-						* interpol_t(1./6.);
-				break;
-			}
+			calcCoefficiants(hmc,xip,_it);
 
 			// renormlize to minimize rounding errors
 			// renormalize(hmc.size(),hmc.data());

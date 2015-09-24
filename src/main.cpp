@@ -292,7 +292,7 @@ int main(int argc, char** argv)
 	}
 
 	HeritageMap* wkm = nullptr;
-	std::vector<std::pair<meshindex_t,double>> wake;
+	std::vector<std::pair<meshaxis_t,double>> wake;
 	if (opts.getWakeFile().size() > 4) {
 		std::ifstream ifs;
 		ifs.open(opts.getWakeFile());
@@ -300,14 +300,13 @@ int main(int argc, char** argv)
 		while (ifs.good()) {
 			double q,f;
 			ifs >> q >> f;
-			wake.push_back(std::pair<meshindex_t,double>(q,f));
+			wake.push_back(std::pair<meshaxis_t,double>(q,f));
 		}
 		ifs.close();
 
 		Display::printText("Building WakeKickMap.");
 		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
-							  wake.data(),wake.size(),
-							  WakeKickMap::InterpolationType::cubic);
+							  wake,WakeKickMap::InterpolationType::cubic);
 	} else {
 		wkm = new Identity(mesh_damdiff,mesh,ps_size,ps_size);
 	}
