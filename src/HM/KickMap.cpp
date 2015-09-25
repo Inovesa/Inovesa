@@ -82,6 +82,65 @@ vfps::KickMap::~KickMap()
 
 void vfps::KickMap::apply()
 {
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		#ifdef INOVESA_SYNC_CL
+		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		#endif // INOVESA_SYNC_CL
+		OCLH::queue.enqueueNDRangeKernel (
+					applyHM,
+					cl::NullRange,
+					cl::NDRange(_xsize,_meshysize));
+		#ifdef CL_VERSION_1_2
+		OCLH::queue.enqueueBarrierWithWaitList();
+		#else // CL_VERSION_1_2
+		OCLH::queue.enqueueBarrier();
+		#endif // CL_VERSION_1_2
+		#ifdef INOVESA_SYNC_CL
+		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		#endif // INOVESA_SYNC_CL
+	} else
+	#endif // INOVESA_USE_CL
+	{
+	meshdata_t* data_in = _in->getData();
+	meshdata_t* data_out = _out->getData();
+
+
+	for (meshindex_t x=0; x< _xsize; x++) {
+		const meshindex_t offs = x*_meshysize;
+		for (meshindex_t y=0; y< _meshysize; y++) {
+			data_out[offs+y] = 0;
+			for (uint_fast8_t j=0; j<_ip; j++) {
+				hi h = _hinfo[x*_ip+j];
+				meshindex_t ysrc = static_cast<int32_t>(y+h.index)
+								 - static_cast<int32_t>(_meshysize/2);
+				if (ysrc < _meshysize) {
+					data_out[offs+y] += data_in[offs+ysrc]
+								*static_cast<meshdata_t>(h.weight);
+				}
+			}
+		}
+	}
+	}
+}
+
+void vfps::KickMap::laser(meshaxis_t amplitude,
+						  meshaxis_t pulselen,
+						  meshaxis_t wavelen)
+{
+	amplitude = amplitude*meshaxis_t(_meshysize/2)/_in->getMax(1);
+	meshaxis_t sinarg = meshaxis_t(2*M_PI)/(wavelen*meshaxis_t(_xsize)/_in->getMax(0));
+	pulselen = pulselen*meshaxis_t(_xsize)/_in->getMax(0)/meshaxis_t(2.35);
+	for(meshindex_t x=0; x<_xsize; x++) {
+		_force[x] +=meshaxis_t(std::exp(-std::pow(-(int(x)-int(_xsize/2)),2)))
+							 /(meshaxis_t(2)*pulselen*pulselen)
+				*amplitude*meshaxis_t(std::sin(double(sinarg)*x));
+	}
+	updateHM();
+}
+
+void vfps::KickMap::updateHM()
+{
 	// gridpoint matrix used for interpolation
 	hi* ph = new hi[_it];
 
@@ -136,56 +195,6 @@ void vfps::KickMap::apply()
 		OCLH::queue.enqueueWriteBuffer
 			(_hi_buf,CL_TRUE,0,
 			 sizeof(hi)*_ip*_size,_hinfo);
-		#ifdef INOVESA_SYNC_CL
-		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
-		#endif // INOVESA_SYNC_CL
-		OCLH::queue.enqueueNDRangeKernel (
-					applyHM,
-					cl::NullRange,
-					cl::NDRange(_xsize,_meshysize));
-		#ifdef CL_VERSION_1_2
-		OCLH::queue.enqueueBarrierWithWaitList();
-		#else // CL_VERSION_1_2
-		OCLH::queue.enqueueBarrier();
-		#endif // CL_VERSION_1_2
-		#ifdef INOVESA_SYNC_CL
-		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
-		#endif // INOVESA_SYNC_CL
-	} else
+	}
 	#endif // INOVESA_USE_CL
-	{
-	meshdata_t* data_in = _in->getData();
-	meshdata_t* data_out = _out->getData();
-
-
-	for (meshindex_t x=0; x< _xsize; x++) {
-		const meshindex_t offs = x*_meshysize;
-		for (meshindex_t y=0; y< _meshysize; y++) {
-			data_out[offs+y] = 0;
-			for (uint_fast8_t j=0; j<_ip; j++) {
-				hi h = _hinfo[x*_ip+j];
-				meshindex_t ysrc = static_cast<int32_t>(y+h.index)
-								 - static_cast<int32_t>(_meshysize/2);
-				if (ysrc < _meshysize) {
-					data_out[offs+y] += data_in[offs+ysrc]
-								*static_cast<meshdata_t>(h.weight);
-				}
-			}
-		}
-	}
-	}
-}
-
-void vfps::KickMap::laser(meshaxis_t amplitude,
-						  meshaxis_t pulselen,
-						  meshaxis_t wavelen)
-{
-	amplitude = amplitude*meshaxis_t(_meshysize/2)/_in->getMax(1);
-	meshaxis_t sinarg = meshaxis_t(2*M_PI)/(wavelen*meshaxis_t(_xsize)/_in->getMax(0));
-	pulselen = pulselen*meshaxis_t(_xsize)/_in->getMax(0)/meshaxis_t(2.35);
-	for(meshindex_t x=0; x<_xsize; x++) {
-		_force[x] +=meshaxis_t(std::exp(-std::pow(-(int(x)-int(_xsize/2)),2)))
-							 /(meshaxis_t(2)*pulselen*pulselen)
-				*amplitude*meshaxis_t(std::sin(double(sinarg)*x));
-	}
 }

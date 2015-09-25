@@ -51,6 +51,8 @@ protected:
 	meshaxis_t* _force;
 
 	const meshindex_t _meshysize;
+
+	void updateHM();
 };
 
 }

@@ -31,9 +31,10 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 	size_t x_other=1;
 	size_t x_mine=0;
 	std::array<interpol_t,4> qic;
+	bool smallwake=false;
 
 	if (xaxis[0] < wakefunction[1].first) {
-		Display::printText("Warning: Given wake to small.");
+		smallwake = true;
 	}
 
 	while (x_mine < _wakesize) {
@@ -41,7 +42,7 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 			if (x_other+3 < wakefunction.size()) {
 				x_other++;
 			} else {
-				Display::printText("Warning: Given wake to small.");
+				smallwake = true;
 				break;
 			}
 		}
@@ -52,6 +53,9 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 								+ qic[2]*wakefunction[x_other+1].second
 								+ qic[3]*wakefunction[x_other+2].second;
 		x_mine++;
+	}
+	if (smallwake) {
+		Display::printText("Warning: Given wake to small.");
 	}
 }
 
@@ -75,6 +79,6 @@ void vfps::WakeKickMap::apply()
 			_force[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
 		}
 	}
-
+	updateHM();
 	KickMap::apply();
 }
