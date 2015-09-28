@@ -273,7 +273,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 	if (xi <  _xsize && yi < _ysize) {
 		// create vectors containing interpolation coefficiants
 		calcCoefficiants(icq,xf,_it);
-		calcCoefficiants(icp,xf,_it);
+		calcCoefficiants(icp,yf,_it);
 
 		/*  Assemble interpolation
 		 * (using uint_fast16_t so product won't overflow)

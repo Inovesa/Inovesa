@@ -60,6 +60,9 @@ public:
 		{ return _wakefile; }
 
 public:
+	inline unsigned int getMeshSize() const
+		{ return meshsize; }
+
 	inline unsigned int getOutSteps() const
 		{ return outsteps; }
 
@@ -74,7 +77,6 @@ public:
 
 	inline double getPhaseSpaceSize() const
 		{ return pq_max; }
-
 
 public:
 	inline double getBendingRadius() const
@@ -105,6 +107,7 @@ private: // program parameters
 	std::string _wakefile;
 
 private: // simulation parameters
+	unsigned int meshsize;
 	unsigned int outsteps;
 	unsigned int padding;
 	double pq_max;

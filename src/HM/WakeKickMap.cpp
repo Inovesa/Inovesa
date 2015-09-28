@@ -19,13 +19,22 @@
 
 #include "HM/WakeKickMap.hpp"
 
+
+
+vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+				const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
+				const vfps::HeritageMap::InterpolationType it) :
+	KickMap(in,out,xsize,ysize,it),
+	_wakefunction(new meshaxis_t[2*xsize]),
+	_wakesize(2*xsize)
+{
+}
+
 vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 				const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
 				const std::vector<std::pair<meshaxis_t, double>> wakefunction,
 				const InterpolationType it) :
-	KickMap(in,out,xsize,ysize,it),
-	_wakefunction(new meshaxis_t[2*xsize]),
-	_wakesize(2*xsize)
+	WakeKickMap(in,out,xsize,ysize,it)
 {
 	const Ruler<meshaxis_t> xaxis(_wakesize,2*in->getMin(0),2*in->getMax(0));
 	size_t x_other=1;
@@ -57,6 +66,15 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 	if (smallwake) {
 		Display::printText("Warning: Given wake to small.");
 	}
+}
+
+vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+				const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
+							   const vfps::ElectricField* csr,
+							   const vfps::HeritageMap::InterpolationType it) :
+	WakeKickMap(in,out,xsize,ysize,it)
+{
+	std::copy_n(_wakefunction,2*xsize,csr->getWakefunction());
 }
 
 vfps::WakeKickMap::~WakeKickMap()

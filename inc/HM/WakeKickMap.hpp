@@ -21,10 +21,12 @@
 #define WAKEKICKMAP_HPP
 
 #include <array>
+#include <fftw3.h>
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
-#include "KickMap.hpp"
+#include "HM/KickMap.hpp"
+#include "ElectricField.hpp"
 #include "Ruler.hpp"
 
 using std::modf;
@@ -54,6 +56,20 @@ public:
 				const std::vector<std::pair<meshaxis_t,double>> wake,
 				const InterpolationType it);
 
+	/**
+	 * @brief WakeKickMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
+	 * @param csrimpedance
+	 * @param it
+	 */
+	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
+				const meshindex_t xsize, const meshindex_t ysize,
+				const vfps::ElectricField* csr,
+				const InterpolationType it);
+
 	~WakeKickMap();
 
 public:
@@ -65,6 +81,18 @@ public:
 	void apply();
 
 private:
+	/**
+	 * @brief WakeKickMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
+	 * @param it
+	 */
+	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
+				const meshindex_t xsize, const meshindex_t ysize,
+				const InterpolationType it);
+
 	/**
 	 * @brief _wakefunktion (normalized single particle) wake,
 	 *		  sampled at 2*xsize positions [-xsize:+xsize]

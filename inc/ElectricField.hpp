@@ -59,8 +59,18 @@ public:
 
 	csrpower_t* updateCSRSpectrum();
 
+	meshaxis_t* getWakefunction() const
+		{ return _wakefunction; }
+
 private:
-	fftwf_plan prepareFFT(unsigned int n, csrpower_t* in, impedance_t* out);
+	enum class fft_direction : uint_fast8_t {
+		forward, backward
+	};
+
+	fftwf_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
+
+	fftwf_plan prepareFFT(size_t n, impedance_t* in, impedance_t* out,
+						  fft_direction direction);
 
 private:
 	const Ruler<meshaxis_t> _axis;
@@ -86,6 +96,8 @@ private:
 	fftwf_plan _ft_bunchprofile;
 
 	const Ruler<meshaxis_t>* _spaceinfo;
+
+	meshaxis_t* _wakefunction;
 };
 
 } // namespace vfps

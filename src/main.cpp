@@ -112,21 +112,33 @@ int main(int argc, char** argv)
 	meshindex_t ps_size;
 	const double qmax = opts.getPhaseSpaceSize();
 	const double pmax = qmax;
-	#ifdef INOVESA_USE_PNG
-	// load pattern to start with
-	png::image<png::gray_pixel_16> image;
+
 	std::string startdistfile = opts.getStartDistFile();
 
 	if (startdistfile.length() <= 4) {
-		Display::printText("Input file name should have the format 'file.end'.");
-		return EXIT_SUCCESS;
+		ps_size = opts.getMeshSize();
+		if (ps_size == 0) {
+			Display::printText("Please give file for initial distribution "
+							   "or size of target mesh.");
+		}
+		Display::printText("Generating (gaussian) initial distribution.");
+		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+							  opts.getNaturalBunchLength());
+		for (meshindex_t x = 0; x < ps_size; x++) {
+			for (meshindex_t y = 0; y < ps_size; y++) {
+				(*mesh)[x][y]
+					= std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
+					* std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+			}
+		}
 	} else {
 		Display::printText("Reading in initial distribution from: \""
 						   +startdistfile+'\"');
-	}
-
+	#ifdef INOVESA_USE_PNG
 	// check for file ending .png
 	if (isOfFileType(".png",startdistfile)) {
+		// load pattern to start with
+		png::image<png::gray_pixel_16> image;
 		try {
 			image.read(opts.getStartDistFile());
 		} catch ( const png::std_error &e ) {
@@ -209,6 +221,7 @@ int main(int argc, char** argv)
 	} else {
 		Display::printText("Unknown format of input file. Will now quit.");
 		return EXIT_SUCCESS;
+	}
 	}
 
 	Impedance* impedance = nullptr;

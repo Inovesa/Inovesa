@@ -26,11 +26,11 @@
 #include <cmath>
 #include <fstream>
 #include <GL/glew.h>
-#ifdef MACOS
+#ifndef __APPLE__
 #include <GL/gl.h>
-#else
+#else // non-Apple
 #include <OpenGL/gl.h>
-#endif
+#endif // non-Apple
 #include <list>
 #include <stdexcept>
 #include <tuple>
