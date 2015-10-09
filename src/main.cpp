@@ -292,8 +292,15 @@ int main(int argc, char** argv)
 	#ifdef INOVESA_USE_GUI
 	Plot2D* psv = nullptr;;
 	if (opts.showPhaseSpace()) {
-		psv = new Plot2D();
-		display->addElement(psv);
+		try {
+			psv = new Plot2D();
+			display->addElement(psv);
+		} catch (std::exception &e) {
+			std::cerr << e.what() << std::endl;
+			display->takeElement(psv);
+			delete psv;
+			psv = nullptr;
+		}
 	}
 	#endif
 
@@ -312,7 +319,7 @@ int main(int argc, char** argv)
 				file->append(&field);
 			}
 			#ifdef INOVESA_USE_GUI
-			if (opts.showPhaseSpace()) {
+			if (psv != nullptr) {
 				psv->createTexture(mesh);
 				display->draw();
 				psv->delTexture();

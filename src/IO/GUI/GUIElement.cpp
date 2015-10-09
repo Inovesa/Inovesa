@@ -19,6 +19,22 @@
 
 #include "IO/GUI/GUIElement.hpp"
 
+#include <exception>
+
+class ShaderNotFound : public std::exception
+{
+public:
+	ShaderNotFound(std::string fname) :
+		_fname(fname)
+		{}
+
+	const char* what() const noexcept
+		{ return ("Cannot open '"+_fname+"'.").c_str(); }
+
+private:
+	std::string _fname;
+};
+
 vfps::GUIElement::GUIElement()
 {
 }
@@ -48,9 +64,7 @@ GLuint vfps::GUIElement::LoadShaders(std::string vertex_file_path,
 			VertexShaderCode += "\n" + Line;
 		VertexShaderStream.close();
 	}else{
-		throw ("Impossible to open"
-				+vertex_file_path
-				+"Are you in the right directory?");
+		throw ShaderNotFound(vertex_file_path);
 		return 0;
 	}
 

@@ -21,24 +21,25 @@
 
 #ifdef INOVESA_USE_GUI
 
-vfps::Display::Display() :
+vfps::Display::Display()
 	#if GLFW_VERSION_MAJOR == 3
+	:
 	window(nullptr)
 	#endif
 {
 	glfwInit();
 
-	#if GLFW_VERSION_MAJOR == 3
+	#if GLFW_VERSION_MAJOR == 3 // GLFW3
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	#else // GLFW3
+	#else // GLFW2
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
 	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
 	glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	#endif // GLFW3
+	#endif // GLFW2
 
 
 	// Open a window and create its OpenGL context
@@ -98,7 +99,7 @@ vfps::Display::~Display()
 
 void vfps::Display::addElement(GUIElement* newitem)
 {
-	item.push_back(newitem);
+	_item.push_back(newitem);
 }
 
 void vfps::Display::draw() {
@@ -106,7 +107,7 @@ void vfps::Display::draw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// draw GUIElements
-	for (GUIElement* i : item) {
+	for (GUIElement* i : _item) {
 		i->draw();
 	}
 
@@ -132,6 +133,16 @@ void vfps::Display::printText(std::string txt)
 				<< " ]: "
 				<< txt
 				<< std::endl;
+}
+
+void vfps::Display::takeElement(vfps::GUIElement* item)
+{
+	for (size_t i=0; i< _item.size(); i++) {
+		if (_item[i] == item) {
+			_item.erase(_item.begin()+i);
+			i--;
+		}
+	}
 }
 
 std::chrono::system_clock::time_point vfps::Display::start_time;

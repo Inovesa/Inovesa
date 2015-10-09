@@ -35,11 +35,11 @@
 #include <GL/glew.h>
 
 // Include GLFW
-#if GLFW_VERSION_MAJOR == 3
+#if GLFW_VERSION_MAJOR == 3 // GLFW3
 #include <GLFW/glfw3.h>
-#else
+#else // GLFW2
 #include <GL/glfw.h>
-#endif
+#endif // GLFW2
 
 // Include GLM
 #define GLM_FORCE_RADIANS
@@ -69,6 +69,8 @@ public:
 
 	static void printText(std::string txt);
 
+	void takeElement(GUIElement* item);
+
 private:
 	#ifdef INOVESA_USE_GUI
 	#if GLFW_VERSION_MAJOR == 3
@@ -76,7 +78,7 @@ private:
 	#endif
 	#endif // INOVESA_USE_GUI
 
-	std::vector<GUIElement*> item;
+	std::vector<GUIElement*> _item;
 };
 
 } // namespace vfps
