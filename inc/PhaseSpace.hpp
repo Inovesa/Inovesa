@@ -26,7 +26,11 @@
 #include <cmath>
 #include <fstream>
 #include <GL/glew.h>
+#ifndef __APPLE__
 #include <GL/gl.h>
+#else // non-Apple
+#include <OpenGL/gl.h>
+#endif // non-Apple
 #include <list>
 #include <stdexcept>
 #include <tuple>
@@ -52,7 +56,8 @@ public:
 
 	PhaseSpace(meshindex_t ps_size,
 			   meshaxis_t xmin, meshaxis_t xmax,
-			   meshaxis_t ymin, meshaxis_t ymax);
+			   meshaxis_t ymin, meshaxis_t ymax,
+			   double xscale=0, double yscale=0);
 
 	PhaseSpace(const PhaseSpace& other);
 
@@ -67,13 +72,16 @@ public:
 	{ return _data1D; }
 
 	inline meshaxis_t getDelta(const uint_fast8_t x) const
-	{ return _axis[x].getDelta(); }
+	{ return _axis[x].delta(); }
 
 	inline meshaxis_t getMax(const uint_fast8_t x) const
-	{ return _axis[x].getMax(); }
+	{ return _axis[x].max(); }
 
 	inline meshaxis_t getMin(const uint_fast8_t x) const
-	{ return _axis[x].getMin(); }
+	{ return _axis[x].min(); }
+
+	inline double getScale(const uint_fast8_t x) const
+	{ return _axis[x].scale(); }
 
 	/**
 	 * @brief getRuler
@@ -105,10 +113,10 @@ public:
 	PhaseSpace& operator=(PhaseSpace other);
 
 	inline size_t nMeshCells() const
-	{ return _axis[0].getNSteps()*_axis[1].getNSteps(); }
+	{ return _axis[0].steps()*_axis[1].steps(); }
 
 	inline size_t nMeshCells(const uint_fast8_t x) const
-	{ return _axis[x].getNSteps(); }
+	{ return _axis[x].steps(); }
 
 	inline meshaxis_t size(const uint_fast8_t x) const
 	{ return _axis[x].size(); }

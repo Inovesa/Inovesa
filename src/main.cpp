@@ -1,21 +1,21 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
+ * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #include <chrono>
 #include <climits>
@@ -38,10 +38,17 @@
 #include "HM/Identity.hpp"
 #include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
+#include "HM/WakeKickMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
+
+inline bool isOfFileType(std::string ending, std::string fname)
+{
+	return ( fname.size() > ending.size() &&
+			std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+}
 
 int main(int argc, char** argv)
 {
@@ -105,21 +112,33 @@ int main(int argc, char** argv)
 	meshindex_t ps_size;
 	const double qmax = opts.getPhaseSpaceSize();
 	const double pmax = qmax;
-	#ifdef INOVESA_USE_PNG
-	// load pattern to start with
-	png::image<png::gray_pixel_16> image;
+
 	std::string startdistfile = opts.getStartDistFile();
 
 	if (startdistfile.length() <= 4) {
-		Display::printText("Input file name should have the format 'file.end'.");
-		return EXIT_SUCCESS;
+		ps_size = opts.getMeshSize();
+		if (ps_size == 0) {
+			Display::printText("Please give file for initial distribution "
+							   "or size of target mesh.");
+		}
+		Display::printText("Generating (gaussian) initial distribution.");
+		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+							  opts.getNaturalBunchLength());
+		for (meshindex_t x = 0; x < ps_size; x++) {
+			for (meshindex_t y = 0; y < ps_size; y++) {
+				(*mesh)[x][y]
+					= std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
+					* std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+			}
+		}
 	} else {
 		Display::printText("Reading in initial distribution from: \""
 						   +startdistfile+'\"');
-	}
-
+	#ifdef INOVESA_USE_PNG
 	// check for file ending .png
-	if (startdistfile.substr(startdistfile.length()-4) == ".png") {
+	if (isOfFileType(".png",startdistfile)) {
+		// load pattern to start with
+		png::image<png::gray_pixel_16> image;
 		try {
 			image.read(opts.getStartDistFile());
 		} catch ( const png::std_error &e ) {
@@ -135,7 +154,8 @@ int main(int argc, char** argv)
 		if (image.get_width() == image.get_height()) {
 			ps_size = image.get_width();
 
-			mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+			mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+								  opts.getNaturalBunchLength());
 
 			for (unsigned int x=0; x<ps_size; x++) {
 				for (unsigned int y=0; y<ps_size; y++) {
@@ -153,9 +173,10 @@ int main(int argc, char** argv)
 		}
 	} else
 	#endif // INOVESA_USE_PNG
-	if (startdistfile.substr(startdistfile.length()-4) == ".txt") {
+	if (isOfFileType(".txt",startdistfile)) {
 		ps_size = 512;
-		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+							  opts.getNaturalBunchLength());
 
 		std::ifstream ifs;
 		ifs.open(startdistfile);
@@ -201,6 +222,7 @@ int main(int argc, char** argv)
 		Display::printText("Unknown format of input file. Will now quit.");
 		return EXIT_SUCCESS;
 	}
+	}
 
 	Impedance* impedance = nullptr;
 	/* this would do zero padding araound the hole ring
@@ -211,7 +233,8 @@ int main(int argc, char** argv)
 	if (opts.getImpedanceFile() == "") {
 		Display::printText("No impedance file given. "
 						   "Will use free space impedance.");
-		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,ps_size);
+		impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
+								  ps_size*std::max(opts.getPadding(),1u));
 	} else {
 		Display::printText("Reading impedance from: \""
 						   +opts.getImpedanceFile()+"\"");
@@ -223,20 +246,18 @@ int main(int argc, char** argv)
 		}
 	}
 
+	ElectricField field(mesh,impedance);
+
 	HDF5File* file = nullptr;
-	std::string h5ending = ".h5";
-	if ( h5ending.size() < opts.getOutFile().size() &&
-		 std::equal(h5ending.rbegin(), h5ending.rend(),
-					opts.getOutFile().rbegin())) {
-		file = new HDF5File(opts.getOutFile(),ps_size,impedance->maxN());
+	if ( isOfFileType(".h5",opts.getOutFile())) {
+		file = new HDF5File(opts.getOutFile(),mesh,&field);
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
 		Display::printText("Will not save results.");
 	}
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
-
-	ElectricField field(mesh,impedance);
+	PhaseSpace* mesh_damdiff = new PhaseSpace(*mesh);
 
 	#ifdef INOVESA_USE_GUI
 	Display* display = nullptr;
@@ -250,24 +271,6 @@ int main(int argc, char** argv)
 	const float rotations = opts.getNRotations();
 	const double f_s = opts.getSyncFreq();
 	const double t_d = opts.getDampingTime();
-
-	double e0;
-	if (t_d > 0) {
-		e0 = 2.0/(f_s*t_d*steps);
-	} else {
-		e0=0;
-	}
-
-	HeritageMap* fpm;
-	if (e0 > 0) {
-		Display::printText("Building FokkerPlanckMap.");
-		fpm = new FokkerPlanckMap(	mesh_rotated,mesh,ps_size,ps_size,
-									FokkerPlanckMap::FPType::full,e0,
-									FokkerPlanckMap::DerivationType::cubic);
-	} else {
-		fpm = new Identity(mesh_rotated,mesh,ps_size,ps_size);
-	}
-
 
 	HeritageMap* rm;
 	if (steps > 1) {
@@ -284,13 +287,50 @@ int main(int argc, char** argv)
 		rm = new Identity(mesh,mesh_rotated,ps_size,ps_size);
 	}
 
+	double e0;
+	if (t_d > 0) {
+		e0 = 2.0/(f_s*t_d*steps);
+	} else {
+		e0=0;
+	}
+
+	HeritageMap* fpm;
+	if (e0 > 0) {
+		Display::printText("Building FokkerPlanckMap.");
+		fpm = new FokkerPlanckMap(	mesh_rotated,mesh_damdiff,ps_size,ps_size,
+									FokkerPlanckMap::FPType::full,e0,
+									FokkerPlanckMap::DerivationType::cubic);
+	} else {
+		fpm = new Identity(mesh_rotated,mesh_damdiff,ps_size,ps_size);
+	}
+
+	HeritageMap* wkm = nullptr;
+	std::vector<std::pair<meshaxis_t,double>> wake;
+	if (opts.getWakeFile().size() > 4) {
+		std::ifstream ifs;
+		ifs.open(opts.getWakeFile());
+
+		while (ifs.good()) {
+			double q,f;
+			ifs >> q >> f;
+			wake.push_back(std::pair<meshaxis_t,double>(q,f));
+		}
+		ifs.close();
+
+		Display::printText("Building WakeKickMap.");
+		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
+							  wake,WakeKickMap::InterpolationType::cubic);
+	} else {
+		wkm = new Identity(mesh_damdiff,mesh,ps_size,ps_size);
+	}
+
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
 		mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
 	}
 	#endif // INOVESA_USE_CL
 	#ifdef INOVESA_USE_GUI
-	Plot2D* psv = nullptr;;
+	Plot2D* psv = nullptr;
 	if (opts.showPhaseSpace()) {
 		try {
 			psv = new Plot2D();
@@ -333,6 +373,7 @@ int main(int argc, char** argv)
 		}
 		rm->apply();
 		fpm->apply();
+		wkm->apply();
 	}
 
 	// save final result
@@ -361,8 +402,10 @@ int main(int argc, char** argv)
 
 	delete mesh;
 	delete mesh_rotated;
+	delete mesh_damdiff;
 
 	delete rm;
+	delete wkm;
 
 	Display::printText("Finished.");
 

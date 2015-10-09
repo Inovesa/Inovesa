@@ -21,9 +21,13 @@
 #define WAKEKICKMAP_HPP
 
 #include <array>
+#include <fftw3.h>
 
 #include "defines.hpp"
-#include "KickMap.hpp"
+#include "IO/Display.hpp"
+#include "HM/KickMap.hpp"
+#include "ElectricField.hpp"
+#include "Ruler.hpp"
 
 using std::modf;
 
@@ -31,9 +35,7 @@ namespace vfps
 {
 
 /**
- * @brief The KickMap class offers an option for one-dimensional kicks
- *
- * @todo implement option to have 1D interpolation with HeritageMap
+ * @brief The WakeKickMap class offers an option for one-dimensional kicks
  */
 class WakeKickMap : public KickMap
 {
@@ -44,24 +46,60 @@ public:
 	 * @param out
 	 * @param xsize
 	 * @param ysize
-	 * @param wake has to be normalized in a way,
+	 * @param wakefunction from -xsize to xsize-1, normalized in a way
 	 *	      that plain multiplication with density gives the force
+	 *
+	 * @todo interpolation when wake does not match PhaseSpace
 	 */
 	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
-			const unsigned int xsize, const unsigned int ysize,
-			const std::vector<integral_t> wake, const InterpolationType it);
+				const meshindex_t xsize, const meshindex_t ysize,
+				const std::vector<std::pair<meshaxis_t,double>> wake,
+				const InterpolationType it);
+
+	/**
+	 * @brief WakeKickMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
+	 * @param csrimpedance
+	 * @param it
+	 */
+	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
+				const meshindex_t xsize, const meshindex_t ysize,
+				const vfps::ElectricField* csr,
+				const InterpolationType it);
+
+	~WakeKickMap();
 
 public:
 	/**
-	 * @brief overloads HeritageMap::apply() to have a variable HeritageMap
+	 * @brief overloads KickMap::apply() to have a variable HeritageMap
+	 *
+	 * @todo currently uses phasespace in CPU Ram
 	 */
 	void apply();
 
 private:
 	/**
-	 * @brief _wake (normalized) wake
+	 * @brief WakeKickMap
+	 * @param in
+	 * @param out
+	 * @param xsize
+	 * @param ysize
+	 * @param it
 	 */
-	const std::vector<vfps::integral_t> _wake;
+	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
+				const meshindex_t xsize, const meshindex_t ysize,
+				const InterpolationType it);
+
+	/**
+	 * @brief _wakefunktion (normalized single particle) wake,
+	 *		  sampled at 2*xsize positions [-xsize:+xsize]
+	 */
+	meshaxis_t* const _wakefunction;
+
+	const size_t _wakesize;
 };
 
 } // namespace VFPS

@@ -21,12 +21,15 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 								   const Impedance* impedance) :
+	_axis(Ruler<meshaxis_t>(impedance->maxN(),0,
+							meshaxis_t(1)/phasespace->size(0))),
 	_nmax(impedance->maxN()),
 	_phasespace(phasespace),
 	_bpmeshcells(phasespace->nMeshCells(0)),
 	_csrspectrum(new csrpower_t[_nmax]),
 	_impedance(impedance),
-	_spaceinfo(phasespace->getRuler(0))
+	_spaceinfo(phasespace->getRuler(0)),
+	_wakefunction(new meshaxis_t[2*_bpmeshcells])
 {
 	_bp_padded_fftw = fftwf_alloc_real(2*_nmax);
 	_bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
@@ -38,11 +41,53 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 	_bp_fourier = reinterpret_cast<impedance_t*>(_bp_fourier_fftw);
 
 	_ft_bunchprofile = prepareFFT(2*_nmax,_bp_padded,_bp_fourier);
+
+	fftwf_complex* z_fftw = fftwf_alloc_complex(2*_bpmeshcells);
+	fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(2*_bpmeshcells);
+	fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(2*_bpmeshcells); //for wake
+	impedance_t* z = reinterpret_cast<impedance_t*>(z_fftw);
+	impedance_t* zcsrf = reinterpret_cast<impedance_t*>(zcsrf_fftw);
+	impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
+
+	/* Marit's original code names eq1 in comment, but it uses eq2.
+	 *
+	 *	eq1:
+	 * 	const double g	= -Ic*phaseSpace.getDelta<0>()*deltat*2*omega0/(2*M_PI);
+	 *
+	 *	eq2:
+	 *	const double g  = -2*ring->getNormalizedCurrent()
+	 *					* vfps::physcons::c*ring->getParticleVelocity()
+	 *					* phaseSpace.getDelta<0>()*deltat/(2*M_PI*R);
+	 *
+	 * original comment:
+	 * !!! omega0 is here a function of R !!!, deltat in Einheiten von 2*pi?
+	 */
+	const double g  = 1;
+
+	std::copy_n(_impedance->data(),2*_bpmeshcells,z);
+
+	fftwf_plan p3 = prepareFFT( 2*_bpmeshcells, z, zcsrf,
+							   fft_direction::forward );
+	fftwf_plan p4 = prepareFFT( 2*_bpmeshcells, z, zcsrb,
+							   fft_direction::backward);
+
+	fftwf_execute(p3);
+	fftwf_destroy_plan(p3);
+	fftwf_execute(p4);
+	fftwf_destroy_plan(p4);
+
+	for (size_t i=0; i< _bpmeshcells; i++) {
+		_wakefunction[i             ] = g * zcsrf[_bpmeshcells-i].real();
+		_wakefunction[i+_bpmeshcells] = g * zcsrb[i             ].real();
+	}
+	fftwf_free(zcsrf_fftw);
+	fftwf_free(zcsrb_fftw);
 }
 
 vfps::ElectricField::~ElectricField()
 {
 	delete [] _csrspectrum;
+	delete [] _wakefunction;
 
 	fftwf_free(_bp_padded_fftw);
 	fftwf_free(_bp_fourier_fftw);
@@ -53,7 +98,7 @@ vfps::ElectricField::~ElectricField()
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
 	std::copy_n(_phasespace->projectionToX(),
-				_spaceinfo->getNSteps(),
+				_spaceinfo->steps(),
 				_bp_padded);
 
 	//FFT charge density
@@ -67,7 +112,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 	return _csrspectrum;
 }
 
-fftwf_plan vfps::ElectricField::prepareFFT(	unsigned int n, csrpower_t* in,
+fftwf_plan vfps::ElectricField::prepareFFT(	size_t n, csrpower_t* in,
 											impedance_t* out)
 {
 	fftwf_plan plan = nullptr;
@@ -92,4 +137,49 @@ fftwf_plan vfps::ElectricField::prepareFFT(	unsigned int n, csrpower_t* in,
 		Display::printText("Created some wisdom at "+wisdomfile.str());
 	}
 	return plan;
+}
+
+fftwf_plan vfps::ElectricField::prepareFFT(size_t n, vfps::impedance_t* in,
+									vfps::impedance_t* out,
+									fft_direction direction)
+{
+	fftwf_plan plan = nullptr;
+
+	char dir;
+	int_fast8_t sign;
+	if (direction == fft_direction::backward) {
+		dir = 'b';
+		sign = +1;
+	} else {
+		dir = 'f';
+		sign = -1;
+	}
+
+	std::stringstream wisdomfile;
+	// get ready to save BunchCharge
+	if (std::is_same<vfps::csrpower_t,float>::value) {
+		wisdomfile << "wisdom_c" << dir << "c32_" << n << ".fftw";
+	} else {
+		wisdomfile << "wisdom_c" << dir << "c64_" << n << ".fftw";
+	}
+	// use wisdomfile, if it exists
+	if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+		plan = fftwf_plan_dft_1d(	n,
+										reinterpret_cast<fftwf_complex*>(in),
+										reinterpret_cast<fftwf_complex*>(out),
+										sign,
+										FFTW_WISDOM_ONLY|FFTW_PATIENT);
+	}
+	// if there was no wisdom (no or bad file), create some
+	if (plan == nullptr) {
+		plan = fftwf_plan_dft_1d(	n,
+										reinterpret_cast<fftwf_complex*>(in),
+										reinterpret_cast<fftwf_complex*>(out),
+										sign,
+										FFTW_PATIENT);
+		fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
+		Display::printText("Created some wisdom at "+wisdomfile.str());
+	}
+	return plan;
+
 }

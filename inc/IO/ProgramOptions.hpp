@@ -56,9 +56,18 @@ public:
 	inline std::string getStartDistFile() const
 		{ return _startdistfile; }
 
+	inline std::string getWakeFile() const
+		{ return _wakefile; }
+
 public:
+	inline unsigned int getMeshSize() const
+		{ return meshsize; }
+
 	inline unsigned int getOutSteps() const
 		{ return outsteps; }
+
+	inline unsigned int getPadding() const
+		{ return padding; }
 
 	inline unsigned int getSteps() const
 		{ return steps; }
@@ -66,6 +75,8 @@ public:
 	inline float getNRotations() const
 		{ return rotations; }
 
+	inline double getPhaseSpaceSize() const
+		{ return pq_max; }
 
 public:
 	inline double getBendingRadius() const
@@ -80,9 +91,6 @@ public:
 	inline double getDampingTime() const
 		{ return t_d; }
 
-	inline double getPhaseSpaceSize() const
-		{ return pq_max; }
-
 private: // program parameters
 	int _cldevice;
 
@@ -96,15 +104,19 @@ private: // program parameters
 
 	std::string _configfile;
 
+	std::string _wakefile;
+
 private: // simulation parameters
+	unsigned int meshsize;
 	unsigned int outsteps;
+	unsigned int padding;
+	double pq_max;
 	unsigned int steps;
 	float rotations;
 
 private: // phsical parameters
 	double f_s;
 	double t_d;
-	double pq_max;
 	double r_bend;
 	double s_0;
 

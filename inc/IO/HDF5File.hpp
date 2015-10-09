@@ -21,6 +21,7 @@
 #define HDF5FILE_HPP
 
 #include <array>
+#include <gsl/gsl_const_mks.h>
 #include <H5Cpp.h>
 #include <string>
 
@@ -39,7 +40,9 @@ public:
 	 * @param ps_size size of one mesh dimension
 	 * @param maxn maximum index (==wavenumber?) of CSR spectrum
 	 */
-	HDF5File(std::string fname, const meshindex_t ps_size, const size_t maxn);
+	HDF5File(const std::string fname,
+			 const PhaseSpace* ps,
+			 const ElectricField* ef);
 
 	~HDF5File();
 
@@ -54,10 +57,41 @@ private:
 
 	static constexpr uint_fast8_t compression = 6;
 
-private:
+	H5::DataType datatype_integral;
+
+	H5::DataType datatype_meshdata;
+
+private: // values for phase space axis
+	static constexpr uint_fast8_t axps_rank = 2;
+
+	H5::DataSet ax0ps_dataset;
+
+	H5::DataSet ax1ps_dataset;
+
+	H5::DataSpace* ax0ps_dataspace;
+
+	H5::DataSpace* ax1ps_dataspace;
+
+	H5::IntType axps_datatype;
+
+	H5::DSetCreatPropList axps_prop;
+
+private: // values for frequency axis
+	static constexpr uint_fast8_t axfreq_rank = 2;
+
+	H5::DataSet axfreq_dataset;
+
+	H5::DataSpace* axfreq_dataspace;
+
+	H5::IntType axfreq_datatype;
+
+	H5::DSetCreatPropList axfreq_prop;
+
+
+private: // bunch charge
 	static constexpr uint_fast8_t bc_rank = 1;
 
-	H5::DataSet* bc_dataset;
+	H5::DataSet bc_dataset;
 
 	H5::DataSpace* bc_dataspace;
 
@@ -65,14 +99,12 @@ private:
 
 	hsize_t bc_dims;
 
-	const std::string bc_name;
-
 	H5::DSetCreatPropList bc_prop;
 
-private:
+private: // bunch profile
 	static constexpr uint_fast8_t bp_rank = 2;
 
-	H5::DataSet* bp_dataset;
+	H5::DataSet bp_dataset;
 
 	H5::DataSpace* bp_dataspace;
 
@@ -80,14 +112,12 @@ private:
 
 	std::array<hsize_t,bp_rank> bp_dims;
 
-	const std::string bp_name;
-
 	H5::DSetCreatPropList bp_prop;
 
-private:
+private: // csr spectrum
 	static constexpr uint_fast8_t csr_rank = 2;
 
-	H5::DataSet* csr_dataset;
+	H5::DataSet csr_dataset;
 
 	H5::DataSpace* csr_dataspace;
 
@@ -95,24 +125,20 @@ private:
 
 	std::array<hsize_t,csr_rank> csr_dims;
 
-	const std::string csr_name;
-
 	H5::DSetCreatPropList csr_prop;
 
 	size_t maxn;
 
-private:
+private: // phase space
 	static constexpr uint_fast8_t ps_rank = 3;
 
-	H5::DataSet* ps_dataset;
+	H5::DataSet ps_dataset;
 
 	H5::DataSpace* ps_dataspace;
 
 	H5::IntType ps_datatype;
 
 	std::array<hsize_t,ps_rank> ps_dims;
-
-	const std::string ps_name;
 
 	H5::DSetCreatPropList ps_prop;
 

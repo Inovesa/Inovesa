@@ -71,9 +71,10 @@ vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
 							 meshaxis_t xmin, meshaxis_t xmax,
-							 meshaxis_t ymin, meshaxis_t ymax) :
-	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax),
-			   Ruler<meshaxis_t>(ps_size,ymin,ymax))
+							 meshaxis_t ymin, meshaxis_t ymax,
+							 double xscale, double yscale) :
+	PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
+			   Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale))
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -156,6 +157,11 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 */
 
 vfps::projection_t *vfps::PhaseSpace::projectionToX() {
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		syncCLMem(clCopyDirection::dev2cpu);
+	}
+	#endif
 	for (size_t x=0; x < nMeshCells(0); x++) {
 		_projection[0][x] = 0;
 
@@ -174,6 +180,11 @@ vfps::projection_t *vfps::PhaseSpace::projectionToX() {
 }
 
 vfps::projection_t *vfps::PhaseSpace::projectionToY() {
+	#ifdef INOVESA_USE_CL
+	if (OCLH::active) {
+		syncCLMem(clCopyDirection::dev2cpu);
+	}
+	#endif
 	for (size_t y=0; y< nMeshCells(1); y++) {
 		_projection[1][y] = 0;
 

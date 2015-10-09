@@ -1,21 +1,21 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
+ * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #include "HM/RotationMap.hpp"
 
@@ -54,10 +54,10 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
 	} else
 	#endif
 	{
-		if (_sat) {
-			Display::printText("\tSaturation for \"ROTMAP_SIZE==0\" "
-							   "only implemented when using OpenCL.");
-		}
+	if (_sat) {
+		Display::printText("\tSaturation for \"ROTMAP_SIZE==0\" "
+						   "only implemented when using OpenCL.");
+	}
 	}
 #else
 	#if ROTMAP_SIZE == 1
@@ -272,55 +272,14 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
 	if (xi <  _xsize && yi < _ysize) {
 		// create vectors containing interpolation coefficiants
-		switch(_it) {
-		case InterpolationType::none:
-			icq[0] = 1;
-
-			icp[0] = 1;
-			break;
-		case InterpolationType::linear:
-			icq[0] = interpol_t(1)-xf;
-			icq[1] = xf;
-
-			icp[0] = interpol_t(1)-yf;
-			icp[1] = yf;
-			break;
-		case InterpolationType::quadratic:
-			icq[0] = xf*(xf-interpol_t(1))/interpol_t(2);
-			icq[1] = interpol_t(1)-xf*xf;
-			icq[2] = xf*(xf+interpol_t(1))/interpol_t(2);
-
-			icp[0] = yf*(yf-interpol_t(1))/interpol_t(2);
-			icp[1] = interpol_t(1)-yf*yf;
-			icp[2] = yf*(yf+interpol_t(1))/interpol_t(2);
-			break;
-		case InterpolationType::cubic:
-			icq[0] = (xf-interpol_t(1))*(xf-interpol_t(2))*xf
-					* interpol_t(-1./6.);
-			icq[1] = (xf+interpol_t(1))*(xf-interpol_t(1))
-					* (xf-interpol_t(2)) / interpol_t(2);
-			icq[2] = (interpol_t(2)-xf)*xf*(xf+interpol_t(1))
-					/ interpol_t(2);
-			icq[3] = xf*(xf+interpol_t(1))*(xf-interpol_t(1))
-					* interpol_t(1./6.);
-
-			icp[0] = (yf-interpol_t(1))*(yf-interpol_t(2))*yf
-					* interpol_t(-1./6.);
-			icp[1] = (yf+interpol_t(1))*(yf-interpol_t(1))
-					* (yf-interpol_t(2)) / interpol_t(2);
-			icp[2] = (interpol_t(2)-yf)*yf*(yf+interpol_t(1))
-					/ interpol_t(2);
-			icp[3] = yf*(yf+interpol_t(1))*(yf-interpol_t(1))
-					* interpol_t(1./6.);
-			break;
-		}
+		calcCoefficiants(icq,xf,_it);
+		calcCoefficiants(icp,yf,_it);
 
 		/*  Assemble interpolation
-		 * (using size_t although _it is mush smaller,
-		 * so that product won't overflow)
+		 * (using uint_fast16_t so product won't overflow)
 		 */
-		for (size_t hmq=0; hmq<_it; hmq++) {
-			for (size_t hmp=0; hmp<_it; hmp++){
+		for (uint_fast16_t hmq=0; hmq<_it; hmq++) {
+			for (uint_fast16_t hmp=0; hmp<_it; hmp++){
 				hmc[hmp*_it+hmq] = icq[hmp]*icp[hmq];
 			}
 		}

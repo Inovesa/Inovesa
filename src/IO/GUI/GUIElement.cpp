@@ -65,7 +65,6 @@ GLuint vfps::GUIElement::LoadShaders(std::string vertex_file_path,
 		VertexShaderStream.close();
 	}else{
 		throw ShaderNotFound(vertex_file_path);
-		return 0;
 	}
 
 	// Read the Fragment Shader code from the file
