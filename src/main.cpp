@@ -225,11 +225,6 @@ int main(int argc, char** argv)
 	}
 
 	Impedance* impedance = nullptr;
-	/* this would do zero padding araound the hole ring
-	size_t zmax = std::ceil(M_PI*opts.getBendingRadius()*ps_size
-							/(2*qmax)
-							/opts.getNaturalBunchLength());
-	*/
 	if (opts.getImpedanceFile() == "") {
 		Display::printText("No impedance file given. "
 						   "Will use free space impedance.");
@@ -244,16 +239,6 @@ int main(int argc, char** argv)
 							   "Will now quit.");
 			return EXIT_SUCCESS;
 		}
-	}
-
-	ElectricField field(mesh,impedance);
-
-	HDF5File* file = nullptr;
-	if ( isOfFileType(".h5",opts.getOutFile())) {
-		file = new HDF5File(opts.getOutFile(),mesh,&field);
-		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
-	} else {
-		Display::printText("Will not save results.");
 	}
 
 	PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
@@ -271,6 +256,7 @@ int main(int argc, char** argv)
 	const float rotations = opts.getNRotations();
 	const double f_s = opts.getSyncFreq();
 	const double t_d = opts.getDampingTime();
+	const double dt = 1.0/(f_s*steps);
 
 	HeritageMap* rm;
 	if (steps > 1) {
@@ -278,7 +264,6 @@ int main(int argc, char** argv)
 		 * (angle = 2*pi corresponds to 1 synchrotron period)
 		 */
 		const double angle = 2*M_PI/steps;
-
 		Display::printText("Building RotationMap.");
 		rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
 							 HeritageMap::InterpolationType::cubic,
@@ -304,6 +289,7 @@ int main(int argc, char** argv)
 		fpm = new Identity(mesh_rotated,mesh_damdiff,ps_size,ps_size);
 	}
 
+	ElectricField* field = nullptr;
 	HeritageMap* wkm = nullptr;
 	std::vector<std::pair<meshaxis_t,double>> wake;
 	if (opts.getWakeFile().size() > 4) {
@@ -320,8 +306,27 @@ int main(int argc, char** argv)
 		Display::printText("Building WakeKickMap.");
 		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
 							  wake,WakeKickMap::InterpolationType::cubic);
+		field = new ElectricField(mesh,impedance);
 	} else {
-		wkm = new Identity(mesh_damdiff,mesh,ps_size,ps_size);
+		double Ib = 50e-6;
+		double bl = opts.getNaturalBunchLength();
+		double E0 = 1.3e9;
+		double sigmaE = 1e-5;
+		double f0 = 2.7e6;
+		double rb = opts.getBendingRadius();
+		Display::printText("Calculating WakeFunction.");
+		field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb);
+		Display::printText("Building WakeKickMap.");
+		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
+							  field,WakeKickMap::InterpolationType::cubic);
+	}
+
+	HDF5File* file = nullptr;
+	if ( isOfFileType(".h5",opts.getOutFile())) {
+		file = new HDF5File(opts.getOutFile(),mesh,field);
+		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
+	} else {
+		Display::printText("Will not save results.");
 	}
 
 	#ifdef INOVESA_USE_CL
@@ -355,8 +360,8 @@ int main(int argc, char** argv)
 			if (file != nullptr) {
 				mesh->integral();
 				file->append(mesh);
-				field.updateCSRSpectrum();
-				file->append(&field);
+				field->updateCSRSpectrum();
+				file->append(field);
 			}
 			#ifdef INOVESA_USE_GUI
 			if (psv != nullptr) {
@@ -380,8 +385,8 @@ int main(int argc, char** argv)
 	if (file != nullptr) {
 		mesh->integral();
 		file->append(mesh);
-		field.updateCSRSpectrum();
-		file->append(&field);
+		field->updateCSRSpectrum();
+		file->append(field);
 	}
 	if (!opts.showPhaseSpace()) {
 		std::stringstream status;

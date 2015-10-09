@@ -29,7 +29,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 	_csrspectrum(new csrpower_t[_nmax]),
 	_impedance(impedance),
 	_spaceinfo(phasespace->getRuler(0)),
-	_wakefunction(new meshaxis_t[2*_bpmeshcells])
+	_wakefunction(nullptr)
 {
 	_bp_padded_fftw = fftwf_alloc_real(2*_nmax);
 	_bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
@@ -41,35 +41,55 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 	_bp_fourier = reinterpret_cast<impedance_t*>(_bp_fourier_fftw);
 
 	_ft_bunchprofile = prepareFFT(2*_nmax,_bp_padded,_bp_fourier);
+}
 
-	fftwf_complex* z_fftw = fftwf_alloc_complex(2*_bpmeshcells);
-	fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(2*_bpmeshcells);
-	fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(2*_bpmeshcells); //for wake
+vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
+								   const Impedance* impedance,
+								   const double Ib, const double bl,
+								   const double E0, const double sigmaE,
+								   const double fs, const double frev,
+								   const double dt, const double rbend) :
+	ElectricField(phasespace,impedance)
+{
+	_wakefunction = new meshaxis_t[2*_bpmeshcells];
+	fftwf_complex* z_fftw = fftwf_alloc_complex(_nmax);
+	fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(_nmax);
+	fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(_nmax); //for wake
 	impedance_t* z = reinterpret_cast<impedance_t*>(z_fftw);
 	impedance_t* zcsrf = reinterpret_cast<impedance_t*>(zcsrf_fftw);
 	impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
 
 	/* Marit's original code names eq1 in comment, but it uses eq2.
+	 * Patrik's calculations lead to eq3
 	 *
 	 *	eq1:
-	 * 	const double g	= -Ic*phaseSpace.getDelta<0>()*deltat*2*omega0/(2*M_PI);
+	 * 	const double g	= -Ic * phaseSpace.getDelta<0>() / M_PI
+	 *	                * (deltat*omega0);
 	 *
 	 *	eq2:
-	 *	const double g  = -2*ring->getNormalizedCurrent()
-	 *					* vfps::physcons::c*ring->getParticleVelocity()
-	 *					* phaseSpace.getDelta<0>()*deltat/(2*M_PI*R);
+	 *	const double g  = -Ic * phaseSpace.getDelta<0>() / M_PI
+	 *					* deltat * physcons::c * beta0 / R
 	 *
-	 * original comment:
+	 * Marit's comment:
 	 * !!! omega0 is here a function of R !!!, deltat in Einheiten von 2*pi?
+	 *
+	 *  eq3:
+	 *  const double g	= -Ic / phaseSpace.getDelta<1>() / M_PI
+	 *					* (deltat*omega0) * exp(sigma_z/R)
+	 *					= -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
+	 *					/ phaseSpace.getDelta<1>()
+	 *					* (deltat*omega0 / M_PI) * exp(sigma_z/R)
+	 *					= -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
+	 *					* phaseSpace.getDelta<1>()
+	 *					* deltat*frev * exp(sigma_z/R)
 	 */
-	const double g  = 1;
+	const double g	= Ib*E0/phasespace->getDelta(1)*dt*frev*std::exp(bl/rbend)
+					/ (2*M_PI*fs*sigmaE);
 
-	std::copy_n(_impedance->data(),2*_bpmeshcells,z);
+	std::copy_n(_impedance->data(),_nmax,z);
 
-	fftwf_plan p3 = prepareFFT( 2*_bpmeshcells, z, zcsrf,
-							   fft_direction::forward );
-	fftwf_plan p4 = prepareFFT( 2*_bpmeshcells, z, zcsrb,
-							   fft_direction::backward);
+	fftwf_plan p3 = prepareFFT( _nmax, z, zcsrf, fft_direction::forward );
+	fftwf_plan p4 = prepareFFT( _nmax, z, zcsrb, fft_direction::backward);
 
 	fftwf_execute(p3);
 	fftwf_destroy_plan(p3);
@@ -80,6 +100,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 		_wakefunction[i             ] = g * zcsrf[_bpmeshcells-i].real();
 		_wakefunction[i+_bpmeshcells] = g * zcsrb[i             ].real();
 	}
+	_wakefunction[_bpmeshcells] = 0.0;
 	fftwf_free(zcsrf_fftw);
 	fftwf_free(zcsrb_fftw);
 }

@@ -289,7 +289,7 @@ void vfps::HDF5File::append(const PhaseSpace* ps)
 	filespace = new H5::DataSpace(bc_dataset.getSpace());
 	filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
 	memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
-	integral_t bunchcharge = ps->getCharge();
+	integral_t bunchcharge = ps->getIntegral();
 	bc_dataset.write(&bunchcharge, bc_datatype,*memspace, *filespace);
 	delete memspace;
 	delete filespace;

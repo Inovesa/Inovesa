@@ -95,7 +95,7 @@ public:
 
 	integral_t integral();
 
-	integral_t getCharge() const
+	integral_t getIntegral() const
 	{ return _integral; }
 
 	meshdata_t variance(const uint_fast8_t axis);
