@@ -24,7 +24,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	_startdistfile(""),
 	_configfile("default.cfg"),
 	_wakefile(""),
-	meshsize(0),
+    meshsize(256),
 	outsteps(100),
 	padding(0),
 	pq_max(5.0),

@@ -118,8 +118,8 @@ int main(int argc, char** argv)
 	if (startdistfile.length() <= 4) {
 		ps_size = opts.getMeshSize();
 		if (ps_size == 0) {
-			Display::printText("Please give file for initial distribution "
-							   "or size of target mesh.");
+            Display::printText("Please give file for initial distribution "
+                               "or size of target mesh > 0.");
 		}
 		Display::printText("Generating (gaussian) initial distribution.");
 		mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
@@ -143,12 +143,12 @@ int main(int argc, char** argv)
 			image.read(opts.getStartDistFile());
 		} catch ( const png::std_error &e ) {
 			std::cerr << e.what() << std::endl;
-			return EXIT_SUCCESS;
+            return EXIT_SUCCESS;
 		}
 		catch ( const png::error &e ) {
 			std::cerr << "Problem loading " << startdistfile
 					  << ": " << e.what() << std::endl;
-			return EXIT_SUCCESS;
+            return EXIT_SUCCESS;
 		}
 
 		if (image.get_width() == image.get_height()) {
@@ -169,7 +169,7 @@ int main(int argc, char** argv)
 			std::cerr << "Phase space has to be quadratic. Please adjust "
 					  << startdistfile << std::endl;
 
-			return EXIT_SUCCESS;
+            return EXIT_SUCCESS;
 		}
 	} else
 	#endif // INOVESA_USE_PNG
@@ -219,8 +219,8 @@ int main(int argc, char** argv)
 			}
 		}
 	} else {
-		Display::printText("Unknown format of input file. Will now quit.");
-		return EXIT_SUCCESS;
+        Display::printText("Unknown format of input file. Will now quit.");
+        return EXIT_SUCCESS;
 	}
 	}
 
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
 		if (impedance->maxN() < ps_size) {
 			Display::printText("No valid impedance file. "
 							   "Will now quit.");
-			return EXIT_SUCCESS;
+            return EXIT_SUCCESS;
 		}
 	}
 
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
 		std::stringstream status;
 		status << rotations << '/' << rotations;
 		Display::printText(status.str());
-	}
+    }
 
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
