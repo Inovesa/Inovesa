@@ -158,8 +158,7 @@ void vfps::KickMap::updateHM()
 		xip = std::modf(poffs, &qp_int);
 		jd = qp_int;
 
-		if (jd < _meshysize)
-		{
+        if (jd < _meshysize) {
 			// create vectors containing interpolation coefficiants
 			calcCoefficiants(hmc,xip,_it);
 
@@ -178,7 +177,7 @@ void vfps::KickMap::updateHM()
 				}
 				_hinfo[q_i*_ip+j1] = ph[j1];
 			}
-		} else {
+        } else {
 			for (unsigned int j1=0; j1<_it; j1++) {
 				ph[j1].index = _meshysize/2;
 				ph[j1].weight = 0;

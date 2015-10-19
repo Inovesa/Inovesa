@@ -409,8 +409,12 @@ int main(int argc, char** argv)
 	delete mesh_rotated;
 	delete mesh_damdiff;
 
+    delete field;
+    delete impedance;
+
 	delete rm;
 	delete wkm;
+    delete fpm;
 
 	Display::printText("Finished.");
 
