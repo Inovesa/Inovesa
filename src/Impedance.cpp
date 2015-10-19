@@ -35,7 +35,7 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model,
 	switch (model) {
 	case ImpedanceModel::FreeSpace:
 		for (size_t i=0; i<_nmax; i++) {
-			_data.push_back(freespacecoeff*std::pow(csrpower_t(n),
+            _data.push_back(freespacecoeff*std::pow(csrpower_t(i),
 													csrpower_t(1.0/3.0)));
 		}
 	break;
