@@ -334,7 +334,8 @@ int main(int argc, char** argv)
 
 	HDF5File* file = nullptr;
 	if ( isOfFileType(".h5",opts.getOutFile())) {
-		file = new HDF5File(opts.getOutFile(),mesh,field);
+        file = new HDF5File(opts.getOutFile(),mesh,field,impedance,
+                            static_cast<WakeKickMap*>(wkm));
 		Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
 	} else {
 		Display::printText("Will not save results.");

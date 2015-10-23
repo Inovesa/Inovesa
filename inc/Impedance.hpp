@@ -28,8 +28,11 @@ public:
 
 	Impedance(std::string datafile);
 
-	inline const impedance_t* data() const
-		{ return _data.data(); }
+    inline const impedance_t* data() const
+        { return _data.data(); }
+
+    inline const std::vector<impedance_t>& impedance() const
+        { return _data; }
 
 	inline const impedance_t operator[](size_t n) const
 		{ return _data[n]; }

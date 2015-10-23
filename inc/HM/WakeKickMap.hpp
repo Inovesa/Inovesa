@@ -46,8 +46,8 @@ public:
      * @param out
      * @param xsize
      * @param ysize
-     * @param wakefunction from -xsize to xsize-1, normalized in a way
-     *          that plain multiplication with density gives the force
+     * @param wake wakefunction from -xsize to xsize-1, normalized in a way
+     *             that plain multiplication with density gives an offset
      *
      * @todo interpolation when wake does not match PhaseSpace
      */
@@ -79,6 +79,9 @@ public:
      * @todo currently uses phasespace in CPU Ram
      */
     void apply();
+
+    inline const meshaxis_t* getWakeFunction() const
+        { return _wakefunction; }
 
 private:
     /**

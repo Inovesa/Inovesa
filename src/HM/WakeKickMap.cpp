@@ -57,7 +57,7 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         }
         calcCoefficiants(qic.data(),
                          xaxis[x_mine]-wakefunction[x_other].first,4);
-        _wakefunction[x_mine]    = qic[0]*wakefunction[x_other-1].second
+        _wakefunction[x_mine]   = qic[0]*wakefunction[x_other-1].second
                                 + qic[1]*wakefunction[x_other  ].second
                                 + qic[2]*wakefunction[x_other+1].second
                                 + qic[3]*wakefunction[x_other+2].second;
