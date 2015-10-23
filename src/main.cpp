@@ -264,10 +264,21 @@ int main(int argc, char** argv)
 		 * (angle = 2*pi corresponds to 1 synchrotron period)
 		 */
 		const double angle = 2*M_PI/steps;
+
+        size_t rotmapsize;
+        #ifdef INOVESA_USE_CL
+        if (OCLH::active) {
+            rotmapsize = 0;
+        } else
+        #endif
+        {
+            rotmapsize = ps_size*ps_size/2;
+        }
 		Display::printText("Building RotationMap.");
 		rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
 							 HeritageMap::InterpolationType::cubic,
-							 RotationMap::RotationCoordinates::norm_pm1,true);
+                             RotationMap::RotationCoordinates::norm_pm1,
+                             true,rotmapsize);
 	} else {
 		rm = new Identity(mesh,mesh_rotated,ps_size,ps_size);
 	}

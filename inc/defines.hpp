@@ -38,14 +38,6 @@
  */
 #define INTEGRAL_TYPE 2
 
-/**
- * possible choices are:
- * 0: no rotation map (re-calculate every step)
- * 1: full rotation map (every mesh point)
- * 2: half rotation map (use symmetry)
- */
-#define ROTMAP_SIZE 0
-
 namespace vfps
 {
 #define FXP_FRACPART 28
