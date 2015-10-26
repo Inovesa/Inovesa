@@ -41,14 +41,16 @@ public:
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
      */
-    ElectricField(PhaseSpace* phasespace, const Impedance* impedance);
+    ElectricField(PhaseSpace* phasespace,
+                  const Impedance* impedance,
+                  const size_t nmax=0);
 
     /**
      * @brief ElectricField
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
      * @param Ib bunch current [A]
-     * @param bl rms bunch length [m]
+     * @param bl natural rms bunch length [m]
      * @param E0 beam energy [eV]
      * @param sigmaE normalized energy spread [1]
      * @param fs synchrotron frequency [Hz]
@@ -56,11 +58,12 @@ public:
      * @param dt time step [s]
      * @param rbend bending radius [m]
      */
-    ElectricField(PhaseSpace* phasespace, const Impedance* impedance,
+    ElectricField(PhaseSpace* ps, const Impedance* impedance,
                   const double Ib, const double bl,
                   const double E0, const double sigmaE,
                   const double fs, const double frev,
-                  const double dt, const double rbend);
+                  const double dt, const double rbend,
+                  const size_t nmax=0);
 
     ~ElectricField();
 
@@ -92,9 +95,9 @@ private:
                           fft_direction direction);
 
 private:
-    const Ruler<meshaxis_t> _axis;
-
     size_t _nmax;
+
+    const Ruler<meshaxis_t> _axis;
 
     PhaseSpace* _phasespace;
 

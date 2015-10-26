@@ -85,6 +85,9 @@ public:
 	inline double getNaturalBunchLength() const
 		{ return s_0; }
 
+	inline double getRevolutionFreq() const
+		{ return f_rev; }
+
 	inline double getSyncFreq() const
 		{ return f_s; }
 
@@ -116,6 +119,7 @@ private: // simulation parameters
 
 private: // phsical parameters
 	double f_s;
+	double f_rev;
 	double t_d;
 	double r_bend;
 	double s_0;

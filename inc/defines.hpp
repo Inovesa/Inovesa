@@ -63,6 +63,13 @@ typedef data_t integral_t;
 typedef data_t timeaxis_t;
 
 typedef integral_t projection_t;
-}
+
+namespace physcons
+{
+/// speed of light (in m/s)
+constexpr double c=2.99792458e8;
+} // namespace physcons
+
+} // namespace vfps
 
 #endif // DEFINES_HPP

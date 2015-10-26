@@ -31,6 +31,7 @@ vfps::ProgramOptions::ProgramOptions() :
 	steps(4000),
 	rotations(1),
 	f_s(8.5e3),
+	f_rev(2.7e6),
 	t_d(0.01),
 	r_bend(1.0),
 	s_0(1.0e-3),

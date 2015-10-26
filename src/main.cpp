@@ -47,7 +47,7 @@ using namespace vfps;
 inline bool isOfFileType(std::string ending, std::string fname)
 {
 	return ( fname.size() > ending.size() &&
-			std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+		std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
 }
 
 int main(int argc, char** argv)
@@ -303,9 +303,12 @@ int main(int argc, char** argv)
 	ElectricField* field = nullptr;
 	HeritageMap* wkm = nullptr;
 	std::vector<std::pair<meshaxis_t,double>> wake;
-	if (opts.getWakeFile().size() > 4) {
+	std::string wakefile = opts.getWakeFile();
+	if (wakefile.size() > 4) {
+		field = new ElectricField(mesh,impedance);
+		Display::printText("Reading WakeFunction from "+wakefile+".");
 		std::ifstream ifs;
-		ifs.open(opts.getWakeFile());
+		ifs.open(wakefile);
 
 		while (ifs.good()) {
 			double q,f;
@@ -313,20 +316,18 @@ int main(int argc, char** argv)
 			wake.push_back(std::pair<meshaxis_t,double>(q,f));
 		}
 		ifs.close();
-
 		Display::printText("Building WakeKickMap.");
 		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
 							  wake,WakeKickMap::InterpolationType::cubic);
-		field = new ElectricField(mesh,impedance);
 	} else {
 		double Ib = 50e-6;
 		double bl = opts.getNaturalBunchLength();
 		double E0 = 1.3e9;
 		double sigmaE = 1e-5;
-		double f0 = 2.7e6;
+		double f0 = opts.getRevolutionFreq();
 		double rb = opts.getBendingRadius();
 		Display::printText("Calculating WakeFunction.");
-		field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb);
+		field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb,2048);
 		Display::printText("Building WakeKickMap.");
 		wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
 							  field,WakeKickMap::InterpolationType::cubic);

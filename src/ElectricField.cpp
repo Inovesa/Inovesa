@@ -20,10 +20,10 @@
 #include "ElectricField.hpp"
 
 vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
-                                   const Impedance* impedance) :
-    _axis(Ruler<meshaxis_t>(impedance->maxN(),0,
-                            meshaxis_t(1)/phasespace->size(0))),
-    _nmax(impedance->maxN()),
+                                   const Impedance* impedance,
+                                   const size_t nmax) :
+    _nmax(nmax > 0 ? nmax : impedance->maxN()),
+    _axis(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
     _phasespace(phasespace),
     _bpmeshcells(phasespace->nMeshCells(0)),
     _csrspectrum(new csrpower_t[_nmax]),
@@ -43,18 +43,20 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _ft_bunchprofile = prepareFFT(2*_nmax,_bp_padded,_bp_fourier);
 }
 
-vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
+vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
                                    const double Ib, const double bl,
                                    const double E0, const double sigmaE,
                                    const double fs, const double frev,
-                                   const double dt, const double rbend) :
-    ElectricField(phasespace,impedance)
+                                   const double dt, const double rbend,
+                                   const size_t nmax) :
+        ElectricField(ps,impedance,nmax)
 {
+    size_t wakenmax = std::round(physcons::c/(2*M_PI*frev*ps->getDelta(0)*bl));
     _wakefunction = new meshaxis_t[2*_bpmeshcells];
-    fftwf_complex* z_fftw = fftwf_alloc_complex(_nmax);
-    fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(_nmax);
-    fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(_nmax); //for wake
+    fftwf_complex* z_fftw = fftwf_alloc_complex(wakenmax);
+    fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(wakenmax);
+    fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(wakenmax); //for wake
     impedance_t* z = reinterpret_cast<impedance_t*>(z_fftw);
     impedance_t* zcsrf = reinterpret_cast<impedance_t*>(zcsrf_fftw);
     impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
@@ -80,17 +82,26 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
      *                    * phaseSpace.getDelta<1>()
      *                    * (deltat*omega0 / M_PI) * exp(sigma_z/R)
      *                    = -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
-     *                  * phaseSpace.getDelta<1>()
+         *                    * phaseSpace.getDelta<1>()
      *                    * deltat*frev * exp(sigma_z/R)
      */
-    const double g = - Ib*E0*phasespace->getDelta(1)
-                   * dt*dt*frev*std::exp(bl/rbend)
+        const double g = - Ib*E0*ps->getDelta(1)
+                                   * dt*frev*std::exp(bl/rbend)
                    / (2*M_PI*fs*sigmaE);
 
-    std::copy_n(_impedance->data(),_nmax,z);
+    std::copy_n(_impedance->data(),std::min(wakenmax,_impedance->maxN()),z);
+    if (_impedance->maxN() < wakenmax) {
+        std::stringstream wavenumbers;
+        wavenumbers << "(Known n=" <<_impedance->maxN() << ","
+                       "needed N=" << wakenmax << ")";
+        Display::printText("Warning: Unknown impedance for high wavenumbers. "
+                           +wavenumbers.str());
+        std::fill_n(&z[_impedance->maxN()],wakenmax-_impedance->maxN(),
+                    impedance_t(0));
+    }
 
-    fftwf_plan p3 = prepareFFT( _nmax, z, zcsrf, fft_direction::forward );
-    fftwf_plan p4 = prepareFFT( _nmax, z, zcsrb, fft_direction::backward);
+    fftwf_plan p3 = prepareFFT( wakenmax, z, zcsrf, fft_direction::forward );
+    fftwf_plan p4 = prepareFFT( wakenmax, z, zcsrb, fft_direction::backward);
 
     fftwf_execute(p3);
     fftwf_destroy_plan(p3);
@@ -134,7 +145,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
     return _csrspectrum;
 }
 
-fftwf_plan vfps::ElectricField::prepareFFT(    size_t n, csrpower_t* in,
+fftwf_plan vfps::ElectricField::prepareFFT( size_t n, csrpower_t* in,
                                             impedance_t* out)
 {
     fftwf_plan plan = nullptr;
