@@ -62,10 +62,12 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
 
     /* Marit's original code names eq1 in comment, but it uses eq2.
-     * Patrik's calculations lead to eq3, but somehow one dt seems to be missing
+     * Patrik's calculations lead to eq3, but this does not work
+     * right now, Patrik's result is adjusted the way Marit changed her result
+     *
      *
      *    eq1:
-     *     const double g    = -Ic * phaseSpace.getDelta<0>() / M_PI
+     *     const double g = -Ic * phaseSpace.getDelta<0>() / M_PI
      *                    * (deltat*omega0);
      *
      *    eq2:
@@ -82,12 +84,15 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
      *                    * phaseSpace.getDelta<1>()
      *                    * (deltat*omega0 / M_PI) * exp(sigma_z/R)
      *                    = -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
-         *                    * phaseSpace.getDelta<1>()
+     *                    * phaseSpace.getDelta<1>()
      *                    * deltat*frev * exp(sigma_z/R)
+     *                    = - Ib*E0*ps->getDelta(1)
+     *                    * dt*frev*std::exp(bl/rbend)
+     *                    / (2*M_PI*fs*sigmaE);
      */
-        const double g = - Ib*E0*ps->getDelta(1)
-                                   * dt*frev*std::exp(bl/rbend)
-                   / (2*M_PI*fs*sigmaE);
+     const double g = - Ib*physcons::c*ps->getDelta(1)*dt*std::exp(bl/rbend)
+                    / (2*M_PI*fs*sigmaE*E0);
+
 
     std::copy_n(_impedance->data(),std::min(wakenmax,_impedance->maxN()),z);
     if (_impedance->maxN() < wakenmax) {
@@ -109,8 +114,8 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     fftwf_destroy_plan(p4);
 
     for (size_t i=0; i< _bpmeshcells; i++) {
-        _wakefunction[i             ] = g * zcsrf[_bpmeshcells-1-i].real();
-        _wakefunction[i+_bpmeshcells] = g * zcsrb[i               ].real();
+        _wakefunction[i             ] = g * zcsrf[_bpmeshcells-i].real();
+        _wakefunction[i+_bpmeshcells] = g * zcsrb[i             ].real();
     }
     fftwf_free(z_fftw);
     fftwf_free(zcsrf_fftw);

@@ -122,17 +122,20 @@ void vfps::Display::draw() {
 
 #endif // INOVESA_USE_GUI
 
-void vfps::Display::printText(std::string txt)
+void vfps::Display::printText(std::string txt, bool signOfLife)
 {
-	std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-	std::cout.setf( std::ios::fixed, std:: ios::floatfield );
-	std::cout.precision(3);
-	std::cout
-				<< "[ " << std::setw(9)
-				<< std::chrono::duration<double>(now-start_time).count()
-				<< " ]: "
-				<< txt
-				<< std::endl;
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    if (!signOfLife ||
+        std::chrono::duration<double>(now-_lastmessage).count() > 1.0) {
+        std::cout.setf( std::ios::fixed, std:: ios::floatfield );
+        std::cout.precision(3);
+        std::cout << "[ " << std::setw(9)
+                  << std::chrono::duration<double>(now-start_time).count()
+                  << " ]: "
+                  << txt
+                  << std::endl;
+        _lastmessage = now;
+    }
 }
 
 void vfps::Display::takeElement(vfps::GUIElement* item)
@@ -146,4 +149,6 @@ void vfps::Display::takeElement(vfps::GUIElement* item)
 }
 
 std::chrono::system_clock::time_point vfps::Display::start_time;
+
+std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 

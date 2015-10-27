@@ -67,7 +67,7 @@ public:
 
 	void draw();
 
-	static void printText(std::string txt);
+	static void printText(std::string txt, bool signOfLife=false);
 
 	void takeElement(GUIElement* item);
 
@@ -79,6 +79,8 @@ private:
 	#endif // INOVESA_USE_GUI
 
 	std::vector<GUIElement*> _item;
+
+    static std::chrono::system_clock::time_point _lastmessage;
 };
 
 } // namespace vfps

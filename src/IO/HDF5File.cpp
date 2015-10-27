@@ -59,7 +59,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
 	const std::array<hsize_t,axps_rank> psa_chunkdims
-			= {{1U,ps_size/8U}};
+			= {{1U,std::min(2048U,ps_size)}};
 	axps_prop.setChunk(axps_rank,psa_chunkdims.data());
 	axps_prop.setShuffle();
 	axps_prop.setDeflate(compression);
@@ -96,7 +96,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
 	const std::array<hsize_t,bp_rank> axfreq_chunkdims
-			= {{1U,ps_size/8U}};
+			= {{1U,std::min(2048U,ps_size)}};
 	axfreq_prop.setChunk(axps_rank,axfreq_chunkdims.data());
 	axfreq_prop.setShuffle();
 	axfreq_prop.setDeflate(compression);
@@ -124,7 +124,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 	bc_dataspace = new H5::DataSpace(bc_rank,&bc_dims,&bc_maxdims);
 
-	const hsize_t bc_chunkdims = 8;
+	const hsize_t bc_chunkdims = 256;
 	bc_prop.setChunk(bc_rank,&bc_chunkdims);
 	bc_prop.setShuffle();
 	bc_prop.setDeflate(compression);
@@ -150,7 +150,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 	bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
 	const std::array<hsize_t,bp_rank> bp_chunkdims
-			= {{1U,ps_size/8U}};
+			= {{1U,std::min(2048U,ps_size)}};
 	bp_prop.setChunk(bp_rank,bp_chunkdims.data());
 	bp_prop.setShuffle();
 	bp_prop.setDeflate(compression);
@@ -176,7 +176,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
 	const std::array<hsize_t,csr_rank> csr_chunkdims
-			= {{1U,ps_size/8U}};
+			= {{1U,std::min(2048U,ps_size)}};
 	csr_prop.setChunk(csr_rank,csr_chunkdims.data());
 	csr_prop.setShuffle();
 	csr_prop.setDeflate(compression);
@@ -208,7 +208,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
 	const std::array<hsize_t,ps_rank> ps_chunkdims
-			= {{1U,ps_size/8U,ps_size/8U}};
+			= {{1U,std::min(64U,ps_size),std::min(64U,ps_size)}};
 	ps_prop.setChunk(ps_rank,ps_chunkdims.data());
 	ps_prop.setShuffle();
 	ps_prop.setDeflate(compression);
@@ -228,7 +228,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     imp_dataspace = new H5::DataSpace(imp_rank,&imp_size,&imp_size);
 
-    const hsize_t imp_chunkdims = 8;
+    const hsize_t imp_chunkdims = 4096;
     imp_prop.setChunk(imp_rank,&imp_chunkdims);
     imp_prop.setShuffle();
     imp_prop.setDeflate(compression);
