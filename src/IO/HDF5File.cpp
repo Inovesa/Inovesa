@@ -228,7 +228,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     imp_dataspace = new H5::DataSpace(imp_rank,&imp_size,&imp_size);
 
-    const hsize_t imp_chunkdims = 4096;
+    const hsize_t imp_chunkdims = std::min(hsize_t(4096),imp_size);
     imp_prop.setChunk(imp_rank,&imp_chunkdims);
     imp_prop.setShuffle();
     imp_prop.setDeflate(compression);
@@ -263,7 +263,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     wf_dataspace = new H5::DataSpace(wf_rank,&wf_size,&wf_size);
 
-    const hsize_t wf_chunkdims = 8;
+    const hsize_t wf_chunkdims = std::min(hsize_t(4096),wf_size);
     wf_prop.setChunk(wf_rank,&wf_chunkdims);
     wf_prop.setShuffle();
     wf_prop.setDeflate(compression);
