@@ -122,15 +122,14 @@ void vfps::Display::draw() {
 
 #endif // INOVESA_USE_GUI
 
-void vfps::Display::printText(std::string txt, bool signOfLife)
+void vfps::Display::printText(std::string txt, float silentTime)
 {
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    if (!signOfLife ||
-        std::chrono::duration<double>(now-_lastmessage).count() > 1.0) {
+    if (std::chrono::duration<float>(now-_lastmessage).count() > silentTime) {
         std::cout.setf( std::ios::fixed, std:: ios::floatfield );
         std::cout.precision(3);
         std::cout << "[ " << std::setw(9)
-                  << std::chrono::duration<double>(now-start_time).count()
+                  << std::chrono::duration<float>(now-start_time).count()
                   << " ]: "
                   << txt
                   << std::endl;

@@ -67,7 +67,7 @@ public:
 
 	void draw();
 
-	static void printText(std::string txt, bool signOfLife=false);
+	static void printText(std::string txt, float silentTime=0.0f);
 
 	void takeElement(GUIElement* item);
 
