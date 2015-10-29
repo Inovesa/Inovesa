@@ -59,7 +59,7 @@ public:
 			meshdata_t* data_in = _in->getData();
 			meshdata_t* data_out = _out->getData();
 
-			std::copy_n(data_in,sizeof(meshdata_t)*_xsize,data_out);
+			std::copy_n(data_in,_size,data_out);
 		}
 	}
 };

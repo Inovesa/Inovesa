@@ -1,113 +1,102 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
+ * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #include "HM/WakeKickMap.hpp"
 
+
+
 vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-					const unsigned int xsize, const unsigned int ysize,
-					const std::vector<integral_t> wake,
-					const InterpolationType it) :
-	KickMap(in,out,xsize,ysize,it),
-	_wake(wake)
+                const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
+                const vfps::HeritageMap::InterpolationType it) :
+    KickMap(in,out,xsize,ysize,it),
+    _wakefunction(new meshaxis_t[2*xsize]),
+    _wakesize(2*xsize)
 {
+}
+
+vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+                const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
+                const std::vector<std::pair<meshaxis_t, double>> wakefunction,
+                const InterpolationType it) :
+    WakeKickMap(in,out,xsize,ysize,it)
+{
+    const Ruler<meshaxis_t> xaxis(_wakesize,2*in->getMin(0),2*in->getMax(0));
+    size_t x_other=1;
+    size_t x_mine=0;
+    std::array<interpol_t,4> qic;
+    bool smallwake=false;
+
+    if (xaxis[0] < wakefunction[1].first) {
+        smallwake = true;
+    }
+
+    while (x_mine < _wakesize) {
+        while (xaxis[x_mine] > wakefunction[x_other+1].first) {
+            if (x_other+3 < wakefunction.size()) {
+                x_other++;
+            } else {
+                smallwake = true;
+                break;
+            }
+        }
+        calcCoefficiants(qic.data(),
+                         xaxis[x_mine]-wakefunction[x_other].first,4);
+        _wakefunction[x_mine]   = qic[0]*wakefunction[x_other-1].second
+                                + qic[1]*wakefunction[x_other  ].second
+                                + qic[2]*wakefunction[x_other+1].second
+                                + qic[3]*wakefunction[x_other+2].second;
+        x_mine++;
+    }
+    if (smallwake) {
+        Display::printText("Warning: Given wake to small.");
+    }
+}
+
+vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+                const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
+                               const vfps::ElectricField* csr,
+                               const vfps::HeritageMap::InterpolationType it) :
+    WakeKickMap(in,out,xsize,ysize,it)
+{
+    std::copy_n(csr->getWakefunction(),2*xsize,_wakefunction);
+}
+
+vfps::WakeKickMap::~WakeKickMap()
+{
+    delete [] _wakefunction;
 }
 
 void vfps::WakeKickMap::apply()
 {
-	integral_t* density = _in->projectionToX();
-	for (unsigned int i=0;i<_xsize;i++) {
-		_force[i] = 0;
-		for (unsigned int j=0;j<_xsize;j++) {
-			_force[i] += meshaxis_t(density[j]*_wake[_xsize+i-j]);
-		}
-	}
-
-	// gridpoint matrix used for interpolation
-	hi* ph = new hi[_it];
-
-	// arrays of interpolation coefficients
-	interpol_t* hmc = new interpol_t[_it];
-
-	// translate force into HM
-	for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-		for(unsigned int p_i=0; p_i< _ysize; p_i++) {
-			// interpolation type specific q and p coordinates
-			meshaxis_t pcoord;
-			meshaxis_t qp_int;
-			//Scaled arguments of interpolation functions:
-			unsigned int jd; //numper of lower mesh point from p'
-			interpol_t xip; //distance of p' from lower mesh point
-			pcoord = _force[q_i];
-			xip = modf(pcoord, &qp_int);
-			jd = qp_int;
-
-			if (jd < _ysize)
-			{
-				// create vectors containing interpolation coefficiants
-				switch (_it) {
-				case InterpolationType::none:
-					hmc[0] = 1;
-					break;
-				case InterpolationType::linear:
-					hmc[0] = interpol_t(1)-xip;
-					hmc[1] = xip;
-					break;
-				case InterpolationType::quadratic:
-					hmc[0] = xip*(xip-interpol_t(1))/interpol_t(2);
-					hmc[1] = interpol_t(1)-xip*xip;
-					hmc[2] = xip*(xip+interpol_t(1))/interpol_t(2);
-					break;
-				case InterpolationType::cubic:
-					hmc[0] = (xip-interpol_t(1))*(xip-interpol_t(2))*xip
-							* interpol_t(-1./6.);
-					hmc[1] = (xip+interpol_t(1))*(xip-interpol_t(1))
-							* (xip-interpol_t(2)) / interpol_t(2);
-					hmc[2] = (interpol_t(2)-xip)*xip*(xip+interpol_t(1))
-							/ interpol_t(2);
-					hmc[3] = xip*(xip+interpol_t(1))*(xip-interpol_t(1))
-							* interpol_t(1./6.);
-					break;
-				}
-
-				// renormlize to minimize rounding errors
-//				renormalize(hmc.size(),hmc.data());
-
-				// write heritage map
-				for (unsigned int j1=0; j1<_it; j1++) {
-					unsigned int j0 = jd+j1-(_it-1)/2;
-					if(j0 < _ysize ) {
-						ph[j0].index = q_i*_ysize+j0;
-						ph[j0].weight = hmc[j1];
-					} else {
-						ph[j0].index = 0;
-						ph[j0].weight = 0;
-					}
-					_hinfo[(q_i*_ysize+p_i)*_ip+j1] = ph[j1];
-				}
-			}
-		}
-	}
-
-	delete [] ph;
-	delete [] hmc;
-
-	// call original apply method
-	HeritageMap::apply();
+    #if INOVESA_USE_CL
+    if (OCLH::active) {
+        _in->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+    }
+    #endif
+    integral_t charge = _in->integral();
+    const integral_t* density = _in->getProjection(0);
+    for (unsigned int i=0;i<_xsize;i++) {
+        _force[i] = 0;
+        for (unsigned int j=0;j<_xsize;j++) {
+            _force[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
+        }
+    }
+    updateHM();
+    KickMap::apply();
 }
-

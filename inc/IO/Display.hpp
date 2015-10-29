@@ -35,11 +35,11 @@
 #include <GL/glew.h>
 
 // Include GLFW
-#if GLFW_VERSION_MAJOR == 3
+#if GLFW_VERSION_MAJOR == 3 // GLFW3
 #include <GLFW/glfw3.h>
-#else
+#else // GLFW2
 #include <GL/glfw.h>
-#endif
+#endif // GLFW2
 
 // Include GLM
 #define GLM_FORCE_RADIANS
@@ -67,7 +67,9 @@ public:
 
 	void draw();
 
-	static void printText(std::string txt);
+	static void printText(std::string txt, float silentTime=0.0f);
+
+	void takeElement(GUIElement* item);
 
 private:
 	#ifdef INOVESA_USE_GUI
@@ -76,7 +78,9 @@ private:
 	#endif
 	#endif // INOVESA_USE_GUI
 
-	std::vector<GUIElement*> item;
+	std::vector<GUIElement*> _item;
+
+    static std::chrono::system_clock::time_point _lastmessage;
 };
 
 } // namespace vfps

@@ -27,7 +27,9 @@
 
 #include "defines.hpp"
 #include "ElectricField.hpp"
+#include "Impedance.hpp"
 #include "PhaseSpace.hpp"
+#include "HM/WakeKickMap.hpp"
 
 namespace vfps {
 
@@ -40,9 +42,11 @@ public:
 	 * @param ps_size size of one mesh dimension
 	 * @param maxn maximum index (==wavenumber?) of CSR spectrum
 	 */
-	HDF5File(const std::string fname,
-			 const PhaseSpace* ps,
-			 const ElectricField* ef);
+    HDF5File(const std::string fname,
+             const PhaseSpace* ps,
+             const ElectricField* ef,
+             const Impedance* imp,
+             const WakeKickMap* wkm);
 
 	~HDF5File();
 
@@ -143,6 +147,33 @@ private: // phase space
 	H5::DSetCreatPropList ps_prop;
 
 	meshindex_t ps_size;
+
+private: // impedance
+    static constexpr uint_fast8_t imp_rank = 1;
+
+    H5::DataSet imp_dataset_real;
+    H5::DataSet imp_dataset_imag;
+
+    H5::DataSpace* imp_dataspace;
+
+    H5::DataType imp_datatype;
+
+    hsize_t imp_size;
+
+    H5::DSetCreatPropList imp_prop;
+
+private: // wake function
+    static constexpr uint_fast8_t wf_rank = 1;
+
+    H5::DataSet wf_dataset;
+
+    H5::DataSpace* wf_dataspace;
+
+    H5::DataType wf_datatype;
+
+    hsize_t wf_size;
+
+    H5::DSetCreatPropList wf_prop;
 };
 
 } // namespace vfps

@@ -25,25 +25,34 @@
 namespace vfps
 {
 
+/**
+ * @brief The KickMap class allows to apply position dependent forces
+ *
+ * @todo change to use 1D HeritageMap
+ */
 class KickMap : public HeritageMap
 {
 public:
-	KickMap(PhaseSpace* in, PhaseSpace* out,
-			const unsigned int xsize, const unsigned int ysize,
-			const InterpolationType it);
+    KickMap(PhaseSpace* in, PhaseSpace* out,
+            const meshindex_t xsize, const meshindex_t ysize,
+            const InterpolationType it);
 
-	~KickMap();
+    ~KickMap();
 
 public:
-	void apply();
+    void apply();
 
-	void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);
+    void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);
 
 protected:
-	/**
-	 * @brief _force
-	 */
-	meshaxis_t* _force;
+    /**
+     * @brief _force
+     */
+    meshaxis_t* _force;
+
+    const meshindex_t _meshysize;
+
+    void updateHM();
 };
 
 }
