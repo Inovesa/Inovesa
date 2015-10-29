@@ -52,8 +52,8 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
             const uint meshoffs = x*ysize;
             for (uint j=0; j<hm_len; j++)
             {
-                value += mult(    src[meshoffs+y+hm[hmoffset+j].src-ysize/2],
-                                hm[hmoffset+j].weight);
+                value += mult( src[meshoffs+y+hm[hmoffset+j].src-ysize/2],
+                               hm[hmoffset+j].weight);
             }
             dst[meshoffs+y] = value;
         }

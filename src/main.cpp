@@ -293,9 +293,9 @@ int main(int argc, char** argv)
     HeritageMap* fpm;
     if (e0 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap(    mesh_rotated,mesh_damdiff,ps_size,ps_size,
-                                    FokkerPlanckMap::FPType::full,e0,
-                                    FokkerPlanckMap::DerivationType::cubic);
+        fpm = new FokkerPlanckMap( mesh_rotated,mesh_damdiff,ps_size,ps_size,
+                                   FokkerPlanckMap::FPType::full,e0,
+                                   FokkerPlanckMap::DerivationType::cubic);
     } else {
         fpm = new Identity(mesh_rotated,mesh_damdiff,ps_size,ps_size);
     }
