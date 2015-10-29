@@ -127,8 +127,10 @@ int main(int argc, char** argv)
         for (meshindex_t x = 0; x < ps_size; x++) {
             for (meshindex_t y = 0; y < ps_size; y++) {
                 (*mesh)[x][y]
-                    = std::exp(-std::pow((float(x)/ps_size-0.5f)*2*qmax,2.0f)/2.0f)
-                    * std::exp(-std::pow((float(y)/ps_size-0.5f)*2*pmax,2.0f)/2.0f);
+                    = std::exp(-std::pow((float(x)/ps_size-0.5f)*2*qmax,2.0f)
+                               /2.0f)
+                    * std::exp(-std::pow((float(y)/ps_size-0.5f)*2*pmax,2.0f)
+                               /2.0f);
             }
         }
     } else {
