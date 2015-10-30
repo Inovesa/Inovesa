@@ -30,12 +30,14 @@ vfps::ProgramOptions::ProgramOptions() :
     pq_max(5.0),
     steps(4000),
     rotations(1),
+    E_0(1.3e9),
     f_s(8.5e3),
     f_rev(2.7e6),
     I_b(1),
     t_d(0.01),
     r_bend(1.0),
     s_0(1.0e-3),
+    s_E(4.7e-4),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),
@@ -51,18 +53,22 @@ vfps::ProgramOptions::ProgramOptions() :
         ("tdamp,d", po::value<double>(&t_d),"Damping time (s)")
         ("NaturalBunchLength,l", po::value<double>(&s_0),
             "Naural RMS Bunch Length (m)")
-        ("initial-dist,D", po::value<std::string>(&_startdistfile),
+        ("InitialDist,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
             "\tgrayscale png (.png) file containing initial particle density\n"
             "\ttext file (.txt) containing normalized z/delta of particles")
-        ("bunchcurrent,I", po::value<double>(&I_b),
+        ("BunchCurrent,I", po::value<double>(&I_b),
             "Current of a single electron bunch (A)")
-        ("bendingradius,R", po::value<double>(&r_bend),
+        ("BendingRadius,R", po::value<double>(&r_bend),
             "Bending radius of accelerator (m)")
-        ("impedance,Z", po::value<std::string>(&_impedancefile),
+        ("BeamEnergy,E", po::value<double>(&E_0),
+            "Beam energy (GeV)")
+        ("BeamEnergySpread,e", po::value<double>(&s_E),
+            "Natural energy spread (relative)")
+        ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information. Might be:\n"
             "\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
-        ("wakefunction,w", po::value<std::string>(&_wakefile),
+        ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing information on wake function.")
     ;
     _programopts_file.add_options()
@@ -96,7 +102,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Factor to use for zero padding of bunch profile, 0/1: no padding")
         ("PhaseSpaceSize,s", po::value<double>(&pq_max),
             "Size of phase Space (maximum sigma_{p/q})")
-        ("rotations,T", po::value<float>(&rotations),
+        ("rotations,T", po::value<double>(&rotations),
             "Simulated time (in number of synchrotron periods)")
     ;
     _cfgfileopts.add(_physopts);
@@ -149,4 +155,45 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     #endif
 
     return true;
+}
+
+void vfps::ProgramOptions::save(std::string fname)
+{
+    std::ofstream ofs(fname.c_str());
+
+    ofs << "#Inovesa v"
+        << INOVESA_VERSION_RELEASE << '.'
+        << INOVESA_VERSION_MINOR << '.'
+        << INOVESA_VERSION_FIX
+        << std::endl;
+
+    for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
+        if (!it->second.value().empty() && !_vm[it->first].defaulted()) {
+            if (it->second.value().type() == typeid(double)) {
+                ofs << it->first << '='
+                    << _vm[it->first].as<double>()
+                    << std::endl;
+            } else if (it->second.value().type() == typeid(unsigned int)) {
+                ofs << it->first << '='
+                    << _vm[it->first].as<unsigned int>()
+                    << std::endl;
+            } else if (it->second.value().type() == typeid(int)) {
+                ofs << it->first << '='
+                    << _vm[it->first].as<int>()
+                    << std::endl;
+            } else if (it->second.value().type() == typeid(bool)) {
+                ofs << it->first << '='
+                    << _vm[it->first].as<bool>()
+                    << std::endl;
+            } else {
+                std::string val;
+                try {
+                    val = _vm[it->first].as<std::string>();
+                    ofs << it->first << '='
+                        << val
+                        << std::endl;
+                } catch(const boost::bad_any_cast &){}
+            }
+        }
+    }
 }

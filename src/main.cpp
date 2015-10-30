@@ -70,6 +70,8 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    opts.save("foo.cfg");
+
     std::string timestring = sstream.str();
     timestring.resize(timestring.size()-1);
 
@@ -324,8 +326,8 @@ int main(int argc, char** argv)
     } else {
         double Ib = opts.getBunchCurrent();
         double bl = opts.getNaturalBunchLength();
-        double E0 = 1.3e9;
-        double sigmaE = 4.7e-4;
+        double E0 = opts.getBeamEnergy();
+        double sigmaE = opts.getEnergySpread();
         double f0 = opts.getRevolutionFrequency();
         double rb = opts.getBendingRadius();
         Display::printText("Calculating WakeFunction.");
@@ -336,10 +338,14 @@ int main(int argc, char** argv)
     }
 
     HDF5File* file = nullptr;
-    if ( isOfFileType(".h5",opts.getOutFile())) {
-        file = new HDF5File(opts.getOutFile(),mesh,field,impedance,
+    std::string ofname = opts.getOutFile();
+    if ( isOfFileType(".h5",ofname)) {
+        std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
+        opts.save(cfgname);
+        Display::printText("Saved configuiration to: \""+cfgname+'\"');
+        file = new HDF5File(ofname,mesh,field,impedance,
                             static_cast<WakeKickMap*>(wkm));
-        Display::printText("Will save results to: \""+opts.getOutFile()+'\"');
+        Display::printText("Will save results to: \""+ofname+'\"');
     } else {
         Display::printText("Will not save results.");
     }

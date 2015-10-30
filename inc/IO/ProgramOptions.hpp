@@ -41,6 +41,9 @@ public:
 
     bool parse(int argc, char** argv);
 
+    void save(std::string fname);
+
+public:
     inline int getCLDevice() const
         { return _cldevice; }
 
@@ -79,11 +82,17 @@ public:
         { return pq_max; }
 
 public:
+    inline double getBeamEnergy() const
+        { return E_0; }
+
     inline double getBendingRadius() const
         { return r_bend; }
 
     inline double getBunchCurrent() const
         { return I_b; }
+
+    inline double getEnergySpread() const
+        { return s_E; }
 
     inline double getNaturalBunchLength() const
         { return s_0; }
@@ -118,15 +127,17 @@ private: // simulation parameters
     unsigned int padding;
     double pq_max;
     unsigned int steps;
-    float rotations;
+    double rotations;
 
 private: // phsical parameters
+    double E_0;
     double f_s;
     double f_rev;
     double I_b;
     double t_d;
     double r_bend;
     double s_0;
+    double s_E;
 
 private:
     po::options_description _cfgfileopts;

@@ -97,8 +97,8 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     std::copy_n(_impedance->data(),std::min(wakenmax,_impedance->maxN()),z);
     if (_impedance->maxN() < wakenmax) {
         std::stringstream wavenumbers;
-        wavenumbers << "(Known n=" <<_impedance->maxN() << ","
-                       "needed N=" << wakenmax << ")";
+        wavenumbers << "(Known: n=" <<_impedance->maxN()
+                    << ", needed: N=" << wakenmax << ")";
         Display::printText("Warning: Unknown impedance for high wavenumbers. "
                            +wavenumbers.str());
         std::fill_n(&z[_impedance->maxN()],wakenmax-_impedance->maxN(),
