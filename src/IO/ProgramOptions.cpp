@@ -100,8 +100,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Save results/ update phase space view every n steps")
         ("padding,p", po::value<unsigned int>(&padding),
             "Factor to use for zero padding of bunch profile, 0/1: no padding")
-        ("PhaseSpaceSize,s", po::value<double>(&pq_max),
-            "Size of phase Space (maximum sigma_{p/q})")
+        ("PhaseSpaceSize,P", po::value<double>(&pq_max),
+            "Size of phase space (maximum sigma_{p/q})")
+        ("meshsize,s", po::value<unsigned int>(&meshsize),
+            "Size of phase space mesh (number of p/q mesh points)")
         ("rotations,T", po::value<double>(&rotations),
             "Simulated time (in number of synchrotron periods)")
     ;

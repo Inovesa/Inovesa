@@ -178,7 +178,7 @@ int main(int argc, char** argv)
     } else
     #endif // INOVESA_USE_PNG
     if (isOfFileType(".txt",startdistfile)) {
-        ps_size = 512;
+        ps_size = opts.getMeshSize();
         mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
                               opts.getNaturalBunchLength());
 
@@ -331,7 +331,8 @@ int main(int argc, char** argv)
         double f0 = opts.getRevolutionFrequency();
         double rb = opts.getBendingRadius();
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb,2048);
+        field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb,
+                                  8u*ps_size);
         Display::printText("Building WakeKickMap.");
         wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
                               field,WakeKickMap::InterpolationType::cubic);

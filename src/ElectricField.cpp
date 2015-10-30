@@ -62,9 +62,6 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
 
     /* Marit's original code names eq1 in comment, but it uses eq2.
-     * Patrik's calculations lead to eq3, but this does not work
-     * right now, Patrik's result is adjusted the way Marit changed her result
-     *
      *
      *    eq1:
      *     const double g = -Ic * phaseSpace.getDelta<0>() / M_PI
@@ -76,22 +73,9 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
      *
      * Marit's comment:
      * !!! omega0 is here a function of R !!!, deltat in Einheiten von 2*pi?
-     *
-     *  eq3:
-     *  const double g    = -Ic * phaseSpace.getDelta<1>() / M_PI
-     *                    * (deltat*omega0) * exp(sigma_z/R)
-     *                    = -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
-     *                    * phaseSpace.getDelta<1>()
-     *                    * (deltat*omega0 / M_PI) * exp(sigma_z/R)
-     *                    = -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
-     *                    * phaseSpace.getDelta<1>()
-     *                    * deltat*frev * exp(sigma_z/R)
-     *                    = - Ib*E0*ps->getDelta(1)
-     *                    * dt*frev*std::exp(bl/rbend)
-     *                    / (2*M_PI*fs*sigmaE);
      */
-     const double g = - Ib*physcons::c*ps->getDelta(1)*dt*std::exp(bl/rbend)
-                    / (2*M_PI*fs*sigmaE*E0);
+     const double g = - Ib*physcons::c*ps->getDelta(1)*dt
+                    / (2*M_PI*fs*sigmaE*E0)/(M_PI*rbend);
 
 
     std::copy_n(_impedance->data(),std::min(wakenmax,_impedance->maxN()),z);
