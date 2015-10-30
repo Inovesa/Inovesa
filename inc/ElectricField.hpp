@@ -59,9 +59,8 @@ public:
      * @param rbend bending radius [m]
      */
     ElectricField(PhaseSpace* ps, const Impedance* impedance,
-                  const double Ib, const double bl,
-                  const double E0, const double sigmaE,
-                  const double fs, const double frev,
+                  const double Ib, const double E0,
+                  const double sigmaE, const double fs,
                   const double dt, const double rbend,
                   const size_t nmax=0);
 

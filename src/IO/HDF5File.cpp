@@ -103,10 +103,10 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 	axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
 											*axfreq_dataspace,axfreq_prop);
-	const double axfreqscale = GSL_CONST_MKS_SPEED_OF_LIGHT/ax0scale;
+    const double axfreqscale = imp->getRuler()->scale();
 	axfreq_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
 		H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
-	axfreq_dataset.write(ef->getRuler()->data(),axfreq_datatype);
+    axfreq_dataset.write(imp->getRuler()->data(),axfreq_datatype);
 
 
 	// get ready to save BunchCharge
@@ -218,6 +218,8 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     // save Impedance
     file->createGroup("Impedance");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/Impedance/axis0" );
+
     if (std::is_same<vfps::impedance_t,std::complex<float>>::value) {
         imp_datatype = H5::PredType::IEEE_F32LE;
     } else if (std::is_same<vfps::impedance_t,std::complex<fixp64>>::value) {

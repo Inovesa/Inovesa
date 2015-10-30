@@ -19,14 +19,11 @@
 
 #include "Impedance.hpp"
 
-vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model,
-                           size_t n, bool roundup)
+vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
+                           double f_rev, double deltaf, bool roundup) :
+    _nmax(roundup? upper_power_of_two(n) : n),
+    _axis(Ruler<frequency_t>(_nmax,0,(_nmax-1)*deltaf,1))
 {
-    if (roundup) {
-           _nmax = upper_power_of_two(n);
-    } else {
-        _nmax = n;
-    }
     _data.reserve(_nmax);
 
     // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
@@ -35,25 +32,39 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model,
     switch (model) {
     case ImpedanceModel::FreeSpace:
         for (size_t i=0; i<_nmax; i++) {
-            _data.push_back(freespacecoeff*std::pow(csrpower_t(i),
+            _data.push_back(freespacecoeff*std::pow(csrpower_t(i*deltaf/f_rev),
                                                     csrpower_t(1.0/3.0)));
         }
     break;
     }
 }
 
-vfps::Impedance::Impedance(std::string datafile)
+vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
+                           double deltaf) :
+    _nmax(z.size()),
+    _axis(Ruler<frequency_t>(_nmax,0,(_nmax-1)*deltaf,1)),
+    _data(z)
 {
-    std::ifstream is(datafile);
+}
+
+vfps::Impedance::Impedance(std::string datafile, double deltaf) :
+    Impedance(readData(datafile),deltaf)
+{
+}
+
+std::vector<vfps::impedance_t> vfps::Impedance::readData(std::string fname)
+{
+    std::vector<vfps::impedance_t> rv;
+    std::ifstream is(fname);
     size_t lineno;
     double real;
     double imag;
 
     while(is.good()) {
         is >> lineno >> real >> imag;
-        _data.push_back(impedance_t(real,imag));
+        rv.push_back(impedance_t(real,imag));
     }
-    _nmax = _data.size();
+    return rv;
 }
 
 uint64_t vfps::Impedance::upper_power_of_two(uint64_t v)

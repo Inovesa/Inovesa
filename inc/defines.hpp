@@ -56,6 +56,7 @@ typedef float data_t;
 typedef data_t csrpower_t;
 typedef std::complex<csrpower_t> impedance_t;
 
+typedef data_t frequency_t;
 typedef data_t meshaxis_t;
 typedef data_t meshdata_t;
 typedef data_t interpol_t;

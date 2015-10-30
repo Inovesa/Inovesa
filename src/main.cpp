@@ -228,16 +228,22 @@ int main(int argc, char** argv)
     }
     }
 
+    double bl = opts.getNaturalBunchLength();
+    double f0 = opts.getRevolutionFrequency();
+    unsigned int padding =opts.getPadding();
+
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
         Display::printText("No impedance file given. "
                            "Will use free space impedance.");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
-                                  ps_size*std::max(opts.getPadding(),1u));
+                                  ps_size*std::max(padding,1u),f0,
+                                  vfps::physcons::c/(2*qmax*bl*padding));
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
-        impedance = new Impedance(opts.getImpedanceFile());
+        impedance = new Impedance(opts.getImpedanceFile(),
+                                  vfps::physcons::c/(2*qmax*bl*padding));
         if (impedance->maxN() < ps_size) {
             Display::printText("No valid impedance file. "
                                "Will now quit.");
@@ -325,14 +331,12 @@ int main(int argc, char** argv)
                               wake,WakeKickMap::InterpolationType::cubic);
     } else {
         double Ib = opts.getBunchCurrent();
-        double bl = opts.getNaturalBunchLength();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
-        double f0 = opts.getRevolutionFrequency();
         double rb = opts.getBendingRadius();
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb,
-                                  8u*ps_size);
+        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,f_s,dt,rb,
+                                  padding*ps_size);
         Display::printText("Building WakeKickMap.");
         wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
                               field,WakeKickMap::InterpolationType::cubic);
