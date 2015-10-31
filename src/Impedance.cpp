@@ -29,13 +29,13 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
     // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
     constexpr impedance_t freespacecoeff = impedance_t(250.1,176.9);
 
-    // frequency resolution: impedance will be sampled at multiples of deltaf
-    const frequency_t deltaf = f_max/f_rev*(_nmax/(_nmax-1.0));
+    // frequency resolution: impedance will be sampled at multiples of delta
+    const frequency_t delta = f_max/f_rev/(_nmax-1.0);
 
     switch (model) {
     case ImpedanceModel::FreeSpace:
         for (size_t i=0; i<_nmax; i++) {
-            _data.push_back(freespacecoeff*std::pow(i*deltaf,
+            _data.push_back(freespacecoeff*std::pow(i*delta,
                                                     csrpower_t(1.0/3.0)));
         }
     break;
