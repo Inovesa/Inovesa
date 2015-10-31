@@ -238,12 +238,12 @@ int main(int argc, char** argv)
                            "Will use free space impedance.");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
                                   ps_size*std::max(padding,1u),f0,
-                                  vfps::physcons::c/(2*qmax*bl*padding));
+                                  ps_size*vfps::physcons::c/(2*qmax*bl));
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
         impedance = new Impedance(opts.getImpedanceFile(),
-                                  vfps::physcons::c/(2*qmax*bl*padding));
+                                  ps_size*vfps::physcons::c/(2*qmax*bl));
         if (impedance->maxN() < ps_size) {
             Display::printText("No valid impedance file. "
                                "Will now quit.");

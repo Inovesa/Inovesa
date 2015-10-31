@@ -42,21 +42,21 @@ public:
 	 * @brief Impedance
 	 * @param model
      * @param n compute (at least) to n=f*f_nyq/f_rev,
-	 *        where f_rev is the revolution frequency
-     *        and deltaf is the frequency resolution
+     *        where f_rev is the revolution frequency
+     *        and f_max is maximum frequency
 	 * @param roundup round to next 2^N
 	 */
-    Impedance(ImpedanceModel model, size_t n, double f_rev, double deltaf,
+    Impedance(ImpedanceModel model, size_t n, double f_rev, double f_max,
               bool roundup=true);
 
-    Impedance(const std::vector<impedance_t>& z, double deltaf);
+    Impedance(const std::vector<impedance_t>& z, double f_max);
 
     /**
      * @brief Impedance
      * @param name of datafile in the format "n Re(Z) Im(Z)",
      *        where n=f/f_rev is the revolution harmonic
      */
-    Impedance(std::string datafile, double deltaf);
+    Impedance(std::string datafile, double f_max);
 
     inline const impedance_t* data() const
 		{ return _data.data(); }

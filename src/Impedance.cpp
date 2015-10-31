@@ -20,19 +20,22 @@
 #include "Impedance.hpp"
 
 vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
-                           double f_rev, double deltaf, bool roundup) :
+                           double f_rev, double f_max, bool roundup) :
     _nmax(roundup? upper_power_of_two(n) : n),
-    _axis(Ruler<frequency_t>(_nmax,0,(_nmax-1)*deltaf,1))
+    _axis(Ruler<frequency_t>(_nmax,0,f_max,1))
 {
     _data.reserve(_nmax);
 
     // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
     constexpr impedance_t freespacecoeff = impedance_t(250.1,176.9);
 
+    // frequency resolution: impedance will be sampled at multiples of deltaf
+    const frequency_t deltaf = f_max/f_rev*(_nmax/(_nmax-1.0));
+
     switch (model) {
     case ImpedanceModel::FreeSpace:
         for (size_t i=0; i<_nmax; i++) {
-            _data.push_back(freespacecoeff*std::pow(csrpower_t(i*deltaf/f_rev),
+            _data.push_back(freespacecoeff*std::pow(i*deltaf,
                                                     csrpower_t(1.0/3.0)));
         }
     break;
@@ -40,15 +43,15 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
 }
 
 vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
-                           double deltaf) :
+                           double f_max) :
     _nmax(z.size()),
-    _axis(Ruler<frequency_t>(_nmax,0,(_nmax-1)*deltaf,1)),
+    _axis(Ruler<frequency_t>(_nmax,0,f_max,1)),
     _data(z)
 {
 }
 
-vfps::Impedance::Impedance(std::string datafile, double deltaf) :
-    Impedance(readData(datafile),deltaf)
+vfps::Impedance::Impedance(std::string datafile, double f_max) :
+    Impedance(readData(datafile),f_max)
 {
 }
 
