@@ -96,8 +96,8 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     fftwf_destroy_plan(p4);
 
     for (size_t i=0; i< _bpmeshcells; i++) {
-        _wakefunction[i             ] = g * zcsrf[_bpmeshcells-i].real();
-        _wakefunction[i+_bpmeshcells] = g * zcsrb[i             ].real();
+        _wakefunction[_bpmeshcells-i] = g * zcsrf[i].real();
+        _wakefunction[i+_bpmeshcells] = g * zcsrb[i].real();
     }
     fftwf_free(z_fftw);
     fftwf_free(zcsrf_fftw);
