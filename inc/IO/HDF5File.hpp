@@ -54,6 +54,8 @@ public:
 
 	void append(const PhaseSpace* ps);
 
+    void append(const WakeKickMap *km);
+
 private:
 	H5::H5File* file;
 
@@ -117,6 +119,19 @@ private: // bunch profile
 	std::array<hsize_t,bp_rank> bp_dims;
 
 	H5::DSetCreatPropList bp_prop;
+
+private: // wake potential
+    static constexpr uint_fast8_t wp_rank = 2;
+
+    H5::DataSet wp_dataset;
+
+    H5::DataSpace* wp_dataspace;
+
+    H5::IntType wp_datatype;
+
+    std::array<hsize_t,wp_rank> wp_dims;
+
+    H5::DSetCreatPropList wp_prop;
 
 private: // csr spectrum
 	static constexpr uint_fast8_t csr_rank = 2;

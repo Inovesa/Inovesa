@@ -28,6 +28,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 	fname( fname ),
 	bc_dims( 0 ),
 	bp_dims( {{ 0, ps->nMeshCells(0) }} ),
+    wp_dims( {{ 0, ps->nMeshCells(0) }} ),
 	csr_dims( {{ 0, ef->getNMax() }} ),
     maxn( ef->getNMax() ),
 	ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
@@ -157,6 +158,32 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 	bp_dataset = file->createDataSet("/BunchProfile/data",bp_datatype,
 											*bp_dataspace,bp_prop);
+
+    // get ready to save WakePotential
+    file->createGroup("WakePotential");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/WakePotential/axis0" );
+
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+        wp_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+        wp_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+        wp_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    const std::array<hsize_t,wp_rank> wp_maxdims
+            = {{H5S_UNLIMITED,ps_size}};
+
+    wp_dataspace = new H5::DataSpace(wp_rank,wp_dims.data(),wp_maxdims.data());
+
+    const std::array<hsize_t,wp_rank> wp_chunkdims
+            = {{1U,std::min(2048U,ps_size)}};
+    wp_prop.setChunk(wp_rank,wp_chunkdims.data());
+    wp_prop.setShuffle();
+    wp_prop.setDeflate(compression);
+
+    wp_dataset = file->createDataSet("/WakePotential/data",wp_datatype,
+                                     *wp_dataspace,wp_prop);
 
 	// get ready to save CSR Spectrum
 	file->createGroup("CSR-Spectrum");
@@ -356,4 +383,21 @@ void vfps::HDF5File::append(const PhaseSpace* ps)
 	bc_dataset.write(&bunchcharge, bc_datatype,*memspace, *filespace);
 	delete memspace;
 	delete filespace;
+}
+
+void vfps::HDF5File::append(const WakeKickMap* wkm)
+{
+    // append WakePotential
+    std::array<hsize_t,wp_rank> wp_offset
+            = {{wp_dims[0],0}};
+    const std::array<hsize_t,wp_rank> wp_ext
+            = {{1,ps_size}};
+    wp_dims[0]++;
+    wp_dataset.extend(wp_dims.data());
+    H5::DataSpace* filespace = new H5::DataSpace(wp_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, wp_ext.data(), wp_offset.data());
+    H5::DataSpace* memspace = new H5::DataSpace(wp_rank,wp_ext.data(),nullptr);
+    wp_dataset.write(wkm->getForce(), wp_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
 }

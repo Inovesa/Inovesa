@@ -311,7 +311,7 @@ int main(int argc, char** argv)
     }
 
     ElectricField* field = nullptr;
-    HeritageMap* wkm = nullptr;
+    WakeKickMap* wkm = nullptr;
     std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
@@ -348,8 +348,7 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh,field,impedance,
-                            static_cast<WakeKickMap*>(wkm));
+        file = new HDF5File(ofname,mesh,field,impedance,wkm);
         Display::printText("Will save results to: \""+ofname+'\"');
     } else {
         Display::printText("Will not save results.");
@@ -388,6 +387,7 @@ int main(int argc, char** argv)
                 file->append(mesh);
                 field->updateCSRSpectrum();
                 file->append(field);
+                file->append(wkm);
             }
             #ifdef INOVESA_USE_GUI
             if (psv != nullptr) {
