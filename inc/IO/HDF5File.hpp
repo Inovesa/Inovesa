@@ -54,7 +54,7 @@ public:
 
 	void append(const PhaseSpace* ps);
 
-    void append(const WakeKickMap *km);
+    void append(const WakeKickMap* wkm);
 
 private:
 	H5::H5File* file;
