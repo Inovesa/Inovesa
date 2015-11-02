@@ -113,6 +113,8 @@ int main(int argc, char** argv)
     PhaseSpace* mesh;
     meshindex_t ps_size;
     const double qmax = opts.getPhaseSpaceSize();
+    const double qmin = -qmax;
+    const double pmin = qmin;
     const double pmax = qmax;
 
     std::string startdistfile = opts.getStartDistFile();
@@ -124,7 +126,7 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         Display::printText("Generating (gaussian) initial distribution.");
-        mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                               opts.getNaturalBunchLength());
         for (meshindex_t x = 0; x < ps_size; x++) {
             for (meshindex_t y = 0; y < ps_size; y++) {
@@ -158,7 +160,7 @@ int main(int argc, char** argv)
         if (image.get_width() == image.get_height()) {
             ps_size = image.get_width();
 
-            mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+            mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                                   opts.getNaturalBunchLength());
 
             for (unsigned int x=0; x<ps_size; x++) {
@@ -179,7 +181,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_PNG
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
-        mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                               opts.getNaturalBunchLength());
 
         std::ifstream ifs;
@@ -238,7 +240,7 @@ int main(int argc, char** argv)
                            "Will use free space impedance.");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
                                   ps_size*std::max(padding,1u),f0,
-                                  ps_size*vfps::physcons::c/(2*qmax*bl));
+                                  ps_size*vfps::physcons::c/(2*qmax*bl),false);
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
@@ -411,6 +413,7 @@ int main(int argc, char** argv)
         file->append(mesh);
         field->updateCSRSpectrum();
         file->append(field);
+        file->append(wkm);
     }
     if (!opts.showPhaseSpace()) {
         std::stringstream status;
