@@ -75,8 +75,11 @@ public:
     inline size_t getNMax() const
         { return _nmax; }
 
-    inline const Ruler<meshaxis_t>* getRuler() const
-        { return &_axis; }
+    inline const Ruler<meshaxis_t>* getFreqRuler() const
+        { return &_axis_freq; }
+
+    inline const Ruler<meshaxis_t>* getWakeRuler() const
+        { return &_axis_wake; }
 
     csrpower_t* updateCSRSpectrum();
 
@@ -96,11 +99,13 @@ private:
 private:
     size_t _nmax;
 
-    const Ruler<meshaxis_t> _axis;
+    const size_t _bpmeshcells;
+
+    const Ruler<meshaxis_t> _axis_freq;
+
+    const Ruler<meshaxis_t> _axis_wake;
 
     PhaseSpace* _phasespace;
-
-    const size_t _bpmeshcells;
 
     csrpower_t* _csrspectrum;
 
@@ -115,8 +120,6 @@ private:
     fftwf_complex* _bp_fourier_fftw;
 
     fftwf_plan _ft_bunchprofile;
-
-    const Ruler<meshaxis_t>* _spaceinfo;
 
     meshaxis_t* _wakefunction;
 };

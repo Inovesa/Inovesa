@@ -23,12 +23,15 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
                                    const Impedance* impedance,
                                    const size_t nmax) :
     _nmax(nmax > 0 ? nmax : impedance->maxN()),
-    _axis(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
-    _phasespace(phasespace),
     _bpmeshcells(phasespace->nMeshCells(0)),
+    _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
+    _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
+                                 -phasespace->getDelta(0)*_bpmeshcells,
+                                  phasespace->getDelta(0)*(_bpmeshcells-1),
+                                 phasespace->getScale(0))),
+    _phasespace(phasespace),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
-    _spaceinfo(phasespace->getRuler(0)),
     _wakefunction(nullptr)
 {
     _bp_padded_fftw = fftwf_alloc_real(2*_nmax);
@@ -95,10 +98,16 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     fftwf_execute(p4);
     fftwf_destroy_plan(p4);
 
+    /* This method works like a DFT of Z with Z(-n) = Z*(n).
+     *
+     * the element _wakefunction[_bpmeshcells] represents the self interaction
+     * set this element (q==0) to zero to make the function anti-semetric
+     */
     _wakefunction[0] = 0;
     for (size_t i=0; i< _bpmeshcells; i++) {
-        _wakefunction[_bpmeshcells-1-i] = g * zcsrf[i].real();
-        _wakefunction[_bpmeshcells  +i] = g * zcsrb[i].real();
+        // zcsrf[0].real() == zcsrb[0].real(), see comment above
+        _wakefunction[_bpmeshcells-i] = g * zcsrf[i].real();
+        _wakefunction[_bpmeshcells+i] = g * zcsrb[i].real();
     }
     fftwf_free(z_fftw);
     fftwf_free(zcsrf_fftw);
@@ -118,9 +127,7 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-    std::copy_n(_phasespace->projectionToX(),
-                _spaceinfo->steps(),
-                _bp_padded);
+    std::copy_n(_phasespace->projectionToX(),_bpmeshcells,_bp_padded);
 
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);
