@@ -34,20 +34,20 @@ class Impedance
 {
 public:
 	enum class ImpedanceModel : uint_fast8_t {
-		FreeSpace = 0
+		FreeSpaceCSR = 0
 	};
 
 public:
-	/**
-	 * @brief Impedance
-	 * @param model
+    /**
+     * @brief Impedance
+     * @param model currently only FreeSpaceCSR is implemented
      * @param n compute (at least) to n=f*f_nyq/f_rev,
      *        where f_rev is the revolution frequency
      *        and f_max is maximum frequency
-	 * @param roundup round to next 2^N
-	 */
+     * @param roundup round to next 2^N
+     */
     Impedance(ImpedanceModel model, size_t n, double f_rev, double f_max,
-              bool roundup=true);
+              bool roundup=false);
 
     Impedance(const std::vector<impedance_t>& z, double f_max);
 
@@ -59,7 +59,7 @@ public:
     Impedance(std::string datafile, double f_max);
 
     inline const impedance_t* data() const
-		{ return _data.data(); }
+        { return _data.data(); }
 
     inline const std::vector<impedance_t>& impedance() const
         { return _data; }

@@ -25,6 +25,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _nmax(nmax > 0 ? nmax : impedance->maxN()),
     _bpmeshcells(phasespace->nMeshCells(0)),
     _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
+    // _axis_wake[_bpmeshcells] will be 0
     _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
                                  -phasespace->getDelta(0)*_bpmeshcells,
                                   phasespace->getDelta(0)*(_bpmeshcells-1),

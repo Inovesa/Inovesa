@@ -33,7 +33,7 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
     const frequency_t delta = f_max/f_rev/(_nmax-1.0);
 
     switch (model) {
-    case ImpedanceModel::FreeSpace:
+    case ImpedanceModel::FreeSpaceCSR:
         for (size_t i=0; i<_nmax; i++) {
             _data.push_back(freespacecoeff*std::pow(i*delta,
                                                     csrpower_t(1.0/3.0)));

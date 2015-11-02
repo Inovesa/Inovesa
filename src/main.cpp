@@ -236,9 +236,9 @@ int main(int argc, char** argv)
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
-        Display::printText("No impedance file given. "
-                           "Will use free space impedance.");
-        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
+        Display::printText("Will use free space CSR impedance. "
+                           "(Give impedance file for other impedance model.)");
+        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
                                   ps_size*std::max(padding,1u),f0,
                                   ps_size*vfps::physcons::c/(2*qmax*bl),false);
     } else {
@@ -353,7 +353,7 @@ int main(int argc, char** argv)
         file = new HDF5File(ofname,mesh,field,impedance,wkm);
         Display::printText("Will save results to: \""+ofname+'\"');
     } else {
-        Display::printText("Will not save results.");
+        Display::printText("Information: Will not save results.");
     }
 
     #ifdef INOVESA_USE_CL
