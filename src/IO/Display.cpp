@@ -45,9 +45,9 @@ vfps::Display::Display()
 	// Open a window and create its OpenGL context
 	#if GLFW_VERSION_MAJOR < 3
 	glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
-	glfwSetWindowTitle("Inovesa");
+    glfwSetWindowTitle("Inovesa (GL3)");
 	#else // GLFW3
-	window = glfwCreateWindow( 512, 512, "Inovesa", NULL, NULL);
+    window = glfwCreateWindow( 512, 512, "Inovesa (GL3)", NULL, NULL);
 	if( window == nullptr ) {
 		GUIElement::glversion = 2;
 
@@ -57,7 +57,7 @@ vfps::Display::Display()
 		glfwWindowHint(GLFW_SAMPLES, 4);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-		window = glfwCreateWindow( 512, 512, "Phace Space View", NULL, NULL);
+        window = glfwCreateWindow( 512, 512, "Inovesa (GL2)", NULL, NULL);
 
 		if( window == nullptr ) {
 			std::cerr << "Failed to initialize GLFW." << std::endl;
