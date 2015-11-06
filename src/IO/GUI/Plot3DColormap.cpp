@@ -79,7 +79,7 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Get a handle for our "myTextureSampler" uniform
-	TextureID = glGetUniformLocation(programID, "myTextureSampler");
+    TextureID = glGetUniformLocation(programID, "textureSampler3DCM");
 }
 
 void vfps::Plot3DColormap::delTexture()
@@ -96,11 +96,11 @@ void vfps::Plot3DColormap::draw()
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Texture);
-	// Set our "myTextureSampler" sampler to user Texture Unit 0
-	glUniform1i(TextureID, 0);
+    // Set "textureSampler3DCM" sampler to user Texture Unit 0
+    glUniform1i(TextureID, 0);
 
 	// 1rst attribute buffer : vertices
-	glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glVertexAttribPointer(
 		0,				  // attribute. No particular reason for 0, but must match the layout in the shader.
@@ -112,7 +112,7 @@ void vfps::Plot3DColormap::draw()
 	);
 
 	// 2nd attribute buffer : UVs
-	glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
 	glVertexAttribPointer(
 		1,								// attribute. No particular reason for 1, but must match the layout in the shader.

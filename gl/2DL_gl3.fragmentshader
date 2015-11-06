@@ -1,0 +1,7 @@
+#version 330 core
+out vec3 color2DL;
+ 
+void main(){
+    color2DL = vec3(1,0,0);
+}
+
