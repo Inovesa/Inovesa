@@ -359,17 +359,28 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_GUI
     Plot2DLine* bpv = nullptr;
     Plot3DColormap* psv = nullptr;
-    if (opts.showPhaseSpace()) {
+    bool gui = opts.showPhaseSpace();
+    if (gui) {
         try {
-            bpv = new Plot2DLine();
             psv = new Plot3DColormap();
             display->addElement(psv);
-            display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             display->takeElement(psv);
             delete psv;
             psv = nullptr;
+            gui = false;
+        }
+    }
+    if (gui) {
+        try {
+            bpv = new Plot2DLine();
+            display->addElement(bpv);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(bpv);
+            delete bpv;
+            bpv = nullptr;
         }
     }
     #endif
@@ -389,8 +400,9 @@ int main(int argc, char** argv)
                 file->append(field);
             }
             #ifdef INOVESA_USE_GUI
-            if (psv != nullptr) {
+            if (gui) {
                 psv->createTexture(mesh);
+                bpv->createLine(mesh);
                 display->draw();
                 psv->delTexture();
             }

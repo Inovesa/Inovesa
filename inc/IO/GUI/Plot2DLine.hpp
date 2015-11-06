@@ -24,7 +24,7 @@ public:
 private:
     size_t _npoints;
 
-    float* _line;
+    std::vector<float> _line;
 };
 
 } // namespace vfps
