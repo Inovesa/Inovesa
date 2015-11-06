@@ -23,12 +23,16 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
                                    const Impedance* impedance,
                                    const size_t nmax) :
     _nmax(nmax > 0 ? nmax : impedance->maxN()),
-    _axis(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
-    _phasespace(phasespace),
     _bpmeshcells(phasespace->nMeshCells(0)),
+    _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
+    // _axis_wake[_bpmeshcells] will be 0
+    _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
+                                 -phasespace->getDelta(0)*_bpmeshcells,
+                                  phasespace->getDelta(0)*(_bpmeshcells-1),
+                                 phasespace->getScale(0))),
+    _phasespace(phasespace),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
-    _spaceinfo(phasespace->getRuler(0)),
     _wakefunction(nullptr)
 {
     _bp_padded_fftw = fftwf_alloc_real(2*_nmax);
@@ -45,26 +49,21 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
-                                   const double Ib, const double bl,
-                                   const double E0, const double sigmaE,
-                                   const double fs, const double frev,
+                                   const double Ib, const double E0,
+                                   const double sigmaE, const double fs,
                                    const double dt, const double rbend,
                                    const size_t nmax) :
         ElectricField(ps,impedance,nmax)
 {
-    size_t wakenmax = std::round(physcons::c/(2*M_PI*frev*ps->getDelta(0)*bl));
     _wakefunction = new meshaxis_t[2*_bpmeshcells];
-    fftwf_complex* z_fftw = fftwf_alloc_complex(wakenmax);
-    fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(wakenmax);
-    fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(wakenmax); //for wake
+    fftwf_complex* z_fftw = fftwf_alloc_complex(nmax);
+    fftwf_complex* zcsrf_fftw = fftwf_alloc_complex(nmax);
+    fftwf_complex* zcsrb_fftw = fftwf_alloc_complex(nmax); //for wake
     impedance_t* z = reinterpret_cast<impedance_t*>(z_fftw);
     impedance_t* zcsrf = reinterpret_cast<impedance_t*>(zcsrf_fftw);
     impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
 
     /* Marit's original code names eq1 in comment, but it uses eq2.
-     * Patrik's calculations lead to eq3, but this does not work
-     * right now, Patrik's result is adjusted the way Marit changed her result
-     *
      *
      *    eq1:
      *     const double g = -Ic * phaseSpace.getDelta<0>() / M_PI
@@ -76,46 +75,40 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
      *
      * Marit's comment:
      * !!! omega0 is here a function of R !!!, deltat in Einheiten von 2*pi?
-     *
-     *  eq3:
-     *  const double g    = -Ic * phaseSpace.getDelta<1>() / M_PI
-     *                    * (deltat*omega0) * exp(sigma_z/R)
-     *                    = -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
-     *                    * phaseSpace.getDelta<1>()
-     *                    * (deltat*omega0 / M_PI) * exp(sigma_z/R)
-     *                    = -Ib * E0[eV] / (2*M_PI*f_s*sigma_delta)
-     *                    * phaseSpace.getDelta<1>()
-     *                    * deltat*frev * exp(sigma_z/R)
-     *                    = - Ib*E0*ps->getDelta(1)
-     *                    * dt*frev*std::exp(bl/rbend)
-     *                    / (2*M_PI*fs*sigmaE);
      */
-     const double g = - Ib*physcons::c*ps->getDelta(1)*dt*std::exp(bl/rbend)
-                    / (2*M_PI*fs*sigmaE*E0);
+     const double g = - Ib*physcons::c*ps->getDelta(1)*dt
+                    / (2*M_PI*fs*sigmaE*E0)/(M_PI*rbend);
 
 
-    std::copy_n(_impedance->data(),std::min(wakenmax,_impedance->maxN()),z);
-    if (_impedance->maxN() < wakenmax) {
+    std::copy_n(_impedance->data(),std::min(nmax,_impedance->maxN()),z);
+    if (_impedance->maxN() < nmax) {
         std::stringstream wavenumbers;
         wavenumbers << "(Known: n=" <<_impedance->maxN()
-                    << ", needed: N=" << wakenmax << ")";
+                    << ", needed: N=" << nmax << ")";
         Display::printText("Warning: Unknown impedance for high wavenumbers. "
                            +wavenumbers.str());
-        std::fill_n(&z[_impedance->maxN()],wakenmax-_impedance->maxN(),
+        std::fill_n(&z[_impedance->maxN()],nmax-_impedance->maxN(),
                     impedance_t(0));
     }
 
-    fftwf_plan p3 = prepareFFT( wakenmax, z, zcsrf, fft_direction::forward );
-    fftwf_plan p4 = prepareFFT( wakenmax, z, zcsrb, fft_direction::backward);
+    fftwf_plan p3 = prepareFFT( nmax, z, zcsrf, fft_direction::forward );
+    fftwf_plan p4 = prepareFFT( nmax, z, zcsrb, fft_direction::backward);
 
     fftwf_execute(p3);
     fftwf_destroy_plan(p3);
     fftwf_execute(p4);
     fftwf_destroy_plan(p4);
 
+    /* This method works like a DFT of Z with Z(-n) = Z*(n).
+     *
+     * the element _wakefunction[_bpmeshcells] represents the self interaction
+     * set this element (q==0) to zero to make the function anti-semetric
+     */
+    _wakefunction[0] = 0;
     for (size_t i=0; i< _bpmeshcells; i++) {
-        _wakefunction[i             ] = g * zcsrf[_bpmeshcells-i].real();
-        _wakefunction[i+_bpmeshcells] = g * zcsrb[i             ].real();
+        // zcsrf[0].real() == zcsrb[0].real(), see comment above
+        _wakefunction[_bpmeshcells-i] = g * zcsrf[i].real();
+        _wakefunction[_bpmeshcells+i] = g * zcsrb[i].real();
     }
     fftwf_free(z_fftw);
     fftwf_free(zcsrf_fftw);
@@ -135,9 +128,7 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-    std::copy_n(_phasespace->projectionToX(),
-                _spaceinfo->steps(),
-                _bp_padded);
+    std::copy_n(_phasespace->projectionToX(),_bpmeshcells,_bp_padded);
 
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);

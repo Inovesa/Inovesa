@@ -40,6 +40,10 @@ public:
     ~KickMap();
 
 public:
+    const inline meshaxis_t* getForce() const
+        { return _force; }
+
+public:
     void apply();
 
     void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);

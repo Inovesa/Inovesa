@@ -34,28 +34,32 @@ class Impedance
 {
 public:
 	enum class ImpedanceModel : uint_fast8_t {
-		FreeSpace = 0
+		FreeSpaceCSR = 0
 	};
 
 public:
-	/**
-	 * @brief Impedance
-	 * @param model
-	 * @param n compute (at least) to wavenumber n=f/f_rev,
-	 *        where f_rev is the revolution frequency
-	 * @param roundup round to next 2^N
-	 */
-	Impedance(ImpedanceModel model, size_t n, bool roundup=true);
+    /**
+     * @brief Impedance
+     * @param model currently only FreeSpaceCSR is implemented
+     * @param n compute (at least) to n=f*f_nyq/f_rev,
+     *        where f_rev is the revolution frequency
+     *        and f_max is maximum frequency
+     * @param roundup round to next 2^N
+     */
+    Impedance(ImpedanceModel model, size_t n, double f_rev, double f_max,
+              bool roundup=false);
 
-	/**
-	 * @brief Impedance
-	 * @param name of datafile in the format "n Re(Z) Im(Z)",
-	 *        where n=f/f_rev is the wavenumber
-	 */
-	Impedance(std::string datafile);
+    Impedance(const std::vector<impedance_t>& z, double f_max);
+
+    /**
+     * @brief Impedance
+     * @param name of datafile in the format "n Re(Z) Im(Z)",
+     *        where n=f/f_rev is the revolution harmonic
+     */
+    Impedance(std::string datafile, double f_max);
 
     inline const impedance_t* data() const
-		{ return _data.data(); }
+        { return _data.data(); }
 
     inline const std::vector<impedance_t>& impedance() const
         { return _data; }
@@ -66,10 +70,18 @@ public:
 	inline size_t maxN() const
 		{ return _data.size(); }
 
-private:
-	std::vector<impedance_t> _data;
+    inline const Ruler<frequency_t>* getRuler() const
+        { return &_axis; }
 
-	size_t _nmax;
+private:
+    size_t _nmax;
+
+    const Ruler<frequency_t> _axis;
+
+    std::vector<impedance_t> _data;
+
+private:
+    static std::vector<impedance_t> readData(std::string fname);
 
 	/**
 	 * @brief upper_power_of_two
@@ -79,8 +91,6 @@ private:
 	 * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 	 */
 	uint64_t upper_power_of_two(uint64_t v);
-
-
 };
 
 } // namespace vfps

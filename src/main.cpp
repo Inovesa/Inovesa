@@ -114,6 +114,8 @@ int main(int argc, char** argv)
     PhaseSpace* mesh;
     meshindex_t ps_size;
     const double qmax = opts.getPhaseSpaceSize();
+    const double qmin = -qmax;
+    const double pmin = qmin;
     const double pmax = qmax;
 
     std::string startdistfile = opts.getStartDistFile();
@@ -125,7 +127,7 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         Display::printText("Generating (gaussian) initial distribution.");
-        mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                               opts.getNaturalBunchLength());
         for (meshindex_t x = 0; x < ps_size; x++) {
             for (meshindex_t y = 0; y < ps_size; y++) {
@@ -159,7 +161,7 @@ int main(int argc, char** argv)
         if (image.get_width() == image.get_height()) {
             ps_size = image.get_width();
 
-            mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+            mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                                   opts.getNaturalBunchLength());
 
             for (unsigned int x=0; x<ps_size; x++) {
@@ -179,8 +181,8 @@ int main(int argc, char** argv)
     } else
     #endif // INOVESA_USE_PNG
     if (isOfFileType(".txt",startdistfile)) {
-        ps_size = 512;
-        mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax,
+        ps_size = opts.getMeshSize();
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                               opts.getNaturalBunchLength());
 
         std::ifstream ifs;
@@ -229,16 +231,22 @@ int main(int argc, char** argv)
     }
     }
 
+    double bl = opts.getNaturalBunchLength();
+    double f0 = opts.getRevolutionFrequency();
+    unsigned int padding =opts.getPadding();
+
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
-        Display::printText("No impedance file given. "
-                           "Will use free space impedance.");
-        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpace,
-                                  ps_size*std::max(opts.getPadding(),1u));
+        Display::printText("Will use free space CSR impedance. "
+                           "(Give impedance file for other impedance model.)");
+        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
+                                  ps_size*std::max(padding,1u),f0,
+                                  ps_size*vfps::physcons::c/(2*qmax*bl),false);
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
-        impedance = new Impedance(opts.getImpedanceFile());
+        impedance = new Impedance(opts.getImpedanceFile(),
+                                  ps_size*vfps::physcons::c/(2*qmax*bl));
         if (impedance->maxN() < ps_size) {
             Display::printText("No valid impedance file. "
                                "Will now quit.");
@@ -306,7 +314,7 @@ int main(int argc, char** argv)
     }
 
     ElectricField* field = nullptr;
-    HeritageMap* wkm = nullptr;
+    WakeKickMap* wkm = nullptr;
     std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
@@ -326,13 +334,12 @@ int main(int argc, char** argv)
                               wake,WakeKickMap::InterpolationType::cubic);
     } else {
         double Ib = opts.getBunchCurrent();
-        double bl = opts.getNaturalBunchLength();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
-        double f0 = opts.getRevolutionFrequency();
         double rb = opts.getBendingRadius();
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,Ib,bl,E0,sigmaE,f_s,f0,dt,rb,2048);
+        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,f_s,dt,rb,
+                                  padding*ps_size);
         Display::printText("Building WakeKickMap.");
         wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
                               field,WakeKickMap::InterpolationType::cubic);
@@ -344,11 +351,10 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh,field,impedance,
-                            static_cast<WakeKickMap*>(wkm));
+        file = new HDF5File(ofname,mesh,field,impedance,wkm);
         Display::printText("Will save results to: \""+ofname+'\"');
     } else {
-        Display::printText("Will not save results.");
+        Display::printText("Information: Will not save results.");
     }
 
     #ifdef INOVESA_USE_CL
@@ -398,6 +404,7 @@ int main(int argc, char** argv)
                 file->append(mesh);
                 field->updateCSRSpectrum();
                 file->append(field);
+                file->append(wkm);
             }
             #ifdef INOVESA_USE_GUI
             if (gui) {
@@ -422,6 +429,7 @@ int main(int argc, char** argv)
         file->append(mesh);
         field->updateCSRSpectrum();
         file->append(field);
+        file->append(wkm);
     }
     if (!opts.showPhaseSpace()) {
         std::stringstream status;

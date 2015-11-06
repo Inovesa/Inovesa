@@ -27,7 +27,7 @@
 
 #define INOVESA_VERSION_RELEASE 0
 #define INOVESA_VERSION_MINOR   6
-#define INOVESA_VERSION_FIX     4
+#define INOVESA_VERSION_FIX     5
 
 //#define INOVESA_SYNC_CL
 
@@ -56,6 +56,7 @@ typedef float data_t;
 typedef data_t csrpower_t;
 typedef std::complex<csrpower_t> impedance_t;
 
+typedef data_t frequency_t;
 typedef data_t meshaxis_t;
 typedef data_t meshdata_t;
 typedef data_t interpol_t;
