@@ -36,8 +36,8 @@ vfps::Display::Display()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	#else // GLFW2
 	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
-	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
-	glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
+    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
+    glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
 	glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	#endif // GLFW2
 
@@ -45,7 +45,8 @@ vfps::Display::Display()
 	// Open a window and create its OpenGL context
 	#if GLFW_VERSION_MAJOR < 3
 	glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
-    glfwSetWindowTitle("Inovesa (GL3)");
+    glfwSetWindowTitle("Inovesa (GL2)");
+    GUIElement::glversion = 2;
 	#else // GLFW3
     window = glfwCreateWindow( 512, 512, "Inovesa (GL3)", NULL, NULL);
 	if( window == nullptr ) {

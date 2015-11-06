@@ -30,7 +30,7 @@ vfps::Plot2DLine::~Plot2DLine()
 void vfps::Plot2DLine::createLine(vfps::PhaseSpace* mesh)
 {
     _npoints=mesh->nMeshCells(0);
-    _line.resize(_npoints*3);
+    _line.resize(_npoints*2);
     float step = 1.5f/_npoints;
     projection_t* bp = mesh->projectionToX();
     float max =0.0f;
@@ -39,16 +39,15 @@ void vfps::Plot2DLine::createLine(vfps::PhaseSpace* mesh)
     }
     max*=3.0f;
     for (size_t n=0; n<_npoints; n++) {
-        _line[3*n  ] = -1.0f+n*step;
-        _line[3*n+1] = -0.9f+bp[n]/max;
-        _line[3*n+2] =  0.0f;
+        _line[2*n  ] = -1.0f+n*step;
+        _line[2*n+1] = -0.9f+bp[n]/max;
     }
 
     // The following commands will talk about our 'vertexbuffer' buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 
     // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, 3*_npoints*sizeof(float),
+    glBufferData(GL_ARRAY_BUFFER, 2*_npoints*sizeof(float),
                  _line.data(), GL_STATIC_DRAW);
 }
 
@@ -56,21 +55,20 @@ void vfps::Plot2DLine::draw()
 {
     glUseProgram(programID);
 
-    // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(VertexArrayID);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glVertexAttribPointer(
        VertexArrayID,      // attribute 0. No particular reason for 0,
                            // but must match the layout in the shader.
-       3,                  // size
+       2,                  // size
        GL_FLOAT,           // type
        GL_FALSE,           // normalized?
        0,                  // stride
        (void*)0            // array buffer offset
     );
 
-    // Draw the triangle !GL_LINE_STRIP
-    glDrawArrays(GL_LINE_STRIP, 0, _npoints); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    // Draw the line
+    glDrawArrays(GL_LINE_STRIP, 0, _npoints);
 
     glDisableVertexAttribArray(VertexArrayID);
 }

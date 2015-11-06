@@ -17,12 +17,12 @@ vfps::Plot3DColormap::Plot3DColormap()
 	}
 
 	static const GLfloat g_vertex_buffer_data[] = {
-        -1.0f,-0.5f, 0.0f,
-         0.5f,-0.5f, 0.0f,
-        -1.0f, 1.0f, 0.0f,
-         0.5f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f,
-         0.5f,-0.5f, 0.0f
+        -1.0f,-0.5f,
+         0.5f,-0.5f,
+        -1.0f, 1.0f,
+         0.5f, 1.0f,
+        -1.0f, 1.0f,
+         0.5f,-0.5f
 	};
 
 	/* Two UV coordinatesfor each vertex.
@@ -104,7 +104,7 @@ void vfps::Plot3DColormap::draw()
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glVertexAttribPointer(
 		0,				  // attribute. No particular reason for 0, but must match the layout in the shader.
-		3,				  // size
+        2,				  // size
 		GL_FLOAT,		   // type
 		GL_FALSE,		   // normalized?
 		0,				  // stride

@@ -1,9 +1,9 @@
 #version 120
 
 // Input vertex data, different for all executions of this shader.
-attribute vec3 Position2DL;
+attribute vec2 Position2DL;
 
 void main(){
-	gl_Position =  vec4(Position2DL,1);
+    gl_Position =  vec4(Position2DL,0,1);
 }
 
