@@ -36,7 +36,8 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _phasespace(phasespace),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
-    _wakefunction(nullptr)
+    _wakefunction(nullptr),
+    _wakepotential(wakepot?new meshaxis_t[_bpmeshcells]:nullptr)
 {
     _bp_padded_fftw = fftwf_alloc_real(_padding*_nmax);
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
@@ -53,17 +54,21 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     if (wakepot) {
         _wakelosses_fftw = fftwf_alloc_complex(_padding*_nmax);
         _wakepotential_fftw = fftwf_alloc_complex(_padding*_nmax);
-        _ft_wakelosses = prepareFFT(_padding*_nmax,_wakelosses,
-                                    _wakepotential_complex,
-                                    fft_direction::forward);
     } else {
         _wakelosses_fftw = nullptr;
         _wakepotential_fftw = nullptr;
-        _ft_wakelosses = nullptr;
     }
 
     _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fftw);
     _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fftw);
+
+    if (wakepot) {
+        _ft_wakelosses = prepareFFT(_padding*_nmax,_wakelosses,
+                                    _wakepotential_complex,
+                                    fft_direction::forward);
+    } else {
+        _ft_wakelosses = nullptr;
+    }
 }
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,

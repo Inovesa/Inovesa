@@ -40,6 +40,7 @@
 #include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
 #include "HM/WakeFunctionMap.hpp"
+#include "HM/WakeImpedanceMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
@@ -314,6 +315,7 @@ int main(int argc, char** argv)
     }
 
     ElectricField* field = nullptr;
+    WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
     std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
@@ -332,17 +334,18 @@ int main(int argc, char** argv)
         Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
                                   wake,HeritageMap::InterpolationType::cubic);
+        wkm = wfm;
     } else {
         double Ib = opts.getBunchCurrent();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
         double rb = opts.getBendingRadius();
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,f_s,dt,rb,
-                                  padding*ps_size);
+        field = new ElectricField(mesh,impedance,padding*ps_size,padding,true);
         Display::printText("Building WakeFunctionMap.");
-        wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
-                                  field,HeritageMap::InterpolationType::cubic);
+        wkm = new WakeImpedanceMap(mesh_damdiff,mesh,ps_size,ps_size,
+                                   field,impedance,
+                                   HeritageMap::InterpolationType::cubic);
     }
 
     HDF5File* file = nullptr;
@@ -404,7 +407,7 @@ int main(int argc, char** argv)
                 file->append(mesh);
                 field->updateCSRSpectrum();
                 file->append(field);
-                file->append(wfm);
+                file->append(wkm);
             }
             #ifdef INOVESA_USE_GUI
             if (gui) {
@@ -420,7 +423,7 @@ int main(int argc, char** argv)
         }
         rm->apply();
         fpm->apply();
-        wfm->apply();
+        wkm->apply();
     }
 
     // save final result
@@ -429,7 +432,7 @@ int main(int argc, char** argv)
         file->append(mesh);
         field->updateCSRSpectrum();
         file->append(field);
-        file->append(wfm);
+        file->append(wkm);
     }
     if (!opts.showPhaseSpace()) {
         std::stringstream status;
@@ -456,7 +459,7 @@ int main(int argc, char** argv)
     delete impedance;
 
     delete rm;
-    delete wfm;
+    delete wkm;
     delete fpm;
 
     Display::printText("Finished.");
