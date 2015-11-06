@@ -29,7 +29,7 @@
 #include "ElectricField.hpp"
 #include "Impedance.hpp"
 #include "PhaseSpace.hpp"
-#include "HM/WakeKickMap.hpp"
+#include "HM/WakeFunctionMap.hpp"
 
 namespace vfps {
 
@@ -46,7 +46,7 @@ public:
              const PhaseSpace* ps,
              const ElectricField* ef,
              const Impedance* imp,
-             const WakeKickMap* wkm);
+             const WakeFunctionMap *wfm);
 
 	~HDF5File();
 

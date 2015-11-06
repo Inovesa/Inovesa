@@ -23,7 +23,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const PhaseSpace* ps,
                          const ElectricField* ef,
                          const Impedance* imp,
-                         const WakeKickMap* wkm) :
+                         const WakeFunctionMap* wfm) :
 	file( nullptr ),
 	fname( fname ),
 	bc_dims( 0 ),
@@ -279,6 +279,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     imp_dataset_real.write(imp_real.data(),imp_datatype);
     imp_dataset_imag.write(imp_imag.data(),imp_datatype);
 
+    if (wfm != nullptr ) {
     // save Wake Function
     file->createGroup("WakeFunction");
 
@@ -300,7 +301,8 @@ vfps::HDF5File::HDF5File(const std::string fname,
     wf_dataset = file->createDataSet("/WakeFunction/data",wf_datatype,
                                      *wf_dataspace,wf_prop);
 
-    wf_dataset.write(wkm->getWakeFunction(),wf_datatype);
+    wf_dataset.write(wfm->getWakeFunction(),wf_datatype);
+    }
 
     // save Inovesa version
 	std::array<hsize_t,1> version_dims {{3}};

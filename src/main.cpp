@@ -39,7 +39,7 @@
 #include "HM/Identity.hpp"
 #include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
-#include "HM/WakeKickMap.hpp"
+#include "HM/WakeFunctionMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
@@ -314,7 +314,7 @@ int main(int argc, char** argv)
     }
 
     ElectricField* field = nullptr;
-    WakeKickMap* wkm = nullptr;
+    WakeFunctionMap* wfm = nullptr;
     std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
@@ -330,8 +330,8 @@ int main(int argc, char** argv)
         }
         ifs.close();
         Display::printText("Building WakeKickMap.");
-        wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
-                              wake,WakeKickMap::InterpolationType::cubic);
+        wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
+                                  wake,HeritageMap::InterpolationType::cubic);
     } else {
         double Ib = opts.getBunchCurrent();
         double E0 = opts.getBeamEnergy();
@@ -341,8 +341,8 @@ int main(int argc, char** argv)
         field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,f_s,dt,rb,
                                   padding*ps_size);
         Display::printText("Building WakeKickMap.");
-        wkm = new WakeKickMap(mesh_damdiff,mesh,ps_size,ps_size,
-                              field,WakeKickMap::InterpolationType::cubic);
+        wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
+                                  field,HeritageMap::InterpolationType::cubic);
     }
 
     HDF5File* file = nullptr;
@@ -351,7 +351,7 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh,field,impedance,wkm);
+        file = new HDF5File(ofname,mesh,field,impedance,wfm);
         Display::printText("Will save results to: \""+ofname+'\"');
     } else {
         Display::printText("Information: Will not save results.");
@@ -404,7 +404,7 @@ int main(int argc, char** argv)
                 file->append(mesh);
                 field->updateCSRSpectrum();
                 file->append(field);
-                file->append(wkm);
+                file->append(wfm);
             }
             #ifdef INOVESA_USE_GUI
             if (gui) {
@@ -420,7 +420,7 @@ int main(int argc, char** argv)
         }
         rm->apply();
         fpm->apply();
-        wkm->apply();
+        wfm->apply();
     }
 
     // save final result
@@ -429,7 +429,7 @@ int main(int argc, char** argv)
         file->append(mesh);
         field->updateCSRSpectrum();
         file->append(field);
-        file->append(wkm);
+        file->append(wfm);
     }
     if (!opts.showPhaseSpace()) {
         std::stringstream status;
@@ -456,7 +456,7 @@ int main(int argc, char** argv)
     delete impedance;
 
     delete rm;
-    delete wkm;
+    delete wfm;
     delete fpm;
 
     Display::printText("Finished.");

@@ -7,8 +7,9 @@ set(SRC_LIST
 			./src/HM/HeritageMap.cpp
 			./src/HM/FokkerPlanckMap.cpp
 			./src/HM/KickMap.cpp
-			./src/HM/RotationMap.cpp
-			./src/HM/WakeKickMap.cpp
+            ./src/HM/RotationMap.cpp
+            ./src/HM/WakeKickMap.cpp
+            ./src/HM/WakeFunctionMap.cpp
 			./src/IO/Display.cpp
 			./src/IO/GUI/GUIElement.cpp
             ./src/IO/GUI/Plot2DLine.cpp
@@ -28,8 +29,9 @@ set(INC_LIST
 			./inc/HM/FokkerPlanckMap.hpp
 			./inc/HM/KickMap.hpp
 			./inc/HM/Identity.hpp
-			./inc/HM/RotationMap.hpp
-			./inc/HM/WakeKickMap.hpp
+            ./inc/HM/RotationMap.hpp
+            ./inc/HM/WakeKickMap.hpp
+            ./inc/HM/WakeFunctionMap.hpp
 			./inc/IO/Display.hpp
 			./inc/IO/GUI/GUIElement.hpp
             ./inc/IO/GUI/Plot2DLine.hpp
