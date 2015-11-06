@@ -12,8 +12,9 @@ vfps::Plot3DColormap::Plot3DColormap()
         loadShaders("gl/3DCM_gl3.vertexshader","gl/3DCM_gl3.fragmentshader");
 		break;
 	}
-    VertexArrayID = glGetAttribLocation(programID, "position3DCM");
-    UVArrayID = glGetAttribLocation(programID, "vertexUV3DCM");
+    position = glGetAttribLocation(programID, "position3DCM");
+    vertexUV = glGetAttribLocation(programID, "vertexUV3DCM");
+    TextureID = glGetUniformLocation(programID, "textureSampler3DCM");
 
 	static const GLfloat g_vertex_buffer_data[] = {
         -1.0f,-0.5f,
@@ -35,8 +36,7 @@ vfps::Plot3DColormap::Plot3DColormap()
 		1.0f, 1.0f,
 		1.0f, 0.0f,
 		0.0f, 1.0f
-	};
-
+    };
 	glGenBuffers(1, &vertexbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data),
@@ -53,8 +53,8 @@ vfps::Plot3DColormap::~Plot3DColormap()
     delTexture();
     glDeleteBuffers(1,&uvbuffer);
     glDeleteBuffers(1,&vertexbuffer);
-    glDeleteVertexArrays(1,&UVArrayID);
-    glDeleteVertexArrays(1,&VertexArrayID);
+    glDeleteVertexArrays(1,&vertexUV);
+    glDeleteVertexArrays(1,&position);
 }
 
 
@@ -79,15 +79,12 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// Get a handle for our "myTextureSampler" uniform
-    TextureID = glGetUniformLocation(programID, "textureSampler3DCM");
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void vfps::Plot3DColormap::delTexture()
 {
-	glDeleteTextures(1, &TextureID);
+    glDeleteTextures(1, &TextureID);
     glDeleteTextures(1, &Texture);
 }
 
@@ -102,18 +99,17 @@ void vfps::Plot3DColormap::draw()
     // Set "textureSampler3DCM" sampler to user Texture Unit 0
     glUniform1i(TextureID, 0);
 
-	// 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(VertexArrayID);
-    glEnableVertexAttribArray(UVArrayID);
-
+    glEnableVertexAttribArray(position);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glVertexAttribPointer(VertexArrayID,2,GL_FLOAT,GL_FALSE,0,nullptr);
+    glVertexAttribPointer(position,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
+
+    glEnableVertexAttribArray(vertexUV);
 	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
     glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
     glDrawArrays(GL_TRIANGLES, 0, 2*3);// 2*3 indices starting at 0
 
-    glDisableVertexAttribArray(VertexArrayID);
-    glDisableVertexAttribArray(UVArrayID);
+    glDisableVertexAttribArray(position);
+    glDisableVertexAttribArray(vertexUV);
 }

@@ -24,7 +24,9 @@ private:
     GLuint vertexbuffer;
     GLuint uvbuffer;
 
-    GLuint UVArrayID;
+    GLuint vertexUV;
+    GLuint position;
+
     GLuint VertexArrayID;
 
     GLuint Texture;

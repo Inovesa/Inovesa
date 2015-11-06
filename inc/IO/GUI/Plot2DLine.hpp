@@ -27,7 +27,7 @@ private:
     std::vector<float> _line;
 
     GLuint vertexbuffer;
-    GLuint VertexArrayID;
+    GLuint position;
 };
 
 } // namespace vfps

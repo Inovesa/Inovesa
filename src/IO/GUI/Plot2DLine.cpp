@@ -13,7 +13,7 @@ vfps::Plot2DLine::Plot2DLine() :
         loadShaders("gl/2DL_gl3.vertexshader","gl/2DL_gl3.fragmentshader");
         break;
     }
-    VertexArrayID = glGetAttribLocation(programID, "position2DL");
+    position = glGetAttribLocation(programID, "position2DL");
 
     // Generate 1 buffer, put the resulting identifier in vertexbuffer
     glGenBuffers(1, &vertexbuffer);
@@ -22,7 +22,7 @@ vfps::Plot2DLine::Plot2DLine() :
 vfps::Plot2DLine::~Plot2DLine()
 {
     glDeleteBuffers(1, &vertexbuffer);
-    glDeleteVertexArrays(1, &VertexArrayID);
+    glDeleteVertexArrays(1, &position);
 }
 
 void vfps::Plot2DLine::createLine(vfps::PhaseSpace* mesh)
@@ -53,12 +53,12 @@ void vfps::Plot2DLine::draw()
 {
     glUseProgram(programID);
 
-    glEnableVertexAttribArray(VertexArrayID);
+    glEnableVertexAttribArray(position);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glVertexAttribPointer(VertexArrayID,2,GL_FLOAT,GL_FALSE,0,nullptr);
+    glVertexAttribPointer(position,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
     // Draw the line
     glDrawArrays(GL_LINE_STRIP, 0, _npoints);
 
-    glDisableVertexAttribArray(VertexArrayID);
+    glDisableVertexAttribArray(position);
 }
