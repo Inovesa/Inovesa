@@ -329,7 +329,7 @@ int main(int argc, char** argv)
             wake.push_back(std::pair<meshaxis_t,double>(q,f));
         }
         ifs.close();
-        Display::printText("Building WakeKickMap.");
+        Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
                                   wake,HeritageMap::InterpolationType::cubic);
     } else {
@@ -340,7 +340,7 @@ int main(int argc, char** argv)
         Display::printText("Calculating WakeFunction.");
         field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,f_s,dt,rb,
                                   padding*ps_size);
-        Display::printText("Building WakeKickMap.");
+        Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
                                   field,HeritageMap::InterpolationType::cubic);
     }

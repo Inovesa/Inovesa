@@ -9,6 +9,7 @@ set(SRC_LIST
 			./src/HM/KickMap.cpp
             ./src/HM/RotationMap.cpp
             ./src/HM/WakeKickMap.cpp
+            ./src/HM/WakeImpedanceMap.cpp
             ./src/HM/WakeFunctionMap.cpp
 			./src/IO/Display.cpp
 			./src/IO/GUI/GUIElement.cpp
@@ -30,6 +31,7 @@ set(INC_LIST
 			./inc/HM/KickMap.hpp
 			./inc/HM/Identity.hpp
             ./inc/HM/RotationMap.hpp
+            ./inc/HM/WakeImpedanceMap.hpp
             ./inc/HM/WakeKickMap.hpp
             ./inc/HM/WakeFunctionMap.hpp
 			./inc/IO/Display.hpp

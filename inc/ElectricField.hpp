@@ -43,7 +43,8 @@ public:
      */
     ElectricField(PhaseSpace* phasespace,
                   const Impedance* impedance,
-                  const size_t nmax=0);
+                  const size_t nmax=0, const size_t padding=2,
+                  const bool wakepot=false);
 
     /**
      * @brief ElectricField
@@ -86,6 +87,8 @@ public:
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
 
+    meshaxis_t* wakePotential();
+
 private:
     enum class fft_direction : uint_fast8_t {
         forward, backward
@@ -97,7 +100,9 @@ private:
                           fft_direction direction);
 
 private:
-    size_t _nmax;
+    const size_t _nmax;
+
+    const size_t _padding;
 
     const size_t _bpmeshcells;
 
@@ -122,6 +127,18 @@ private:
     fftwf_plan _ft_bunchprofile;
 
     meshaxis_t* _wakefunction;
+
+    impedance_t* _wakelosses;
+
+    fftwf_complex* _wakelosses_fftw;
+
+    impedance_t* _wakepotential_complex;
+
+    fftwf_complex* _wakepotential_fftw;
+
+    meshaxis_t* _wakepotential;
+
+    fftwf_plan _ft_wakelosses;
 };
 
 } // namespace vfps

@@ -21,12 +21,15 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
                                    const Impedance* impedance,
-                                   const size_t nmax) :
+                                   const size_t nmax,
+                                   const size_t padding,
+                                   const bool wakepot) :
     _nmax(nmax > 0 ? nmax : impedance->maxN()),
+    _padding(padding),
     _bpmeshcells(phasespace->nMeshCells(0)),
     _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
     // _axis_wake[_bpmeshcells] will be 0
-    _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
+    _axis_wake(Ruler<meshaxis_t>(_padding*_bpmeshcells,
                                  -phasespace->getDelta(0)*_bpmeshcells,
                                   phasespace->getDelta(0)*(_bpmeshcells-1),
                                  phasespace->getScale(0))),
@@ -35,20 +38,35 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _impedance(impedance),
     _wakefunction(nullptr)
 {
-    _bp_padded_fftw = fftwf_alloc_real(2*_nmax);
+    _bp_padded_fftw = fftwf_alloc_real(_padding*_nmax);
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
 
     //zero-padding
-    std::fill_n(&_bp_padded[_bpmeshcells],2*_nmax-_bpmeshcells,integral_t(0));
+    std::fill_n(&_bp_padded[_bpmeshcells],_padding*_nmax-_bpmeshcells,integral_t(0));
 
-    _bp_fourier_fftw = fftwf_alloc_complex(2*_nmax);
+    _bp_fourier_fftw = fftwf_alloc_complex(_padding*_nmax);
     _bp_fourier = reinterpret_cast<impedance_t*>(_bp_fourier_fftw);
 
-    _ft_bunchprofile = prepareFFT(2*_nmax,_bp_padded,_bp_fourier);
+    _ft_bunchprofile = prepareFFT(_padding*_nmax,_bp_padded,_bp_fourier);
+
+
+    if (wakepot) {
+        _wakelosses_fftw = fftwf_alloc_complex(_padding*_nmax);
+        _wakepotential_fftw = fftwf_alloc_complex(_padding*_nmax);
+        _ft_wakelosses = prepareFFT(_padding*_nmax,_wakelosses,
+                                    _wakepotential_complex,
+                                    fft_direction::forward);
+    } else {
+        _wakelosses_fftw = nullptr;
+        _wakepotential_fftw = nullptr;
+        _ft_wakelosses = nullptr;
+    }
+
+    _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fftw);
+    _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fftw);
 }
 
-vfps::ElectricField::ElectricField(PhaseSpace* ps,
-                                   const Impedance* impedance,
+vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double fs,
                                    const double dt, const double rbend,
@@ -122,7 +140,16 @@ vfps::ElectricField::~ElectricField()
 
     fftwf_free(_bp_padded_fftw);
     fftwf_free(_bp_fourier_fftw);
+    if(_wakelosses_fftw != nullptr) {
+        fftwf_free(_wakelosses_fftw);
+    }
+    if(_wakepotential_fftw != nullptr) {
+        fftwf_free(_wakepotential_fftw);
+    }
     fftwf_destroy_plan(_ft_bunchprofile);
+    if (_ft_wakelosses != nullptr) {
+        fftwf_destroy_plan(_ft_wakelosses);
+    }
     fftwf_cleanup();
 }
 
@@ -139,6 +166,32 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
     }
 
     return _csrspectrum;
+}
+
+vfps::meshaxis_t *vfps::ElectricField::wakePotential()
+{
+    std::copy_n(_phasespace->projectionToX(),_bpmeshcells,_bp_padded);
+
+    //FFT charge density
+    fftwf_execute(_ft_bunchprofile);
+
+    const size_t center = _padding*_bpmeshcells/2;
+    std::fill_n(_wakelosses,center-_bpmeshcells/2,0);
+    for (unsigned int i=0; i<_bpmeshcells/2; i++) {
+        _wakelosses[center-i]=((*_impedance)[i]*impedance_t(1,-1)
+                               *_bp_fourier[i]);
+        _wakelosses[center+i]=((*_impedance)[i]
+                               *_bp_fourier[i]);
+    }
+    std::fill_n(_wakelosses+center+_bpmeshcells/2,center-_bpmeshcells/2,0);
+
+    fftwf_execute(_ft_wakelosses);
+
+    for (unsigned int i=0; i<_bpmeshcells; i++) {
+        _wakepotential[i]=_wakepotential_complex[center-_bpmeshcells/2+i].real();
+    }
+
+    return _wakepotential;
 }
 
 fftwf_plan vfps::ElectricField::prepareFFT( size_t n, csrpower_t* in,

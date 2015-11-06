@@ -43,7 +43,7 @@ public:
 
 public:
     /**
-     * @brief overloads KickMap::apply() to have a variable HeritageMap
+     * @brief overloads WakeKickMap::apply()
      *
      * @todo currently uses phasespace in CPU Ram
      */
@@ -77,6 +77,6 @@ private:
     const size_t _wakesize;
 };
 
-} // namespace VFPS
+} // namespace vfps
 
 #endif // WAKEFUNCTIONMAP_HPP
