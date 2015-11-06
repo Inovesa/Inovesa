@@ -6,16 +6,14 @@ vfps::Plot2DLine::Plot2DLine() :
     // Create and compile our GLSL program from the shaders
     switch (glversion) {
     case 2:
-        programID = LoadShaders("gl/2DL_gl2.vertexshader",
-                                "gl/2DL_gl2.fragmentshader");
+        loadShaders("gl/2DL_gl2.vertexshader","gl/2DL_gl2.fragmentshader");
         break;
     case 3:
     default:
-        programID = LoadShaders("gl/2DL_gl3.vertexshader",
-                                "gl/2DL_gl3.fragmentshader");
+        loadShaders("gl/2DL_gl3.vertexshader","gl/2DL_gl3.fragmentshader");
         break;
     }
-    VertexArrayID = glGetAttribLocation(programID, "Position2DL");
+    VertexArrayID = glGetAttribLocation(programID, "position2DL");
 
     // Generate 1 buffer, put the resulting identifier in vertexbuffer
     glGenBuffers(1, &vertexbuffer);
@@ -23,8 +21,8 @@ vfps::Plot2DLine::Plot2DLine() :
 
 vfps::Plot2DLine::~Plot2DLine()
 {
-    glDeleteProgram(programID);
-    glDeleteBuffers(1,&vertexbuffer);
+    glDeleteBuffers(1, &vertexbuffer);
+    glDeleteVertexArrays(1, &VertexArrayID);
 }
 
 void vfps::Plot2DLine::createLine(vfps::PhaseSpace* mesh)
@@ -57,15 +55,7 @@ void vfps::Plot2DLine::draw()
 
     glEnableVertexAttribArray(VertexArrayID);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glVertexAttribPointer(
-       VertexArrayID,      // attribute 0. No particular reason for 0,
-                           // but must match the layout in the shader.
-       2,                  // size
-       GL_FLOAT,           // type
-       GL_FALSE,           // normalized?
-       0,                  // stride
-       (void*)0            // array buffer offset
-    );
+    glVertexAttribPointer(VertexArrayID,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
     // Draw the line
     glDrawArrays(GL_LINE_STRIP, 0, _npoints);

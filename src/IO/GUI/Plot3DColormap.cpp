@@ -2,19 +2,18 @@
 
 vfps::Plot3DColormap::Plot3DColormap()
 {
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
-
 	// Create and compile our GLSL program from the shaders
 	switch (glversion) {
 	case 2:
-        programID = LoadShaders("gl/3DCM_gl2.vertexshader","gl/3DCM_gl2.fragmentshader");
+        loadShaders("gl/3DCM_gl2.vertexshader","gl/3DCM_gl2.fragmentshader");
 		break;
 	case 3:
 	default:
-        programID = LoadShaders("gl/3DCM_gl3.vertexshader","gl/3DCM_gl3.fragmentshader");
+        loadShaders("gl/3DCM_gl3.vertexshader","gl/3DCM_gl3.fragmentshader");
 		break;
 	}
+    VertexArrayID = glGetAttribLocation(programID, "position3DCM");
+    UVArrayID = glGetAttribLocation(programID, "vertexUV3DCM");
 
 	static const GLfloat g_vertex_buffer_data[] = {
         -1.0f,-0.5f,
@@ -23,7 +22,7 @@ vfps::Plot3DColormap::Plot3DColormap()
          0.5f, 1.0f,
         -1.0f, 1.0f,
          0.5f,-0.5f
-	};
+    };
 
 	/* Two UV coordinatesfor each vertex.
 	 * Cordinates are switched because Mesh2D has data arranged as [x][y],
@@ -51,7 +50,11 @@ vfps::Plot3DColormap::Plot3DColormap()
 
 vfps::Plot3DColormap::~Plot3DColormap()
 {
-	delTexture();
+    delTexture();
+    glDeleteBuffers(1,&uvbuffer);
+    glDeleteBuffers(1,&vertexbuffer);
+    glDeleteVertexArrays(1,&UVArrayID);
+    glDeleteVertexArrays(1,&VertexArrayID);
 }
 
 
@@ -85,7 +88,7 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
 void vfps::Plot3DColormap::delTexture()
 {
 	glDeleteTextures(1, &TextureID);
-	glDeleteTextures(1, &Texture);
+    glDeleteTextures(1, &Texture);
 }
 
 void vfps::Plot3DColormap::draw()
@@ -100,31 +103,17 @@ void vfps::Plot3DColormap::draw()
     glUniform1i(TextureID, 0);
 
 	// 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(VertexArrayID);
+    glEnableVertexAttribArray(UVArrayID);
+
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	glVertexAttribPointer(
-		0,				  // attribute. No particular reason for 0, but must match the layout in the shader.
-        2,				  // size
-		GL_FLOAT,		   // type
-		GL_FALSE,		   // normalized?
-		0,				  // stride
-		(void*)0			// array buffer offset
-	);
+    glVertexAttribPointer(VertexArrayID,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
-	// 2nd attribute buffer : UVs
-    glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-	glVertexAttribPointer(
-		1,								// attribute. No particular reason for 1, but must match the layout in the shader.
-		2,								// size : U+V => 2
-		GL_FLOAT,						 // type
-		GL_FALSE,						 // normalized?
-		0,								// stride
-		(void*)0						  // array buffer offset
-	);
-	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles
+    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
+    glDrawArrays(GL_TRIANGLES, 0, 2*3);// 2*3 indices starting at 0
+
+    glDisableVertexAttribArray(VertexArrayID);
+    glDisableVertexAttribArray(UVArrayID);
 }

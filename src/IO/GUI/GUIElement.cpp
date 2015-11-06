@@ -41,15 +41,11 @@ vfps::GUIElement::GUIElement()
 
 vfps::GUIElement::~GUIElement()
 {
-	// Cleanup VBO and shader
-	glDeleteBuffers(1, &vertexbuffer);
-	glDeleteBuffers(1, &uvbuffer);
-	glDeleteProgram(programID);
-	glDeleteVertexArrays(1, &VertexArrayID);
+    glDeleteProgram(programID);
 }
 
-GLuint vfps::GUIElement::LoadShaders(std::string vertex_file_path,
-									 std::string fragment_file_path)
+void vfps::GUIElement::loadShaders(std::string vertex_file_path,
+                                   std::string fragment_file_path)
 {
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -117,24 +113,22 @@ GLuint vfps::GUIElement::LoadShaders(std::string vertex_file_path,
 
 
 	// Link the program
-	GLuint ProgramID = glCreateProgram();
-	glAttachShader(ProgramID, VertexShaderID);
-	glAttachShader(ProgramID, FragmentShaderID);
-	glLinkProgram(ProgramID);
+    programID = glCreateProgram();
+    glAttachShader(programID, VertexShaderID);
+    glAttachShader(programID, FragmentShaderID);
+    glLinkProgram(programID);
 
 	// Check the program
-	glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
-	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
+    glGetProgramiv(programID, GL_LINK_STATUS, &Result);
+    glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 	if ( InfoLogLength > 1 ){
 		std::vector<char> ProgramErrorMessage(InfoLogLength+1);
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+        glGetProgramInfoLog(programID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
 		throw ProgramErrorMessage;
 	}
 
 	glDeleteShader(VertexShaderID);
-	glDeleteShader(FragmentShaderID);
-
-	return ProgramID;
+    glDeleteShader(FragmentShaderID);
 }
 
 uint_fast8_t vfps::GUIElement::glversion;

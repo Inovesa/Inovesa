@@ -56,15 +56,10 @@ public:
 	static uint_fast8_t glversion;
 
 protected:
-	GLuint LoadShaders(std::string vertex_file_path,
-					   std::string fragment_file_path);
+    void loadShaders(std::string vertex_file_path,
+                     std::string fragment_file_path);
 
-	GLuint vertexbuffer;
-	GLuint uvbuffer;
-	GLuint programID;
-    GLuint VertexArrayID;
-	GLuint Texture;
-    GLuint TextureID;
+    GLuint programID;
 };
 
 } // namespace vfps

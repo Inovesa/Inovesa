@@ -25,6 +25,9 @@ private:
     size_t _npoints;
 
     std::vector<float> _line;
+
+    GLuint vertexbuffer;
+    GLuint VertexArrayID;
 };
 
 } // namespace vfps

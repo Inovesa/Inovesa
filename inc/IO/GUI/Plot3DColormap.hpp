@@ -19,6 +19,16 @@ public:
 	void delTexture();
 
 	void draw();
+
+private:
+    GLuint vertexbuffer;
+    GLuint uvbuffer;
+
+    GLuint UVArrayID;
+    GLuint VertexArrayID;
+
+    GLuint Texture;
+    GLuint TextureID;
 };
 
 } // namespace vfps
