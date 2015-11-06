@@ -38,9 +38,6 @@ class GUIElement;
 #else
 #include <GL/glfw.h>
 #endif
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "PhaseSpace.hpp"
 
@@ -65,11 +62,9 @@ protected:
 	GLuint vertexbuffer;
 	GLuint uvbuffer;
 	GLuint programID;
-	GLuint VertexArrayID;
-	GLuint MatrixID;
+    GLuint VertexArrayID;
 	GLuint Texture;
-	GLuint TextureID;
-	glm::mat4 MVP;
+    GLuint TextureID;
 };
 
 } // namespace vfps

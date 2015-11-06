@@ -8,37 +8,21 @@ vfps::Plot3DColormap::Plot3DColormap()
 	// Create and compile our GLSL program from the shaders
 	switch (glversion) {
 	case 2:
-		programID = LoadShaders("gl/gl2.vertexshader","gl/gl2.fragmentshader");
+        programID = LoadShaders("gl/3DCM_gl2.vertexshader","gl/3DCM_gl2.fragmentshader");
 		break;
 	case 3:
 	default:
-		programID = LoadShaders("gl/gl3.vertexshader","gl/gl3.fragmentshader");
+        programID = LoadShaders("gl/3DCM_gl3.vertexshader","gl/3DCM_gl3.fragmentshader");
 		break;
 	}
 
-	// Get a handle for our "MVP" uniform
-	MatrixID = glGetUniformLocation(programID, "MVP");
-
-	// Projection matrix : 45° Field of View, 1:1 ratio, display range : 0.1 unit <-> 100 units
-	glm::mat4 Projection = glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
-	// Camera matrix
-	glm::mat4 View	   = glm::lookAt(
-								glm::vec3(0.5,0.5,1.0),
-								glm::vec3(0.5,0.5,0),
-								glm::vec3(0,1,0)
-						   );
-	// Model matrix : an identity matrix (model will be at the origin)
-	glm::mat4 Model	  = glm::mat4(1.0f);
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	MVP  = Projection * View * Model;
-
 	static const GLfloat g_vertex_buffer_data[] = {
-		0.0f, 0.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f
+        -1.0f,-0.5f, 0.0f,
+         0.5f,-0.5f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+         0.5f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f,
+         0.5f,-0.5f, 0.0f
 	};
 
 	/* Two UV coordinatesfor each vertex.
@@ -108,10 +92,6 @@ void vfps::Plot3DColormap::draw()
 {
 	// Use our shader
 	glUseProgram(programID);
-
-	// Send our transformation to the currently bound shader,
-	// in the "MVP" uniform
-	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);

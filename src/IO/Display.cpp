@@ -82,8 +82,8 @@ vfps::Display::Display()
 	glfwEnable(GLFW_STICKY_KEYS);
 	#endif
 
-	// Dark blue background
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+    // White background
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
 	// Enable depth test
 	glEnable(GL_DEPTH_TEST);
