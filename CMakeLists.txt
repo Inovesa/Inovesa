@@ -43,7 +43,18 @@ set(INC_LIST
 			./inc/defines.hpp
 			./inc/fixed_point.h
 )
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST})
+set(MISC_LIST
+	default.cfg
+	./gl/2DL_gl2.fragmentshader
+	./gl/2DL_gl3.vertexshader
+	./gl/2DL_gl3.fragmentshader
+	./gl/2DL_gl2.vertexshader
+	./gl/3DCM_gl2.fragmentshader
+	./gl/3DCM_gl3.vertexshader
+	./gl/3DCM_gl3.fragmentshader
+	./gl/3DCM_gl2.vertexshader
+)
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
 add_definitions(-std=c++11)
 if(DEFINED CMAKE_BUILD_TYPE)
