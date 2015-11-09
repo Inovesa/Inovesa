@@ -25,7 +25,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
                                    const size_t padding,
                                    const bool wakepot) :
     _nmax(nmax > 0 ? nmax : impedance->maxN()),
-    _padding(padding),
+    _padding(std::max(padding,size_t(1u))),
     _bpmeshcells(phasespace->nMeshCells(0)),
     _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
     // _axis_wake[_bpmeshcells] will be 0
@@ -43,7 +43,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
 
     //zero-padding
-    std::fill_n(&_bp_padded[_bpmeshcells],_padding*_nmax-_bpmeshcells,integral_t(0));
+    std::fill_n(_bp_padded,_padding*_nmax,integral_t(0));
 
     _bp_fourier_fftw = fftwf_alloc_complex(_padding*_nmax);
     _bp_fourier = reinterpret_cast<impedance_t*>(_bp_fourier_fftw);
@@ -160,7 +160,8 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-    std::copy_n(_phasespace->projectionToX(),_bpmeshcells,_bp_padded);
+  std::copy_n(_phasespace->projectionToX(),_bpmeshcells,
+              _bp_padded+(_bpmeshcells*(_padding-size_t(1))/2));
 
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);
@@ -175,25 +176,32 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 
 vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
-    std::copy_n(_phasespace->projectionToX(),_bpmeshcells,_bp_padded);
+    // copy bunch profile so that negative times are at maximum bins
+    vfps::projection_t* bp=_phasespace->projectionToX();
+    std::copy_n(bp,_bpmeshcells/2,_bp_padded+_padding*_nmax-_bpmeshcells/2);
+    std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
 
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);
 
-    const size_t center = _padding*_bpmeshcells/2;
-    std::fill_n(_wakelosses,center-_bpmeshcells/2,0);
-    for (unsigned int i=0; i<_bpmeshcells/2; i++) {
+    std::ofstream bp_wake("bp_wake.tsv");
+    std::ofstream bp_ft("bp_ft.tsv");
+
+    std::fill_n(_wakelosses,_padding*_nmax,0);
+    for (unsigned int i=0; i<_padding*_nmax; i++) {
+        /*
         _wakelosses[center-i]=((*_impedance)[i]*impedance_t(1,-1)
                                *_bp_fourier[i]);
-        _wakelosses[center+i]=((*_impedance)[i]
-                               *_bp_fourier[i]);
+         */
+        _wakelosses[i]=((*_impedance)[i]*_bp_fourier[i]);
     }
-    std::fill_n(_wakelosses+center+_bpmeshcells/2,center-_bpmeshcells/2,0);
 
     fftwf_execute(_ft_wakelosses);
 
-    for (unsigned int i=0; i<_bpmeshcells; i++) {
-        _wakepotential[i]=_wakepotential_complex[center-_bpmeshcells/2+i].real();
+    for (unsigned int i=0; i<_bpmeshcells/2; i++) {
+        _wakepotential[_bpmeshcells/2+i]=_wakepotential_complex[i].real();
+        _wakepotential[_bpmeshcells/2-i]
+            =_wakepotential_complex[_nmax*_padding-i-1].real();
     }
 
     return _wakepotential;

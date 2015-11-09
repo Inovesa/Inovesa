@@ -20,12 +20,8 @@ void vfps::WakeImpedanceMap::apply()
     _in->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
     }
     #endif
-    integral_t charge = _in->integral();
-    // get wake potential from ElectricField
-    meshaxis_t* wake = _field->wakePotential();
-
-    for (unsigned int i=0;i<_xsize;i++) {
-        _force[i] += wake[i]/charge; // renormalize to units of p (2DO)
-    }
+    _field->wakePotential();
+    //std::copy_n(_field->wakePotential(),_xsize,_force);
+    std::fill_n(_force,_xsize,0);
     WakeKickMap::apply();
 }

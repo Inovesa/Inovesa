@@ -336,10 +336,12 @@ int main(int argc, char** argv)
                                   wake,HeritageMap::InterpolationType::cubic);
         wkm = wfm;
     } else {
+        /*
         double Ib = opts.getBunchCurrent();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
         double rb = opts.getBendingRadius();
+        */
         Display::printText("Calculating WakeFunction.");
         field = new ElectricField(mesh,impedance,padding*ps_size,padding,true);
         Display::printText("Building WakeFunctionMap.");
