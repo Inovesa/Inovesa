@@ -87,6 +87,13 @@ public:
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
 
+    /**
+     * @brief wakePotential
+     * @return
+     *
+     * @todo: Handling of negative frequencies in the formfactor
+     * @todo: Correct scaling
+     */
     meshaxis_t* wakePotential();
 
 private:
