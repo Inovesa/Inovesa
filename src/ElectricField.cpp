@@ -184,15 +184,8 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);
 
-    std::ofstream bp_wake("bp_wake.tsv");
-    std::ofstream bp_ft("bp_ft.tsv");
-
     std::fill_n(_wakelosses,_padding*_nmax,0);
-    for (unsigned int i=0; i<_padding*_nmax; i++) {
-        /*
-        _wakelosses[center-i]=((*_impedance)[i]*impedance_t(1,-1)
-                               *_bp_fourier[i]);
-         */
+    for (unsigned int i=0; i<_padding*_nmax/2; i++) {
         _wakelosses[i]=((*_impedance)[i]*_bp_fourier[i]);
     }
 
@@ -200,7 +193,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 
     for (unsigned int i=0; i<_bpmeshcells/2; i++) {
         _wakepotential[_bpmeshcells/2+i]=_wakepotential_complex[i].real();
-        _wakepotential[_bpmeshcells/2-i]
+        _wakepotential[_bpmeshcells/2-i-1]
             =_wakepotential_complex[_nmax*_padding-i-1].real();
     }
 

@@ -20,8 +20,9 @@ void vfps::WakeImpedanceMap::apply()
     _in->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
     }
     #endif
-    _field->wakePotential();
-    //std::copy_n(_field->wakePotential(),_xsize,_force);
-    std::fill_n(_force,_xsize,0);
+    std::copy_n(_field->wakePotential(),_xsize,_force);
+    for (meshindex_t x=0;x<_xsize;x++) {
+        _force[x] *= 2e-10;
+    }
     WakeKickMap::apply();
 }
