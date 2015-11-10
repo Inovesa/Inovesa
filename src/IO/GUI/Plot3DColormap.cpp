@@ -14,7 +14,7 @@ vfps::Plot3DColormap::Plot3DColormap()
 	}
     position = glGetAttribLocation(programID, "position3DCM");
     vertexUV = glGetAttribLocation(programID, "vertexUV3DCM");
-    TextureID = glGetUniformLocation(programID, "textureSampler3DCM");
+    textureSampler = glGetUniformLocation(programID, "textureSampler3DCM");
 
 	static const GLfloat g_vertex_buffer_data[] = {
         -1.0f,-0.5f,
@@ -50,19 +50,20 @@ vfps::Plot3DColormap::Plot3DColormap()
 
 vfps::Plot3DColormap::~Plot3DColormap()
 {
-    delTexture();
     glDeleteBuffers(1,&uvbuffer);
     glDeleteBuffers(1,&vertexbuffer);
     glDeleteVertexArrays(1,&vertexUV);
     glDeleteVertexArrays(1,&position);
+    glDeleteTextures(1, &textureID);
+    glDeleteTextures(1, &textureSampler);
 }
 
 
 void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
 {
-	glGenTextures (1, &Texture);
+    glGenTextures (1, &textureID);
 	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-	glBindTexture(GL_TEXTURE_2D,Texture);
+    glBindTexture(GL_TEXTURE_2D,textureID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
@@ -84,8 +85,7 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
 
 void vfps::Plot3DColormap::delTexture()
 {
-    glDeleteTextures(1, &TextureID);
-    glDeleteTextures(1, &Texture);
+    glDeleteTextures(1, &textureID);
 }
 
 void vfps::Plot3DColormap::draw()
@@ -95,18 +95,18 @@ void vfps::Plot3DColormap::draw()
 
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Texture);
+    glBindTexture(GL_TEXTURE_2D, textureID);
     // Set "textureSampler3DCM" sampler to user Texture Unit 0
-    glUniform1i(TextureID, 0);
+    glUniform1i(textureSampler, 0);
 
     glEnableVertexAttribArray(position);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glVertexAttribPointer(position,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
-
     glEnableVertexAttribArray(vertexUV);
-	glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
-    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, uvbuffer);
+    glVertexAttribPointer(vertexUV,2,GL_FLOAT,GL_FALSE,0,nullptr);
+
 
     glDrawArrays(GL_TRIANGLES, 0, 2*3);// 2*3 indices starting at 0
 
