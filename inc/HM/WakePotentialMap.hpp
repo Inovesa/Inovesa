@@ -17,11 +17,11 @@ public:
 
 public:
     /**
-     * @brief overloads WakeKickMap::apply()
+     * @brief update implements WakeKickMap
      *
      * @todo currently uses phasespace in CPU Ram
      */
-    void apply();
+    void update();
 
 private:
     ElectricField* _field;

@@ -33,9 +33,9 @@ namespace vfps
 class Impedance
 {
 public:
-	enum class ImpedanceModel : uint_fast8_t {
-		FreeSpaceCSR = 0
-	};
+    enum class ImpedanceModel : uint_fast8_t {
+        FreeSpaceCSR = 0
+    };
 
 public:
     /**
@@ -46,8 +46,8 @@ public:
      *        and f_max is maximum frequency
      * @param roundup round to next 2^N
      */
-    Impedance(ImpedanceModel model, size_t n, double f_rev, double f_max,
-              bool roundup=false);
+    Impedance(ImpedanceModel model, size_t n,
+              double f_rev, double f_max);
 
     Impedance(const std::vector<impedance_t>& z, double f_max);
 
@@ -64,11 +64,14 @@ public:
     inline const std::vector<impedance_t>& impedance() const
         { return _data; }
 
-	inline const impedance_t operator[](size_t n) const
-		{ return _data[n]; }
+    inline const impedance_t operator[](size_t n) const
+        { return _data[n]; }
 
-	inline size_t maxN() const
-		{ return _data.size(); }
+    inline size_t maxN() const
+        { return _nmax; }
+
+    inline size_t size() const
+        { return _data.size(); }
 
     inline const Ruler<frequency_t>* getRuler() const
         { return &_axis; }
@@ -83,14 +86,14 @@ private:
 private:
     static std::vector<impedance_t> readData(std::string fname);
 
-	/**
-	 * @brief upper_power_of_two
-	 * @param v
-	 * @return
-	 *
-	 * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-	 */
-	uint64_t upper_power_of_two(uint64_t v);
+    /**
+     * @brief upper_power_of_two
+     * @param v
+     * @return
+     *
+     * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+     */
+    uint64_t upper_power_of_two(uint64_t v);
 };
 
 } // namespace vfps

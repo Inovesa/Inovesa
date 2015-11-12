@@ -51,6 +51,8 @@ public:
      * @todo currently uses phasespace in CPU Ram
      */
     void apply();
+
+    virtual void update()=0;
 };
 
 } // namespace VFPS

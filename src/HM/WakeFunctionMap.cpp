@@ -61,7 +61,7 @@ vfps::WakeFunctionMap::~WakeFunctionMap()
     delete [] _wakefunction;
 }
 
-void vfps::WakeFunctionMap::apply()
+void vfps::WakeFunctionMap::update()
 {
     #if INOVESA_USE_CL
     if (OCLH::active) {
@@ -76,5 +76,4 @@ void vfps::WakeFunctionMap::apply()
             _force[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
         }
     }
-    WakeKickMap::apply();
 }

@@ -43,7 +43,6 @@ public:
      */
     ElectricField(PhaseSpace* phasespace,
                   const Impedance* impedance,
-                  const size_t nmax=0, const size_t padding=2,
                   const bool wakepot=false);
 
     /**
@@ -108,8 +107,6 @@ private:
 
 private:
     const size_t _nmax;
-
-    const size_t _padding;
 
     const size_t _bpmeshcells;
 

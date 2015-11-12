@@ -20,8 +20,8 @@
 #include "Impedance.hpp"
 
 vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
-                           double f_rev, double f_max, bool roundup) :
-    _nmax(roundup? upper_power_of_two(n) : n),
+                           double f_rev, double f_max) :
+    _nmax(n),
     _axis(Ruler<frequency_t>(_nmax,0,f_max,1))
 {
     _data.reserve(_nmax);

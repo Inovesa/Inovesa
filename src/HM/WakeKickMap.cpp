@@ -32,6 +32,7 @@ vfps::WakeKickMap::~WakeKickMap()
 
 void vfps::WakeKickMap::apply()
 {
+    update();
     updateHM();
     KickMap::apply();
 }

@@ -235,15 +235,15 @@ int main(int argc, char** argv)
 
     double bl = opts.getNaturalBunchLength();
     double f0 = opts.getRevolutionFrequency();
-    unsigned int padding =opts.getPadding();
+    unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
         Display::printText("Will use free space CSR impedance. "
                            "(Give impedance file for other impedance model.)");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
-                                  ps_size*std::max(padding,1u),f0,
-                                  ps_size*vfps::physcons::c/(2*qmax*bl),false);
+                                  ps_size*padding,f0,
+                                  ps_size*vfps::physcons::c/(2*qmax*bl));
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
@@ -344,7 +344,7 @@ int main(int argc, char** argv)
         double rb = opts.getBendingRadius();
         */
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,padding*ps_size,padding,true);
+        field = new ElectricField(mesh,impedance,true);
         Display::printText("Building WakeFunctionMap.");
         wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
                                    HeritageMap::InterpolationType::cubic);
@@ -397,6 +397,8 @@ int main(int argc, char** argv)
     #endif
 
     Display::printText("Starting the simulation.");
+    // first update to have wkm for step0 in file
+    wkm->update();
     for (unsigned int i=0;i<steps*rotations;i++) {
         if (i%outstep == 0) {
             #ifdef INOVESA_USE_CL

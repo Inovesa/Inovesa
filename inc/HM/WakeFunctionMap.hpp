@@ -42,15 +42,15 @@ public:
     ~WakeFunctionMap();
 
 public:
+    inline const meshaxis_t* getWakeFunction() const
+        { return _wakefunction; }
+
     /**
-     * @brief overloads WakeKickMap::apply()
+     * @brief update implements WakeKickMap
      *
      * @todo currently uses phasespace in CPU Ram
      */
-    void apply();
-
-    inline const meshaxis_t* getWakeFunction() const
-        { return _wakefunction; }
+    void update();
 
 private:
 

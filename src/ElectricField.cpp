@@ -21,15 +21,12 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
                                    const Impedance* impedance,
-                                   const size_t nmax,
-                                   const size_t padding,
                                    const bool wakepot) :
-    _nmax(nmax > 0 ? nmax : impedance->maxN()),
-    _padding(std::max(padding,size_t(1u))),
+    _nmax(impedance->maxN()),
     _bpmeshcells(phasespace->nMeshCells(0)),
     _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
     // _axis_wake[_bpmeshcells] will be 0
-    _axis_wake(Ruler<meshaxis_t>(_padding*_bpmeshcells,
+    _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
                                  -phasespace->getDelta(0)*_bpmeshcells,
                                   phasespace->getDelta(0)*(_bpmeshcells-1),
                                  phasespace->getScale(0))),
@@ -39,21 +36,20 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _wakefunction(nullptr),
     _wakepotential(wakepot?new meshaxis_t[_bpmeshcells]:nullptr)
 {
-    _bp_padded_fftw = fftwf_alloc_real(_padding*_nmax);
+    _bp_padded_fftw = fftwf_alloc_real(_nmax);
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
+    std::fill_n(_bp_padded,_nmax,integral_t(0));
 
-    //zero-padding
-    std::fill_n(_bp_padded,_padding*_nmax,integral_t(0));
-
-    _bp_fourier_fftw = fftwf_alloc_complex(_padding*_nmax);
+    _bp_fourier_fftw = fftwf_alloc_complex(_nmax);
     _bp_fourier = reinterpret_cast<impedance_t*>(_bp_fourier_fftw);
+    std::fill_n(_bp_fourier,_nmax,integral_t(0));
 
-    _ft_bunchprofile = prepareFFT(_padding*_nmax,_bp_padded,_bp_fourier);
+    _ft_bunchprofile = prepareFFT(_nmax,_bp_padded,_bp_fourier);
 
 
     if (wakepot) {
-        _wakelosses_fftw = fftwf_alloc_complex(_padding*_nmax);
-        _wakepotential_fftw = fftwf_alloc_complex(_padding*_nmax);
+        _wakelosses_fftw = fftwf_alloc_complex(_nmax);
+        _wakepotential_fftw = fftwf_alloc_complex(_nmax);
     } else {
         _wakelosses_fftw = nullptr;
         _wakepotential_fftw = nullptr;
@@ -63,7 +59,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fftw);
 
     if (wakepot) {
-        _ft_wakelosses = prepareFFT(_padding*_nmax,_wakelosses,
+        _ft_wakelosses = prepareFFT(_nmax,_wakelosses,
                                     _wakepotential_complex,
                                     fft_direction::forward);
     } else {
@@ -161,8 +157,10 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-  std::copy_n(_phasespace->projectionToX(),_bpmeshcells,
-              _bp_padded+(_bpmeshcells*(_padding-size_t(1))/2));
+    // copy bunch profile so that negative times are at maximum bins
+    vfps::projection_t* bp=_phasespace->projectionToX();
+    std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
+    std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
 
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);
@@ -179,13 +177,13 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
     // copy bunch profile so that negative times are at maximum bins
     vfps::projection_t* bp=_phasespace->projectionToX();
-    std::copy_n(bp,_bpmeshcells/2,_bp_padded+_padding*_nmax-_bpmeshcells/2);
+    std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
     std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
 
     //FFT charge density
     fftwf_execute(_ft_bunchprofile);
 
-    std::fill_n(_wakelosses,_padding*_nmax,0);
+    std::fill_n(_wakelosses,_nmax,0);
     for (unsigned int i=0; i<_nmax; i++) {
         _wakelosses[i]=((*_impedance)[i]*_bp_fourier[i]);
     }
@@ -195,7 +193,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     for (unsigned int i=0; i<_bpmeshcells/2; i++) {
         _wakepotential[_bpmeshcells/2+i]=_wakepotential_complex[i].real();
         _wakepotential[_bpmeshcells/2-i-1]
-            =_wakepotential_complex[_nmax*_padding-i-1].real();
+            =_wakepotential_complex[_nmax-i-1].real();
     }
 
     return _wakepotential;

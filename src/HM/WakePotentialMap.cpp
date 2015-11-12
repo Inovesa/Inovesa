@@ -9,7 +9,7 @@ vfps::WakePotentialMap::WakePotentialMap(
 {
 }
 
-void vfps::WakePotentialMap::apply()
+void vfps::WakePotentialMap::update()
 {
     #if INOVESA_USE_CL
     if (OCLH::active) {
@@ -18,7 +18,6 @@ void vfps::WakePotentialMap::apply()
     #endif
     std::copy_n(_field->wakePotential(),_xsize,_force);
     for (meshindex_t x=0;x<_xsize;x++) {
-        _force[x] *= 2e-10;
+        _force[x] *= 2e-8;
     }
-    WakeKickMap::apply();
 }
