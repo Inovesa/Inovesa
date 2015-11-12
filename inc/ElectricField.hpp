@@ -124,9 +124,9 @@ private:
 
     integral_t* _bp_padded_fftw;
 
-    impedance_t* _bp_fourier;
+    impedance_t* _formfactor;
 
-    fftwf_complex* _bp_fourier_fftw;
+    fftwf_complex* _formfactor_fftw;
 
     fftwf_plan _ft_bunchprofile;
 

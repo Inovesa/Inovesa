@@ -40,11 +40,11 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
     std::fill_n(_bp_padded,_nmax,integral_t(0));
 
-    _bp_fourier_fftw = fftwf_alloc_complex(_nmax);
-    _bp_fourier = reinterpret_cast<impedance_t*>(_bp_fourier_fftw);
-    std::fill_n(_bp_fourier,_nmax,integral_t(0));
+    _formfactor_fftw = fftwf_alloc_complex(_nmax);
+    _formfactor = reinterpret_cast<impedance_t*>(_formfactor_fftw);
+    std::fill_n(_formfactor,_nmax,integral_t(0));
 
-    _ft_bunchprofile = prepareFFT(_nmax,_bp_padded,_bp_fourier);
+    _ft_bunchprofile = prepareFFT(_nmax,_bp_padded,_formfactor);
 
 
     if (wakepot) {
@@ -141,7 +141,7 @@ vfps::ElectricField::~ElectricField()
     delete [] _wakepotential;
 
     fftwf_free(_bp_padded_fftw);
-    fftwf_free(_bp_fourier_fftw);
+    fftwf_free(_formfactor_fftw);
     if(_wakelosses_fftw != nullptr) {
         fftwf_free(_wakelosses_fftw);
     }
@@ -167,7 +167,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 
     for (unsigned int i=0; i<_nmax; i++) {
         // norm = squared magnitude
-        _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_bp_fourier[i]);
+        _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
     }
 
     return _csrspectrum;
@@ -185,15 +185,16 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 
     std::fill_n(_wakelosses,_nmax,0);
     for (unsigned int i=0; i<_nmax; i++) {
-        _wakelosses[i]=((*_impedance)[i]*_bp_fourier[i]);
+        _wakelosses[i]=((*_impedance)[i]*_formfactor[i]);
     }
 
     fftwf_execute(_ft_wakelosses);
 
     for (unsigned int i=0; i<_bpmeshcells/2; i++) {
-        _wakepotential[_bpmeshcells/2+i]=_wakepotential_complex[i].real();
+        _wakepotential[_bpmeshcells/2+i  ]
+            = _wakepotential_complex[      i  ].real()/_nmax;
         _wakepotential[_bpmeshcells/2-i-1]
-            =_wakepotential_complex[_nmax-i-1].real();
+            = _wakepotential_complex[_nmax-i-1].real()/_nmax;
     }
 
     return _wakepotential;
