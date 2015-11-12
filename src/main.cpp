@@ -40,7 +40,7 @@
 #include "HM/KickMap.hpp"
 #include "HM/RotationMap.hpp"
 #include "HM/WakeFunctionMap.hpp"
-#include "HM/WakeImpedanceMap.hpp"
+#include "HM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
@@ -133,7 +133,8 @@ int main(int argc, char** argv)
         for (meshindex_t x = 0; x < ps_size; x++) {
             for (meshindex_t y = 0; y < ps_size; y++) {
                 (*mesh)[x][y]
-                    = std::exp(-std::pow((float(x)/ps_size-0.5f)*2*qmax,2.0f)
+                    = 0.5f/M_PI
+                    * std::exp(-std::pow((float(x)/ps_size-0.5f)*2*qmax,2.0f)
                                /2.0f)
                     * std::exp(-std::pow((float(y)/ps_size-0.5f)*2*pmax,2.0f)
                                /2.0f);
@@ -345,8 +346,7 @@ int main(int argc, char** argv)
         Display::printText("Calculating WakeFunction.");
         field = new ElectricField(mesh,impedance,padding*ps_size,padding,true);
         Display::printText("Building WakeFunctionMap.");
-        wkm = new WakeImpedanceMap(mesh_damdiff,mesh,ps_size,ps_size,
-                                   field,impedance,
+        wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
                                    HeritageMap::InterpolationType::cubic);
     }
 
@@ -405,6 +405,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESA_USE_CL
             if (file != nullptr) {
+                file->timeStep(i*dt);
                 mesh->integral();
                 file->append(mesh);
                 field->updateCSRSpectrum();
@@ -430,6 +431,7 @@ int main(int argc, char** argv)
 
     // save final result
     if (file != nullptr) {
+        file->timeStep(dt*steps*rotations);
         mesh->integral();
         file->append(mesh);
         field->updateCSRSpectrum();

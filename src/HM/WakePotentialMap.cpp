@@ -1,19 +1,15 @@
-#include "HM/WakeImpedanceMap.hpp"
+#include "HM/WakePotentialMap.hpp"
 
-
-
-
-vfps::WakeImpedanceMap::WakeImpedanceMap(vfps::PhaseSpace *in, vfps::PhaseSpace *out,
+vfps::WakePotentialMap::WakePotentialMap(
+        vfps::PhaseSpace *in, vfps::PhaseSpace *out,
         const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
-        ElectricField *field, const vfps::Impedance* impedance,
-        const vfps::HeritageMap::InterpolationType it):
+        ElectricField *field, const vfps::HeritageMap::InterpolationType it):
     WakeKickMap(in,out,xsize,ysize,it),
-    _field(field),
-    _impedance(impedance)
+    _field(field)
 {
 }
 
-void vfps::WakeImpedanceMap::apply()
+void vfps::WakePotentialMap::apply()
 {
     #if INOVESA_USE_CL
     if (OCLH::active) {

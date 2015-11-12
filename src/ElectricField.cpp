@@ -142,6 +142,7 @@ vfps::ElectricField::~ElectricField()
 {
     delete [] _csrspectrum;
     delete [] _wakefunction;
+    delete [] _wakepotential;
 
     fftwf_free(_bp_padded_fftw);
     fftwf_free(_bp_fourier_fftw);
@@ -185,7 +186,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     fftwf_execute(_ft_bunchprofile);
 
     std::fill_n(_wakelosses,_padding*_nmax,0);
-    for (unsigned int i=0; i<_padding*_nmax/2; i++) {
+    for (unsigned int i=0; i<_nmax; i++) {
         _wakelosses[i]=((*_impedance)[i]*_bp_fourier[i]);
     }
 

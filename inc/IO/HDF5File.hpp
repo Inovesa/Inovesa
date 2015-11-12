@@ -48,13 +48,15 @@ public:
              const Impedance* imp,
              const WakeFunctionMap *wfm);
 
-	~HDF5File();
+    ~HDF5File();
 
-	void append(const ElectricField* ef);
+    void append(const ElectricField* ef);
 
-	void append(const PhaseSpace* ps);
+    void append(const PhaseSpace* ps);
 
     void append(const WakeKickMap* wkm);
+
+    void timeStep(const double t);
 
 private:
 	H5::H5File* file;
@@ -93,6 +95,18 @@ private: // values for frequency axis
 
 	H5::DSetCreatPropList axfreq_prop;
 
+private: // time axis
+    static constexpr uint_fast8_t ta_rank = 1;
+
+    H5::DataSet ta_dataset;
+
+    H5::DataSpace* ta_dataspace;
+
+    H5::IntType ta_datatype;
+
+    hsize_t ta_dims;
+
+    H5::DSetCreatPropList ta_prop;
 
 private: // bunch charge
 	static constexpr uint_fast8_t bc_rank = 1;

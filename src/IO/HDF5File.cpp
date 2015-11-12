@@ -24,19 +24,20 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const ElectricField* ef,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm) :
-	file( nullptr ),
-	fname( fname ),
-	bc_dims( 0 ),
-	bp_dims( {{ 0, ps->nMeshCells(0) }} ),
+    file( nullptr ),
+    fname( fname ),
+    ta_dims( 0 ),
+    bc_dims( 0 ),
+    bp_dims( {{ 0, ps->nMeshCells(0) }} ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
-	csr_dims( {{ 0, ef->getNMax() }} ),
+    csr_dims( {{ 0, ef->getNMax() }} ),
     maxn( ef->getNMax() ),
-	ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
+    ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     ps_size( ps->nMeshCells(0) ),
     imp_size( imp->maxN() ),
     wf_size( 2*ps_size )
 {
-	file = new H5::H5File(fname,H5F_ACC_TRUNC);
+    file = new H5::H5File(fname,H5F_ACC_TRUNC);
 
 	file->createGroup("Info");
 	// save Values of Phase Space Axis
@@ -102,17 +103,32 @@ vfps::HDF5File::HDF5File(const std::string fname,
 	axfreq_prop.setShuffle();
 	axfreq_prop.setDeflate(compression);
 
-	axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
-											*axfreq_dataspace,axfreq_prop);
+    axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
+                                         *axfreq_dataspace,axfreq_prop);
     const double axfreqscale = imp->getRuler()->scale();
-	axfreq_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
-		H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
+    axfreq_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
     axfreq_dataset.write(imp->getRuler()->data(),axfreq_datatype);
 
 
+    // get ready to save TimeAxis
+    ta_datatype = H5::PredType::IEEE_F64LE;
+
+    hsize_t ta_maxdims = H5S_UNLIMITED;
+
+    ta_dataspace = new H5::DataSpace(ta_rank,&ta_dims,&ta_maxdims);
+
+
+    const hsize_t ta_chunkdims = 256;
+    ta_prop.setChunk(ta_rank,&ta_chunkdims);
+    ta_prop.setShuffle();
+    ta_prop.setDeflate(compression);
+
+    ta_dataset = file->createDataSet("/Info/AxisValues_t",ta_datatype,
+                                     *ta_dataspace,ta_prop);
+
 	// get ready to save BunchCharge
 	file->createGroup("BunchCharge");
-
 	if (std::is_same<vfps::integral_t,float>::value) {
 		bc_datatype = H5::PredType::IEEE_F32LE;
 	} else if (std::is_same<vfps::integral_t,fixp64>::value) {
@@ -305,14 +321,14 @@ vfps::HDF5File::HDF5File(const std::string fname,
     }
 
     // save Inovesa version
-	std::array<hsize_t,1> version_dims {{3}};
-	H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
-	H5::DataSet version_dset = file->createDataSet
-			("/Info/INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
-	std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
-									INOVESA_VERSION_MINOR,
-									INOVESA_VERSION_FIX}};
-	version_dset.write(version.data(),H5::PredType::NATIVE_INT);
+        std::array<hsize_t,1> version_dims {{3}};
+        H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
+        H5::DataSet version_dset = file->createDataSet
+                        ("/Info/INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
+        std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
+                                                                        INOVESA_VERSION_MINOR,
+                                                                        INOVESA_VERSION_FIX}};
+        version_dset.write(version.data(),H5::PredType::NATIVE_INT);
 }
 
 vfps::HDF5File::~HDF5File()
@@ -400,6 +416,23 @@ void vfps::HDF5File::append(const WakeKickMap* wkm)
     filespace->selectHyperslab(H5S_SELECT_SET, wp_ext.data(), wp_offset.data());
     H5::DataSpace* memspace = new H5::DataSpace(wp_rank,wp_ext.data(),nullptr);
     wp_dataset.write(wkm->getForce(), wp_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
+}
+
+void vfps::HDF5File::timeStep(const double t)
+{
+    // append to TimeAxis
+    hsize_t ta_offset = ta_dims;
+    const hsize_t ta_ext = 1;
+    ta_dims++;
+    ta_dataset.extend(&ta_dims);
+    H5::DataSpace* filespace;
+    H5::DataSpace* memspace;
+    filespace = new H5::DataSpace(ta_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, &ta_ext, &ta_offset);
+    memspace = new H5::DataSpace(ta_rank,&ta_ext,nullptr);
+    ta_dataset.write(&t, ta_datatype,*memspace, *filespace);
     delete memspace;
     delete filespace;
 }

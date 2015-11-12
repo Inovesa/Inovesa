@@ -8,13 +8,12 @@
 namespace vfps
 {
 
-class WakeImpedanceMap : public WakeKickMap
+class WakePotentialMap : public WakeKickMap
 {
 public:
-    WakeImpedanceMap(PhaseSpace* in, PhaseSpace* out,
+    WakePotentialMap(PhaseSpace* in, PhaseSpace* out,
                      const meshindex_t xsize, const meshindex_t ysize,
-                     ElectricField *field, const Impedance *impedance,
-                     const InterpolationType it);
+                     ElectricField *field, const InterpolationType it);
 
 public:
     /**
@@ -26,8 +25,6 @@ public:
 
 private:
     ElectricField* _field;
-
-    const Impedance* _impedance;
 };
 
 } // namespace vfps
