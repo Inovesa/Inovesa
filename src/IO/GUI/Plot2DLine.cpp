@@ -25,7 +25,7 @@ vfps::Plot2DLine::~Plot2DLine()
     glDeleteVertexArrays(1, &position);
 }
 
-void vfps::Plot2DLine::createLine(vfps::PhaseSpace* mesh)
+void vfps::Plot2DLine::updateLine(vfps::PhaseSpace* mesh)
 {
     _npoints=mesh->nMeshCells(0);
     _line.resize(_npoints*2);

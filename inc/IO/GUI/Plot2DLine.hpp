@@ -15,9 +15,7 @@ public:
 
     ~Plot2DLine();
 
-    void createLine(PhaseSpace* mesh);
-
-    void delLine();
+    void updateLine(PhaseSpace* mesh);
 
     void draw();
 

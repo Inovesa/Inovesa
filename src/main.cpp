@@ -373,7 +373,7 @@ int main(int argc, char** argv)
     bool gui = opts.showPhaseSpace();
     if (gui) {
         try {
-            psv = new Plot3DColormap();
+            psv = new Plot3DColormap(0.5/M_PI);
             display->addElement(psv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -415,7 +415,7 @@ int main(int argc, char** argv)
             #ifdef INOVESA_USE_GUI
             if (gui) {
                 psv->createTexture(mesh);
-                bpv->createLine(mesh);
+                bpv->updateLine(mesh);
                 display->draw();
                 psv->delTexture();
             }
@@ -438,11 +438,10 @@ int main(int argc, char** argv)
         file->append(field);
         file->append(wkm);
     }
-    if (!opts.showPhaseSpace()) {
-        std::stringstream status;
-        status << rotations << '/' << rotations;
-        Display::printText(status.str());
-    }
+
+    std::stringstream status;
+    status << rotations << '/' << rotations;
+    Display::printText(status.str());
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

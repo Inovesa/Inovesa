@@ -10,7 +10,7 @@ namespace vfps
 class Plot3DColormap : public GUIElement
 {
 public:
-	Plot3DColormap();
+	Plot3DColormap(vfps::meshdata_t maxvalue=1);
 
 	~Plot3DColormap();
 
@@ -29,6 +29,8 @@ private:
 
     GLuint textureID;
     GLuint textureSampler;
+
+    vfps::meshdata_t maxValue;
 };
 
 } // namespace vfps
