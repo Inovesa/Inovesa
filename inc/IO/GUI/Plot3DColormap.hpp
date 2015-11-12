@@ -27,10 +27,8 @@ private:
     GLuint vertexUV;
     GLuint position;
 
-    GLuint VertexArrayID;
-
-    GLuint Texture;
-    GLuint TextureID;
+    GLuint textureID;
+    GLuint textureSampler;
 };
 
 } // namespace vfps
