@@ -56,8 +56,11 @@ public:
 	static uint_fast8_t glversion;
 
 protected:
-    void loadShaders(std::string vertex_file_path,
-                     std::string fragment_file_path);
+    void compileShaders();
+
+    std::string _fragmentshadercode;
+
+    std::string _vertexshadercode;
 
     GLuint programID;
 };

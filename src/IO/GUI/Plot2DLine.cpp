@@ -3,16 +3,49 @@
 vfps::Plot2DLine::Plot2DLine() :
     _npoints(0)
 {
-    // Create and compile our GLSL program from the shaders
+    // Create GLSL code
     switch (glversion) {
     case 2:
-        loadShaders("gl/2DL_gl2.vertexshader","gl/2DL_gl2.fragmentshader");
+        _fragmentshadercode = R"(
+                #version 120
+                void main(){
+                    gl_FragColor = vec4(1,0,0,1);
+                }
+                )";
+        _vertexshadercode = R"(
+            #version 120
+
+            // Input vertex data, different for all executions of this shader.
+            attribute vec2 position2DL;
+
+            void main(){
+                gl_Position =  vec4(position2DL,0,1);
+            }
+            )";
         break;
     case 3:
     default:
-        loadShaders("gl/2DL_gl3.vertexshader","gl/2DL_gl3.fragmentshader");
+        _fragmentshadercode = R"(
+            #version 330 core
+            out vec3 color2DL;
+
+            void main(){
+                color2DL = vec3(1,0,0);
+            }
+            )";
+        _vertexshadercode = R"(
+            #version 330 core
+
+            // Input vertex data, different for all executions of this shader.
+            layout(location = 0) in vec2 position2DL;
+
+            void main(){
+                gl_Position =  vec4(position2DL,0,1);
+            }
+            )";
         break;
     }
+    compileShaders();
     position = glGetAttribLocation(programID, "position2DL");
 
     // Generate 1 buffer, put the resulting identifier in vertexbuffer
