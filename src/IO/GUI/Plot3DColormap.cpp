@@ -3,16 +3,84 @@
 vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue) :
     maxValue(maxvalue)
 {
-    // Create and compile our GLSL program from the shaders
+    // Create GLSL code
     switch (glversion) {
     case 2:
-        loadShaders("gl/3DCM_gl2.vertexshader","gl/3DCM_gl2.fragmentshader");
+        _fragmentshadercode = R"(
+            #version 120
+
+            // Interpolated values from the vertex shaders
+            varying vec2 UV3DCM;
+
+            // Values that stay constant for the whole mesh.
+            uniform sampler2D textureSampler3DCM;
+
+            void main(){
+
+                // Output color = color of the texture at the specified UV
+                gl_FragColor =  texture2D( textureSampler3DCM, UV3DCM );
+            }
+            )";
+        _vertexshadercode = R"(
+            #version 120
+
+            // Input vertex data, different for all executions of this shader.
+            attribute vec2 position3DCM;
+            attribute vec2 vertexUV3DCM;
+
+            // Output data ; will be interpolated for each fragment.
+            varying vec2 UV3DCM;
+
+            void main(){
+
+                gl_Position =  vec4(position3DCM,0,1);
+
+                // UV of the vertex. No special space for this one.
+                UV3DCM = vertexUV3DCM;
+            }
+            )";
         break;
     case 3:
     default:
-        loadShaders("gl/3DCM_gl3.vertexshader","gl/3DCM_gl3.fragmentshader");
+        _fragmentshadercode = R"(
+            #version 330 core
+
+            // Interpolated values from the vertex shaders
+            in vec2 UV3DCM;
+
+            // Ouput data
+            out vec3 color3DCM;
+
+            // Values that stay constant for the whole mesh.
+            uniform sampler2D textureSampler3DCM;
+
+            void main(){
+                // Output color = color of the texture at the specified UV
+                color3DCM = texture2D( textureSampler3DCM, UV3DCM ).rgb;
+            }
+            )";
+        _vertexshadercode = R"(
+            #version 330 core
+
+            // Input vertex data, different for all executions of this shader.
+            layout(location = 0) in vec2 position3DCM;
+            layout(location = 1) in vec2 vertexUV3DCM;
+
+            // Output data ; will be interpolated for each fragment.
+            out vec2 UV3DCM;
+
+            void main(){
+
+                // Output position of the vertex, in clip space : MVP * position
+                gl_Position = vec4(position3DCM,0,1);
+
+                // UV of the vertex. No special space for this one.
+                UV3DCM = vertexUV3DCM;
+            }
+            )";
         break;
     }
+    compileShaders();
     position = glGetAttribLocation(programID, "position3DCM");
     vertexUV = glGetAttribLocation(programID, "vertexUV3DCM");
     textureSampler = glGetUniformLocation(programID, "textureSampler3DCM");

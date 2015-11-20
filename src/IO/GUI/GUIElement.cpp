@@ -24,15 +24,15 @@
 class ShaderException : public std::exception
 {
 public:
-    ShaderException(std::string fname) :
-		_fname(fname)
+    ShaderException(const std::string msg) :
+        _msg(msg)
 		{}
 
 	const char* what() const noexcept
-		{ return ("Cannot open '"+_fname+"'.").c_str(); }
+        { return _msg.c_str(); }
 
 private:
-	std::string _fname;
+    std::string _msg;
 };
 
 vfps::GUIElement::GUIElement()
@@ -44,40 +44,17 @@ vfps::GUIElement::~GUIElement()
     glDeleteProgram(programID);
 }
 
-void vfps::GUIElement::loadShaders(std::string vertex_file_path,
-                                   std::string fragment_file_path)
+void vfps::GUIElement::compileShaders()
 {
-	// Create the shaders
-	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-
-	// Read the Vertex Shader code from the file
-	std::string VertexShaderCode;
-	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if(VertexShaderStream.is_open()){
-		std::string Line = "";
-		while(getline(VertexShaderStream, Line))
-			VertexShaderCode += "\n" + Line;
-		VertexShaderStream.close();
-	}else{
-        throw ShaderException(vertex_file_path);
-	}
-
-	// Read the Fragment Shader code from the file
-	std::string FragmentShaderCode;
-	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if(FragmentShaderStream.is_open()){
-		std::string Line = "";
-		while(getline(FragmentShaderStream, Line))
-			FragmentShaderCode += "\n" + Line;
-		FragmentShaderStream.close();
-	}
+    // Create the shaders
+    GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 	GLint Result = GL_FALSE;
 	GLint InfoLogLength;
 
 	// Compile Vertex Shader
-	char const * VertexSourcePointer = VertexShaderCode.c_str();
+    char const * VertexSourcePointer = _vertexshadercode.c_str();
     glShaderSource(VertexShaderID, 1, &VertexSourcePointer , nullptr);
 	glCompileShader(VertexShaderID);
 
@@ -92,7 +69,7 @@ void vfps::GUIElement::loadShaders(std::string vertex_file_path,
 	}
 
 	// Compile Fragment Shader
-	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
+    char const * FragmentSourcePointer = _fragmentshadercode.c_str();
     glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , nullptr);
 	glCompileShader(FragmentShaderID);
 
