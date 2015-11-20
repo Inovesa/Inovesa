@@ -121,6 +121,8 @@ int main(int argc, char** argv)
 
     std::string startdistfile = opts.getStartDistFile();
 
+    meshdata_t maxval;
+
     if (startdistfile.length() <= 4) {
         ps_size = opts.getMeshSize();
         if (ps_size == 0) {
@@ -140,6 +142,7 @@ int main(int argc, char** argv)
                                /2.0f);
             }
         }
+        maxval = 0.5f/M_PI;
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -169,6 +172,13 @@ int main(int argc, char** argv)
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
                     (*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+                }
+            }
+            integral_t normalization = 1.0/mesh->integral();
+            for (unsigned int x=0; x<ps_size; x++) {
+                for (unsigned int y=0; y<ps_size; y++) {
+                    (*mesh)[x][y] *= normalization;
+                    maxval = std::max(maxval,(*mesh)[x][y]);
                 }
             }
             std::stringstream imgsize;
@@ -214,12 +224,10 @@ int main(int argc, char** argv)
         ifs.close();
 
         // normalize to higest peak
-        meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+        maxval = std::numeric_limits<meshdata_t>::min();
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
-                if ((*mesh)[x][y] > maxval) {
-                    maxval = (*mesh)[x][y];
-                }
+                maxval = std::max(maxval,(*mesh)[x][y]);
             }
         }
         for (unsigned int x=0; x<ps_size; x++) {
@@ -374,7 +382,7 @@ int main(int argc, char** argv)
     bool gui = opts.showPhaseSpace();
     if (gui) {
         try {
-            psv = new Plot3DColormap(0.5/M_PI);
+            psv = new Plot3DColormap(maxval);
             display->addElement(psv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
