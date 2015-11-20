@@ -21,10 +21,10 @@
 
 #include <exception>
 
-class ShaderNotFound : public std::exception
+class ShaderException : public std::exception
 {
 public:
-	ShaderNotFound(std::string fname) :
+    ShaderException(std::string fname) :
 		_fname(fname)
 		{}
 
@@ -60,7 +60,7 @@ void vfps::GUIElement::loadShaders(std::string vertex_file_path,
 			VertexShaderCode += "\n" + Line;
 		VertexShaderStream.close();
 	}else{
-		throw ShaderNotFound(vertex_file_path);
+        throw ShaderException(vertex_file_path);
 	}
 
 	// Read the Fragment Shader code from the file
@@ -73,44 +73,38 @@ void vfps::GUIElement::loadShaders(std::string vertex_file_path,
 		FragmentShaderStream.close();
 	}
 
-
-
 	GLint Result = GL_FALSE;
 	GLint InfoLogLength;
 
-
-
 	// Compile Vertex Shader
 	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(VertexShaderID, 1, &VertexSourcePointer , NULL);
+    glShaderSource(VertexShaderID, 1, &VertexSourcePointer , nullptr);
 	glCompileShader(VertexShaderID);
 
 	// Check Vertex Shader
 	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 	if ( InfoLogLength > 1 ){
-		std::vector<char> VertexShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
-		throw VertexShaderErrorMessage;
+        char* VertexShaderErrorMessage = new char[InfoLogLength+1];
+        VertexShaderErrorMessage[InfoLogLength] = '\0';
+        glGetShaderInfoLog(VertexShaderID, InfoLogLength, nullptr, VertexShaderErrorMessage);
+        throw ShaderException(VertexShaderErrorMessage);
 	}
-
-
 
 	// Compile Fragment Shader
 	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , NULL);
+    glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , nullptr);
 	glCompileShader(FragmentShaderID);
 
 	// Check Fragment Shader
 	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 	if ( InfoLogLength > 1 ){
-		std::vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
-		throw FragmentShaderErrorMessage;
+        char* FragmentShaderErrorMessage = new char[InfoLogLength+1];
+        FragmentShaderErrorMessage[InfoLogLength] = '\0';
+        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, nullptr, FragmentShaderErrorMessage);
+        throw ShaderException(FragmentShaderErrorMessage);
 	}
-
-
 
 	// Link the program
     programID = glCreateProgram();
@@ -122,9 +116,10 @@ void vfps::GUIElement::loadShaders(std::string vertex_file_path,
     glGetProgramiv(programID, GL_LINK_STATUS, &Result);
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 	if ( InfoLogLength > 1 ){
-		std::vector<char> ProgramErrorMessage(InfoLogLength+1);
-        glGetProgramInfoLog(programID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
-		throw ProgramErrorMessage;
+        char* ProgramErrorMessage = new char[InfoLogLength+1];
+        ProgramErrorMessage[InfoLogLength] = '\0';
+        glGetProgramInfoLog(programID, InfoLogLength, nullptr, &ProgramErrorMessage[0]);
+        throw ShaderException(ProgramErrorMessage);
 	}
 
 	glDeleteShader(VertexShaderID);

@@ -414,10 +414,16 @@ int main(int argc, char** argv)
             }
             #ifdef INOVESA_USE_GUI
             if (gui) {
-                psv->createTexture(mesh);
-                bpv->updateLine(mesh);
+                if (psv != nullptr) {
+                    psv->createTexture(mesh);
+                }
+                if (bpv != nullptr) {
+                    bpv->updateLine(mesh);
+                }
                 display->draw();
-                psv->delTexture();
+                if (psv != nullptr) {
+                    psv->delTexture();
+                }
             }
             #endif
             std::stringstream status;
