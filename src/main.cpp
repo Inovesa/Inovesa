@@ -430,11 +430,19 @@ int main(int argc, char** argv)
             }
             #ifdef INOVESA_USE_GUI
             if (gui) {
-                psv->createTexture(mesh);
-                bpv->updateLine(mesh->nMeshCells(0),mesh->projectionToX());
-                wpv->updateLine(mesh->nMeshCells(0),wkm->getForce());
+                if (psv != nullptr) {
+                    psv->createTexture(mesh);
+                }
+                if (bpv != nullptr) {
+                    bpv->updateLine(mesh->nMeshCells(0),mesh->projectionToX());
+                }
+                if (wpv != nullptr) {
+                    wpv->updateLine(mesh->nMeshCells(0),wkm->getForce());
+                }
                 display->draw();
-                psv->delTexture();
+                if (psv != nullptr) {
+                    psv->delTexture();
+                }
             }
             #endif
             std::stringstream status;
@@ -486,3 +494,4 @@ int main(int argc, char** argv)
 
     return EXIT_SUCCESS;
 }
+
