@@ -345,14 +345,12 @@ int main(int argc, char** argv)
                                   wake,HeritageMap::InterpolationType::cubic);
         wkm = wfm;
     } else {
-        /*
         double Ib = opts.getBunchCurrent();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
         double rb = opts.getBendingRadius();
-        */
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,true);
+        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,dt,rb);
         Display::printText("Building WakeFunctionMap.");
         wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
                                    HeritageMap::InterpolationType::cubic);

@@ -19,22 +19,29 @@
 
 #include "ElectricField.hpp"
 
-vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
+vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
-                                   const bool wakepot) :
+                                   bool wakepot,
+                                   double wakescalining) :
     _nmax(impedance->maxN()),
-    _bpmeshcells(phasespace->nMeshCells(0)),
+    _bpmeshcells(ps->nMeshCells(0)),
     _axis_freq(Ruler<meshaxis_t>(_nmax,0,meshaxis_t(1)/_nmax)),
     // _axis_wake[_bpmeshcells] will be 0
     _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
-                                 -phasespace->getDelta(0)*_bpmeshcells,
-                                  phasespace->getDelta(0)*(_bpmeshcells-1),
-                                 phasespace->getScale(0))),
-    _phasespace(phasespace),
+                                 -ps->getDelta(0)*_bpmeshcells,
+                                  ps->getDelta(0)*(_bpmeshcells-1),
+                                 ps->getScale(0))),
+    _phasespace(ps),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
     _wakefunction(nullptr),
-    _wakepotential(wakepot?new meshaxis_t[_bpmeshcells]:nullptr)
+    _wakelosses(nullptr),
+    _wakelosses_fftw(nullptr),
+    _wakepotential_complex(nullptr),
+    _wakepotential_fftw(nullptr),
+    _wakepotential(wakepot?new meshaxis_t[_bpmeshcells]:nullptr),
+    _ft_wakelosses(nullptr),
+    _field2meshpoints(wakescalining)
 {
     _bp_padded_fftw = fftwf_alloc_real(_nmax);
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
@@ -45,26 +52,24 @@ vfps::ElectricField::ElectricField(PhaseSpace* phasespace,
     std::fill_n(_formfactor,_nmax,integral_t(0));
 
     _ft_bunchprofile = prepareFFT(_nmax,_bp_padded,_formfactor);
+}
 
-
-    if (wakepot) {
-        _wakelosses_fftw = fftwf_alloc_complex(_nmax);
-        _wakepotential_fftw = fftwf_alloc_complex(_nmax);
-    } else {
-        _wakelosses_fftw = nullptr;
-        _wakepotential_fftw = nullptr;
-    }
+vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
+                                   const vfps::Impedance *impedance,
+                                   const double Ib, const double E0,
+                                   const double sigmaE, const double dt,
+                                   const double rbend) :
+    ElectricField(ps,impedance,true,4*M_PI*rbend*Ib/physcons::c*dt
+                                    /(ps->getDelta(1)*sigmaE*E0*physcons::e))
+{
+    _wakelosses_fftw = fftwf_alloc_complex(_nmax);
+    _wakepotential_fftw = fftwf_alloc_complex(_nmax);
 
     _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fftw);
     _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fftw);
-
-    if (wakepot) {
-        _ft_wakelosses = prepareFFT(_nmax,_wakelosses,
-                                    _wakepotential_complex,
-                                    fft_direction::forward);
-    } else {
-        _ft_wakelosses = nullptr;
-    }
+    _ft_wakelosses = prepareFFT(_nmax,_wakelosses,
+                                _wakepotential_complex,
+                                fft_direction::forward);
 }
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
@@ -72,7 +77,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
                                    const double sigmaE, const double fs,
                                    const double dt, const double rbend,
                                    const size_t nmax) :
-        ElectricField(ps,impedance,nmax)
+        ElectricField(ps,impedance)
 {
     _wakefunction = new meshaxis_t[2*_bpmeshcells];
     fftwf_complex* z_fftw = fftwf_alloc_complex(nmax);
@@ -192,9 +197,9 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 
     for (unsigned int i=0; i<_bpmeshcells/2; i++) {
         _wakepotential[_bpmeshcells/2+i  ]
-            = _wakepotential_complex[      i  ].real()/_nmax;
+            = _field2meshpoints*_wakepotential_complex[      i  ].real()/_nmax;
         _wakepotential[_bpmeshcells/2-i-1]
-            = _wakepotential_complex[_nmax-i-1].real()/_nmax;
+            = _field2meshpoints*_wakepotential_complex[_nmax-i-1].real()/_nmax;
     }
 
     return _wakepotential;

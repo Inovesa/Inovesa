@@ -17,7 +17,4 @@ void vfps::WakePotentialMap::update()
     }
     #endif
     std::copy_n(_field->wakePotential(),_xsize,_force);
-    for (meshindex_t x=0;x<_xsize;x++) {
-        _force[x] *= 2e-8;
-    }
 }

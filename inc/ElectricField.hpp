@@ -41,9 +41,14 @@ public:
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
      */
-    ElectricField(PhaseSpace* phasespace,
+    ElectricField(PhaseSpace* ps,
                   const Impedance* impedance,
-                  const bool wakepot=false);
+                  const bool wakepot=false,
+                  const double wakescalining=1.0);
+
+    ElectricField(PhaseSpace* ps,
+                  const Impedance* impedance, const double Ib, const double E0,
+                  const double sigmaE, const double dt, const double rbend);
 
     /**
      * @brief ElectricField
@@ -143,6 +148,8 @@ private:
     meshaxis_t* _wakepotential;
 
     fftwf_plan _ft_wakelosses;
+
+    const double _field2meshpoints;
 };
 
 } // namespace vfps
