@@ -15,7 +15,7 @@ public:
 
     ~Plot2DLine();
 
-    void updateLine(PhaseSpace* mesh);
+    void updateLine(const size_t npoints, const float* points);
 
     void draw();
 

@@ -370,6 +370,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_GUI
     Plot2DLine* bpv = nullptr;
     Plot3DColormap* psv = nullptr;
+    Plot2DLine* wpv = nullptr;
     bool gui = opts.showPhaseSpace();
     if (gui) {
         try {
@@ -382,8 +383,6 @@ int main(int argc, char** argv)
             psv = nullptr;
             gui = false;
         }
-    }
-    if (gui) {
         try {
             bpv = new Plot2DLine();
             display->addElement(bpv);
@@ -392,6 +391,15 @@ int main(int argc, char** argv)
             display->takeElement(bpv);
             delete bpv;
             bpv = nullptr;
+        }
+        try {
+            wpv = new Plot2DLine();
+            display->addElement(wpv);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(wpv);
+            delete wpv;
+            wpv = nullptr;
         }
     }
     #endif
@@ -417,7 +425,8 @@ int main(int argc, char** argv)
             #ifdef INOVESA_USE_GUI
             if (gui) {
                 psv->createTexture(mesh);
-                bpv->updateLine(mesh);
+                bpv->updateLine(mesh->nMeshCells(0),mesh->projectionToX());
+                wpv->updateLine(mesh->nMeshCells(0),wkm->getForce());
                 display->draw();
                 psv->delTexture();
             }

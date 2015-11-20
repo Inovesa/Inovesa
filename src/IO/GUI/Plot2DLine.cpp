@@ -25,20 +25,19 @@ vfps::Plot2DLine::~Plot2DLine()
     glDeleteVertexArrays(1, &position);
 }
 
-void vfps::Plot2DLine::updateLine(vfps::PhaseSpace* mesh)
+void vfps::Plot2DLine::updateLine(const size_t npoints, const float* points)
 {
-    _npoints=mesh->nMeshCells(0);
+    _npoints=npoints;
     _line.resize(_npoints*2);
     float step = 1.5f/_npoints;
-    projection_t* bp = mesh->projectionToX();
     float max =0.0f;
     for (size_t n=0; n<_npoints; n++) {
-        max = std::max(max,bp[n]);
+        max = std::max(max,points[n]);
     }
-    max*=3.0f;
+    max*=4.0f;
     for (size_t n=0; n<_npoints; n++) {
         _line[2*n  ] = -1.0f+n*step;
-        _line[2*n+1] = -0.9f+bp[n]/max;
+        _line[2*n+1] = -0.8f+points[n]/max;
     }
 
     // The following commands will talk about our 'vertexbuffer' buffer
