@@ -135,10 +135,12 @@ protected:
     PhaseSpace* _out;
 
 protected:
+    #ifdef INOVESA_USE_CL
     /**
      * @brief genCode4HM1D generates OpenCL code for a generic heritage map
      */
     void genCode4HM1D();
+    #endif // INOVESA_USE_CL
 
     /**
      * @brief calcCoefficiants

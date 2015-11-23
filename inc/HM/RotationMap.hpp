@@ -24,6 +24,7 @@
 
 #include "defines.hpp"
 #include "HeritageMap.hpp"
+#include "IO/Display.hpp"
 
 using std::modf;
 

@@ -40,11 +40,6 @@
 #else // GLFW2
 #include <GL/glfw.h>
 #endif // GLFW2
-
-// Include GLM
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #endif // INOVESA_USE_GUI
 #include <vector>
 
@@ -63,22 +58,26 @@ public:
 
 	~Display();
 
+    #ifdef INOVESA_USE_GUI
 	void addElement(GUIElement* newitem);
+    #endif // INOVESA_USE_GUI
 
 	void draw();
 
 	static void printText(std::string txt, float silentTime=0.0f);
 
+    #ifdef INOVESA_USE_GUI
 	void takeElement(GUIElement* item);
+    #endif // INOVESA_USE_GUI
 
 private:
 	#ifdef INOVESA_USE_GUI
 	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow* window;
-	#endif
-	#endif // INOVESA_USE_GUI
+    #endif
 
 	std::vector<GUIElement*> _item;
+    #endif // INOVESA_USE_GUI
 
     static std::chrono::system_clock::time_point _lastmessage;
 };

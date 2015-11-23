@@ -37,7 +37,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
     if (_rotmapsize == 0) {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
-            rot = {{_cos_dt,_sin_dt}};
+            rot = {{float(_cos_dt),float(_sin_dt)}};
             imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
 
             genCode4Rotation();
@@ -314,6 +314,8 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
     delete [] ph1D;
 }
 
+
+#ifdef INOVESA_USE_CL
 void vfps::RotationMap::genCode4HM4_2sat()
 {
     _cl_code += R"(
@@ -636,3 +638,4 @@ void vfps::RotationMap::genCode4Rotation()
         ;})";
     }
 }
+#endif // INOVESA_USE_CL

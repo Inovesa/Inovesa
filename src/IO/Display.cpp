@@ -19,14 +19,15 @@
 
 #include "IO/Display.hpp"
 
-#ifdef INOVESA_USE_GUI
-
 vfps::Display::Display()
+    #ifdef INOVESA_USE_GUI
 	#if GLFW_VERSION_MAJOR == 3
 	:
 	window(nullptr)
-	#endif
+    #endif // GLFW_VERSION_MAJOR == 3
+    #endif // INOVESA_USE_GUI
 {
+    #ifdef INOVESA_USE_GUI
 	glfwInit();
 
 	#if GLFW_VERSION_MAJOR == 3 // GLFW3
@@ -40,7 +41,6 @@ vfps::Display::Display()
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
 	glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	#endif // GLFW2
-
 
 	// Open a window and create its OpenGL context
 	#if GLFW_VERSION_MAJOR < 3
@@ -81,7 +81,7 @@ vfps::Display::Display()
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	#else
 	glfwEnable(GLFW_STICKY_KEYS);
-	#endif
+    #endif // GLFW_VERSION_MAJOR == 3
 
     // White background
     glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
@@ -90,19 +90,25 @@ vfps::Display::Display()
 	glEnable(GL_DEPTH_TEST);
 	// Accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
+    #endif // INOVESA_USE_GUI
 }
 
 vfps::Display::~Display()
 {
+    #ifdef INOVESA_USE_GUI
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
+    #endif // INOVESA_USE_GUI
 }
 
+#ifdef INOVESA_USE_GUI
 void vfps::Display::addElement(GUIElement* newitem)
 {
 	_item.push_back(newitem);
 }
+#endif // INOVESA_USE_GUI
 
+#ifdef INOVESA_USE_GUI
 void vfps::Display::draw() {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -120,7 +126,6 @@ void vfps::Display::draw() {
 	#endif
 	glfwPollEvents();
 }
-
 #endif // INOVESA_USE_GUI
 
 void vfps::Display::printText(std::string txt, float silentTime)
@@ -138,6 +143,7 @@ void vfps::Display::printText(std::string txt, float silentTime)
     }
 }
 
+#ifdef INOVESA_USE_GUI
 void vfps::Display::takeElement(vfps::GUIElement* item)
 {
 	for (size_t i=0; i< _item.size(); i++) {
@@ -147,6 +153,7 @@ void vfps::Display::takeElement(vfps::GUIElement* item)
 		}
 	}
 }
+#endif // INOVESA_USE_GUI
 
 std::chrono::system_clock::time_point vfps::Display::start_time;
 

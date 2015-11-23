@@ -49,7 +49,7 @@ typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
 // has to be uint32_t (same as cl_uint) for OpenCL support
 typedef uint32_t meshindex_t;
 
-/* currently all of the below types have to be the same for fixpNN
+/* currently all of the below types have to be the same
  * use this to switch them all */
 typedef float data_t;
 

@@ -127,6 +127,8 @@ void vfps::HeritageMap::apply()
     }
 }
 
+
+#ifdef INOVESA_USE_CL
 void vfps::HeritageMap::genCode4HM1D()
 {
     _cl_code += R"(
@@ -146,6 +148,7 @@ void vfps::HeritageMap::genCode4HM1D()
     }
 )";
 }
+#endif // INOVESA_USE_CL
 
 void vfps::HeritageMap::calcCoefficiants(vfps::interpol_t* ic,
                                          const vfps::interpol_t f,
