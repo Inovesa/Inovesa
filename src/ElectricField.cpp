@@ -185,12 +185,15 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
     std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
 
-    //FFT charge density
+    //Fourier transorm charge density
+    for (unsigned int i=0; i<_nmax; i++) {
+        _bp_padded[i]*=_axis_wake.delta();
+    }
     fftwf_execute(_ft_bunchprofile);
 
     std::fill_n(_wakelosses,_nmax,0);
     for (unsigned int i=0; i<_nmax; i++) {
-        _wakelosses[i]=((*_impedance)[i]*_formfactor[i]);
+        _wakelosses[i]=(*_impedance)[i]*_formfactor[i];
     }
 
     fftwf_execute(_ft_wakelosses);
