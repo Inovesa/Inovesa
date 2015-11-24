@@ -21,18 +21,20 @@
 
 #include "IO/GUI/Plot2DLine.hpp"
 
-vfps::Plot2DLine::Plot2DLine() :
+vfps::Plot2DLine::Plot2DLine(std::array<float,3> rgb) :
     _npoints(0)
 {
+    std::stringstream color;
+    color << rgb[0] << ',' << rgb[1] << ',' << rgb[2];
     // Create GLSL code
     switch (glversion) {
     case 2:
         _fragmentshadercode = R"(
                 #version 120
                 void main(){
-                    gl_FragColor = vec4(1,0,0,1);
-                }
-                )";
+                    gl_FragColor = vec4(
+        )";
+        _fragmentshadercode += color.str() + ",0);}";
         _vertexshadercode = R"(
             #version 120
 
@@ -51,9 +53,9 @@ vfps::Plot2DLine::Plot2DLine() :
             out vec3 color2DL;
 
             void main(){
-                color2DL = vec3(1,0,0);
-            }
+                color2DL = vec3(
             )";
+            _fragmentshadercode += color.str() + ");}";
         _vertexshadercode = R"(
             #version 330 core
 

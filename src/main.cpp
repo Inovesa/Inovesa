@@ -390,7 +390,7 @@ int main(int argc, char** argv)
             gui = false;
         }
         try {
-            bpv = new Plot2DLine();
+            bpv = new Plot2DLine(std::array<float,3>{{1,0,0}});
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -399,7 +399,7 @@ int main(int argc, char** argv)
             bpv = nullptr;
         }
         try {
-            wpv = new Plot2DLine();
+            wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
             display->addElement(wpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
