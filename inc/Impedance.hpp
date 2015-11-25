@@ -34,7 +34,8 @@ class Impedance
 {
 public:
     enum class ImpedanceModel : uint_fast8_t {
-        FreeSpaceCSR = 0
+        ConstantOne = 0,
+        FreeSpaceCSR = 1
     };
 
 public:

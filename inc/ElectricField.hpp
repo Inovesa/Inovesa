@@ -149,7 +149,7 @@ private:
 
     fftwf_plan _ft_wakelosses;
 
-    const double _field2meshpoints;
+    const double _wakescaling;
 };
 
 } // namespace vfps
