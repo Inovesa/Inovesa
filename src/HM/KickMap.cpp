@@ -149,7 +149,7 @@ void vfps::KickMap::updateHM()
 
     // translate force into HM
     for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-        meshaxis_t poffs = _meshysize/2-_force[q_i];
+        meshaxis_t poffs = _meshysize/2+_force[q_i];
         meshaxis_t qp_int;
         //Scaled arguments of interpolation functions:
         meshindex_t jd; //numper of lower mesh point from p'

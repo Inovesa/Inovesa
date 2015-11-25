@@ -50,8 +50,7 @@ public:
 
 protected:
     /**
-     * @brief _force for computational speed is defined in a way,
-     *        that positive forces reduce the energy
+     * @brief _force in units of mesh points
      */
     meshaxis_t* _force;
 
