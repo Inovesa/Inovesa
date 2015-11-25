@@ -192,11 +192,13 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     // This is because Y[n-i] = Y[i].
     fftwf_execute(_ft_bunchprofile);
     _formfactor[0] *= _axis_wake.delta();
+    _formfactor[_nmax/2]*= _axis_wake.delta();
     for (size_t i=1; i<_nmax/2; i++) {
         _formfactor[i      ]*= _axis_wake.delta();
         _formfactor[_nmax-i] = std::conj(_formfactor[i]);
     }
     _wakelosses[0]=(*_impedance)[0]*_formfactor[0];
+    _wakelosses[_nmax/2]=(*_impedance)[_nmax/2]*_formfactor[_nmax/2];
     for (unsigned int i=1; i<_nmax/2; i++) {
         _wakelosses[      i]=          (*_impedance)[i] *_formfactor[      i];
         _wakelosses[_nmax-i]=std::conj((*_impedance)[i])*_formfactor[_nmax-i];
@@ -205,8 +207,10 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     //Fourier transorm wakelosses
     fftwf_execute(_ft_wakelosses);
 
-    _wakepotential[_bpmeshcells/2]
-        = _wakepotential_complex[0].real()* _axis_freq.delta() *_wakescaling;
+    _wakepotential[0] = _wakepotential_complex[_bpmeshcells/2].real()
+                      * _axis_freq.delta() *_wakescaling;
+    _wakepotential[_bpmeshcells/2] = _wakepotential_complex[0].real()
+                      * _axis_freq.delta() *_wakescaling;
     for (unsigned int i=1; i<_bpmeshcells/2; i++) {
         _wakepotential[_bpmeshcells/2+i]
             = _wakepotential_complex[      i].real()
