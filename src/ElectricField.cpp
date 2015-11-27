@@ -21,7 +21,6 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
-                                   bool wakepot,
                                    double wakescalining) :
     _nmax(impedance->maxN()),
     _bpmeshcells(ps->nMeshCells(0)),
@@ -39,9 +38,9 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _wakelosses_fftw(nullptr),
     _wakepotential_complex(nullptr),
     _wakepotential_fftw(nullptr),
-    _wakepotential(wakepot?new meshaxis_t[_bpmeshcells]:nullptr),
+    _wakepotential(wakescalining>0?new meshaxis_t[_bpmeshcells]:nullptr),
     _ft_wakelosses(nullptr),
-    _wakescaling(wakescalining)
+    _wakescaling(wakescalining*_axis_wake.delta()*_axis_freq.delta())
 {
     _bp_padded_fftw = fftwf_alloc_real(_nmax);
     _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
@@ -59,8 +58,8 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt,
                                    const double rbend) :
-    ElectricField(ps,impedance,true,4*M_PI*rbend*Ib/physcons::c*dt/physcons::e
-                                    /(ps->getDelta(1)*sigmaE*E0)
+    ElectricField(ps,impedance,4*M_PI*rbend*Ib/physcons::c*dt/physcons::e
+                               /(ps->getDelta(1)*sigmaE*E0)
                  )
 {
     _wakelosses_fftw = fftwf_alloc_complex(_nmax);
@@ -190,34 +189,22 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     // FFTW R2C only computes elements 0...n/2, and
     // sets second half of output array to 0.
     // This is because Y[n-i] = Y[i].
+    // We will use this, and choose the wake losses
+    // for negetive frequencies to be 0, equivalent to Z(-|f|)=0.
     fftwf_execute(_ft_bunchprofile);
-    _formfactor[0] *= _axis_wake.delta();
-    _formfactor[_nmax/2]*= _axis_wake.delta();
-    for (size_t i=1; i<_nmax/2; i++) {
-        _formfactor[i      ]*= _axis_wake.delta();
-        _formfactor[_nmax-i] = std::conj(_formfactor[i]);
-    }
-    _wakelosses[0]=(*_impedance)[0]*_formfactor[0];
-    _wakelosses[_nmax/2]=(*_impedance)[_nmax/2]*_formfactor[_nmax/2];
-    for (unsigned int i=1; i<_nmax/2; i++) {
-        _wakelosses[      i]=          (*_impedance)[i] *_formfactor[      i];
-        _wakelosses[_nmax-i]=std::conj((*_impedance)[i])*_formfactor[_nmax-i];
+
+    for (unsigned int i=0; i<_nmax/2; i++) {
+        _wakelosses[i]= (*_impedance)[i] *_formfactor[i];
     }
 
     //Fourier transorm wakelosses
     fftwf_execute(_ft_wakelosses);
 
-    _wakepotential[0] = _wakepotential_complex[_bpmeshcells/2].real()
-                      * _axis_freq.delta() *_wakescaling;
-    _wakepotential[_bpmeshcells/2] = _wakepotential_complex[0].real()
-                      * _axis_freq.delta() *_wakescaling;
-    for (unsigned int i=1; i<_bpmeshcells/2; i++) {
+    for (size_t i=0; i<_bpmeshcells/2; i++) {
         _wakepotential[_bpmeshcells/2+i]
-            = _wakepotential_complex[      i].real()
-            * _axis_freq.delta() *_wakescaling;
-        _wakepotential[_bpmeshcells/2-i]
-            = _wakepotential_complex[_nmax-i].real()
-            * _axis_freq.delta() *_wakescaling;
+            = _wakepotential_complex[        i].real()*_wakescaling;
+        _wakepotential[_bpmeshcells/2-1-i]
+            = _wakepotential_complex[_nmax-1-i].real()*_wakescaling;
     }
 
     return _wakepotential;

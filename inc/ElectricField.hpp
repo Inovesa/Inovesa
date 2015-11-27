@@ -40,18 +40,32 @@ public:
      * @brief ElectricField minimal constructor, will not offer wake function
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
+     * @param wakescaling scaling of wakepotential
+     *        (As being part of fourier transform,
+     *         delta t and delta f will be automatically taken into account.)
+     *
+     * Use other constructors when you want to use wake function or wake field.
      */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance,
-                  const bool wakepot=false,
-                  const double wakescalining=1.0);
+                  const double wakescalining=0.0);
 
+    /**
+     * @brief ElectricField constructor for use of wake potential
+     * @param ps
+     * @param impedance
+     * @param Ib
+     * @param E0
+     * @param sigmaE
+     * @param dt
+     * @param rbend
+     */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance, const double Ib, const double E0,
                   const double sigmaE, const double dt, const double rbend);
 
     /**
-     * @brief ElectricField
+     * @brief ElectricField constructor for use of wake function
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
      * @param Ib bunch current [A]
@@ -62,6 +76,7 @@ public:
      * @param frev revolution frequency [Hz]
      * @param dt time step [s]
      * @param rbend bending radius [m]
+     * @param nmax
      */
     ElectricField(PhaseSpace* ps, const Impedance* impedance,
                   const double Ib, const double E0,
