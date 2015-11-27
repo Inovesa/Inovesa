@@ -370,7 +370,7 @@ int main(int argc, char** argv)
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+        mesh->syncCLMem(clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_CL
     #ifdef INOVESA_USE_GUI
@@ -417,7 +417,7 @@ int main(int argc, char** argv)
         if (i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
-                mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+                mesh->syncCLMem(clCopyDirection::dev2cpu);
             }
             #endif // INOVESA_USE_CL
             if (file != nullptr) {

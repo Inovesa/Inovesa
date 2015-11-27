@@ -65,7 +65,7 @@ void vfps::WakeFunctionMap::update()
 {
     #if INOVESA_USE_CL
     if (OCLH::active) {
-    _in->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+    _in->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif
     integral_t charge = _in->integral();

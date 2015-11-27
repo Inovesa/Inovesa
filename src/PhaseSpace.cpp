@@ -26,6 +26,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
                                              new integral_t[nMeshCells(1)]
                                           }}),
     _nmeshcells(nMeshCells(0)*nMeshCells(1)),
+    _integraltype(IntegralType::simpson),
     _data1D(new meshdata_t[_nmeshcells]())
 {
     _data = new meshdata_t*[nMeshCells(0)];
@@ -95,12 +96,17 @@ vfps::integral_t vfps::PhaseSpace::integral()
 {
     projectionToX();
     _integral = 0;
-    for (size_t x=0; x< nMeshCells(0); x++) {
-        #if INTEGRAL_TYPE == 1
+    switch (_integraltype) {
+    case IntegralType::sum:
+        for (size_t x=0; x< nMeshCells(0); x++) {
             _projection[0][x] += _projection[0][x];
-        #elif INTEGRAL_TYPE == 2
+        }
+        break;
+    case IntegralType::simpson:
+        for (size_t x=0; x< nMeshCells(0); x++) {
             _integral += _projection[0][x]*static_cast<integral_t>(_ws[0][x]);
-        #endif
+        }
+        break;
     }
     return _integral;
 }
@@ -162,20 +168,26 @@ vfps::projection_t *vfps::PhaseSpace::projectionToX() {
         syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif
-    for (size_t x=0; x < nMeshCells(0); x++) {
-        _projection[0][x] = 0;
-
-        for (size_t y=0; y< nMeshCells(1); y++) {
-            #if INTEGRAL_TYPE == 1
+    switch (_integraltype) {
+    case IntegralType::sum:
+        for (size_t x=0; x < nMeshCells(0); x++) {
+            _projection[0][x] = 0;
+            for (size_t y=0; y< nMeshCells(1); y++) {
                 _projection[0][x] += _data[x][y];
-            #elif INTEGRAL_TYPE == 2
-                _projection[0][x] += _data[x][y]*_ws[1][y];
-            #endif
+            }
         }
-        #if INTEGRAL_TYPE == 1
-            _projection[0][x] /= size(1);
-        #endif
-    }
+        //_projection[0][x] /= size(1);
+        break;
+    case IntegralType::simpson:
+          for (size_t x=0; x < nMeshCells(0); x++) {
+              _projection[0][x] = 0;
+              for (size_t y=0; y< nMeshCells(1); y++) {
+                _projection[0][x] += _data[x][y]*_ws[1][y];
+              }
+          }
+          break;
+        }
+
     return _projection[0];
 }
 
@@ -185,19 +197,25 @@ vfps::projection_t *vfps::PhaseSpace::projectionToY() {
         syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif
-    for (size_t y=0; y< nMeshCells(1); y++) {
-        _projection[1][y] = 0;
+    switch (_integraltype) {
+    case IntegralType::sum:
+        for (size_t y=0; y< nMeshCells(1); y++) {
+            _projection[1][y] = 0;
 
-        for (size_t x=0; x< nMeshCells(0); x++) {
-            #if INTEGRAL_TYPE == 1
+            for (size_t x=0; x< nMeshCells(0); x++) {
                 _projection[1][y] += _data[x][y];
-            #elif INTEGRAL_TYPE == 2
-                _projection[1][y] += _data[x][y]*_ws[0][x];
-            #endif
-        }
-        #if INTEGRAL_TYPE == 1
+            }
             _projection[1][y] /= size(0);
-        #endif
+        }
+        break;
+    case IntegralType::simpson:
+        for (size_t y=0; y< nMeshCells(1); y++) {
+            _projection[1][y] = 0;
+            for (size_t x=0; x< nMeshCells(0); x++) {
+                _projection[1][y] += _data[x][y]*_ws[0][x];
+            }
+        }
+        break;
     }
     return _projection[1];
 }

@@ -31,13 +31,6 @@
 
 //#define INOVESA_SYNC_CL
 
-/**
- * possible choices are:
- * 1: sum
- * 2: simpson
- */
-#define INTEGRAL_TYPE 2
-
 namespace vfps
 {
 #define FXP_FRACPART 28

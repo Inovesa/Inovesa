@@ -21,6 +21,11 @@
 #define OPENCLHANDLER_HPP
 #ifdef INOVESA_USE_CL
 
+enum class clCopyDirection {
+    cpu2dev,
+    dev2cpu
+};
+
 #include <GL/glew.h>
 
 #define __CL_ENABLE_EXCEPTIONS

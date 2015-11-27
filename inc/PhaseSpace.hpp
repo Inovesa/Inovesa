@@ -37,7 +37,7 @@
 #include <vector>
 
 namespace vfps {
-	class PhaseSpace; // forward declaration
+        class PhaseSpace; // forward declaration
 }
 
 #include "CL/OpenCLHandler.hpp"
@@ -50,9 +50,14 @@ namespace vfps
 class PhaseSpace
 {
 public:
-	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
+    enum class IntegralType : uint_fast8_t {
+        sum,simpson
+    };
 
-	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
+public:
+        PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
+
+        PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
 
 	PhaseSpace(meshindex_t ps_size,
 			   meshaxis_t xmin, meshaxis_t xmax,
@@ -132,11 +137,6 @@ public:
 	friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 	#ifdef INOVESA_USE_CL
-	enum class clCopyDirection {
-		cpu2dev,
-		dev2cpu
-	};
-
 	void syncCLMem(clCopyDirection dir);
 	#endif
 
@@ -148,6 +148,8 @@ protected:
 	const std::array<projection_t*,2> _projection;
 
 	size_t _nmeshcells;
+
+	const IntegralType _integraltype;
 
 	meshdata_t** _data;
 

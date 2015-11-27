@@ -13,7 +13,7 @@ void vfps::WakePotentialMap::update()
 {
     #if INOVESA_USE_CL
     if (OCLH::active) {
-    _in->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+    _in->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif
     std::copy_n(_field->wakePotential(),_xsize,_force);
