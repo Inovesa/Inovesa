@@ -196,6 +196,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     for (unsigned int i=0; i<_nmax/2; i++) {
         _wakelosses[i]= (*_impedance)[i] *_formfactor[i];
     }
+    std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
 
     //Fourier transorm wakelosses
     fftwf_execute(_ft_wakelosses);
