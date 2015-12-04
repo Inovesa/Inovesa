@@ -23,9 +23,9 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it) :
     HeritageMap(in,out,xsize,1,it,it),
-    _force(new meshaxis_t[xsize]()),
     _meshysize(ysize)
 {
+    _force.resize(xsize,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
     for (meshindex_t q_i=0; q_i<xsize; q_i++) {
         _hinfo[q_i*_ip].index = _meshysize/2;
@@ -39,7 +39,7 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         _cl_code += R"(
-        __kernel void applyHM_Kick(    const __global data_t* src,
+        __kernel void applyHM_Kick( const __global data_t* src,
                                     const __global hi* hm,
                                     const uint hm_len,
                                     const uint ysize,
@@ -52,7 +52,8 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
             const uint meshoffs = x*ysize;
             for (uint j=0; j<hm_len; j++)
             {
-                value += mult( src[meshoffs+y+hm[hmoffset+j].src-ysize/2],
+                value += mult( src[meshoffs+min(ysize-1,
+                                                y+hm[hmoffset+j].src-ysize/2)],
                                hm[hmoffset+j].weight);
             }
             dst[meshoffs+y] = value;
@@ -77,7 +78,6 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
 
 vfps::KickMap::~KickMap()
 {
-    delete [] _force;
 }
 
 void vfps::KickMap::apply()
@@ -85,7 +85,7 @@ void vfps::KickMap::apply()
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         #ifdef INOVESA_SYNC_CL
-        _in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+        _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         OCLH::queue.enqueueNDRangeKernel (
                     applyHM,
@@ -97,7 +97,7 @@ void vfps::KickMap::apply()
         OCLH::queue.enqueueBarrier();
         #endif // CL_VERSION_1_2
         #ifdef INOVESA_SYNC_CL
-        _out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+        _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #endif // INOVESA_USE_CL
@@ -112,12 +112,10 @@ void vfps::KickMap::apply()
             data_out[offs+y] = 0;
             for (uint_fast8_t j=0; j<_ip; j++) {
                 hi h = _hinfo[x*_ip+j];
-                meshindex_t ysrc = static_cast<int32_t>(y+h.index)
-                                 - static_cast<int32_t>(_meshysize/2);
-                if (ysrc < _meshysize) {
-                    data_out[offs+y] += data_in[offs+ysrc]
-                                *static_cast<meshdata_t>(h.weight);
-                }
+                data_out[offs+y] += data_in[offs+std::min(_meshysize-1,
+                        static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
+                      - static_cast<int32_t>(_meshysize/2)))]
+                      * static_cast<meshdata_t>(h.weight);
             }
         }
     }

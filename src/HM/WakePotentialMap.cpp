@@ -16,5 +16,5 @@ void vfps::WakePotentialMap::update()
     _in->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif
-    std::copy_n(_field->wakePotential(),_xsize,_force);
+    std::copy_n(_field->wakePotential(),_xsize,_force.data());
 }

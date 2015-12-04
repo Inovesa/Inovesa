@@ -97,7 +97,7 @@ void vfps::HeritageMap::apply()
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         #ifdef INOVESA_SYNC_CL
-        _in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+        _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         OCLH::queue.enqueueNDRangeKernel (
                     applyHM,
@@ -109,7 +109,7 @@ void vfps::HeritageMap::apply()
         OCLH::queue.enqueueBarrier();
         #endif // CL_VERSION_1_2
         #ifdef INOVESA_SYNC_CL
-        _out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+        _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #endif // INOVESA_USE_CL

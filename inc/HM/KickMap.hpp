@@ -41,7 +41,7 @@ public:
 
 public:
     const inline meshaxis_t* getForce() const
-        { return _force; }
+        { return _force.data(); }
 
 public:
     void apply();
@@ -52,7 +52,7 @@ protected:
     /**
      * @brief _force in units of mesh points
      */
-    meshaxis_t* _force;
+    std::vector<meshaxis_t> _force;
 
     const meshindex_t _meshysize;
 
