@@ -112,6 +112,8 @@ void vfps::KickMap::apply()
             data_out[offs+y] = 0;
             for (uint_fast8_t j=0; j<_ip; j++) {
                 hi h = _hinfo[x*_ip+j];
+                // the min makes sure not to have out of bounds accesses
+                // casting is to be sure about overflow behaviour
                 data_out[offs+y] += data_in[offs+std::min(_meshysize-1,
                         static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
                       - static_cast<int32_t>(_meshysize/2)))]

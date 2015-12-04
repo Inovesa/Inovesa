@@ -25,7 +25,9 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
     _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
                                              new integral_t[nMeshCells(1)]
                                           }}),
-    _nmeshcells(nMeshCells(0)*nMeshCells(1)),
+    _nmeshcellsX(nMeshCells(0)),
+    _nmeshcellsY(nMeshCells(1)),
+    _nmeshcells(_nmeshcellsX*_nmeshcellsY),
     _integraltype(IntegralType::simpson),
     _data1D(new meshdata_t[_nmeshcells]())
 {
@@ -33,34 +35,77 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
     for (size_t i=0; i<nMeshCells(0); i++) {
         _data[i] = &(_data1D[i*nMeshCells(1)]);
     }
-    _ws[0] = new meshdata_t[nMeshCells(0)];
-    _ws[1] = new meshdata_t[nMeshCells(1)];
+    _ws = new meshdata_t[nMeshCells(0)];
 
     const integral_t ca = 3.;
     integral_t dc = 1;
 
     const integral_t h03 = getDelta(0)/integral_t(3);
-    _ws[0][0] = h03;
+    _ws[0] = h03;
     for (size_t x=1; x< nMeshCells(0)-1; x++){
-        _ws[0][x] = h03 * (ca+dc);
+        _ws[x] = h03 * (ca+dc);
         dc = -dc;
     }
-    _ws[0][nMeshCells(0)-1] = h03;
+    _ws[nMeshCells(0)-1] = h03;
 
-
-    const integral_t h13 = getDelta(1)/integral_t(3);
-    _ws[1][0] = h13;
-    for (size_t x=1; x< nMeshCells(1)-1; x++){
-        _ws[1][x] = h13 * (ca+dc);
-        dc = -dc;
-    }
-    _ws[1][nMeshCells(0)-1] = h13;
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         data_buf = cl::Buffer(OCLH::context,
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*nMeshCells(0)*nMeshCells(1),
                            _data1D);
+        projectionX_buf = cl::Buffer(OCLH::context,
+                                     CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                     sizeof(projection_t)*_nmeshcellsX,
+                                     _projection[0]);
+        integral_buf = cl::Buffer(OCLH::context,
+                                     CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                     sizeof(integral_t),&_integral);
+        ws_buf = cl::Buffer(OCLH::context,
+                            CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                            sizeof(meshdata_t)*_nmeshcellsX,
+                            _ws);
+        std::string cl_code_projection_x = R"(
+            __kernel void projectionX(const __global float* mesh,
+                                      const __global float* ws,
+                                      const uint ysize,
+                                      __global float* proj)
+            {
+                float value = 0;
+                const uint x = get_global_id(0);
+                const uint meshoffs = x*ysize;
+                for (uint y=0; y< ysize; y++) {
+                    value += mesh[meshoffs+y]*ws[y];
+                }
+                proj[x] = value;
+            }
+            )";
+        _clProgProjX  = OCLH::prepareCLProg(cl_code_projection_x);
+        _clKernProjX = cl::Kernel(_clProgProjX, "projectionX");
+        _clKernProjX.setArg(0, data_buf);
+        _clKernProjX.setArg(1, ws_buf);
+        _clKernProjX.setArg(2, _nmeshcellsY);
+        _clKernProjX.setArg(3, projectionX_buf);
+
+        std::string cl_code_integral = R"(
+            __kernel void integral(const __global float* proj,
+                                   const __global float* ws,
+                                   const uint xsize,
+                                   float result)
+            {
+                float value = 0;
+                for (uint x=0; x< xsize; x++) {
+                    value += proj[x]*ws[x];
+                }
+                result = value;
+            }
+            )";
+        _clProgIntegral  = OCLH::prepareCLProg(cl_code_integral);
+        _clKernIntegral = cl::Kernel(_clProgIntegral, "integral");
+        _clKernIntegral.setArg(0, projectionX_buf);
+        _clKernIntegral.setArg(1, ws_buf);
+        _clKernIntegral.setArg(2, _nmeshcellsX);
+        _clKernIntegral.setArg(3, _integral);
     }
     #endif
 }
@@ -88,25 +133,34 @@ vfps::PhaseSpace::~PhaseSpace()
     delete [] _data1D;
     delete [] _projection[0];
     delete [] _projection[1];
-    delete [] _ws[0];
-    delete [] _ws[1];
+    delete [] _ws;
 }
 
 vfps::integral_t vfps::PhaseSpace::integral()
 {
     projectionToX();
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        OCLH::queue.enqueueNDRangeKernel (
+                    _clKernIntegral,
+                    cl::NullRange,
+                    cl::NDRange(1));
+    } else
+    #endif
+    {
     _integral = 0;
     switch (_integraltype) {
     case IntegralType::sum:
         for (size_t x=0; x< nMeshCells(0); x++) {
-            _projection[0][x] += _projection[0][x];
+            _integral += _projection[0][x];
         }
         break;
     case IntegralType::simpson:
         for (size_t x=0; x< nMeshCells(0); x++) {
-            _integral += _projection[0][x]*static_cast<integral_t>(_ws[0][x]);
+            _integral += _projection[0][x]*static_cast<integral_t>(_ws[x]);
         }
         break;
+    }
     }
     return _integral;
 }
@@ -165,9 +219,16 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 vfps::projection_t *vfps::PhaseSpace::projectionToX() {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        syncCLMem(clCopyDirection::dev2cpu);
-    }
+        OCLH::queue.enqueueNDRangeKernel (
+                    _clKernProjX,
+                    cl::NullRange,
+                    cl::NDRange(nMeshCells(0)));
+
+        OCLH::queue.enqueueReadBuffer (projectionX_buf,CL_TRUE,0,
+                sizeof(projection_t)*nMeshCells(0),_projection[0]);
+    } else
     #endif
+    {
     switch (_integraltype) {
     case IntegralType::sum:
         for (size_t x=0; x < nMeshCells(0); x++) {
@@ -175,19 +236,19 @@ vfps::projection_t *vfps::PhaseSpace::projectionToX() {
             for (size_t y=0; y< nMeshCells(1); y++) {
                 _projection[0][x] += _data[x][y];
             }
+            _projection[0][x] /= size(1);
         }
-        //_projection[0][x] /= size(1);
         break;
     case IntegralType::simpson:
           for (size_t x=0; x < nMeshCells(0); x++) {
               _projection[0][x] = 0;
               for (size_t y=0; y< nMeshCells(1); y++) {
-                _projection[0][x] += _data[x][y]*_ws[1][y];
+                _projection[0][x] += _data[x][y]*_ws[y];
               }
           }
           break;
         }
-
+    }
     return _projection[0];
 }
 
@@ -212,7 +273,7 @@ vfps::projection_t *vfps::PhaseSpace::projectionToY() {
         for (size_t y=0; y< nMeshCells(1); y++) {
             _projection[1][y] = 0;
             for (size_t x=0; x< nMeshCells(0); x++) {
-                _projection[1][y] += _data[x][y]*_ws[0][x];
+                _projection[1][y] += _data[x][y]*_ws[x];
             }
         }
         break;

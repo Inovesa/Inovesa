@@ -108,9 +108,15 @@ public:
 	const projection_t* getProjection(const uint_fast8_t x) const
 	{ return _projection[x]; }
 
-	projection_t* projectionToX();
+    /**
+     * @brief projectionToX
+     * @return
+     *
+     * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
+     */
+    projection_t* projectionToX();
 
-	projection_t* projectionToY();
+        projection_t* projectionToY();
 
 	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }
@@ -147,7 +153,11 @@ protected:
 
 	const std::array<projection_t*,2> _projection;
 
-	size_t _nmeshcells;
+	const uint32_t _nmeshcellsX;
+
+	const uint32_t _nmeshcellsY;
+
+	const size_t _nmeshcells;
 
 	const IntegralType _integraltype;
 
@@ -166,11 +176,26 @@ protected:
 	 */
 	std::array<std::vector<meshdata_t>,2> _moment;
 
-	std::array<meshdata_t*,2> _ws;
+    meshdata_t* _ws;
 
 #ifdef INOVESA_USE_CL
 public:
-	cl::Buffer data_buf;
+    cl::Buffer data_buf;
+
+    cl::Buffer projectionX_buf;
+
+    cl::Buffer integral_buf;
+
+private:
+    cl::Program _clProgProjX;
+
+    cl::Kernel  _clKernProjX;
+
+    cl::Program _clProgIntegral;
+
+    cl::Kernel  _clKernIntegral;
+
+    cl::Buffer  ws_buf;
 #endif
 };
 
