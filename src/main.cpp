@@ -490,6 +490,12 @@ int main(int argc, char** argv)
     delete wkm;
     delete fpm;
 
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        OCLH::teardownCLEnvironment();
+    }
+    #endif // INOVESA_USE_CL
+
     Display::printText("Finished.");
 
     return EXIT_SUCCESS;

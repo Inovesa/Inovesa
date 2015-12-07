@@ -48,7 +48,7 @@ set(INC_LIST
             ./inc/fixed_point.h
 )
 set(MISC_LIST
-	default.cfg
+    default.cfg
 )
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
@@ -68,6 +68,7 @@ find_package(OpenCL)
 IF(OPENCL_FOUND)
     add_definitions( -DINOVESA_USE_CL)
     MESSAGE ("Found OpenCL. Will add support.")
+    find_package(clFFT REQUIRED)
 ENDIF()
 find_package(OpenGL)
 IF(OPENGL_FOUND)
@@ -91,7 +92,7 @@ ENDIF()
 include_directories(./inc
     ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS}
     ${HDF5_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS}
-    ${OPENCL_INCLUDE_DIRS}
+    ${OPENCL_INCLUDE_DIRS} ${CLFFT_INCLUDE_DIRS}
 )
 SET(LIBS ${LIBS} ${GSL_LIBRARIES} ${Boost_LIBRARIES}
     ${GLFW_LIBRARIES} ${GLEW_LIBRARIES}
@@ -99,5 +100,6 @@ SET(LIBS ${LIBS} ${GSL_LIBRARIES} ${Boost_LIBRARIES}
     ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES}
     ${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES}
     ${PNG_LIBRARIES} ${FFTW_LIBRARIES}
+    ${CLFFT_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME} ${LIBS})

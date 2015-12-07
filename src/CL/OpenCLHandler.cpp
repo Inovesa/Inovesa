@@ -23,30 +23,33 @@
 
 void OCLH::prepareCLEnvironment()
 {
-	cl::Platform::get(&OCLH::platforms);
+        cl::Platform::get(&OCLH::platforms);
 
     std::string available_clversion;
-	std::string needed_clversion = "OpenCL 1.";
+        std::string needed_clversion = "OpenCL 1.";
 
     unsigned int plati = 0;
     std::string cl_plat_vendor;
     for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
         OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
         if (available_clversion.substr(0,needed_clversion.length()) == needed_clversion) {
-			// stick with AMD (if available)
-			if (cl_plat_vendor != "Advanced Micro Devices, Inc.") {
+                        // stick with AMD (if available)
+                        if (cl_plat_vendor != "Advanced Micro Devices, Inc.") {
                 plati = p;
                 cl_plat_vendor = OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>();
-			}
+            }
         }
     }
+
+    clfftInitSetupData(&fft_setup);
+    clfftSetup(&fft_setup);
 
     cl_context_properties properties[] =
         { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[plati])(), 0};
 
-	OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
+        OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
 
-	OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
+        OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 }
 
 void
@@ -84,7 +87,12 @@ cl::Program OCLH::prepareCLProg(std::string code)
 	}
 	#endif // DEBUG
 
-	return p;
+return p;
+}
+
+void OCLH::teardownCLEnvironment()
+{
+    clfftTeardown();
 }
 
 void OCLH::listCLDevices()
@@ -110,10 +118,17 @@ void OCLH::listCLDevices()
 }
 
 bool OCLH::active;
+
 VECTOR_CLASS<cl::Platform> OCLH::platforms;
+
 cl::Context OCLH::context;
+
 VECTOR_CLASS<cl::Device> OCLH::devices;
+
 cl::CommandQueue OCLH::queue;
+
 bool OCLH::ogl_sharing;
+
+clfftSetupData OCLH::fft_setup;
 
 #endif

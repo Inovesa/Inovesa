@@ -28,6 +28,7 @@
 #include "PhaseSpace.hpp"
 #include "Ruler.hpp"
 #include "Impedance.hpp"
+#include "CL/OpenCLHandler.hpp"
 
 #include "IO/Display.hpp"
 
@@ -65,7 +66,7 @@ public:
                   const double sigmaE, const double dt, const double rbend);
 
     /**
-     * @brief ElectricField constructor for use of wake function
+     * @brief ElectricField (unmaintained) constructor for use of wake function
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
      * @param Ib bunch current [A]
@@ -144,11 +145,23 @@ private:
 
     integral_t* _bp_padded_fftw;
 
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _bp_padded_clfft;
+    #endif // INOVESA_USE_CL
+
     impedance_t* _formfactor;
 
     fftwf_complex* _formfactor_fftw;
 
-    fftwf_plan _ft_bunchprofile;
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _formfactor_clfft;
+    #endif // INOVESA_USE_CL
+
+    fftwf_plan _ffttw_bunchprofile;
+
+    #ifdef INOVESA_USE_CL
+    clfftPlanHandle _clfft_bunchprofile;
+    #endif // INOVESA_USE_CL
 
     meshaxis_t* _wakefunction;
 
@@ -156,13 +169,25 @@ private:
 
     fftwf_complex* _wakelosses_fftw;
 
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _wakelosses_clfft;
+    #endif // INOVESA_USE_CL
+
     impedance_t* _wakepotential_complex;
 
     fftwf_complex* _wakepotential_fftw;
 
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _wakepotential_clfft;
+    #endif // INOVESA_USE_CL
+
     meshaxis_t* _wakepotential;
 
-    fftwf_plan _ft_wakelosses;
+    fftwf_plan _fftwt_wakelosses;
+
+    #ifdef INOVESA_USE_CL
+    clfftPlanHandle _clfft_wakelosses;
+    #endif // INOVESA_USE_CL
 
     const double _wakescaling;
 };

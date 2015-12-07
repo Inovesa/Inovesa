@@ -35,6 +35,7 @@ enum class clCopyDirection {
 #else
 #include <CL/cl.hpp>
 #endif
+#include <clFFT.h>
 
 #include <climits>
 #include <iostream>
@@ -62,6 +63,8 @@ public:
 
 	static cl::Program prepareCLProg(std::string);
 
+	static void teardownCLEnvironment();
+
 	static void listCLDevices();
 
 	static bool active;
@@ -78,6 +81,9 @@ public:
 	static cl::CommandQueue queue;
 
 	static bool ogl_sharing;
+
+private:
+	static clfftSetupData fft_setup;
 };
 
 #endif // INOVESA_USE_CL
