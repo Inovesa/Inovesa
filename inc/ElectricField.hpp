@@ -45,7 +45,7 @@ public:
      *        (As being part of fourier transform,
      *         delta t and delta f will be automatically taken into account.)
      *
-     * Use other constructors when you want to use wake function or wake field.
+     * Use other constructors when you want to use wake function or potential.
      */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance,
@@ -60,6 +60,8 @@ public:
      * @param sigmaE
      * @param dt
      * @param rbend
+     *
+     * @todo: check whether impedance's frequencies match
      */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance, const double Ib, const double E0,
@@ -147,6 +149,9 @@ private:
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _bp_padded_clfft;
+
+    cl::Program _clProgPadBP;
+    cl::Kernel _clKernPadBP;
     #endif // INOVESA_USE_CL
 
     impedance_t* _formfactor;
@@ -155,6 +160,9 @@ private:
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _formfactor_clfft;
+
+    cl::Program _clProgWakelosses;
+    cl::Kernel _clKernWakelosses;
     #endif // INOVESA_USE_CL
 
     fftwf_plan _ffttw_bunchprofile;

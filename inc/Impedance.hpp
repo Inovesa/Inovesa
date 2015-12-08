@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
 
@@ -46,10 +47,17 @@ public:
      *        where f_rev is the revolution frequency
      *        and f_max is maximum frequency
      * @param roundup round to next 2^N
+     *
+     * @todo: make this constructor also use basic constructor
      */
     Impedance(ImpedanceModel model, size_t n,
               double f_rev, double f_max);
 
+    /**
+     * @brief Impedance basic constructor that initializes everything
+     * @param z
+     * @param f_max
+     */
     Impedance(const std::vector<impedance_t>& z, double f_max);
 
     /**
@@ -76,6 +84,8 @@ public:
 
     inline const Ruler<frequency_t>* getRuler() const
         { return &_axis; }
+
+    cl::Buffer data_buf;
 
 private:
     size_t _nmax;

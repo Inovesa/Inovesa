@@ -20,6 +20,7 @@
 #ifdef INOVESA_USE_CL
 
 #include "CL/OpenCLHandler.hpp"
+#include "IO/Display.hpp"
 
 void OCLH::prepareCLEnvironment()
 {

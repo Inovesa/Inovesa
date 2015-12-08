@@ -100,7 +100,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
                 result = value;
             }
             )";
-        _clProgIntegral  = OCLH::prepareCLProg(cl_code_integral);
+        _clProgIntegral = OCLH::prepareCLProg(cl_code_integral);
         _clKernIntegral = cl::Kernel(_clProgIntegral, "integral");
         _clKernIntegral.setArg(0, projectionX_buf);
         _clKernIntegral.setArg(1, ws_buf);
@@ -138,7 +138,7 @@ vfps::PhaseSpace::~PhaseSpace()
 
 vfps::integral_t vfps::PhaseSpace::integral()
 {
-    projectionToX();
+    updateXProjection();
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         OCLH::queue.enqueueNDRangeKernel (
@@ -216,16 +216,19 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 }
 */
 
-vfps::projection_t *vfps::PhaseSpace::projectionToX() {
+void vfps::PhaseSpace::updateXProjection(bool sync) {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         OCLH::queue.enqueueNDRangeKernel (
                     _clKernProjX,
                     cl::NullRange,
                     cl::NDRange(nMeshCells(0)));
-
-        OCLH::queue.enqueueReadBuffer (projectionX_buf,CL_TRUE,0,
-                sizeof(projection_t)*nMeshCells(0),_projection[0]);
+        OCLH::queue.enqueueBarrierWithWaitList();
+        if (sync) {
+            OCLH::queue.enqueueReadBuffer (projectionX_buf,CL_TRUE,0,
+                                           sizeof(projection_t)*nMeshCells(0),
+                                           _projection[0]);
+        }
     } else
     #endif
     {
@@ -249,10 +252,9 @@ vfps::projection_t *vfps::PhaseSpace::projectionToX() {
           break;
         }
     }
-    return _projection[0];
 }
 
-vfps::projection_t *vfps::PhaseSpace::projectionToY() {
+void vfps::PhaseSpace::updateYProjection() {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         syncCLMem(clCopyDirection::dev2cpu);
@@ -278,7 +280,6 @@ vfps::projection_t *vfps::PhaseSpace::projectionToY() {
         }
         break;
     }
-    return _projection[1];
 }
 
 vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)

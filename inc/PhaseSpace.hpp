@@ -105,8 +105,8 @@ public:
 
 	meshdata_t variance(const uint_fast8_t axis);
 
-	const projection_t* getProjection(const uint_fast8_t x) const
-	{ return _projection[x]; }
+    const inline projection_t* getProjection(const uint_fast8_t x) const
+        { return _projection[x]; }
 
     /**
      * @brief projectionToX
@@ -114,9 +114,9 @@ public:
      *
      * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
      */
-    projection_t* projectionToX();
+    void updateXProjection(bool sync=false);
 
-        projection_t* projectionToY();
+    void updateYProjection();
 
 	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }

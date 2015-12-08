@@ -434,7 +434,7 @@ int main(int argc, char** argv)
                     psv->createTexture(mesh);
                 }
                 if (bpv != nullptr) {
-                    bpv->updateLine(mesh->nMeshCells(0),mesh->projectionToX());
+                    bpv->updateLine(mesh->nMeshCells(0),mesh->getProjection(0));
                 }
                 if (wpv != nullptr) {
                     wpv->updateLine(mesh->nMeshCells(0),wkm->getForce());

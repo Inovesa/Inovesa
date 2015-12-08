@@ -40,9 +40,6 @@ enum class clCopyDirection {
 #include <climits>
 #include <iostream>
 
-#include "IO/Display.hpp"
-
-
 /**
  * @brief prepareCLEnvironment
  * @return true on successful initialization
