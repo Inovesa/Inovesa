@@ -136,6 +136,7 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
                   << INOVESA_VERSION_RELEASE << '.'
                   << INOVESA_VERSION_MINOR << '.'
                   << INOVESA_VERSION_FIX
+                  << " (Branch: " GIT_BRANCH ")"
                   << std::endl;
         return false;
     }
@@ -167,6 +168,7 @@ void vfps::ProgramOptions::save(std::string fname)
         << INOVESA_VERSION_RELEASE << '.'
         << INOVESA_VERSION_MINOR << '.'
         << INOVESA_VERSION_FIX
+        << " (Branch: " GIT_BRANCH ")"
         << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {

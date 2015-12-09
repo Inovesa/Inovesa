@@ -148,7 +148,7 @@ private:
     integral_t* _bp_padded_fftw;
 
     #ifdef INOVESA_USE_CL
-    cl::Buffer _bp_padded_clfft;
+    cl::Buffer _bp_padded_buf;
 
     cl::Program _clProgPadBP;
     cl::Kernel _clKernPadBP;
@@ -159,7 +159,7 @@ private:
     fftwf_complex* _formfactor_fftw;
 
     #ifdef INOVESA_USE_CL
-    cl::Buffer _formfactor_clfft;
+    cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;
     cl::Kernel _clKernWakelosses;
@@ -178,7 +178,7 @@ private:
     fftwf_complex* _wakelosses_fftw;
 
     #ifdef INOVESA_USE_CL
-    cl::Buffer _wakelosses_clfft;
+    cl::Buffer _wakelosses_buf;
     #endif // INOVESA_USE_CL
 
     impedance_t* _wakepotential_complex;
@@ -186,7 +186,12 @@ private:
     fftwf_complex* _wakepotential_fftw;
 
     #ifdef INOVESA_USE_CL
-    cl::Buffer _wakepotential_clfft;
+    cl::Buffer _wakepotential_buf;
+    cl::Buffer _wakepotential_complex_buf; // todo: directly use padded real
+
+    cl::Program _clProgScaleWP;
+    cl::Kernel _clKernScaleWP;
+
     #endif // INOVESA_USE_CL
 
     meshaxis_t* _wakepotential;
