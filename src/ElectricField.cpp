@@ -44,14 +44,14 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        _bp_padded = new meshdata_t[_nmax];
+        _bp_padded = new integral_t[_nmax];
         std::fill_n(_bp_padded,_nmax,0);
         _bp_padded_clfft = cl::Buffer(OCLH::context,
-                                      CL_MEM_READ_WRITE,
-                                      sizeof(impedance_t)*_nmax,_bp_padded);
+                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                      sizeof(integral_t)*_nmax,_bp_padded);
         _formfactor = new impedance_t[_nmax];
         _formfactor_clfft = cl::Buffer(OCLH::context,
-                                       CL_MEM_READ_WRITE,
+                                       CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                        sizeof(impedance_t)*_nmax,_formfactor);
         clfftCreateDefaultPlan(&_clfft_bunchprofile,
                                OCLH::context(),CLFFT_1D,&_nmax);
@@ -60,9 +60,6 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
         clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
         clfftBakePlan(_clfft_bunchprofile,1,&OCLH::queue(), nullptr, nullptr);
 
-        // to be implemented
-        // std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
-        // std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
         std::string cl_code_padbp = R"(
             __kernel void pad_bp(__global float* bp_padded,
                                  const uint paddedsize,
@@ -71,7 +68,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
             {
                 const uint g = get_global_id(0);
                 const uint b = (g+bpmeshcells/2)%bpmeshcells;
-                const uint p;
+                const uint p = (b+paddedsize-bpmeshcells/2)%paddedsize;
                 bp_padded[p] = bp[b];
             }
             )";
@@ -108,11 +105,11 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
     if (OCLH::active) {
         _wakelosses = new impedance_t[_nmax];
         _wakelosses_clfft = cl::Buffer(OCLH::context,
-                                      CL_MEM_READ_WRITE,
+                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                       sizeof(impedance_t)*_nmax,_wakelosses);
         _wakepotential = new meshaxis_t[_nmax];
         _wakepotential_clfft = cl::Buffer(OCLH::context,
-                                          CL_MEM_READ_WRITE,
+                                          CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                           sizeof(meshaxis_t)*_nmax,
                                           _wakepotential);
         clfftCreateDefaultPlan(&_clfft_wakelosses,
@@ -225,7 +222,6 @@ vfps::ElectricField::~ElectricField()
 {
     delete [] _csrspectrum;
     delete [] _wakefunction;
-    delete [] _wakepotential;
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -255,7 +251,7 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-    _phasespace->updateXProjection();
+    _phasespace->updateXProjection(true);
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),

@@ -45,9 +45,13 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
         }
         break;
     }
-    data_buf = cl::Buffer(OCLH::context,
-                          CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                          _nmax*sizeof(impedance_t),_data.data());
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        data_buf = cl::Buffer(OCLH::context,
+                              CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                             _nmax*sizeof(impedance_t),_data.data());
+    }
+    #endif
 }
 
 vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
@@ -56,9 +60,13 @@ vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
     _axis(Ruler<frequency_t>(_nmax,0,f_max,1)),
     _data(z)
 {
-    data_buf = cl::Buffer(OCLH::context,
-                          CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                          _nmax*sizeof(impedance_t),_data.data());
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        data_buf = cl::Buffer(OCLH::context,
+                              CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                             _nmax*sizeof(impedance_t),_data.data());
+    }
+    #endif
 }
 
 vfps::Impedance::Impedance(std::string datafile, double f_max) :
