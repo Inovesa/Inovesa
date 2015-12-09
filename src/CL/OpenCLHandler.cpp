@@ -68,6 +68,7 @@ OCLH::prepareCLDevice(unsigned int device)
 
 cl::Program OCLH::prepareCLProg(std::string code)
 {
+    code = custom_datatypes+code;
 	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
 	cl::Program p(OCLH::context, source);
 	try {
@@ -131,5 +132,16 @@ cl::CommandQueue OCLH::queue;
 bool OCLH::ogl_sharing;
 
 clfftSetupData OCLH::fft_setup;
+
+const std::string OCLH::custom_datatypes = R"(
+        typedef struct { float real; float imag; } impedance_t;
+        inline impedance_t cmult(const impedance_t a, const impedance_t b) {
+            impedance_t rv;
+            rv.real = a.real*b.real - a.imag*b.imag;
+            rv.imag = a.imag*b.real + a.real*b.imag;
+            return rv;
+        }
+
+        )";
 
 #endif

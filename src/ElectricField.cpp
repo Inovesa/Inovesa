@@ -122,21 +122,42 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
         clfftBakePlan(_clfft_wakelosses,1,&OCLH::queue(), nullptr, nullptr);
 
         std::string cl_code_wakelosses = R"(
-            __kernel void wakeloss(__global float* wakelosses,
-                                   const __global float* impedance,
-                                   const __global float* formfactor)
+            __kernel void wakeloss(__global impedance_t* wakelosses,
+                                   const __global impedance_t* impedance,
+                                   const __global impedance_t* formfactor)
             {
-                const uint n = 2*get_global_id(0);
-                wakelosses[n  ] = impedance[n  ]*formfactor[n  ];
-                wakelosses[n+1] = impedance[n+1]*formfactor[n+1];
+                const uint n = get_global_id(0);
+                wakelosses[n] = cmult(impedance[n],formfactor[n]);
             }
             )";
 
-        _clProgPadBP = OCLH::prepareCLProg(cl_code_wakelosses);
-        _clKernWakelosses = cl::Kernel(_clProgPadBP, "wakeloss");
+        _clProgWakelosses = OCLH::prepareCLProg(cl_code_wakelosses);
+        _clKernWakelosses = cl::Kernel(_clProgWakelosses, "wakeloss");
         _clKernWakelosses.setArg(0, _wakelosses_buf);
         _clKernWakelosses.setArg(1, _impedance->data_buf);
         _clKernWakelosses.setArg(2, _formfactor_buf);
+
+        std::string cl_code_wakepotential = R"(
+            __kernel void scalewp(__global float* wakepot,
+                                  const uint paddedsize,
+                                  const uint bpmeshcells,
+                                  const float scaling,
+                                  const __global impedance_t* wakepot_padded)
+            {
+                const uint g = get_global_id(0);
+                const uint n = (g+bpmeshcells/2)%bpmeshcells;
+                const uint p = (n+paddedsize-bpmeshcells/2)%paddedsize;
+                wakepot[n] = wakepot_padded[p].real/scaling;
+            }
+            )";
+
+        _clProgScaleWP = OCLH::prepareCLProg(cl_code_wakepotential);
+        _clKernScaleWP = cl::Kernel(_clProgScaleWP, "scalewp");
+        _clKernScaleWP.setArg(0, _wakepotential_buf);
+        _clKernScaleWP.setArg(1, _nmax);
+        _clKernScaleWP.setArg(2, _bpmeshcells);
+        _clKernScaleWP.setArg(3, _wakescaling);
+        _clKernScaleWP.setArg(4, _wakepotential_complex_buf);
     } else
     #endif // INOVESA_USE_CL
     {
@@ -316,6 +337,14 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                                       sizeof(*_wakepotential_complex)*_nmax,
                                       _wakepotential_complex);
         #endif
+        OCLH::queue.enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
+                                          cl::NDRange(_nmax));
+        OCLH::queue.enqueueBarrierWithWaitList();
+        #ifdef INOVESA_SYNC_CL
+        OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
+                                      sizeof(*_wakepotential)*_bpmeshcells,
+                                      _wakepotential);
+        #endif
     } else
     #endif // INOVESA_USE_CL
     {
@@ -346,18 +375,6 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
             _wakepotential[_bpmeshcells/2-1-i]
                 = _wakepotential_complex[_nmax-1-i].real()*_wakescaling;
         }
-    }
-    std::ofstream debugfile("test.dat");
-    for (size_t i=0; i<_nmax; i++) {
-        debugfile << i << '\t'
-                  << _bp_padded[i] << '\t'
-                  << _formfactor[i].real() << '\t'
-                  << _formfactor[i].imag() << '\t'
-                  << _wakelosses[i].real() << '\t'
-                  << _wakelosses[i].imag() << '\t'
-                  << _wakepotential_complex[i].real() << '\t'
-                  << _wakepotential_complex[i].imag() << '\t'
-                  << std::endl;
     }
 
     return _wakepotential;

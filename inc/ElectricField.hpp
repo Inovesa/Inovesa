@@ -187,7 +187,9 @@ private:
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _wakepotential_buf;
-    cl::Buffer _wakepotential_complex_buf; // todo: directly use padded real
+
+    // non-interleaved internal data format might be usefull
+    cl::Buffer _wakepotential_complex_buf;
 
     cl::Program _clProgScaleWP;
     cl::Kernel _clKernScaleWP;
