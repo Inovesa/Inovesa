@@ -53,8 +53,9 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
         _formfactor_buf = cl::Buffer(OCLH::context,
                                        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                        sizeof(impedance_t)*_nmax,_formfactor);
+        const size_t nmax = _nmax;
         clfftCreateDefaultPlan(&_clfft_bunchprofile,
-                               OCLH::context(),CLFFT_1D,&_nmax);
+                               OCLH::context(),CLFFT_1D,&nmax);
         clfftSetPlanPrecision(_clfft_bunchprofile,CLFFT_SINGLE);
         clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
         clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
@@ -104,7 +105,6 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
     _wakepotential = new meshaxis_t[_bpmeshcells];
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-
         _wakepotential_buf = cl::Buffer(OCLH::context, CL_MEM_READ_WRITE,
                                         sizeof(*_wakepotential)*_bpmeshcells);
         _wakelosses = new impedance_t[_nmax];
@@ -113,8 +113,9 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
         _wakepotential_complex = new impedance_t[_nmax];
         _wakepotential_complex_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
                                         sizeof(*_wakepotential_complex)*_nmax);
+        const size_t nmax = _nmax;
         clfftCreateDefaultPlan(&_clfft_wakelosses,
-                               OCLH::context(),CLFFT_1D,&_nmax);
+                               OCLH::context(),CLFFT_1D,&nmax);
         clfftSetPlanPrecision(_clfft_wakelosses,CLFFT_SINGLE);
         clfftSetLayout(_clfft_wakelosses,CLFFT_COMPLEX_INTERLEAVED,
                        CLFFT_COMPLEX_INTERLEAVED);
@@ -147,7 +148,7 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
                 const uint g = get_global_id(0);
                 const uint n = (g+bpmeshcells/2)%bpmeshcells;
                 const uint p = (n+paddedsize-bpmeshcells/2)%paddedsize;
-                wakepot[n] = wakepot_padded[p].real/scaling;
+                wakepot[n] = scaling*wakepot_padded[p].real;
             }
             )";
 
@@ -272,7 +273,7 @@ vfps::ElectricField::~ElectricField()
     }
 }
 
-vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
+vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum(bool sync)
 {
     _phasespace->updateXProjection(true);
     #ifdef INOVESA_USE_CL
@@ -281,6 +282,8 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
                           0,nullptr,nullptr,
                           &_bp_padded_buf(),&_formfactor_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
+
+        // to be implemented
     } else
     #endif // INOVESA_USE_CL
     {
@@ -300,7 +303,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
     return _csrspectrum;
 }
 
-vfps::meshaxis_t *vfps::ElectricField::wakePotential()
+vfps::meshaxis_t *vfps::ElectricField::wakePotential(bool sync)
 {
     _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CL
@@ -340,11 +343,14 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         OCLH::queue.enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
-        #ifdef INOVESA_SYNC_CL
+        #ifndef INOVESA_SYNC_CL
+        if (sync)
+        #endif
+        {
         OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
                                       sizeof(*_wakepotential)*_bpmeshcells,
                                       _wakepotential);
-        #endif
+        }
     } else
     #endif // INOVESA_USE_CL
     {

@@ -300,6 +300,9 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
     case clCopyDirection::dev2cpu:
         OCLH::queue.enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
+        OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+                                      sizeof(projection_t)*nMeshCells(0),
+                                      _projection[0]);
         break;
     }
 }

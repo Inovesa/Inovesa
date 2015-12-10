@@ -104,7 +104,14 @@ public:
     inline const Ruler<meshaxis_t>* getWakeRuler() const
         { return &_axis_wake; }
 
-    csrpower_t* updateCSRSpectrum();
+    /**
+     * @brief updateCSRSpectrum
+     * @param sync
+     * @return
+     *
+     * @todo: OpenCL part
+     */
+    csrpower_t* updateCSRSpectrum(bool sync=false);
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
@@ -116,7 +123,7 @@ public:
      * @todo: Handling of negative frequencies in the formfactor
      * @todo: Correct scaling
      */
-    meshaxis_t* wakePotential();
+    meshaxis_t* wakePotential(bool sync=false);
 
 private:
     enum class fft_direction : uint_fast8_t {
@@ -129,9 +136,9 @@ private:
                           fft_direction direction);
 
 private:
-    const size_t _nmax;
+    const uint32_t _nmax;
 
-    const size_t _bpmeshcells;
+    const uint32_t _bpmeshcells;
 
     const Ruler<meshaxis_t> _axis_freq;
 
@@ -204,7 +211,7 @@ private:
     clfftPlanHandle _clfft_wakelosses;
     #endif // INOVESA_USE_CL
 
-    const double _wakescaling;
+    const meshdata_t _wakescaling;
 };
 
 } // namespace vfps
