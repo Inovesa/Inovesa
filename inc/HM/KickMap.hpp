@@ -54,8 +54,17 @@ protected:
      */
     std::vector<meshaxis_t> _force;
 
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _force_buf;
+    #endif
+
     const meshindex_t _meshysize;
 
+    /**
+     * @brief updateHM
+     *
+     * @todo use OpenCL
+     */
     void updateHM();
 };
 

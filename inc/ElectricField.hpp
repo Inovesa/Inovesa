@@ -49,7 +49,7 @@ public:
      */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance,
-                  const double wakescalining=0.0);
+                  const meshaxis_t wakescalining=0.0);
 
     /**
      * @brief ElectricField constructor for use of wake potential
@@ -193,8 +193,10 @@ private:
     fftwf_complex* _wakepotential_fftw;
 
     #ifdef INOVESA_USE_CL
+public:
     cl::Buffer _wakepotential_buf;
 
+private:
     // non-interleaved internal data format might be usefull
     cl::Buffer _wakepotential_complex_buf;
 

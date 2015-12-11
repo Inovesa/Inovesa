@@ -141,6 +141,13 @@ void vfps::KickMap::laser(meshaxis_t amplitude,
 
 void vfps::KickMap::updateHM()
 {
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+    OCLH::queue.enqueueReadBuffer(_force_buf,CL_TRUE,
+                                  0,sizeof(meshdata_t)*_xsize,_force.data());
+    }
+    #endif
+
     // gridpoint matrix used for interpolation
     hi* ph = new hi[_it];
 

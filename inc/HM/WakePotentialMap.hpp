@@ -18,8 +18,6 @@ public:
 public:
     /**
      * @brief update implements WakeKickMap
-     *
-     * @todo currently uses phasespace in CPU Ram
      */
     void update();
 

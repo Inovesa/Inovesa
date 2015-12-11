@@ -21,7 +21,7 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
-                                   double wakescalining) :
+                                   const meshaxis_t wakescalining) :
     _nmax(impedance->maxN()),
     _bpmeshcells(ps->nMeshCells(0)),
     _axis_freq(Ruler<frequency_t>(_nmax,0,1/(ps->getDelta(0)),0)),
@@ -38,7 +38,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _wakelosses_fftw(nullptr),
     _wakepotential_complex(nullptr),
     _wakepotential_fftw(nullptr),
-    _wakepotential(wakescalining!=0.0?new meshaxis_t[_bpmeshcells]:nullptr),
+    _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
     _fftwt_wakelosses(nullptr),
     _wakescaling(wakescalining*_axis_wake.delta()*_axis_freq.delta())
 {
