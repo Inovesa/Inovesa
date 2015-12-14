@@ -48,6 +48,10 @@ public:
 
     void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);
 
+    #ifdef INOVESA_USE_CL
+    void syncCLMem(clCopyDirection dir);
+    #endif // INOVESA_USE_CL
+
 protected:
     /**
      * @brief _force in units of mesh points

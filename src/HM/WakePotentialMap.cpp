@@ -16,8 +16,11 @@ void vfps::WakePotentialMap::update()
     _field->wakePotential();
     OCLH::queue.enqueueCopyBuffer(_field->_wakepotential_buf,_force_buf,
                                   0,0,sizeof(meshaxis_t)*_xsize);
+    #ifdef INOVESA_SYNC_CL
+    sync(clCopyDirection::dev2cpu);
+    #endif // INOVESA_SYNC_CL
     } else
-    #endif
+    #endif // INOVESA_USE_CL
     {
     std::copy_n(_field->wakePotential(),_xsize,_force.data());
     }

@@ -111,7 +111,7 @@ public:
      *
      * @todo: OpenCL part
      */
-    csrpower_t* updateCSRSpectrum(bool sync=false);
+    csrpower_t* updateCSRSpectrum();
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
@@ -123,7 +123,7 @@ public:
      * @todo: Handling of negative frequencies in the formfactor
      * @todo: Correct scaling
      */
-    meshaxis_t* wakePotential(bool sync=false);
+    meshaxis_t* wakePotential();
 
 private:
     enum class fft_direction : uint_fast8_t {

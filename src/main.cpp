@@ -72,17 +72,16 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    opts.save("foo.cfg");
-
     std::string timestring = sstream.str();
     timestring.resize(timestring.size()-1);
 
     sstream.str("");
-    sstream << INOVESA_VERSION_RELEASE << '.'
+    sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
             << INOVESA_VERSION_MINOR << '.'
-            << INOVESA_VERSION_FIX;
+            << INOVESA_VERSION_FIX << ", Branch: "
+            << GIT_BRANCH;
 
-    Display::printText("Started Inovesa (v"
+    Display::printText("Started Inovesa ("
                        +sstream.str()+") at "+timestring);
 
     #ifdef INOVESA_USE_CL
@@ -249,7 +248,7 @@ int main(int argc, char** argv)
     if (opts.getImpedanceFile() == "") {
         Display::printText("Will use free space CSR impedance. "
                            "(Give impedance file for other impedance model.)");
-        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
+        impedance = new Impedance(Impedance::ImpedanceModel::ConstantOne,
                                   ps_size*padding,f0,
                                   ps_size*vfps::physcons::c/(2*qmax*bl));
     } else {
@@ -413,11 +412,22 @@ int main(int argc, char** argv)
     Display::printText("Starting the simulation.");
     // first update to have wkm for step0 in file
     wkm->update();
+
+    std::ofstream debugfile("wkm.tmp");
+    if (OCLH::active) {
+      wkm->syncCLMem(clCopyDirection::dev2cpu);
+    }
+    const meshaxis_t* force = wkm->getForce();
+    for (size_t i=0; i<ps_size; i++) {
+        debugfile << i << '\t' << force[i] << std::endl;
+    }
+
     for (unsigned int i=0;i<steps*rotations;i++) {
         if (i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
                 mesh->syncCLMem(clCopyDirection::dev2cpu);
+                wkm->syncCLMem(clCopyDirection::dev2cpu);
             }
             #endif // INOVESA_USE_CL
             if (file != nullptr) {

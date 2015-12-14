@@ -141,6 +141,24 @@ void vfps::KickMap::laser(meshaxis_t amplitude,
     updateHM();
 }
 
+#ifdef INOVESA_USE_CL
+void vfps::KickMap::syncCLMem(clCopyDirection dir)
+{
+    switch (dir) {
+    case clCopyDirection::cpu2dev:
+        OCLH::queue.enqueueWriteBuffer(_force_buf,CL_TRUE,0,
+                                      sizeof(meshaxis_t)*_xsize,
+                                      _force.data());
+        break;
+    case clCopyDirection::dev2cpu:
+        OCLH::queue.enqueueReadBuffer(_force_buf,CL_TRUE,0,
+                                      sizeof(meshaxis_t)*_xsize,
+                                      _force.data());
+        break;
+    }
+}
+#endif // INOVESA_USE_CL
+
 void vfps::KickMap::updateHM()
 {
     #ifdef INOVESA_USE_CL

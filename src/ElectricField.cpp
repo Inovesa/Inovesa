@@ -40,7 +40,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _wakepotential_fftw(nullptr),
     _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
     _fftwt_wakelosses(nullptr),
-    _wakescaling(wakescalining*_axis_wake.delta()*_axis_freq.delta())
+    _wakescaling(1/*wakescalining*_axis_wake.delta()*_axis_freq.delta()*/)
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -273,7 +273,7 @@ vfps::ElectricField::~ElectricField()
     }
 }
 
-vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum(bool sync)
+vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
     _phasespace->updateXProjection(true);
     #ifdef INOVESA_USE_CL
@@ -303,7 +303,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum(bool sync)
     return _csrspectrum;
 }
 
-vfps::meshaxis_t *vfps::ElectricField::wakePotential(bool sync)
+vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
     _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CL
@@ -311,46 +311,35 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential(bool sync)
         OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
                                           cl::NDRange(_bpmeshcells));
         OCLH::queue.enqueueBarrierWithWaitList();
-        #ifdef INOVESA_SYNC_CL
-        OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
-                                      sizeof(*_bp_padded)*_nmax,_bp_padded);
-        #endif
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
                           &_bp_padded_buf(),&_formfactor_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
-        #ifdef INOVESA_SYNC_CL
-        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
-                                      sizeof(*_formfactor)*_nmax,_formfactor);
-        #endif
 
         OCLH::queue.enqueueNDRangeKernel( _clKernWakelosses,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
-        #ifdef INOVESA_SYNC_CL
-        OCLH::queue.enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
-                                      sizeof(*_wakelosses)*_nmax,_wakelosses);
-        #endif
         clfftEnqueueTransform(_clfft_wakelosses,CLFFT_BACKWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
                           &_wakelosses_buf(),&_wakepotential_complex_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
-        #ifdef INOVESA_SYNC_CL
-        OCLH::queue.enqueueReadBuffer(_wakepotential_complex_buf,CL_TRUE,0,
-                                      sizeof(*_wakepotential_complex)*_nmax,
-                                      _wakepotential_complex);
-        #endif
         OCLH::queue.enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
         #ifndef INOVESA_SYNC_CL
-        if (sync)
-        #endif
-        {
+        OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
+                                      sizeof(*_bp_padded)*_nmax,_bp_padded);
+        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
+                                      sizeof(*_formfactor)*_nmax,_formfactor);
+        OCLH::queue.enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
+                                      sizeof(*_wakelosses)*_nmax,_wakelosses);
+        OCLH::queue.enqueueReadBuffer(_wakepotential_complex_buf,CL_TRUE,0,
+                                      sizeof(*_wakepotential_complex)*_nmax,
+                                      _wakepotential_complex);
         OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
                                       sizeof(*_wakepotential)*_bpmeshcells,
                                       _wakepotential);
-        }
+        #endif // INOVESA_SYNC_CL
     } else
     #endif // INOVESA_USE_CL
     {
@@ -430,7 +419,7 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n, vfps::impedance_t* in,
     }
 
     std::stringstream wisdomfile;
-    // get ready to save BunchCharge
+    // find filename for wisdom
     if (std::is_same<vfps::csrpower_t,float>::value) {
         wisdomfile << "wisdom_c" << dir << "c32_" << n << ".fftw";
     } else {
