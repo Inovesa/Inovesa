@@ -38,6 +38,8 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     #endif
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
+        _force_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
+                                sizeof(meshaxis_t)*_xsize);
         _cl_code += R"(
         __kernel void applyHM_Kick( const __global data_t* src,
                                     const __global hi* hm,

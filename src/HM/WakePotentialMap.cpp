@@ -7,9 +7,6 @@ vfps::WakePotentialMap::WakePotentialMap(
     WakeKickMap(in,out,xsize,ysize,it),
     _field(field)
 {
-    #ifdef INOVESA_USE_CL
-    _force_buf = _field->_wakepotential_buf;
-    #endif
 }
 
 void vfps::WakePotentialMap::update()
@@ -17,6 +14,8 @@ void vfps::WakePotentialMap::update()
     #if INOVESA_USE_CL
     if (OCLH::active) {
     _field->wakePotential();
+    OCLH::queue.enqueueCopyBuffer(_field->_wakepotential_buf,_force_buf,
+                                  0,0,sizeof(meshaxis_t)*_xsize);
     } else
     #endif
     {
