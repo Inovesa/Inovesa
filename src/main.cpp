@@ -248,7 +248,7 @@ int main(int argc, char** argv)
     if (opts.getImpedanceFile() == "") {
         Display::printText("Will use free space CSR impedance. "
                            "(Give impedance file for other impedance model.)");
-        impedance = new Impedance(Impedance::ImpedanceModel::ConstantOne,
+        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
                                   ps_size*padding,f0,
                                   ps_size*vfps::physcons::c/(2*qmax*bl));
     } else {
@@ -413,9 +413,12 @@ int main(int argc, char** argv)
     // first update to have wkm for step0 in file
     wkm->update();
 
-    std::ofstream debugfile("wkm.tmp");
+    std::ofstream debugfile;
     if (OCLH::active) {
-      wkm->syncCLMem(clCopyDirection::dev2cpu);
+        debugfile.open("wkm-clfft.tmp");
+        wkm->syncCLMem(clCopyDirection::dev2cpu);
+    } else {
+        debugfile.open("wkm-fftw.tmp");
     }
     const meshaxis_t* force = wkm->getForce();
     for (size_t i=0; i<ps_size; i++) {

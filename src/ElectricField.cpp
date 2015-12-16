@@ -40,7 +40,13 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _wakepotential_fftw(nullptr),
     _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
     _fftwt_wakelosses(nullptr),
-    _wakescaling(1/*wakescalining*_axis_wake.delta()*_axis_freq.delta()*/)
+    #ifdef INOVESA_USE_CL
+    _wakescaling(OCLH::active?
+                   wakescalining*_axis_wake.delta()*_axis_freq.delta()*_nmax:
+                   wakescalining*_axis_wake.delta()*_axis_freq.delta())
+    #else
+    _wakescaling(wakescalining*_axis_wake.delta()*_axis_freq.delta())
+    #endif // INOVESA_USE_CL
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -275,7 +281,7 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
 {
-    _phasespace->updateXProjection(true);
+    _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
@@ -371,7 +377,6 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                 = _wakepotential_complex[_nmax-1-i].real()*_wakescaling;
         }
     }
-
     return _wakepotential;
 }
 

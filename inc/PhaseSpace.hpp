@@ -114,7 +114,7 @@ public:
      *
      * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
      */
-    void updateXProjection(bool sync=false);
+    void updateXProjection();
 
     void updateYProjection();
 
