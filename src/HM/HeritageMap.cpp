@@ -34,46 +34,6 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
     _out(out)
 {
     #ifdef INOVESA_USE_CL
-    if (std::is_same<vfps::meshdata_t,float>::value) {
-    _cl_code +=
-        "typedef float data_t;\n"
-        "typedef float2 data2_t;\n"
-        "typedef float3 data3_t;\n"
-        "typedef float4 data4_t;\n"
-        "float mult(float x, float y);"
-        "float mult(float x, float y) { return x*y; }\n";
-    } else  if (std::is_same<vfps::meshdata_t,double>::value) {
-    _cl_code +=
-        "typedef double data_t;\n"
-        "typedef double2 data2_t;\n"
-        "typedef double3 data3_t;\n"
-        "typedef double4 data4_t;\n"
-        "double mult(double x, double y) { return x*y; }\n";
-    } else {
-        std::stringstream fxp_fracpart;
-        fxp_fracpart << FXP_FRACPART;
-
-        _cl_code +=    "__constant int fracpart="+fxp_fracpart.str()+";\n";
-        #if FXP_FRACPART < 31
-        if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
-        _cl_code +=
-            "typedef int data_t;\n"
-            "typedef int2 data2_t;\n"
-            "typedef int3 data3_t;\n"
-            "typedef int4 data4_t;\n"
-            "int mult(int x, int y){return ((long)(x)*(long)(y))>>fracpart;}\n";
-        } else
-        #endif
-        if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
-        _cl_code +=
-            "typedef long data_t;\n"
-            "typedef long2 data2_t;\n"
-            "typedef long3 data3_t;\n"
-            "typedef long4 data4_t;\n"
-            "long mult(long x, long y) {"
-            "return ((mul_hi(x,y) << (64-fracpart)) + ((x*y) >> fracpart));}\n";
-        }
-    }
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
     #endif // INOVESA_USE_CL
 }

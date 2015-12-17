@@ -83,6 +83,8 @@ private:
 	static clfftSetupData fft_setup;
 
     static const std::string custom_datatypes;
+
+    static std::string datatype_aliases();
 };
 
 #endif // INOVESA_USE_CL

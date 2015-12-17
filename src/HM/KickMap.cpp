@@ -22,7 +22,7 @@
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it) :
-    HeritageMap(in,out,xsize,1,it,it),
+    HeritageMap(in,out,0,0,it,it),
     _meshysize(ysize)
 {
     _force.resize(xsize,meshaxis_t(0));
@@ -41,39 +41,45 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         _force_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_xsize);
         _cl_code += R"(
-        __kernel void applyHM_Kick( const __global data_t* src,
-                                    const __global hi* hm,
-                                    const uint hm_len,
-                                    const uint ysize,
-                                    __global data_t* dst)
+        __kernel void apply_Kick( const __global data_t* src,
+                                  const __global data_t* dy,
+                                  const uint ysize,
+                                  __global data_t* dst)
         {
             data_t value = 0;
             const uint x = get_global_id(0);
-            const uint y = get_global_id(1);
-            const uint hmoffset = x*hm_len;
             const uint meshoffs = x*ysize;
-            for (uint j=0; j<hm_len; j++)
-            {
-                value += mult( src[meshoffs+min(ysize-1,
-                                                y+hm[hmoffset+j].src-ysize/2)],
-                               hm[hmoffset+j].weight);
+            const int dyi = floor(dy[x]);
+            const data_t dyf = dy - dyi;
+            uint y=0;
+            while (y < 1-dyi) {
+                dst[meshoffs+y]  = 0;
+                y++;
             }
-            dst[meshoffs+y] = value;
+            while (y<ysize-2+dyi) {
+                dst[meshoffs+y] = mult(src[meshoffs+y-1+dyi],
+                                      (dyf  )*(dyf-1)*(dyf-2)/(-6))
+                                + mult(src[meshoffs+y  +dyi],
+                                      (dyf+1)*(dyf-1)*(dyf-2)/( 2))
+                                + mult(src[meshoffs+y+1+dyi],
+                                      (dyf+1)*(dyf  )*(dyf-2)/(-2))
+                                + mult(src[meshoffs+y+2+dyi],
+                                      (dyf+1)*(dyf  )*(dyf-1)/( 6));
+                y++
+            }
+            while (y < ysize) {
+                dst[meshoffs+y]  = 0;
+                y++;
+            }
         }
         )";
         _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-        _hi_buf = cl::Buffer(OCLH::context,
-                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                             sizeof(hi)*_ip*_size,
-                             _hinfo);
-
-        applyHM = cl::Kernel(_cl_prog, "applyHM_Kick");
+        applyHM = cl::Kernel(_cl_prog, "apply_Kick");
         applyHM.setArg(0, _in->data_buf);
-        applyHM.setArg(1, _hi_buf);
-        applyHM.setArg(2, _ip);
-        applyHM.setArg(3, _meshysize);
-        applyHM.setArg(4, _out->data_buf);
+        applyHM.setArg(1, _force_buf);
+        applyHM.setArg(2, _meshysize);
+        applyHM.setArg(3, _out->data_buf);
     }
     #endif // INOVESA_USE_CL
 }
@@ -92,7 +98,7 @@ void vfps::KickMap::apply()
         OCLH::queue.enqueueNDRangeKernel (
                     applyHM,
                     cl::NullRange,
-                    cl::NDRange(_xsize,_meshysize));
+                    cl::NDRange(_xsize));
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2
@@ -162,12 +168,9 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 void vfps::KickMap::updateHM()
 {
     #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-    OCLH::queue.enqueueReadBuffer(_force_buf,CL_TRUE,
-                                  0,sizeof(meshdata_t)*_xsize,_force.data());
-    }
+    if (!OCLH::active)
     #endif
-
+    {
     // gridpoint matrix used for interpolation
     hi* ph = new hi[_it];
 
@@ -214,12 +217,5 @@ void vfps::KickMap::updateHM()
 
     delete [] ph;
     delete [] hmc;
-
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        OCLH::queue.enqueueWriteBuffer
-            (_hi_buf,CL_TRUE,0,
-             sizeof(hi)*_ip*_size,_hinfo);
     }
-    #endif // INOVESA_USE_CL
 }
