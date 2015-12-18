@@ -207,7 +207,7 @@ private:
 
     meshaxis_t* _wakepotential;
 
-    fftwf_plan _fftwt_wakelosses;
+    fftwf_plan _fftw_wakelosses;
 
     #ifdef INOVESA_USE_CL
     clfftPlanHandle _clfft_wakelosses;

@@ -39,7 +39,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _wakepotential_complex(nullptr),
     _wakepotential_fftw(nullptr),
     _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
-    _fftwt_wakelosses(nullptr),
+    _fftw_wakelosses(nullptr),
     #ifdef INOVESA_USE_CL
     _wakescaling(OCLH::active?
                    wakescalining*_axis_wake.delta()*_axis_freq.delta()*_nmax:
@@ -173,7 +173,7 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
 
         _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fftw);
         _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fftw);
-        _fftwt_wakelosses = prepareFFT(_nmax,_wakelosses,
+        _fftw_wakelosses = prepareFFT(_nmax,_wakelosses,
                                     _wakepotential_complex,
                                   fft_direction::backward);
     }
@@ -272,8 +272,8 @@ vfps::ElectricField::~ElectricField()
             fftwf_free(_wakepotential_fftw);
         }
         fftwf_destroy_plan(_ffttw_bunchprofile);
-        if (_fftwt_wakelosses != nullptr) {
-            fftwf_destroy_plan(_fftwt_wakelosses);
+        if (_fftw_wakelosses != nullptr) {
+            fftwf_destroy_plan(_fftw_wakelosses);
         }
         fftwf_cleanup();
     }
@@ -332,7 +332,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         OCLH::queue.enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
-        #ifndef INOVESA_SYNC_CL
+        #ifdef INOVESA_SYNC_CL
         OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
         OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
@@ -368,7 +368,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
 
         //Fourier transorm wakelosses
-        fftwf_execute(_fftwt_wakelosses);
+        fftwf_execute(_fftw_wakelosses);
 
         for (size_t i=0; i<_bpmeshcells/2; i++) {
             _wakepotential[_bpmeshcells/2+i]

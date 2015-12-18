@@ -22,7 +22,7 @@
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it) :
-    HeritageMap(in,out,0,0,it,it),
+    HeritageMap(in,out,xsize,0,it,it),
     _meshysize(ysize)
 {
     _force.resize(xsize,meshaxis_t(0));
@@ -46,17 +46,16 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                                   const uint ysize,
                                   __global data_t* dst)
         {
-            data_t value = 0;
-            const uint x = get_global_id(0);
-            const uint meshoffs = x*ysize;
+            const int x = get_global_id(0);
+            const int meshoffs = x*ysize;
             const int dyi = floor(dy[x]);
-            const data_t dyf = dy - dyi;
-            uint y=0;
-            while (y < 1-dyi) {
+            const data_t dyf = dy[x] - dyi;
+            int y=0;
+            while (y-1+dyi<0) {
                 dst[meshoffs+y]  = 0;
                 y++;
             }
-            while (y<ysize-2+dyi) {
+            while (y+2+dyi<ysize && y < ysize) {
                 dst[meshoffs+y] = mult(src[meshoffs+y-1+dyi],
                                       (dyf  )*(dyf-1)*(dyf-2)/(-6))
                                 + mult(src[meshoffs+y  +dyi],
@@ -65,7 +64,7 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                                       (dyf+1)*(dyf  )*(dyf-2)/(-2))
                                 + mult(src[meshoffs+y+2+dyi],
                                       (dyf+1)*(dyf  )*(dyf-1)/( 6));
-                y++
+                y++;
             }
             while (y < ysize) {
                 dst[meshoffs+y]  = 0;

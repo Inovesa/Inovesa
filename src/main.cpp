@@ -280,30 +280,25 @@ int main(int argc, char** argv)
     const double t_d = opts.getDampingTime();
     const double dt = 1.0/(f_s*steps);
 
-    HeritageMap* rm;
-    if (steps > 1) {
-        /* angle of one rotation step (in rad)
-         * (angle = 2*pi corresponds to 1 synchrotron period)
-         */
-        const double angle = 2*M_PI/steps;
+    /* angle of one rotation step (in rad)
+     * (angle = 2*pi corresponds to 1 synchrotron period)
+     */
+    const double angle = 2*M_PI/steps;
 
-        size_t rotmapsize;
-        #ifdef INOVESA_USE_CL
-        if (OCLH::active) {
-            rotmapsize = 0;
-        } else
-        #endif
-        {
-            rotmapsize = ps_size*ps_size/2;
-        }
-        Display::printText("Building RotationMap.");
-        rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
-                             HeritageMap::InterpolationType::cubic,
-                             RotationMap::RotationCoordinates::norm_pm1,
-                             true,rotmapsize);
-    } else {
-        rm = new Identity(mesh,mesh_rotated,ps_size,ps_size);
+    size_t rotmapsize;
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        rotmapsize = 0;
+    } else
+    #endif
+    {
+        rotmapsize = ps_size*ps_size/2;
     }
+    Display::printText("Building RotationMap.");
+    RotationMap* rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
+                         HeritageMap::InterpolationType::cubic,
+                         RotationMap::RotationCoordinates::norm_pm1,
+                         true,rotmapsize);
 
     double e0;
     if (t_d > 0) {
@@ -412,18 +407,6 @@ int main(int argc, char** argv)
     Display::printText("Starting the simulation.");
     // first update to have wkm for step0 in file
     wkm->update();
-
-    std::ofstream debugfile;
-    if (OCLH::active) {
-        debugfile.open("wkm-clfft.tmp");
-        wkm->syncCLMem(clCopyDirection::dev2cpu);
-    } else {
-        debugfile.open("wkm-fftw.tmp");
-    }
-    const meshaxis_t* force = wkm->getForce();
-    for (size_t i=0; i<ps_size; i++) {
-        debugfile << i << '\t' << force[i] << std::endl;
-    }
 
     for (unsigned int i=0;i<steps*rotations;i++) {
         if (i%outstep == 0) {
