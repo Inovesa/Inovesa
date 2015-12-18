@@ -22,7 +22,7 @@
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it) :
-    HeritageMap(in,out,xsize,0,it,it),
+    HeritageMap(in,out,xsize,1,it,it),
     _meshysize(ysize)
 {
     _force.resize(xsize,meshaxis_t(0));
