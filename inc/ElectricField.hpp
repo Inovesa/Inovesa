@@ -43,7 +43,8 @@ public:
      * @param impedance to use for electric field calculation
      * @param wakescaling scaling of wakepotential
      *        (As being part of fourier transform,
-     *         delta t and delta f will be automatically taken into account.)
+     *         delta t and delta f will be automatically taken into account.
+     *         Also factor of 2 is applied to fix (Z*Rho)(k<0)=0)
      *
      * Use other constructors when you want to use wake function or potential.
      */
@@ -53,19 +54,27 @@ public:
 
     /**
      * @brief ElectricField constructor for use of wake potential
-     * @param ps
-     * @param impedance
-     * @param Ib
-     * @param E0
-     * @param sigmaE
-     * @param dt
-     * @param rbend
+     * @param phasespace this electric field is assigned to
+     * @param impedance to use for electric field calculation
+     * @param Ib bunch current [A]
+     * @param E0 beam energy [eV]
+     * @param sigmaE normalized energy spread [1]
+     * @param dt time step [s]
+     * @param br bending radius [m]
      *
      * @todo: check whether impedance's frequencies match
+     *
+     * Internally all physical quantities are used to calculate
+     * the wakescalining for ElectricField(PhaseSpace*,Impedance*,meshaxis_t).
+     * We have factors of:
+     *   Q_b = Ib/f0 (wake potential is calculated for normalized charge)
+     *   dt*f0 (fraction of one revolution)
+     *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
-    ElectricField(PhaseSpace* ps,
-                  const Impedance* impedance, const double Ib, const double E0,
-                  const double sigmaE, const double dt, const double rbend);
+    ElectricField(PhaseSpace* ps, const Impedance* impedance,
+                  const double Ib, const double E0,
+                  const double sigmaE, const double dt,
+                  const double rbend);
 
     /**
      * @brief ElectricField (unmaintained) constructor for use of wake function
@@ -75,17 +84,15 @@ public:
      * @param bl natural rms bunch length [m]
      * @param E0 beam energy [eV]
      * @param sigmaE normalized energy spread [1]
-     * @param fs synchrotron frequency [Hz]
      * @param frev revolution frequency [Hz]
      * @param dt time step [s]
-     * @param rbend bending radius [m]
+     * @param fs synchrotron frequency [Hz]
      * @param nmax
      */
-    ElectricField(PhaseSpace* ps, const Impedance* impedance,
-                  const double Ib, const double E0,
-                  const double sigmaE, const double fs,
-                  const double dt, const double rbend,
-                  const size_t nmax=0);
+    ElectricField(PhaseSpace* ps,
+                  const Impedance* impedance, const double Ib, const double E0,
+                  const double sigmaE, const double dt, const double f0,
+                  const double fs, const size_t nmax);
 
     ~ElectricField();
 

@@ -24,7 +24,9 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const meshaxis_t wakescalining) :
     _nmax(impedance->maxN()),
     _bpmeshcells(ps->nMeshCells(0)),
-    _axis_freq(Ruler<frequency_t>(_nmax,0,1/(ps->getDelta(0)),0)),
+    _axis_freq(Ruler<frequency_t>(_nmax,0,
+                                  1/(ps->getDelta(0)),
+                                  physcons::c/ps->getScale(0))),
     // _axis_wake[_bpmeshcells] will be at position 0
     _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
                                  -ps->getDelta(0)*_bpmeshcells,
@@ -42,10 +44,10 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _fftw_wakelosses(nullptr),
     #ifdef INOVESA_USE_CL
     _wakescaling(OCLH::active?
-                   wakescalining*_axis_wake.delta()*_axis_freq.delta()*_nmax:
-                   wakescalining*_axis_wake.delta()*_axis_freq.delta())
+                   2*wakescalining*_axis_freq.delta()*_axis_wake.delta()*_nmax:
+                   2*wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #else
-    _wakescaling(wakescalining*_axis_wake.delta()*_axis_freq.delta())
+    _wakescaling(2*wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #endif // INOVESA_USE_CL
 {
     #ifdef INOVESA_USE_CL
@@ -104,9 +106,8 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt,
                                    const double rbend) :
-    ElectricField(ps,impedance,4*M_PI*rbend*Ib/physcons::c*dt/physcons::e
-                               /(ps->getDelta(1)*sigmaE*E0)
-                 )
+    ElectricField(ps,impedance,Ib*dt*physcons::c*2*M_PI*rbend
+                               /(ps->getDelta(1)*sigmaE*E0))
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
     #ifdef INOVESA_USE_CL
@@ -182,8 +183,8 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
                                    const double Ib, const double E0,
-                                   const double sigmaE, const double fs,
-                                   const double dt, const double rbend,
+                                   const double sigmaE, const double dt,
+                                   const double rbend, const double fs,
                                    const size_t nmax) :
         ElectricField(ps,impedance)
 {
@@ -377,6 +378,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                 = _wakepotential_complex[_nmax-1-i].real()*_wakescaling;
         }
     }
+
     return _wakepotential;
 }
 
