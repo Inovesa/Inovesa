@@ -142,6 +142,12 @@ int main(int argc, char** argv)
             }
         }
         maxval = 0.5f/M_PI;
+        const integral_t one = mesh->integral();
+        for (meshindex_t x = 0; x < ps_size; x++) {
+            for (meshindex_t y = 0; y < ps_size; y++) {
+                (*mesh)[x][y] /= one;
+            }
+        }
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
