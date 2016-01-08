@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -20,7 +20,7 @@
 #include "Impedance.hpp"
 
 vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
-                           double f_rev, double f_max) :
+                           const double f_rev, const double f_max, const double rbend) :
     _nmax(n),
     _axis(Ruler<frequency_t>(_nmax,0,f_max,1))
 {
@@ -28,6 +28,9 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
 
     // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
     constexpr impedance_t freespacecoeff = impedance_t(306.3,176.9);
+
+    // rescale freespacecoeff, taking ito account straight sections
+    const csrpower_t scaling = 2*M_PI*rbend*f_rev;
 
     // frequency resolution: impedance will be sampled at multiples of delta
     const frequency_t delta = f_max/f_rev/(_nmax-1.0);
@@ -40,8 +43,8 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
         break;
     case ImpedanceModel::FreeSpaceCSR:
         for (size_t i=0; i<_nmax; i++) {
-            _data.push_back(freespacecoeff*std::pow(i*delta,
-                                                    csrpower_t(1.0/3.0)));
+            _data.push_back(scaling*freespacecoeff
+                            *std::pow(i*delta,csrpower_t(1.0/3.0)));
         }
         break;
     }

@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -245,12 +245,14 @@ int main(int argc, char** argv)
     unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
+    double rb = opts.getBendingRadius();
     if (opts.getImpedanceFile() == "") {
         Display::printText("Will use free space CSR impedance. "
                            "(Give impedance file for other impedance model.)");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
                                   ps_size*padding,f0,
-                                  ps_size*vfps::physcons::c/(2*qmax*bl));
+                                  ps_size*vfps::physcons::c/(2*qmax*bl),
+                                  rb);
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
@@ -342,9 +344,8 @@ int main(int argc, char** argv)
         double Ib = opts.getBunchCurrent();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
-        double rb = opts.getBendingRadius();
         Display::printText("Calculating WakeFunction.");
-        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,dt,rb);
+        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,dt);
         Display::printText("Building WakeFunctionMap.");
         wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
                                    HeritageMap::InterpolationType::cubic);

@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -104,10 +104,8 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
 vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
                                    const vfps::Impedance *impedance,
                                    const double Ib, const double E0,
-                                   const double sigmaE, const double dt,
-                                   const double rbend) :
-    ElectricField(ps,impedance,Ib*dt*physcons::c*2*M_PI*rbend
-                               /(ps->getDelta(1)*sigmaE*E0))
+                                   const double sigmaE, const double dt) :
+    ElectricField(ps,impedance,Ib*dt/(ps->getDelta(1)*sigmaE*E0))
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
     #ifdef INOVESA_USE_CL

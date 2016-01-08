@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -46,12 +46,12 @@ public:
      * @param n compute (at least) to n=f*f_nyq/f_rev,
      *        where f_rev is the revolution frequency
      *        and f_max is maximum frequency
-     * @param roundup round to next 2^N
+     * @param rbend bending radius
      *
      * @todo: make this constructor also use basic constructor
      */
     Impedance(ImpedanceModel model, size_t n,
-              double f_rev, double f_max);
+              const double f_rev, const double f_max, const double rbend);
 
     /**
      * @brief Impedance basic constructor that initializes everything

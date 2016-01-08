@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -60,7 +60,6 @@ public:
      * @param E0 beam energy [eV]
      * @param sigmaE normalized energy spread [1]
      * @param dt time step [s]
-     * @param br bending radius [m]
      *
      * @todo: check whether impedance's frequencies match
      *
@@ -68,13 +67,12 @@ public:
      * the wakescalining for ElectricField(PhaseSpace*,Impedance*,meshaxis_t).
      * We have factors of:
      *   Q_b = Ib/f0 (wake potential is calculated for normalized charge)
-     *   dt*f0 (fraction of one revolution)
+     *   dt*f0 (fraction of one revolution, impedance is for one revolution)
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
     ElectricField(PhaseSpace* ps, const Impedance* impedance,
                   const double Ib, const double E0,
-                  const double sigmaE, const double dt,
-                  const double rbend);
+                  const double sigmaE, const double dt);
 
     /**
      * @brief ElectricField (unmaintained) constructor for use of wake function
