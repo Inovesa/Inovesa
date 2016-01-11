@@ -78,8 +78,10 @@ int main(int argc, char** argv)
     sstream.str("");
     sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
             << INOVESA_VERSION_MINOR << '.'
-            << INOVESA_VERSION_FIX << ", Branch: "
-            << GIT_BRANCH;
+            << INOVESA_VERSION_FIX;
+    if (std::string(GIT_BRANCH) != "stable") {
+        sstream << ", Branch: "<< GIT_BRANCH;
+    }
 
     Display::printText("Started Inovesa ("
                        +sstream.str()+") at "+timestring);
@@ -120,8 +122,6 @@ int main(int argc, char** argv)
 
     std::string startdistfile = opts.getStartDistFile();
 
-    meshdata_t maxval;
-
     if (startdistfile.length() <= 4) {
         ps_size = opts.getMeshSize();
         if (ps_size == 0) {
@@ -139,13 +139,6 @@ int main(int argc, char** argv)
                                /2.0f)
                     * std::exp(-std::pow((float(y)/ps_size-0.5f)*2*pmax,2.0f)
                                /2.0f);
-            }
-        }
-        maxval = 0.5f/M_PI;
-        const integral_t one = mesh->integral();
-        for (meshindex_t x = 0; x < ps_size; x++) {
-            for (meshindex_t y = 0; y < ps_size; y++) {
-                (*mesh)[x][y] /= one;
             }
         }
     } else {
@@ -177,13 +170,6 @@ int main(int argc, char** argv)
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
                     (*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
-                }
-            }
-            integral_t normalization = 1.0/mesh->integral();
-            for (unsigned int x=0; x<ps_size; x++) {
-                for (unsigned int y=0; y<ps_size; y++) {
-                    (*mesh)[x][y] *= normalization;
-                    maxval = std::max(maxval,(*mesh)[x][y]);
                 }
             }
             std::stringstream imgsize;
@@ -227,23 +213,36 @@ int main(int argc, char** argv)
             }
         }
         ifs.close();
-
-        // normalize to higest peak
-        maxval = std::numeric_limits<meshdata_t>::min();
-        for (unsigned int x=0; x<ps_size; x++) {
-            for (unsigned int y=0; y<ps_size; y++) {
-                maxval = std::max(maxval,(*mesh)[x][y]);
-            }
-        }
-        for (unsigned int x=0; x<ps_size; x++) {
-            for (unsigned int y=0; y<ps_size; y++) {
-                (*mesh)[x][y] /= maxval;
-            }
-        }
     } else {
         Display::printText("Unknown format of input file. Will now quit.");
         return EXIT_SUCCESS;
     }
+    }
+
+    // normalize integral to 1
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        mesh->syncCLMem(clCopyDirection::cpu2dev);
+    }
+    #endif // INOVESA_USE_CL
+    const integral_t one = mesh->integral();
+    for (meshindex_t x = 0; x < ps_size; x++) {
+        for (meshindex_t y = 0; y < ps_size; y++) {
+            (*mesh)[x][y] /= one;
+        }
+    }
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        mesh->syncCLMem(clCopyDirection::cpu2dev);
+    }
+    #endif // INOVESA_USE_CL
+
+    // find highest peak (for display)
+    meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+    for (unsigned int x=0; x<ps_size; x++) {
+        for (unsigned int y=0; y<ps_size; y++) {
+            maxval = std::max(maxval,(*mesh)[x][y]);
+        }
     }
 
     double bl = opts.getNaturalBunchLength();
@@ -252,8 +251,7 @@ int main(int argc, char** argv)
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
-        Display::printText("Will use free space CSR impedance. "
-                           "(Give impedance file for other impedance model.)");
+        Display::printText("Will use free space CSR impedance.");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
                                   ps_size*padding,f0,
                                   ps_size*vfps::physcons::c/(2*qmax*bl));

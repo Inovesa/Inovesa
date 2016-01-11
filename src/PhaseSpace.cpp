@@ -65,21 +65,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*_nmeshcellsX,
                             _ws);
-        std::string cl_code_projection_x = R"(
-            __kernel void projectionX(const __global float* mesh,
-                                      const __global float* ws,
-                                      const uint ysize,
-                                      __global float* proj)
-            {
-                float value = 0;
-                const uint x = get_global_id(0);
-                const uint meshoffs = x*ysize;
-                for (uint y=0; y< ysize; y++) {
-                    value += mesh[meshoffs+y]*ws[y];
-                }
-                proj[x] = value;
-            }
-            )";
+
         _clProgProjX  = OCLH::prepareCLProg(cl_code_projection_x);
         _clKernProjX = cl::Kernel(_clProgProjX, "projectionX");
         _clKernProjX.setArg(0, data_buf);
@@ -87,25 +73,12 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
         _clKernProjX.setArg(2, _nmeshcellsY);
         _clKernProjX.setArg(3, projectionX_buf);
 
-        std::string cl_code_integral = R"(
-            __kernel void integral(const __global float* proj,
-                                   const __global float* ws,
-                                   const uint xsize,
-                                   float result)
-            {
-                float value = 0;
-                for (uint x=0; x< xsize; x++) {
-                    value += proj[x]*ws[x];
-                }
-                result = value;
-            }
-            )";
         _clProgIntegral = OCLH::prepareCLProg(cl_code_integral);
         _clKernIntegral = cl::Kernel(_clProgIntegral, "integral");
         _clKernIntegral.setArg(0, projectionX_buf);
         _clKernIntegral.setArg(1, ws_buf);
         _clKernIntegral.setArg(2, _nmeshcellsX);
-        _clKernIntegral.setArg(3, _integral);
+        _clKernIntegral.setArg(3, integral_buf);
     }
     #endif
 }
@@ -145,6 +118,8 @@ vfps::integral_t vfps::PhaseSpace::integral()
                     _clKernIntegral,
                     cl::NullRange,
                     cl::NDRange(1));
+        OCLH::queue.enqueueReadBuffer
+            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral);
     } else
     #endif
     {
@@ -311,3 +286,34 @@ void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
     std::swap(first._data, second._data);
     std::swap(first._data1D,second._data1D);
 }
+
+std::string vfps::PhaseSpace::cl_code_integral = R"(
+    __kernel void integral(const __global float* proj,
+                           const __global float* ws,
+                           const uint xsize,
+                           __global float* result)
+    {
+        float value = 0;
+        for (uint x=0; x< xsize; x++) {
+            value += proj[x]*ws[x];
+        }
+        *result = value;
+    }
+    )";
+
+std::string vfps::PhaseSpace::cl_code_projection_x = R"(
+     __kernel void projectionX(const __global float* mesh,
+                               const __global float* ws,
+                               const uint ysize,
+                               __global float* proj)
+     {
+         float value = 0;
+         const uint x = get_global_id(0);
+         const uint meshoffs = x*ysize;
+         for (uint y=0; y< ysize; y++) {
+             value += mesh[meshoffs+y]*ws[y];
+         }
+         proj[x] = value;
+     }
+     )";
+

@@ -46,7 +46,6 @@ public:
      * @param n compute (at least) to n=f*f_nyq/f_rev,
      *        where f_rev is the revolution frequency
      *        and f_max is maximum frequency
-     * @param rbend bending radius
      *
      * @todo: make this constructor also use basic constructor
      */

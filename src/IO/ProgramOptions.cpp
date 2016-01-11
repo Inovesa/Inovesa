@@ -135,9 +135,11 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << "Inovesa v"
                   << INOVESA_VERSION_RELEASE << '.'
                   << INOVESA_VERSION_MINOR << '.'
-                  << INOVESA_VERSION_FIX
-                  << " (Branch: " GIT_BRANCH ")"
-                  << std::endl;
+                  << INOVESA_VERSION_FIX;
+        if (std::string(GIT_BRANCH) != "stable") {
+            std::cout << " (Branch: " GIT_BRANCH ")";
+        }
+        std::cout << std::endl;
         return false;
     }
     std::ifstream ifs(_configfile.c_str());
