@@ -105,7 +105,8 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
                                    const vfps::Impedance *impedance,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt) :
-    ElectricField(ps,impedance,Ib*dt/(ps->getDelta(1)*sigmaE*E0))
+    ElectricField(ps,impedance,
+                  Ib*dt*physcons::c/ps->getScale(0)/(ps->getDelta(1)*sigmaE*E0))
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
     #ifdef INOVESA_USE_CL

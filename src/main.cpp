@@ -120,6 +120,7 @@ int main(int argc, char** argv)
     const double pmin = qmin;
     const double pmax = qmax;
 
+    const double bl = opts.getNaturalBunchLength();
     std::string startdistfile = opts.getStartDistFile();
 
     if (startdistfile.length() <= 4) {
@@ -129,8 +130,7 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         Display::printText("Generating (gaussian) initial distribution.");
-        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                              opts.getNaturalBunchLength());
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
         for (meshindex_t x = 0; x < ps_size; x++) {
             for (meshindex_t y = 0; y < ps_size; y++) {
                 (*mesh)[x][y]
@@ -164,8 +164,7 @@ int main(int argc, char** argv)
         if (image.get_width() == image.get_height()) {
             ps_size = image.get_width();
 
-            mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                                  opts.getNaturalBunchLength());
+            mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
 
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
@@ -185,8 +184,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_PNG
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
-        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                              opts.getNaturalBunchLength());
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
 
         std::ifstream ifs;
         ifs.open(startdistfile);
@@ -245,9 +243,8 @@ int main(int argc, char** argv)
         }
     }
 
-    double bl = opts.getNaturalBunchLength();
-    double f0 = opts.getRevolutionFrequency();
-    unsigned int padding =std::max(opts.getPadding(),1u);
+    const double f0 = opts.getRevolutionFrequency();
+    const unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
@@ -346,9 +343,9 @@ int main(int argc, char** argv)
         double Ib = opts.getBunchCurrent();
         double E0 = opts.getBeamEnergy();
         double sigmaE = opts.getEnergySpread();
-        Display::printText("Calculating WakeFunction.");
+        Display::printText("Calculating WakePotential.");
         field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,dt);
-        Display::printText("Building WakeFunctionMap.");
+        Display::printText("Building WakeKickMap.");
         wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
                                    HeritageMap::InterpolationType::cubic);
     }

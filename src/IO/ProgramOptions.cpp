@@ -49,6 +49,8 @@ vfps::ProgramOptions::ProgramOptions() :
         ("version,v", "print version string")
     ;
     _physopts.add_options()
+        ("RevolutionFrequency,F", po::value<double>(&f_rev),
+            "Revolution frequency (Hz)")
         ("syncfreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
         ("tdamp,d", po::value<double>(&t_d),"Damping time (s)")
         ("NaturalBunchLength,l", po::value<double>(&s_0),
@@ -102,7 +104,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Factor to use for zero padding of bunch profile, 0/1: no padding")
         ("PhaseSpaceSize,P", po::value<double>(&pq_max),
             "Size of phase space (maximum sigma_{p/q})")
-        ("meshsize,s", po::value<unsigned int>(&meshsize),
+        ("MeshSize,s", po::value<unsigned int>(&meshsize),
             "Size of phase space mesh (number of p/q mesh points)")
         ("rotations,T", po::value<double>(&rotations),
             "Simulated time (in number of synchrotron periods)")

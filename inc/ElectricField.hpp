@@ -68,6 +68,7 @@ public:
      * We have factors of:
      *   Q_b = Ib/f0 (wake potential is calculated for normalized charge)
      *   dt*f0 (fraction of one revolution, impedance is for one revolution)
+     *   c/ps->getScale(0) (charge/sigma_z -> current)
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
     ElectricField(PhaseSpace* ps, const Impedance* impedance,
