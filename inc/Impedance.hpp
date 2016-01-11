@@ -51,7 +51,7 @@ public:
      * @todo: make this constructor also use basic constructor
      */
     Impedance(ImpedanceModel model, size_t n,
-              const double f_rev, const double f_max, const double rbend);
+              const double f_rev, const double f_max);
 
     /**
      * @brief Impedance basic constructor that initializes everything

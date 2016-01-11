@@ -20,17 +20,14 @@
 #include "Impedance.hpp"
 
 vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
-                           const double f_rev, const double f_max, const double rbend) :
+                           const double f_rev, const double f_max) :
     _nmax(n),
     _axis(Ruler<frequency_t>(_nmax,0,f_max,1))
 {
     _data.reserve(_nmax);
 
     // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
-    constexpr impedance_t freespacecoeff = impedance_t(306.3,176.9);
-
-    // rescale freespacecoeff, taking ito account straight sections
-    const csrpower_t scaling = 2*M_PI*rbend*f_rev;
+    constexpr impedance_t Z0 = impedance_t(306.3,176.9);
 
     // frequency resolution: impedance will be sampled at multiples of delta
     const frequency_t delta = f_max/f_rev/(_nmax-1.0);
@@ -43,8 +40,7 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
         break;
     case ImpedanceModel::FreeSpaceCSR:
         for (size_t i=0; i<_nmax; i++) {
-            _data.push_back(scaling*freespacecoeff
-                            *std::pow(i*delta,csrpower_t(1.0/3.0)));
+            _data.push_back(Z0*std::pow(i*delta,csrpower_t(1.0/3.0)));
         }
         break;
     }

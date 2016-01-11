@@ -251,14 +251,12 @@ int main(int argc, char** argv)
     unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
-    double rb = opts.getBendingRadius();
     if (opts.getImpedanceFile() == "") {
         Display::printText("Will use free space CSR impedance. "
                            "(Give impedance file for other impedance model.)");
         impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
                                   ps_size*padding,f0,
-                                  ps_size*vfps::physcons::c/(2*qmax*bl),
-                                  rb);
+                                  ps_size*vfps::physcons::c/(2*qmax*bl));
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
