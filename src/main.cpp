@@ -444,7 +444,10 @@ int main(int argc, char** argv)
             }
             #endif
             std::stringstream status;
-            status << static_cast<float>(i)/steps << '/' << rotations;
+            status.precision(2);
+            status << std::setw(3) << static_cast<float>(i)/steps
+                   << '/' << rotations;
+            status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
             Display::printText(status.str(),2.0f);
         }
         rm->apply();
@@ -463,7 +466,9 @@ int main(int argc, char** argv)
     }
 
     std::stringstream status;
-    status << rotations << '/' << rotations;
+    status.precision(2);
+    status << std::setw(3) << rotations << '/' << rotations;
+    status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
     Display::printText(status.str());
 
     #ifdef INOVESA_USE_CL

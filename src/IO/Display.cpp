@@ -1,130 +1,130 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #include "IO/Display.hpp"
 
 vfps::Display::Display()
     #ifdef INOVESA_USE_GUI
-	#if GLFW_VERSION_MAJOR == 3
-	:
-	window(nullptr)
+        #if GLFW_VERSION_MAJOR == 3
+        :
+        window(nullptr)
     #endif // GLFW_VERSION_MAJOR == 3
     #endif // INOVESA_USE_GUI
 {
     #ifdef INOVESA_USE_GUI
-	glfwInit();
+        glfwInit();
 
-	#if GLFW_VERSION_MAJOR == 3 // GLFW3
-	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	#else // GLFW2
-	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
+    #if GLFW_VERSION_MAJOR == 3 // GLFW3
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #else // GLFW2
+    glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
-	glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	#endif // GLFW2
+    glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    #endif // GLFW2
 
-	// Open a window and create its OpenGL context
-	#if GLFW_VERSION_MAJOR < 3
-	glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
+    // Open a window and create its OpenGL context
+    #if GLFW_VERSION_MAJOR < 3
+    glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
     glfwSetWindowTitle("Inovesa (GL2)");
     GUIElement::glversion = 2;
-	#else // GLFW3
+    #else // GLFW3
     window = glfwCreateWindow( 512, 512, "Inovesa (GL3)", NULL, NULL);
-	if( window == nullptr ) {
-		GUIElement::glversion = 2;
+    if( window == nullptr ) {
+        GUIElement::glversion = 2;
 
-		glfwTerminate();
-		printText("Failed to open OpenGl 3 window, will try OpenGL 2.");
-		glfwInit();
-		glfwWindowHint(GLFW_SAMPLES, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        glfwTerminate();
+        printText("Failed to open OpenGl 3 window, will try OpenGL 2.");
+        glfwInit();
+        glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         window = glfwCreateWindow( 512, 512, "Inovesa (GL2)", NULL, NULL);
 
-		if( window == nullptr ) {
-			std::cerr << "Failed to initialize GLFW." << std::endl;
-			glfwTerminate();
-		}
-	} else {
-		GUIElement::glversion = 3;
-	}
-	glfwMakeContextCurrent(window);
-	#endif // GLFW3
+        if( window == nullptr ) {
+            std::cerr << "Failed to initialize GLFW." << std::endl;
+            glfwTerminate();
+        }
+    } else {
+        GUIElement::glversion = 3;
+    }
+    glfwMakeContextCurrent(window);
+    #endif // GLFW3
 
-	// Initialize GLEW
-	glewExperimental = true; // Needed for core profile
-	if (glewInit() != GLEW_OK) {
-		std::cerr << "Failed to initialize GLEW" << std::endl;
-	}
+    // Initialize GLEW
+    glewExperimental = true; // Needed for core profile
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW" << std::endl;
+    }
 
-	// Ensure we can capture the escape key being pressed below
-	#if GLFW_VERSION_MAJOR == 3
-	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	#else
-	glfwEnable(GLFW_STICKY_KEYS);
+    // Ensure we can capture the escape key being pressed below
+    #if GLFW_VERSION_MAJOR == 3
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    #else
+    glfwEnable(GLFW_STICKY_KEYS);
     #endif // GLFW_VERSION_MAJOR == 3
 
     // White background
     glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
     #endif // INOVESA_USE_GUI
 }
 
 vfps::Display::~Display()
 {
     #ifdef INOVESA_USE_GUI
-	// Close OpenGL window and terminate GLFW
-	glfwTerminate();
+    // Close OpenGL window and terminate GLFW
+    glfwTerminate();
     #endif // INOVESA_USE_GUI
 }
 
 #ifdef INOVESA_USE_GUI
 void vfps::Display::addElement(GUIElement* newitem)
 {
-	_item.push_back(newitem);
+    _item.push_back(newitem);
 }
 #endif // INOVESA_USE_GUI
 
 #ifdef INOVESA_USE_GUI
 void vfps::Display::draw() {
-	// Clear the screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// draw GUIElements
-	for (GUIElement* i : _item) {
-		i->draw();
-	}
+    // draw GUIElements
+    for (GUIElement* i : _item) {
+        i->draw();
+    }
 
-	// Swap buffers
-	#if GLFW_VERSION_MAJOR == 3
-	glfwSwapBuffers(window);
-	#else
-	glfwSwapBuffers();
-	#endif
-	glfwPollEvents();
+    // Swap buffers
+    #if GLFW_VERSION_MAJOR == 3
+    glfwSwapBuffers(window);
+    #else
+    glfwSwapBuffers();
+    #endif
+    glfwPollEvents();
 }
 #endif // INOVESA_USE_GUI
 
@@ -133,7 +133,7 @@ void vfps::Display::printText(std::string txt, float silentTime)
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     if (std::chrono::duration<float>(now-_lastmessage).count() > silentTime) {
         std::cout.setf( std::ios::fixed, std:: ios::floatfield );
-        std::cout.precision(3);
+        std::cout.precision(2);
         std::cout << "[ " << std::setw(9)
                   << std::chrono::duration<float>(now-start_time).count()
                   << " ]: "
@@ -146,12 +146,12 @@ void vfps::Display::printText(std::string txt, float silentTime)
 #ifdef INOVESA_USE_GUI
 void vfps::Display::takeElement(vfps::GUIElement* item)
 {
-	for (size_t i=0; i< _item.size(); i++) {
-		if (_item[i] == item) {
-			_item.erase(_item.begin()+i);
-			i--;
-		}
-	}
+    for (size_t i=0; i< _item.size(); i++) {
+        if (_item[i] == item) {
+            _item.erase(_item.begin()+i);
+            i--;
+        }
+    }
 }
 #endif // INOVESA_USE_GUI
 
