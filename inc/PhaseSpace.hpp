@@ -55,18 +55,20 @@ public:
     };
 
 public:
-        PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
+    PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis, const double Fk=1);
 
-        PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
+    PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+               const double Fk=1);
 
-	PhaseSpace(meshindex_t ps_size,
-			   meshaxis_t xmin, meshaxis_t xmax,
-			   meshaxis_t ymin, meshaxis_t ymax,
-			   double xscale=0, double yscale=0);
+    PhaseSpace(meshindex_t ps_size,
+               meshaxis_t xmin, meshaxis_t xmax,
+               meshaxis_t ymin, meshaxis_t ymax,
+               double xscale=0, double yscale=0,
+               const double Fk=1);
 
-	PhaseSpace(const PhaseSpace& other);
+    PhaseSpace(const PhaseSpace& other);
 
-	~PhaseSpace();
+    ~PhaseSpace();
 
 	 /**
 	  * @brief getData gives direct access to held data
@@ -201,6 +203,15 @@ private:
 
     static std::string cl_code_projection_x;
 #endif
+
+private:
+    /**
+     * @brief haissinski calculates haissinski distribution
+     * @param target
+     * @param kappa
+     * @param loops (maximum) number of loops (choose 0 for gaussian)
+     */
+    void haissinski(const uint_fast8_t x, const projection_t Fk);
 };
 
 /**

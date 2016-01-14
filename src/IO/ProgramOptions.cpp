@@ -33,11 +33,12 @@ vfps::ProgramOptions::ProgramOptions() :
     E_0(1.3e9),
     f_s(8.5e3),
     f_rev(2.7e6),
+    h(1),
     I_b(1),
     t_d(0.01),
     r_bend(1.0),
-    s_0(1.0e-3),
     s_E(4.7e-4),
+    V_RF(1e6),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),
@@ -51,16 +52,16 @@ vfps::ProgramOptions::ProgramOptions() :
     _physopts.add_options()
         ("RevolutionFrequency,F", po::value<double>(&f_rev),
             "Revolution frequency (Hz)")
-        ("syncfreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
-        ("tdamp,d", po::value<double>(&t_d),"Damping time (s)")
-        ("NaturalBunchLength,l", po::value<double>(&s_0),
-            "Naural RMS Bunch Length (m)")
+        ("SyncFreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
+        ("DampingTime,d", po::value<double>(&t_d),"Damping time (s)")
+        ("HarmonicNumber,H", po::value<double>(&h),
+            "Harmonic Number (1)")
         ("InitialDist,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
             "\tgrayscale png (.png) file containing initial particle density\n"
             "\ttext file (.txt) containing normalized z/delta of particles")
         ("BunchCurrent,I", po::value<double>(&I_b),
-            "Current of a single electron bunch (A)")
+            "Ring Current due to a single electron bunch (A)")
         ("BendingRadius,R", po::value<double>(&r_bend),
             "Bending radius of accelerator (m)")
         ("BeamEnergy,E", po::value<double>(&E_0),
@@ -70,6 +71,8 @@ vfps::ProgramOptions::ProgramOptions() :
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information. Might be:\n"
             "\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
+        ("RFVoltage,V", po::value<double>(&V_RF),
+            "Accelerating Voltage (V)")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing information on wake function.")
     ;

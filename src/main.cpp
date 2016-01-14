@@ -114,33 +114,36 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_CL
 
     PhaseSpace* mesh;
-    meshindex_t ps_size;
+    meshindex_t ps_size = opts.getMeshSize();
     const double qmax = opts.getPhaseSpaceSize();
     const double qmin = -qmax;
     const double pmin = qmin;
     const double pmax = qmax;
 
-    const double bl = opts.getNaturalBunchLength();
+    const double sE = opts.getEnergySpread();
+    const double dE = sE*opts.getBeamEnergy();
+    const double f0 = opts.getRevolutionFrequency();
+    const double h = opts.getHarmonicNumber();
+    const double V = opts.getRFVoltage();
+    const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V;
+    const double Ib = opts.getBunchCurrent();
+    const double E0 = opts.getBeamEnergy();
+    const double R = physcons::c/(2*M_PI*f0);
+    const double Fk = 6000*Ib/(physcons::epsolon0*2*M_PI*h*f0*V)
+                    * std::pow(R/3.0,1./3.)
+                    * std::pow(bl,-4./3.);
     std::string startdistfile = opts.getStartDistFile();
 
     if (startdistfile.length() <= 4) {
-        ps_size = opts.getMeshSize();
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        Display::printText("Generating (gaussian) initial distribution.");
-        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
-        for (meshindex_t x = 0; x < ps_size; x++) {
-            for (meshindex_t y = 0; y < ps_size; y++) {
-                (*mesh)[x][y]
-                    = 0.5f/M_PI
-                    * std::exp(-std::pow((float(x)/ps_size-0.5f)*2*qmax,2.0f)
-                               /2.0f)
-                    * std::exp(-std::pow((float(y)/ps_size-0.5f)*2*pmax,2.0f)
-                               /2.0f);
-            }
-        }
+        sstream.str("");
+        sstream << Fk;
+        Display::printText("Generating initial distribution with Fk="
+                           +sstream.str()+".");
+        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -243,7 +246,6 @@ int main(int argc, char** argv)
         }
     }
 
-    const double f0 = opts.getRevolutionFrequency();
     const unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
@@ -340,11 +342,8 @@ int main(int argc, char** argv)
                                   wake,HeritageMap::InterpolationType::cubic);
         wkm = wfm;
     } else {
-        double Ib = opts.getBunchCurrent();
-        double E0 = opts.getBeamEnergy();
-        double sigmaE = opts.getEnergySpread();
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh,impedance,Ib,E0,sigmaE,dt);
+        field = new ElectricField(mesh,impedance,Ib,E0,sE,dt);
         Display::printText("Building WakeKickMap.");
         wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
                                    HeritageMap::InterpolationType::cubic);
@@ -445,7 +444,7 @@ int main(int argc, char** argv)
             #endif
             std::stringstream status;
             status.precision(2);
-            status << std::setw(3) << static_cast<float>(i)/steps
+            status << std::setw(4) << static_cast<float>(i)/steps
                    << '/' << rotations;
             status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
             Display::printText(status.str(),2.0f);
@@ -467,7 +466,7 @@ int main(int argc, char** argv)
 
     std::stringstream status;
     status.precision(2);
-    status << std::setw(3) << rotations << '/' << rotations;
+    status << std::setw(4) << rotations << '/' << rotations;
     status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
     Display::printText(status.str());
 

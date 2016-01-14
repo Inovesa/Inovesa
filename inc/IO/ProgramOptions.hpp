@@ -94,11 +94,14 @@ public:
     inline double getEnergySpread() const
         { return s_E; }
 
-    inline double getNaturalBunchLength() const
-        { return s_0; }
+    inline double getHarmonicNumber() const
+        { return h; }
 
     inline double getRevolutionFrequency() const
         { return f_rev; }
+
+    inline double getRFVoltage() const
+        { return V_RF; }
 
     inline double getSyncFreq() const
         { return f_s; }
@@ -133,11 +136,12 @@ private: // phsical parameters
     double E_0;
     double f_s;
     double f_rev;
+    double h;
     double I_b;
     double t_d;
     double r_bend;
-    double s_0;
     double s_E;
+    double V_RF;
 
 private:
     po::options_description _cfgfileopts;

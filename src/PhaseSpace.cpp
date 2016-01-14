@@ -19,7 +19,8 @@
 
 #include "PhaseSpace.hpp"
 
-vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
+vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
+                             const double Fk) :
     _axis(axis),
     _integral(0),
     _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
@@ -36,6 +37,19 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
         _data[i] = &(_data1D[i*nMeshCells(1)]);
     }
     _ws = new meshdata_t[nMeshCells(0)];
+
+    if (Fk > 1) {
+        haissinski(0,Fk); // 50 iterations haissinski for y axis
+    } else {
+        haissinski(0,1); // creates gaussian for x axis
+    }
+    haissinski(1,1); // creates gaussian for y axis
+
+    for (meshindex_t x = 0; x < nMeshCells(0); x++) {
+        for (meshindex_t y = 0; y < nMeshCells(1); y++) {
+            _data[x][y] = _projection[0][x]*_projection[1][y];
+        }
+    }
 
     const integral_t ca = 3.;
     integral_t dc = 1;
@@ -84,16 +98,19 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis) :
 }
 
 
-vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2) :
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}})
+vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+                             const double Fk) :
+    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},Fk)
 {}
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              meshaxis_t xmin, meshaxis_t xmax,
                              meshaxis_t ymin, meshaxis_t ymax,
-                             double xscale, double yscale) :
+                             double xscale, double yscale,
+                             const double Fk) :
     PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
-               Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale))
+               Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale),
+               Fk)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -278,6 +295,49 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
                                       _projection[0]);
         break;
     }
+}
+
+void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
+                                  const projection_t Fk)
+{
+    constexpr uint32_t maxloops = 200;
+    projection_t kappa = 0.29103;
+    projection_t* I = new projection_t[nMeshCells()];
+    uint32_t k=0;
+    integral_t F;
+    do{
+        for (uint32_t i=0;i<nMeshCells(x);i++){ //Erzeugung der Startwerte
+            _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]);
+            I[i]=0;
+        }
+        F=1;
+        while(F < Fk && k<maxloops){ // fuehrt Iterationen durch
+            F=0;
+            for(uint32_t i=0; i<nMeshCells(x); i++){
+                projection_t tv=0; // vorheriges t
+                I[i]=0;
+                for(uint32_t j=0; j<=i; j++){ //Berechnet Wert des Integrals I[i]
+                    projection_t tn =std::pow(((j+1)*getDelta(x)),2./3.); // naechstes t
+                    projection_t b  = (tn-tv)*0.5;
+                    I[i]+= _projection[x][i-j]*b;
+                    tv =std::pow(( j   *getDelta(x)),2./3.);
+                }
+                I[i]*=1.5;
+                //Berechnet neues y[i]
+                _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]+I[i]);
+
+                F+=_projection[x][i]*getDelta(x);
+            }
+            k++;
+        }
+        kappa*=0.99;
+        k++;
+    } while(F > 1.01*Fk && k<maxloops);
+
+    for (uint32_t i=0;i<nMeshCells(x);i++){ // Normalize Haissinski distribution
+        _projection[x][i]/=F;
+    }
+    delete [] I;
 }
 #endif // INOVESA_USE_CL
 
