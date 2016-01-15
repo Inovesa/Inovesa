@@ -38,16 +38,18 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
     }
     _ws = new meshdata_t[nMeshCells(0)];
 
-    if (Fk > 1) {
-        haissinski(0,Fk); // 50 iterations haissinski for y axis
-    } else {
-        haissinski(0,1); // creates gaussian for x axis
-    }
-    haissinski(1,1); // creates gaussian for y axis
+    if (Fk >= 0) {
+        if (Fk > 0) {
+            haissinski(0,Fk); // 50 iterations haissinski for y axis
+        } else {
+            haissinski(0,0); // creates gaussian for x axis
+        }
+        haissinski(1,0); // creates gaussian for y axis
 
-    for (meshindex_t x = 0; x < nMeshCells(0); x++) {
-        for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-            _data[x][y] = _projection[0][x]*_projection[1][y];
+        for (meshindex_t x = 0; x < nMeshCells(0); x++) {
+            for (meshindex_t y = 0; y < nMeshCells(1); y++) {
+                _data[x][y] = _projection[0][x]*_projection[1][y];
+            }
         }
     }
 
@@ -114,7 +116,7 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
-    PhaseSpace(other._axis)
+    PhaseSpace(other._axis,-1)
 { std::copy_n(other._data1D,nMeshCells(0)*nMeshCells(1),_data1D); }
 
 vfps::PhaseSpace::~PhaseSpace()
@@ -301,38 +303,32 @@ void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
                                   const projection_t Fk)
 {
     constexpr uint32_t maxloops = 200;
-    projection_t kappa = 0.29103;
+    projection_t kappa = 0.01; // maximum: 0.29103
     projection_t* I = new projection_t[nMeshCells()];
     uint32_t k=0;
-    integral_t F;
-    do{
-        for (uint32_t i=0;i<nMeshCells(x);i++){ //Erzeugung der Startwerte
-            _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]);
+    integral_t F=0;
+    for (uint32_t i=0;i<nMeshCells(x);i++){ //Erzeugung der Startwerte
+        _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]);
+        I[i]=0;
+        F+=_projection[x][i]*getDelta(x);
+    }
+    while(F < Fk && k<maxloops){ // fuehrt Iterationen durch
+        for(uint32_t i=0; i<nMeshCells(x); i++){
+            projection_t tv=0; // vorheriges t
             I[i]=0;
-        }
-        F=1;
-        while(F < Fk && k<maxloops){ // fuehrt Iterationen durch
-            F=0;
-            for(uint32_t i=0; i<nMeshCells(x); i++){
-                projection_t tv=0; // vorheriges t
-                I[i]=0;
-                for(uint32_t j=0; j<=i; j++){ //Berechnet Wert des Integrals I[i]
-                    projection_t tn =std::pow(((j+1)*getDelta(x)),2./3.); // naechstes t
-                    projection_t b  = (tn-tv)*0.5;
-                    I[i]+= _projection[x][i-j]*b;
-                    tv =std::pow(( j   *getDelta(x)),2./3.);
-                }
-                I[i]*=1.5;
-                //Berechnet neues y[i]
-                _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]+I[i]);
-
-                F+=_projection[x][i]*getDelta(x);
+            for(uint32_t j=0; j<=i; j++){ //Berechnet Wert des Integrals I[i]
+                projection_t tn =std::pow(((j+1)*getDelta(x)),2./3.); // naechstes t
+                projection_t b  = (tn-tv)*0.5;
+                I[i]+= _projection[x][i-j]*b;
+                tv =std::pow(( j   *getDelta(x)),2./3.);
             }
-            k++;
+            I[i]*=1.5;
+            //Berechnet neues y[i]
+            _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]+I[i]);
+            F+=_projection[x][i]*getDelta(x);
         }
-        kappa*=0.99;
         k++;
-    } while(F > 1.01*Fk && k<maxloops);
+    };
 
     for (uint32_t i=0;i<nMeshCells(x);i++){ // Normalize Haissinski distribution
         _projection[x][i]/=F;
