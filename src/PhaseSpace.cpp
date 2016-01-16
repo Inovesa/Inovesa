@@ -303,32 +303,29 @@ void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
                                   const projection_t Fk)
 {
     constexpr uint32_t maxloops = 200;
-    projection_t kappa = 0.01; // maximum: 0.29103
-    projection_t* I = new projection_t[nMeshCells()];
-    uint32_t k=0;
-    integral_t F=0;
-    for (uint32_t i=0;i<nMeshCells(x);i++){ //Erzeugung der Startwerte
-        _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]);
-        I[i]=0;
-        F+=_projection[x][i]*getDelta(x);
-    }
-    while(F < Fk && k<maxloops){ // fuehrt Iterationen durch
+    constexpr double kappamax=0.291030514208;
+    constexpr double p=1.50088;
+    constexpr double q=1.05341;
+    projection_t kappa = kappamax*(1.0-std::exp(-p*std::pow(Fk,q)));
+    projection_t* I = new projection_t[nMeshCells(x)];
+    std::fill_n(I,nMeshCells(x),0);
+    projection_t F;
+    for(uint32_t k=0;k<maxloops && F<Fk;k++){ // fuehrt Iterationen durch
+        F=0;
         for(uint32_t i=0; i<nMeshCells(x); i++){
-            projection_t tv=0; // vorheriges t
-            I[i]=0;
-            for(uint32_t j=0; j<=i; j++){ //Berechnet Wert des Integrals I[i]
-                projection_t tn =std::pow(((j+1)*getDelta(x)),2./3.); // naechstes t
-                projection_t b  = (tn-tv)*0.5;
-                I[i]+= _projection[x][i-j]*b;
-                tv =std::pow(( j   *getDelta(x)),2./3.);
-            }
-            I[i]*=1.5;
-            //Berechnet neues y[i]
+            data_t tv=0; // vorheriges t
             _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]+I[i]);
             F+=_projection[x][i]*getDelta(x);
+            I[i]=0;
+            for(uint32_t j=0; j<=i; j++){ //Berechnet neuen Wert I[i]
+                data_t tn =std::pow(((j+1)*getDelta(x)),2./3.); // naechstes t
+                data_t b  = (tn-tv)*0.5;
+                I[i]+= _projection[x][i-j]*b;
+                tv =std::pow((j*getDelta(x)),2./3.);
+            }
+            I[i]*=1.5;
         }
-        k++;
-    };
+    }
 
     for (uint32_t i=0;i<nMeshCells(x);i++){ // Normalize Haissinski distribution
         _projection[x][i]/=F;
