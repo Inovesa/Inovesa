@@ -29,6 +29,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     ta_dims( 0 ),
     bc_dims( 0 ),
     bp_dims( {{ 0, ps->nMeshCells(0) }} ),
+    bl_dims( 0 ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
     csr_dims( {{ 0, ef->getNMax() }} ),
     maxn( ef->getNMax() ),
@@ -173,7 +174,29 @@ vfps::HDF5File::HDF5File(const std::string fname,
 	bp_prop.setDeflate(compression);
 
 	bp_dataset = file->createDataSet("/BunchProfile/data",bp_datatype,
-											*bp_dataspace,bp_prop);
+					 *bp_dataspace,bp_prop);
+
+    // get ready to save BunchLength
+    file->createGroup("BunchLength");
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            bl_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            bl_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            bl_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    hsize_t bl_maxdims = H5S_UNLIMITED;
+
+    bl_dataspace = new H5::DataSpace(bl_rank,&bl_dims,&bl_maxdims);
+
+    const hsize_t bl_chunkdims = 256;
+    bl_prop.setChunk(bl_rank,&bl_chunkdims);
+    bl_prop.setShuffle();
+    bl_prop.setDeflate(compression);
+
+    bl_dataset = file->createDataSet("/BunchLength/data",bl_datatype,
+                                     *bl_dataspace,bl_prop);
 
     // get ready to save WakePotential
     file->createGroup("WakePotential");
@@ -388,6 +411,19 @@ void vfps::HDF5File::append(const PhaseSpace* ps)
 	bp_dataset.write(ps->getProjection(0), bp_datatype,*memspace, *filespace);
 	delete memspace;
 	delete filespace;
+
+    // append Length
+    hsize_t bl_offset = bl_dims;
+    const hsize_t bl_ext = 1;
+    bl_dims++;
+    bl_dataset.extend(&bl_dims);
+    filespace = new H5::DataSpace(bl_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
+    memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
+    meshaxis_t bunchlength = ps->getMoment(0,1);
+    bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
 
 	// append BunchCharge
 	hsize_t bc_offset = bc_dims;

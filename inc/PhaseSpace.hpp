@@ -115,6 +115,9 @@ public:
 
 	meshdata_t variance(const uint_fast8_t axis);
 
+    meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
+        { return _moment[x][m]; }
+
     const inline projection_t* getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
@@ -142,9 +145,8 @@ public:
 	inline meshaxis_t size(const uint_fast8_t x) const
 	{ return _axis[x].size(); }
 
-	inline meshaxis_t x(const uint_fast8_t axis,
-						const size_t n) const
-	{ return _axis[axis][n]; }
+    inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
+        { return _axis[axis][n]; }
 
 	/**
 	 * @brief swap
@@ -184,7 +186,7 @@ protected:
 	 * 2: skewness
 	 * 3: kurtosis
 	 */
-	std::array<std::vector<meshdata_t>,2> _moment;
+	std::array<std::array<meshdata_t,4>,2> _moment;
 
     meshdata_t* _ws;
 

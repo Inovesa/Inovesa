@@ -159,56 +159,32 @@ vfps::integral_t vfps::PhaseSpace::integral()
     return _integral;
 }
 
-/*
 vfps::meshdata_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
-    if (axis == 0) {
-        projectionToX();
-    } else {
-        projectionToY();
-    }
-
-    if (_moment[axis].size() == 0) {
-        _moment[axis].resize(1);
-    }
-
     meshdata_t avg = 0;
-    for (size_t i=0; i<size(axis); i++) {
-        avg += meshdata_t(i)*_projection[axis][i];
+    for (size_t i=0; i<nMeshCells(axis); i++) {
+        avg += _projection[axis][i]*x(axis,i);
     }
-    avg = avg/meshdata_t(size(axis));
 
+    avg /= size(axis);
     _moment[axis][0] = avg;
 
-    return x(axis,avg);
+    return avg;
 }
 
 vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 {
-    if (axis == 0) {
-        projectionToX();
-    } else {
-        projectionToY();
-    }
-
-    if (_moment[axis].size() < 2) {
-        _moment[axis].resize(2);
-    }
-
-    average(axis);
-
-    meshdata_t avg = _moment[axis][0];
+    meshdata_t avg = average(axis);;
     meshdata_t var = 0;
-    for (size_t i=0; i<size(axis); i++) {
-        var += (meshdata_t(i)-avg)*_projection[axis][i];
+    for (size_t i=0; i<nMeshCells(axis); i++) {
+        var += _projection[axis][i]*std::pow(x(axis,i)-avg,2);
     }
-    var = var/meshdata_t(size(axis));
+    var /= size(axis);
 
     _moment[axis][1] = var;
 
-    return x(axis,var);
+    return var;
 }
-*/
 
 void vfps::PhaseSpace::updateXProjection() {
     #ifdef INOVESA_USE_CL

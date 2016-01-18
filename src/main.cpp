@@ -415,6 +415,7 @@ int main(int argc, char** argv)
             if (file != nullptr) {
                 file->timeStep(i*dt);
                 mesh->integral();
+                mesh->variance(0);
                 file->append(mesh);
                 file->append(wkm);
             }

@@ -134,6 +134,19 @@ private: // bunch profile
 
 	H5::DSetCreatPropList bp_prop;
 
+private: // bunch length
+    static constexpr uint_fast8_t bl_rank = 1;
+
+    H5::DataSet bl_dataset;
+
+    H5::DataSpace* bl_dataspace;
+
+    H5::IntType bl_datatype;
+
+    hsize_t bl_dims;
+
+    H5::DSetCreatPropList bl_prop;
+
 private: // wake potential
     static constexpr uint_fast8_t wp_rank = 2;
 
