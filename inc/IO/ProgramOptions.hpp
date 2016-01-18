@@ -103,6 +103,9 @@ public:
     inline double getRFVoltage() const
         { return V_RF; }
 
+    inline double getStartDistParam() const
+        { return Fk; }
+
     inline double getSyncFreq() const
         { return f_s; }
 
@@ -134,6 +137,7 @@ private: // simulation parameters
 
 private: // phsical parameters
     double E_0;
+    double Fk;
     double f_s;
     double f_rev;
     double h;

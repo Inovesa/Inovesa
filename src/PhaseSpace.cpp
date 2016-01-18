@@ -304,13 +304,15 @@ void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
 {
     constexpr uint32_t maxloops = 200;
     constexpr double kappamax=0.291030514208;
+    constexpr double kappamin=0.01;
     constexpr double p=1.50088;
     constexpr double q=1.05341;
-    projection_t kappa = kappamax*(1.0-std::exp(-p*std::pow(Fk,q)));
+    projection_t kappa = std::max(kappamax*(1.0-std::exp(-p*std::pow(Fk,q))),
+                                  kappamin);
     projection_t* I = new projection_t[nMeshCells(x)];
     std::fill_n(I,nMeshCells(x),0);
-    projection_t F;
-    for(uint32_t k=0;k<maxloops && F<Fk;k++){ // fuehrt Iterationen durch
+    projection_t F=-1;
+    for(uint32_t k=0;k<=maxloops && F<Fk;k++){ // fuehrt Iterationen durch
         F=0;
         for(uint32_t i=0; i<nMeshCells(x); i++){
             data_t tv=0; // vorheriges t

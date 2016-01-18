@@ -31,6 +31,7 @@ vfps::ProgramOptions::ProgramOptions() :
     steps(4000),
     rotations(1),
     E_0(1.3e9),
+    Fk(0),
     f_s(8.5e3),
     f_rev(2.7e6),
     h(1),
@@ -56,10 +57,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("DampingTime,d", po::value<double>(&t_d),"Damping time (s)")
         ("HarmonicNumber,H", po::value<double>(&h),
             "Harmonic Number (1)")
-        ("InitialDist,D", po::value<std::string>(&_startdistfile),
+        ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
             "\tgrayscale png (.png) file containing initial particle density\n"
             "\ttext file (.txt) containing normalized z/delta of particles")
+        ("InitialDistParam,F",po::value<double>(&Fk),
+            "Parameter F(k) of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b),
             "Ring Current due to a single electron bunch (A)")
         ("BendingRadius,R", po::value<double>(&r_bend),

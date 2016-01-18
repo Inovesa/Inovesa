@@ -128,10 +128,7 @@ int main(int argc, char** argv)
     const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V;
     const double Ib = opts.getBunchCurrent();
     const double E0 = opts.getBeamEnergy();
-    const double R = physcons::c/(2*M_PI*f0);
-    const double Fk = 6000*Ib/(physcons::epsolon0*2*M_PI*h*f0*V)
-                    * std::pow(R/3.0,1./3.)
-                    * std::pow(bl,-4./3.);
+    const double Fk = opts.getStartDistParam();
     std::string startdistfile = opts.getStartDistFile();
 
     if (startdistfile.length() <= 4) {
@@ -141,7 +138,7 @@ int main(int argc, char** argv)
         }
         sstream.str("");
         sstream << Fk;
-        Display::printText("Generating initial distribution with Fk="
+        Display::printText("Generating initial distribution with F(k)="
                            +sstream.str()+".");
         mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk);
     } else {
