@@ -125,7 +125,8 @@ int main(int argc, char** argv)
     const double f0 = opts.getRevolutionFrequency();
     const double h = opts.getHarmonicNumber();
     const double V = opts.getRFVoltage();
-    const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V;
+    const double f_s = opts.getSyncFreq();
+    const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V*f_s;
     const double Ib = opts.getBunchCurrent();
     const double E0 = opts.getBeamEnergy();
     const double Fk = opts.getStartDistParam();
@@ -276,7 +277,6 @@ int main(int argc, char** argv)
     const unsigned int steps = std::max(opts.getSteps(),1u);
     const unsigned int outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
-    const double f_s = opts.getSyncFreq();
     const double t_d = opts.getDampingTime();
     const double dt = 1.0/(f_s*steps);
 
@@ -416,8 +416,6 @@ int main(int argc, char** argv)
                 file->timeStep(i*dt);
                 mesh->integral();
                 file->append(mesh);
-                field->updateCSRSpectrum();
-                file->append(field);
                 file->append(wkm);
             }
             #ifdef INOVESA_USE_GUI
@@ -440,7 +438,7 @@ int main(int argc, char** argv)
             }
             #endif
             std::stringstream status;
-            status.precision(2);
+            status.precision(3);
             status << std::setw(4) << static_cast<float>(i)/steps
                    << '/' << rotations;
             status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
@@ -456,13 +454,11 @@ int main(int argc, char** argv)
         file->timeStep(dt*steps*rotations);
         mesh->integral();
         file->append(mesh);
-        field->updateCSRSpectrum();
-        file->append(field);
         file->append(wkm);
     }
 
     std::stringstream status;
-    status.precision(2);
+    status.precision(3);
     status << std::setw(4) << rotations << '/' << rotations;
     status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
     Display::printText(status.str());

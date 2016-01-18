@@ -61,7 +61,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "might be:\n"
             "\tgrayscale png (.png) file containing initial particle density\n"
             "\ttext file (.txt) containing normalized z/delta of particles")
-        ("InitialDistParam,F",po::value<double>(&Fk),
+        ("InitialDistParam,K",po::value<double>(&Fk),
             "Parameter F(k) of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b),
             "Ring Current due to a single electron bunch (A)")
