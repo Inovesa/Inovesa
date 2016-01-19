@@ -121,16 +121,26 @@ int main(int argc, char** argv)
     const double pmax = qmax;
 
     const double sE = opts.getEnergySpread();
-    const double dE = sE*opts.getBeamEnergy();
+    const double E0 = opts.getBeamEnergy();
+    const double dE = sE*E0;
     const double f0 = opts.getRevolutionFrequency();
     const double h = opts.getHarmonicNumber();
     const double V = opts.getRFVoltage();
-    const double f_s = opts.getSyncFreq();
-    const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V*f_s;
+    const double fs = opts.getSyncFreq();
+    const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V*fs;
     const double Ib = opts.getBunchCurrent();
-    const double E0 = opts.getBeamEnergy();
     const double Fk = opts.getStartDistParam();
+    const double R = physcons::c/(2*M_PI*f0);
     std::string startdistfile = opts.getStartDistFile();
+
+    const double Ith = physcons::IAlfven/physcons::me*2*M_PI
+                     * std::pow(dE*fs/f0,2)/V/h
+                     * std::pow(bl/R,1./3.)*0.482;
+
+    sstream.str("");
+    sstream << Ith;
+    Display::printText("Information: Threshold current is "
+                       +sstream.str()+" mA.");
 
     if (startdistfile.length() <= 4) {
         if (ps_size == 0) {
@@ -278,7 +288,7 @@ int main(int argc, char** argv)
     const unsigned int outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
     const double t_d = opts.getDampingTime();
-    const double dt = 1.0/(f_s*steps);
+    const double dt = 1.0/(fs*steps);
 
     /* angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
@@ -302,7 +312,7 @@ int main(int argc, char** argv)
 
     double e0;
     if (t_d > 0) {
-        e0 = 2.0/(f_s*t_d*steps);
+        e0 = 2.0/(fs*t_d*steps);
     } else {
         e0=0;
     }

@@ -68,6 +68,12 @@ constexpr double epsolon0 = 8.854187817e-12;
 
 /// charge of one electron (in C)
 constexpr double e=1.602e-19;
+
+/// Alfven current (in A)
+constexpr double IAlfven = 17045;
+
+/// electron rest energy (in eV)
+constexpr double me = 510998.9;
 } // namespace physcons
 
 } // namespace vfps
