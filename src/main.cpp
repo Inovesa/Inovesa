@@ -138,9 +138,9 @@ int main(int argc, char** argv)
                      * std::pow(bl/R,1./3.)*0.482;
 
     sstream.str("");
-    sstream << Ith;
+    sstream << std::scientific << Ith;
     Display::printText("Information: Threshold current is "
-                       +sstream.str()+" mA.");
+                       +sstream.str()+" A.");
 
     if (startdistfile.length() <= 4) {
         if (ps_size == 0) {
