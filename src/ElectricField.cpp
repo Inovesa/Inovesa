@@ -289,7 +289,8 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
                           &_bp_padded_buf(),&_formfactor_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
 
-        // to be implemented
+        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
+                                      _nmax*sizeof(_formfactor[0]),_formfactor);
     } else
     #endif // INOVESA_USE_CL
     {
@@ -299,11 +300,10 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
         std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
         //FFT charge density
         fftwf_execute(_ffttw_bunchprofile);
-
-        for (unsigned int i=0; i<_nmax; i++) {
-            // norm = squared magnitude
-            _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
-        }
+    }
+    for (unsigned int i=0; i<_nmax; i++) {
+        // norm = squared magnitude
+        _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
     }
 
     return _csrspectrum;

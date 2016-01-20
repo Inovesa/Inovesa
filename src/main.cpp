@@ -431,6 +431,8 @@ int main(int argc, char** argv)
                 mesh->integral();
                 mesh->variance(0);
                 file->append(mesh);
+                field->updateCSRSpectrum();
+                file->append(field);
                 file->append(wkm);
             }
             #endif // INOVESA_USE_HDF5
@@ -471,6 +473,8 @@ int main(int argc, char** argv)
         file->timeStep(dt*steps*rotations);
         mesh->integral();
         file->append(mesh);
+        field->updateCSRSpectrum();
+        file->append(field);
         file->append(wkm);
     }
     #endif // INOVESA_USE_HDF5
