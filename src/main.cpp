@@ -356,6 +356,7 @@ int main(int argc, char** argv)
                                    HeritageMap::InterpolationType::cubic);
     }
 
+    #ifdef INOVESSA_USE_HDF5
     HDF5File* file = nullptr;
     std::string ofname = opts.getOutFile();
     if ( isOfFileType(".h5",ofname)) {
@@ -364,7 +365,9 @@ int main(int argc, char** argv)
         Display::printText("Saved configuiration to: \""+cfgname+'\"');
         file = new HDF5File(ofname,mesh,field,impedance,wfm);
         Display::printText("Will save results to: \""+ofname+'\"');
-    } else {
+    } else
+    #endif // INOVESSA_USE_HDF5
+    {
         Display::printText("Information: Will not save results.");
     }
 
@@ -408,7 +411,7 @@ int main(int argc, char** argv)
             wpv = nullptr;
         }
     }
-    #endif
+    #endif // INOVESSA_USE_GUI
 
     Display::printText("Starting the simulation.");
     // first update to have wkm for step0 in file
@@ -422,6 +425,7 @@ int main(int argc, char** argv)
                 wkm->syncCLMem(clCopyDirection::dev2cpu);
             }
             #endif // INOVESA_USE_CL
+            #ifdef INOVESSA_USE_HDF5
             if (file != nullptr) {
                 file->timeStep(i*dt);
                 mesh->integral();
@@ -429,6 +433,7 @@ int main(int argc, char** argv)
                 file->append(mesh);
                 file->append(wkm);
             }
+            #endif // INOVESSA_USE_HDF5
             #ifdef INOVESA_USE_GUI
             if (gui) {
                 if (psv != nullptr) {
@@ -447,7 +452,7 @@ int main(int argc, char** argv)
                     psv->delTexture();
                 }
             }
-            #endif
+            #endif // INOVESSA_USE_GUI
             std::stringstream status;
             status.precision(3);
             status << std::setw(4) << static_cast<float>(i)/steps
@@ -460,6 +465,7 @@ int main(int argc, char** argv)
         wkm->apply();
     }
 
+    #ifdef INOVESSA_USE_HDF5
     // save final result
     if (file != nullptr) {
         file->timeStep(dt*steps*rotations);
@@ -467,6 +473,7 @@ int main(int argc, char** argv)
         file->append(mesh);
         file->append(wkm);
     }
+    #endif // INOVESSA_USE_HDF5
 
     std::stringstream status;
     status.precision(3);
