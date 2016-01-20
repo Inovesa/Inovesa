@@ -17,7 +17,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESSA_USE_HDF5
+#ifdef INOVESA_USE_HDF5
 #include "IO/HDF5File.hpp"
 
 vfps::HDF5File::HDF5File(const std::string fname,
@@ -474,4 +474,4 @@ void vfps::HDF5File::timeStep(const double t)
     delete filespace;
 }
 
-#endif // INOVESSA_USE_HDF5
+#endif // INOVESA_USE_HDF5

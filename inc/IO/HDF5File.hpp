@@ -17,7 +17,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESSA_USE_HDF5
+#ifdef INOVESA_USE_HDF5
 #ifndef HDF5FILE_HPP
 #define HDF5FILE_HPP
 
@@ -222,4 +222,4 @@ private: // wake function
 } // namespace vfps
 
 #endif // HDF5FILE_HPP
-#endif // INOVESSA_USE_HDF5
+#endif // INOVESA_USE_HDF5
