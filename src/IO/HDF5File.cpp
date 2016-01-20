@@ -169,7 +169,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 	bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
 	const std::array<hsize_t,bp_rank> bp_chunkdims
-			= {{1U,std::min(2048U,ps_size)}};
+            = {{64U,std::min(2048U,ps_size)}};
 	bp_prop.setChunk(bp_rank,bp_chunkdims.data());
 	bp_prop.setShuffle();
 	bp_prop.setDeflate(compression);
@@ -217,7 +217,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     wp_dataspace = new H5::DataSpace(wp_rank,wp_dims.data(),wp_maxdims.data());
 
     const std::array<hsize_t,wp_rank> wp_chunkdims
-            = {{1U,std::min(2048U,ps_size)}};
+            = {{64U,std::min(2048U,ps_size)}};
     wp_prop.setChunk(wp_rank,wp_chunkdims.data());
     wp_prop.setShuffle();
     wp_prop.setDeflate(compression);
@@ -243,7 +243,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
 	const std::array<hsize_t,csr_rank> csr_chunkdims
-			= {{1U,std::min(2048U,ps_size)}};
+            = {{64U,std::min(2048U,ps_size)}};
 	csr_prop.setChunk(csr_rank,csr_chunkdims.data());
 	csr_prop.setShuffle();
 	csr_prop.setDeflate(compression);
@@ -275,7 +275,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
 	const std::array<hsize_t,ps_rank> ps_chunkdims
-			= {{1U,std::min(64U,ps_size),std::min(64U,ps_size)}};
+            = {{64U,std::min(64U,ps_size),std::min(64U,ps_size)}};
 	ps_prop.setChunk(ps_rank,ps_chunkdims.data());
 	ps_prop.setShuffle();
 	ps_prop.setDeflate(compression);
