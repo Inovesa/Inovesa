@@ -72,6 +72,8 @@ public:
 
 	static VECTOR_CLASS<cl::Device> devices;
 
+    static cl_device_type devicetype;
+
 	/**
 	 * @brief command queue for OpenCL
 	 */

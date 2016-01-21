@@ -124,7 +124,9 @@ int main(int argc, char** argv)
     const double E0 = opts.getBeamEnergy();
     const double dE = sE*E0;
     const double f0 = opts.getRevolutionFrequency();
+    #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
+    #endif // INOVESA_USE_HDF5
     const double h = opts.getHarmonicNumber();
     const double V = opts.getRFVoltage();
     const double fs = opts.getSyncFreq();
@@ -298,7 +300,7 @@ int main(int argc, char** argv)
 
     size_t rotmapsize;
     #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
+    if (OCLH::active && OCLH::devicetype != CL_DEVICE_TYPE_CPU ) {
         rotmapsize = 0;
     } else
     #endif

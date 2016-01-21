@@ -57,6 +57,7 @@ void
 OCLH::prepareCLDevice(unsigned int device)
 {
 	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
+    devicetype = OCLH::devices[device].getInfo<CL_DEVICE_TYPE>();
 	// cl_VENDOR_gl_sharing is present, when string contains the substring
 	OCLH::ogl_sharing
 			= OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
@@ -126,6 +127,8 @@ VECTOR_CLASS<cl::Platform> OCLH::platforms;
 cl::Context OCLH::context;
 
 VECTOR_CLASS<cl::Device> OCLH::devices;
+
+cl_device_type OCLH::devicetype;
 
 cl::CommandQueue OCLH::queue;
 
