@@ -95,7 +95,10 @@ public:
 
     ~ElectricField();
 
-    inline csrpower_t* getData() const
+    inline csrpower_t getCSRPower() const
+        { return _csrpower; }
+
+    inline csrpower_t* getCSRSpectrum() const
         { return _csrspectrum; }
 
     inline const Impedance* getImpedance() const
@@ -111,13 +114,13 @@ public:
         { return &_axis_wake; }
 
     /**
-     * @brief updateCSRSpectrum
+     * @brief updateCSR
      * @param sync
-     * @return
+     * @return CSR spectrum (getNMax() points)
      *
-     * @todo: OpenCL part
+     * @todo: Use OpenCL for power calculation
      */
-    csrpower_t* updateCSRSpectrum();
+    csrpower_t* updateCSR();
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
@@ -151,6 +154,8 @@ private:
     const Ruler<meshaxis_t> _axis_wake;
 
     PhaseSpace* _phasespace;
+
+    csrpower_t _csrpower;
 
     csrpower_t* _csrspectrum;
 

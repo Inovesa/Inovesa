@@ -33,6 +33,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                   ps->getDelta(0)*(_bpmeshcells-1),
                                  ps->getScale(0))),
     _phasespace(ps),
+    _csrpower(0),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
     _wakefunction(nullptr),
@@ -279,7 +280,7 @@ vfps::ElectricField::~ElectricField()
     }
 }
 
-vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
+vfps::csrpower_t* vfps::ElectricField::updateCSR()
 {
     _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CL
@@ -301,9 +302,11 @@ vfps::csrpower_t* vfps::ElectricField::updateCSRSpectrum()
         //FFT charge density
         fftwf_execute(_ffttw_bunchprofile);
     }
+    _csrpower = 0;
     for (unsigned int i=0; i<_nmax; i++) {
         // norm = squared magnitude
         _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
+        _csrpower += _csrspectrum[i];
     }
 
     return _csrspectrum;
