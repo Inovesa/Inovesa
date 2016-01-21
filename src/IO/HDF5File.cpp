@@ -227,9 +227,9 @@ vfps::HDF5File::HDF5File(const std::string fname,
                                      *wp_dataspace,wp_prop);
 
     // get ready to save CSR Spectrum
-    file->createGroup("CSR-Spectrum");
-    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR-Spectrum/axis0" );
-    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSR-Spectrum/axis1" );
+    file->createGroup("CSRSpectrum");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSRSpectrum/axis0" );
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSRSpectrum/axis1" );
 
     if (std::is_same<vfps::csrpower_t,float>::value) {
         csr_datatype = H5::PredType::IEEE_F32LE;
@@ -250,12 +250,12 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csr_prop.setShuffle();
     csr_prop.setDeflate(compression);
 
-    csr_dataset = file->createDataSet("/CSR-Spectrum/data",csr_datatype,
+    csr_dataset = file->createDataSet("/CSRSpectrum/data",csr_datatype,
                                       *csr_dataspace,csr_prop);
 
     // get ready to save CSR Power
-    file->createGroup("CSR-Power");
-    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR-Power/axis0" );
+    file->createGroup("CSRPower");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSRPower/axis0" );
 
     if (std::is_same<vfps::csrpower_t,float>::value) {
         csrp_datatype = H5::PredType::IEEE_F32LE;
@@ -273,7 +273,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csrp_prop.setShuffle();
     csrp_prop.setDeflate(compression);
 
-    csrp_dataset = file->createDataSet("/CSR-Power/data",csrp_datatype,
+    csrp_dataset = file->createDataSet("/CSRPower/data",csrp_datatype,
                                       *csrp_dataspace,csrp_prop);
 
 	// get ready to save PhaseSpace

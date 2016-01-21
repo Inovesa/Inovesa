@@ -32,6 +32,7 @@ vfps::ProgramOptions::ProgramOptions() :
     rotations(1),
     E_0(1.3e9),
     Fk(0),
+    f_c(23e9),
     f_s(8.5e3),
     f_rev(2.7e6),
     h(1),
@@ -74,6 +75,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information. Might be:\n"
             "\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
+        ("CutoffFreq", po::value<double>(&f_c),"Beamline cutoff frequency (Hz)")
         ("RFVoltage,V", po::value<double>(&V_RF),
             "Accelerating Voltage (V)")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),

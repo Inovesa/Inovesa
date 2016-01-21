@@ -280,7 +280,7 @@ vfps::ElectricField::~ElectricField()
     }
 }
 
-vfps::csrpower_t* vfps::ElectricField::updateCSR()
+vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
 {
     _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CL
@@ -304,9 +304,11 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR()
     }
     _csrpower = 0;
     for (unsigned int i=0; i<_nmax; i++) {
+        frequency_t highpass=(1-std::exp(-std::pow((_axis_freq.scale()*_axis_freq[i]/cutoff),2)));
+
         // norm = squared magnitude
         _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
-        _csrpower += _csrspectrum[i];
+        _csrpower += highpass*_csrspectrum[i];
     }
 
     return _csrspectrum;

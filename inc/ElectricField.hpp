@@ -115,12 +115,12 @@ public:
 
     /**
      * @brief updateCSR
-     * @param sync
+     * @param cutoff
      * @return CSR spectrum (getNMax() points)
      *
      * @todo: Use OpenCL for power calculation
      */
-    csrpower_t* updateCSR();
+    csrpower_t* updateCSR(frequency_t cutoff);
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }

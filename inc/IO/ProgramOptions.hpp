@@ -91,6 +91,9 @@ public:
     inline double getBunchCurrent() const
         { return I_b; }
 
+    inline double getCutoffFrequency() const
+        { return f_c; }
+
     inline double getEnergySpread() const
         { return s_E; }
 
@@ -138,6 +141,7 @@ private: // simulation parameters
 private: // phsical parameters
     double E_0;
     double Fk;
+    double f_c;
     double f_s;
     double f_rev;
     double h;

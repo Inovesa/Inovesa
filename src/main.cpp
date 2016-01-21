@@ -124,6 +124,7 @@ int main(int argc, char** argv)
     const double E0 = opts.getBeamEnergy();
     const double dE = sE*E0;
     const double f0 = opts.getRevolutionFrequency();
+    const double fc = opts.getCutoffFrequency();
     const double h = opts.getHarmonicNumber();
     const double V = opts.getRFVoltage();
     const double fs = opts.getSyncFreq();
@@ -431,7 +432,7 @@ int main(int argc, char** argv)
                 mesh->integral();
                 mesh->variance(0);
                 file->append(mesh);
-                field->updateCSR();
+                field->updateCSR(fc);
                 file->append(field);
                 file->append(wkm);
             }
@@ -473,7 +474,7 @@ int main(int argc, char** argv)
         file->timeStep(dt*steps*rotations);
         mesh->integral();
         file->append(mesh);
-        field->updateCSR();
+        field->updateCSR(fc);
         file->append(field);
         file->append(wkm);
     }
