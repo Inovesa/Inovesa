@@ -81,6 +81,9 @@ public:
     inline double getPhaseSpaceSize() const
         { return pq_max; }
 
+    inline int getRotationMapSize() const
+        { return rotmapsize; }
+
 public:
     inline double getBeamEnergy() const
         { return E_0; }
@@ -137,6 +140,7 @@ private: // simulation parameters
     double pq_max;
     unsigned int steps;
     double rotations;
+    int rotmapsize;
 
 private: // phsical parameters
     double E_0;

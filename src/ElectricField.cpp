@@ -71,7 +71,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
 
         std::string cl_code_padbp = R"(
             __kernel void pad_bp(__global float* bp_padded,
-                                 const uint paddedsize,
+                                 const ulong paddedsize,
                                  const uint bpmeshcells,
                                  const __global float* bp)
             {

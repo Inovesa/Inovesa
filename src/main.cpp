@@ -298,16 +298,31 @@ int main(int argc, char** argv)
      */
     const double angle = 2*M_PI/steps;
 
-    size_t rotmapsize;
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active && OCLH::devicetype != CL_DEVICE_TYPE_CPU ) {
-        rotmapsize = 0;
-    } else
-    #endif
-    {
-        rotmapsize = ps_size*ps_size/2;
+    int rotmaptype = opts.getRotationMapSize();
+    if (rotmaptype < 0) {
+        #ifdef INOVESA_USE_CL
+        if (OCLH::active && OCLH::devicetype != CL_DEVICE_TYPE_CPU ) {
+            rotmaptype = 0;
+        } else
+        #endif
+        {
+            rotmaptype = 2;
+        }
     }
-    Display::printText("Building RotationMap.");
+    size_t rotmapsize;
+    std::string rotmapstring;
+    switch (rotmaptype) {
+    case 0:
+        rotmapsize = 0;
+        rotmapstring = "Initializing RotationMap.";
+        break;
+    default:
+        rotmaptype = std::min(rotmaptype,2); // force to be 1 or 2
+        rotmapsize = ps_size*ps_size/rotmaptype;
+        rotmapstring = "Building RotationMap.";
+        break;
+    }
+    Display::printText(rotmapstring);
     RotationMap* rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
                          HeritageMap::InterpolationType::cubic,
                          RotationMap::RotationCoordinates::norm_pm1,

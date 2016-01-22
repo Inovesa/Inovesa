@@ -30,6 +30,7 @@ vfps::ProgramOptions::ProgramOptions() :
     pq_max(5.0),
     steps(4000),
     rotations(1),
+    rotmapsize(-1),
     E_0(1.3e9),
     Fk(0),
     f_c(23e9),
@@ -112,6 +113,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "Factor to use for zero padding of bunch profile, 0/1: no padding")
         ("PhaseSpaceSize,P", po::value<double>(&pq_max),
             "Size of phase space (maximum sigma_{p/q})")
+        ("ForceRotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
+            "Size of rotation map (-1=guess, 0=none, 1=fill, 2=half)")
         ("MeshSize,s", po::value<unsigned int>(&meshsize),
             "Size of phase space mesh (number of p/q mesh points)")
         ("rotations,T", po::value<double>(&rotations),
