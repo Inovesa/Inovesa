@@ -298,6 +298,11 @@ int main(int argc, char** argv)
      */
     const double angle = 2*M_PI/steps;
 
+    /* CPU usually have plenty of memory,
+     * so the default is to use a prebuilt RotationMap on CPU.
+     * However, other CL devices (like GPU) might have limited RAM,
+     * so we will default to not use a prebuilt RotationMap with them.
+     */
     int rotmaptype = opts.getRotationMapSize();
     if (rotmaptype < 0) {
         #ifdef INOVESA_USE_CL

@@ -183,10 +183,10 @@ void vfps::ProgramOptions::save(std::string fname)
         << INOVESA_VERSION_RELEASE << '.'
         << INOVESA_VERSION_MINOR << '.'
         << INOVESA_VERSION_FIX;
-        if (std::string(GIT_BRANCH) != "stable") {
-            ofs << " (Branch: " GIT_BRANCH ")";
-        }
-        ofs << std::endl;
+    if (std::string(GIT_BRANCH) != "stable") {
+        ofs << " (Branch: " GIT_BRANCH ")";
+    }
+    ofs << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         if (!it->second.value().empty() && !_vm[it->first].defaulted()) {
