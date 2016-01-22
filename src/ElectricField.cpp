@@ -62,9 +62,8 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
         _formfactor_buf = cl::Buffer(OCLH::context,
                                        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                        sizeof(impedance_t)*_nmax,_formfactor);
-        const size_t nmax = _nmax;
         clfftCreateDefaultPlan(&_clfft_bunchprofile,
-                               OCLH::context(),CLFFT_1D,&nmax);
+                               OCLH::context(),CLFFT_1D,&_nmax);
         clfftSetPlanPrecision(_clfft_bunchprofile,CLFFT_SINGLE);
         clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
         clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
@@ -147,7 +146,7 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
 
         std::string cl_code_wakepotential = R"(
             __kernel void scalewp(__global float* wakepot,
-                                  const uint paddedsize,
+                                  const ulong paddedsize,
                                   const uint bpmeshcells,
                                   const float scaling,
                                   const __global impedance_t* wakepot_padded)

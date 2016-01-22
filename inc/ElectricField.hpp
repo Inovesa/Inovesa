@@ -145,7 +145,7 @@ private:
                           fft_direction direction);
 
 private:
-    const uint32_t _nmax;
+    const size_t _nmax;
 
     const uint32_t _bpmeshcells;
 
