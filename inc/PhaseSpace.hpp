@@ -131,6 +131,16 @@ public:
 
     void updateYProjection();
 
+    /**
+     * @brief normalize
+     * @return integral before normalization
+     *
+     * @todo: Use OpenCL
+     *
+     * normalize() does neither recompute the integral nor sets it to 1
+     */
+    integral_t normalize();
+
 	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }
 

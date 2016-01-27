@@ -61,12 +61,12 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
-            "\tgrayscale png (.png) file containing initial particle density\n"
-            "\ttext file (.txt) containing normalized z/delta of particles")
+            "\tgrayscale png (.png) file\n"
+            "\ttext file (.txt) w/ particle coordinates")
         ("InitialDistParam,K",po::value<double>(&Fk),
             "Parameter F(k) of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b),
-            "Ring Current due to a single electron bunch (A)")
+            "Ring Current due to a single bunch (A)")
         ("BendingRadius,R", po::value<double>(&r_bend),
             "Bending radius of accelerator (m)")
         ("BeamEnergy,E", po::value<double>(&E_0),
@@ -74,13 +74,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("BeamEnergySpread,e", po::value<double>(&s_E),
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
-            "File containing impedance information. Might be:\n"
-            "\ttext file (.txt) containing wavenumber Re(Z) Im(Z)")
+            "File containing impedance information.")
         ("CutoffFreq", po::value<double>(&f_c),"Beamline cutoff frequency (Hz)")
         ("RFVoltage,V", po::value<double>(&V_RF),
             "Accelerating Voltage (V)")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
-            "File containing information on wake function.")
+            "File containing wake function.")
     ;
     _programopts_file.add_options()
         ("cldev", po::value<int>(&_cldevice)->default_value(1),
@@ -94,7 +93,7 @@ vfps::ProgramOptions::ProgramOptions() :
     _programopts_cli.add_options()
         #ifdef INOVESA_USE_CL
         ("cldev", po::value<int>(&_cldevice)->default_value(1),
-            "OpenCL device to use ('0' lists available devices)")
+            "OpenCL device to use\n('-1' lists available devices)")
         #endif // INOVESA_USE_CL
         ("config,c", po::value<std::string>(&_configfile),
             "name of a file containing a configuration.")
@@ -106,17 +105,21 @@ vfps::ProgramOptions::ProgramOptions() :
     ;
     _simulopts.add_options()
         ("steps,N", po::value<unsigned int>(&steps),
-            "Number of steps for one synchrotron period (delta t=1/(N*f_s))")
+            "Steps for one synchrotron period")
         ("outstep,n", po::value<unsigned int>(&outsteps),
-            "Save results/ update phase space view every n steps")
+            "Save results every n steps.")
         ("padding,p", po::value<unsigned int>(&padding),
-            "Factor to use for zero padding of bunch profile, 0/1: no padding")
+            "Factor for zero padding of bunch profile")
         ("PhaseSpaceSize,P", po::value<double>(&pq_max),
             "Size of phase space (maximum sigma_{p/q})")
         ("ForceRotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
-            "Size of rotation map (-1=guess, 0=none, 1=fill, 2=half)")
+            "Size of rotation map\n"
+            "-1: use default for device\n"
+            " 0: none\n"
+            " 1: full\n"
+            " 2: half")
         ("MeshSize,s", po::value<unsigned int>(&meshsize),
-            "Size of phase space mesh (number of p/q mesh points)")
+            "Number of mesh points per dimension")
         ("rotations,T", po::value<double>(&rotations),
             "Simulated time (in number of synchrotron periods)")
     ;

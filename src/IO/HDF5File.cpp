@@ -24,11 +24,14 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const PhaseSpace* ps,
                          const ElectricField* ef,
                          const Impedance* imp,
-                         const WakeFunctionMap* wfm) :
+                         const WakeFunctionMap* wfm,
+                         const double BunchCurrent) :
     file( nullptr ),
     fname( fname ),
     ta_dims( 0 ),
     bc_dims( 0 ),
+    bc( 0 ),
+    bc_set(BunchCurrent),
     bp_dims( {{ 0, ps->nMeshCells(0) }} ),
     bl_dims( 0 ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
@@ -130,27 +133,22 @@ vfps::HDF5File::HDF5File(const std::string fname,
     ta_dataset = file->createDataSet("/Info/AxisValues_t",ta_datatype,
                                      *ta_dataspace,ta_prop);
 
-	// get ready to save BunchCharge
-	file->createGroup("BunchCharge");
-	if (std::is_same<vfps::integral_t,float>::value) {
-		bc_datatype = H5::PredType::IEEE_F32LE;
-	} else if (std::is_same<vfps::integral_t,fixp64>::value) {
-		bc_datatype = H5::PredType::STD_I64LE;
-	} else if (std::is_same<vfps::integral_t,double>::value) {
-		bc_datatype = H5::PredType::IEEE_F64LE;
-	}
+    // get ready to save BunchCharge
+    file->createGroup("BunchCurrent");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t","/BunchCurrent/axis0");
+    bc_datatype = H5::PredType::IEEE_F64LE;
 
-	hsize_t bc_maxdims = H5S_UNLIMITED;
+    hsize_t bc_maxdims = H5S_UNLIMITED;
 
-	bc_dataspace = new H5::DataSpace(bc_rank,&bc_dims,&bc_maxdims);
+    bc_dataspace = new H5::DataSpace(bc_rank,&bc_dims,&bc_maxdims);
 
-	const hsize_t bc_chunkdims = 256;
-	bc_prop.setChunk(bc_rank,&bc_chunkdims);
-	bc_prop.setShuffle();
-	bc_prop.setDeflate(compression);
+    const hsize_t bc_chunkdims = 256;
+    bc_prop.setChunk(bc_rank,&bc_chunkdims);
+    bc_prop.setShuffle();
+    bc_prop.setDeflate(compression);
 
-	bc_dataset = file->createDataSet("/BunchCharge/data",bc_datatype,
-											*bc_dataspace,bc_prop);
+    bc_dataset = file->createDataSet("/BunchCurrent/data",bc_datatype,
+                                     *bc_dataspace,bc_prop);
 
 	// get ready to save BunchProfiles
 	file->createGroup("BunchProfile");
@@ -467,18 +465,18 @@ void vfps::HDF5File::append(const PhaseSpace* ps)
     delete memspace;
     delete filespace;
 
-	// append BunchCharge
-	hsize_t bc_offset = bc_dims;
-	const hsize_t bc_ext = 1;
-	bc_dims++;
-	bc_dataset.extend(&bc_dims);
-	filespace = new H5::DataSpace(bc_dataset.getSpace());
-	filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
-	memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
-	integral_t bunchcharge = ps->getIntegral();
-	bc_dataset.write(&bunchcharge, bc_datatype,*memspace, *filespace);
-	delete memspace;
-	delete filespace;
+    // append BunchCurrent
+    hsize_t bc_offset = bc_dims;
+    const hsize_t bc_ext = 1;
+    bc_dims++;
+    bc_dataset.extend(&bc_dims);
+    filespace = new H5::DataSpace(bc_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
+    memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
+    bc = ps->getIntegral()*bc_set;
+    bc_dataset.write(&bc, bc_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
 }
 
 void vfps::HDF5File::append(const WakeKickMap* wkm)

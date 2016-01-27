@@ -56,39 +56,39 @@ void OCLH::prepareCLEnvironment()
 void
 OCLH::prepareCLDevice(unsigned int device)
 {
-	OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
+        OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
     devicetype = OCLH::devices[device].getInfo<CL_DEVICE_TYPE>();
-	// cl_VENDOR_gl_sharing is present, when string contains the substring
-	OCLH::ogl_sharing
-			= OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
-				"_gl_sharing") != std::string::npos;
-	std::string devicename;
-	OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
-	vfps::Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
+        // cl_VENDOR_gl_sharing is present, when string contains the substring
+        OCLH::ogl_sharing
+                        = OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
+                                "_gl_sharing") != std::string::npos;
+        std::string devicename;
+        OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
+        vfps::Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
 }
 
 cl::Program OCLH::prepareCLProg(std::string code)
 {
     code = datatype_aliases()+custom_datatypes+code;
-	cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
-	cl::Program p(OCLH::context, source);
-	try {
-		p.build(OCLH::devices);
-	} catch (cl::Error &e) {
-		e.what();
-	#ifdef DEBUG
-	// in debug builds, CL code and build log should always be displayed
-	}
-	#endif  // DEBUG
-		std::cout	<< "===== OpenCL Code =====\n"
-					<< code << std::endl;
-		std::cout	<< "===== OpenCL Build Log =====\n"
-					<< p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
-					<< std::endl;
-	#ifndef DEBUG
-	// in release builds show CL code and build log only when error occured
-	}
-	#endif // DEBUG
+        cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
+        cl::Program p(OCLH::context, source);
+        try {
+                p.build(OCLH::devices);
+        } catch (cl::Error &e) {
+                e.what();
+        #ifdef DEBUG
+        // in debug builds, CL code and build log should always be displayed
+        }
+        #endif  // DEBUG
+                std::cout	<< "===== OpenCL Code =====\n"
+                                        << code << std::endl;
+                std::cout	<< "===== OpenCL Build Log =====\n"
+                                        << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
+                                        << std::endl;
+        #ifndef DEBUG
+        // in release builds show CL code and build log only when error occured
+        }
+        #endif // DEBUG
 
 return p;
 }
@@ -100,24 +100,42 @@ void OCLH::teardownCLEnvironment()
 
 void OCLH::listCLDevices()
 {
-	std::cout << "Available OpenCL Devices:" << std::endl;
-	for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
-		cl_context_properties tmp_properties[] =
-			{ CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
-		cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
-		VECTOR_CLASS<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
-		for (unsigned int d=0; d<OCLH::devices.size(); d++) {
-			std::cout	<< "=> " << d+1 << ": "
-						<< tmp_devices[d].getInfo<CL_DEVICE_NAME>() << " ("
-						<< tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
-						<< tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>()
-						<< " CU on \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\")"
-						<< " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"' << std::endl
-						<< " offering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
-						<< " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
-						<< std::endl;
-		}
-	}
+    std::cout << "OpenCL device options available on this computer:" << std::endl
+              << " 0: (Do not use OpenCL.)" << std::endl;
+    for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
+        cl_context_properties tmp_properties[] =
+            { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
+        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
+        VECTOR_CLASS<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
+        for (unsigned int d=0; d<OCLH::devices.size(); d++) {
+            std::string tmpdevicetype;
+            switch(tmp_devices[d].getInfo<CL_DEVICE_TYPE>()) {
+            case CL_DEVICE_TYPE_CPU:
+                tmpdevicetype = "CPU";
+                break;
+            case CL_DEVICE_TYPE_GPU:
+                tmpdevicetype = "GPU";
+                break;
+            default:
+                tmpdevicetype = "unknown";
+                break;
+            }
+            std::cout << " " << d+1 << ": "
+                      << tmpdevicetype << ", "
+                      << tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
+                      << tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << "CU "
+                      << "(" << tmp_devices[d].getInfo<CL_DEVICE_NAME>() << ")"
+                      #ifdef DEBUG
+                      << std::endl
+                      << "\ton \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\""
+                      << " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"'
+                      << std::endl
+                      << "\toffering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
+                      << " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
+                      #endif // DEBUG
+                      << std::endl;
+        }
+    }
 }
 
 bool OCLH::active;

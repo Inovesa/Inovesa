@@ -83,11 +83,16 @@ int main(int argc, char** argv)
         sstream << ", Branch: "<< GIT_BRANCH;
     }
 
+    #ifdef INOVESA_USE_CL
+    if (opts.getCLDevice() >= 0)
+    #endif // INOVESA_USE_CL
+    {
     Display::printText("Started Inovesa ("
                        +sstream.str()+") at "+timestring);
+    }
 
     #ifdef INOVESA_USE_CL
-    OCLH::active = (opts.getCLDevice() >= 0);
+    OCLH::active = (opts.getCLDevice() != 0);
     if (OCLH::active) {
         try {
             OCLH::prepareCLEnvironment();
@@ -98,7 +103,7 @@ int main(int argc, char** argv)
         }
     }
     if (OCLH::active) {
-        if (opts.getCLDevice() == 0) {
+        if (opts.getCLDevice() < 0) {
             OCLH::listCLDevices();
             return EXIT_SUCCESS;
         } else {
@@ -142,7 +147,7 @@ int main(int argc, char** argv)
 
     sstream.str("");
     sstream << std::scientific << Ith;
-    Display::printText("Information: Threshold current is "
+    Display::printText("Information: BBT-Threshold-Current at "
                        +sstream.str()+" A.");
 
     if (startdistfile.length() <= 4) {
@@ -232,22 +237,7 @@ int main(int argc, char** argv)
     }
 
     // normalize integral to 1
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        mesh->syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
-    const integral_t one = mesh->integral();
-    for (meshindex_t x = 0; x < ps_size; x++) {
-        for (meshindex_t y = 0; y < ps_size; y++) {
-            (*mesh)[x][y] /= one;
-        }
-    }
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        mesh->syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
+    mesh->normalize();
 
     // find highest peak (for display)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
@@ -301,6 +291,7 @@ int main(int argc, char** argv)
     /* CPU usually have plenty of memory,
      * so the default is to use a prebuilt RotationMap on CPU.
      * However, other CL devices (like GPU) might have limited RAM,
+     * or compute faster than load the information from memory,
      * so we will default to not use a prebuilt RotationMap with them.
      */
     int rotmaptype = opts.getRotationMapSize();
@@ -386,7 +377,7 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh,field,impedance,wfm);
+        file = new HDF5File(ofname,mesh,field,impedance,wfm,Ib);
         Display::printText("Will save results to: \""+ofname+'\"');
     } else
     #endif // INOVESA_USE_HDF5
@@ -448,10 +439,10 @@ int main(int argc, char** argv)
                 wkm->syncCLMem(clCopyDirection::dev2cpu);
             }
             #endif // INOVESA_USE_CL
+            mesh->normalize();
             #ifdef INOVESA_USE_HDF5
             if (file != nullptr) {
                 file->timeStep(i*dt);
-                mesh->integral();
                 mesh->variance(0);
                 file->append(mesh);
                 field->updateCSR(fc);
@@ -482,7 +473,7 @@ int main(int argc, char** argv)
             status.precision(3);
             status << std::setw(4) << static_cast<float>(i)/steps
                    << '/' << rotations;
-            status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
+            status << "\t1-Q/Q_0=" << 1.0 - mesh->getIntegral();
             Display::printText(status.str(),2.0f);
         }
         rm->apply();

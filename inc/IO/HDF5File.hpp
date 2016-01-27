@@ -47,7 +47,8 @@ public:
              const PhaseSpace* ps,
              const ElectricField* ef,
              const Impedance* imp,
-             const WakeFunctionMap *wfm);
+             const WakeFunctionMap *wfm,
+             const double BunchCurrent);
 
     ~HDF5File();
 
@@ -109,7 +110,7 @@ private: // time axis
 
     H5::DSetCreatPropList ta_prop;
 
-private: // bunch charge
+private: // bunch current
 	static constexpr uint_fast8_t bc_rank = 1;
 
 	H5::DataSet bc_dataset;
@@ -121,6 +122,10 @@ private: // bunch charge
 	hsize_t bc_dims;
 
 	H5::DSetCreatPropList bc_prop;
+
+    double bc;
+
+    double bc_set;
 
 private: // bunch profile
 	static constexpr uint_fast8_t bp_rank = 2;

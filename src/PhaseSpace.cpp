@@ -250,6 +250,28 @@ void vfps::PhaseSpace::updateYProjection() {
     }
 }
 
+vfps::integral_t vfps::PhaseSpace::normalize()
+{
+    integral();
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        OCLH::queue.enqueueReadBuffer
+            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
+    }
+    #endif // INOVESA_USE_CL
+    for (meshindex_t i = 0; i < _nmeshcells; i++) {
+        _data1D[i] /= _integral;
+    }
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        OCLH::queue.enqueueWriteBuffer
+            (data_buf,CL_TRUE,0,
+             sizeof(meshdata_t)*nMeshCells(),_data1D);
+    }
+    #endif // INOVESA_USE_CL
+    return _integral;
+}
+
 vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
 {
     swap(*this,other);
