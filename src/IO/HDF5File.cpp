@@ -153,6 +153,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 	// get ready to save BunchProfiles
 	file->createGroup("BunchProfile");
 	file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/BunchProfile/axis0" );
+	file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis1" );
 
 	if (std::is_same<vfps::integral_t,float>::value) {
 		bp_datatype = H5::PredType::IEEE_F32LE;
@@ -178,6 +179,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     // get ready to save BunchLength
     file->createGroup("BunchLength");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchLength/axis0" );
     if (std::is_same<vfps::meshaxis_t,float>::value) {
             bl_datatype = H5::PredType::IEEE_F32LE;
     } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
