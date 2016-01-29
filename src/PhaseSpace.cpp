@@ -166,7 +166,8 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
         avg += _projection[axis][i]*x(axis,i);
     }
 
-    avg /= nMeshCells(axis)/size(axis);
+    // _projection is normalized in p/q coordinates
+    avg *= getDelta(axis);
 
     _moment[axis][0] = avg;
 
@@ -180,7 +181,9 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
     for (size_t i=0; i<nMeshCells(axis); i++) {
         var += _projection[axis][i]*std::pow(x(axis,i)-avg,2);
     }
-    var /= nMeshCells(axis)/size(axis);
+
+    // _projection is normalized in p/q coordinates
+    var *= getDelta(axis);
 
     _moment[axis][1] = var;
 
