@@ -444,6 +444,7 @@ int main(int argc, char** argv)
             if (file != nullptr) {
                 file->timeStep(i*dt);
                 mesh->variance(0);
+                mesh->variance(1);
                 file->append(mesh);
                 field->updateCSR(fc);
                 file->append(field);

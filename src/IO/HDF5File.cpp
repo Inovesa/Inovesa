@@ -34,6 +34,8 @@ vfps::HDF5File::HDF5File(const std::string fname,
     bc_set(BunchCurrent),
     bp_dims( {{ 0, ps->nMeshCells(0) }} ),
     bl_dims( 0 ),
+    qb_dims( 0 ),
+    es_dims( 0 ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
     csr_dims( {{ 0, ef->getNMax() }} ),
     maxn( ef->getNMax() ),
@@ -199,6 +201,52 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     bl_dataset = file->createDataSet("/BunchLength/data",bl_datatype,
                                      *bl_dataspace,bl_prop);
+
+    // get ready to save BunchPosition
+    file->createGroup("BunchPosition");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchPosition/axis0" );
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            qb_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            qb_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            qb_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    hsize_t qb_maxdims = H5S_UNLIMITED;
+
+    qb_dataspace = new H5::DataSpace(qb_rank,&qb_dims,&qb_maxdims);
+
+    const hsize_t qb_chunkdims = 256;
+    qb_prop.setChunk(qb_rank,&qb_chunkdims);
+    qb_prop.setShuffle();
+    qb_prop.setDeflate(compression);
+
+    qb_dataset = file->createDataSet("/BunchPosition/data",qb_datatype,
+                                     *qb_dataspace,qb_prop);
+
+    // get ready to save Energy Spread
+    file->createGroup("EnergySpread");
+    file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergySpread/axis0" );
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            es_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            es_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            es_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    hsize_t es_maxdims = H5S_UNLIMITED;
+
+    es_dataspace = new H5::DataSpace(es_rank,&es_dims,&es_maxdims);
+
+    const hsize_t es_chunkdims = 256;
+    es_prop.setChunk(es_rank,&es_chunkdims);
+    es_prop.setShuffle();
+    es_prop.setDeflate(compression);
+
+    es_dataset = file->createDataSet("/EnergySpread/data",es_datatype,
+                                     *es_dataspace,es_prop);
 
     // get ready to save WakePotential
     file->createGroup("WakePotential");
@@ -464,6 +512,32 @@ void vfps::HDF5File::append(const PhaseSpace* ps)
     memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
     meshaxis_t bunchlength = ps->getMoment(0,1);
     bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
+
+    // append Position
+    hsize_t qb_offset = qb_dims;
+    const hsize_t qb_ext = 1;
+    qb_dims++;
+    qb_dataset.extend(&qb_dims);
+    filespace = new H5::DataSpace(qb_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, &qb_ext, &qb_offset);
+    memspace = new H5::DataSpace(qb_rank,&qb_ext,nullptr);
+    meshaxis_t bunchposition = ps->getMoment(0,0);
+    qb_dataset.write(&bunchposition, qb_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
+
+    // append energy spread
+    hsize_t es_offset = es_dims;
+    const hsize_t es_ext = 1;
+    es_dims++;
+    es_dataset.extend(&es_dims);
+    filespace = new H5::DataSpace(es_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
+    memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
+    meshaxis_t energyspread = ps->getMoment(1,1);
+    es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
     delete memspace;
     delete filespace;
 

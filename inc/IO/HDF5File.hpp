@@ -153,6 +153,32 @@ private: // bunch length
 
     H5::DSetCreatPropList bl_prop;
 
+private: // bunch position
+    static constexpr uint_fast8_t qb_rank = 1;
+
+    H5::DataSet qb_dataset;
+
+    H5::DataSpace* qb_dataspace;
+
+    H5::IntType qb_datatype;
+
+    hsize_t qb_dims;
+
+    H5::DSetCreatPropList qb_prop;
+
+private: // energy spread
+    static constexpr uint_fast8_t es_rank = 1;
+
+    H5::DataSet es_dataset;
+
+    H5::DataSpace* es_dataspace;
+
+    H5::IntType es_datatype;
+
+    hsize_t es_dims;
+
+    H5::DSetCreatPropList es_prop;
+
 private: // wake potential
     static constexpr uint_fast8_t wp_rank = 2;
 

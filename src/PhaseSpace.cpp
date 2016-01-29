@@ -20,7 +20,7 @@
 #include "PhaseSpace.hpp"
 
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
-                             const double Fk) :
+                             const double Fk,meshindex_t xoffset) :
     _axis(axis),
     _integral(0),
     _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
@@ -48,7 +48,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 
         for (meshindex_t x = 0; x < nMeshCells(0); x++) {
             for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-                _data[x][y] = _projection[0][x]*_projection[1][y];
+                _data[x][y] = _projection[0][(x+xoffset)%nMeshCells(0)]*_projection[1][y];
             }
         }
     }
@@ -159,17 +159,18 @@ vfps::integral_t vfps::PhaseSpace::integral()
     return _integral;
 }
 
-vfps::meshdata_t vfps::PhaseSpace::average(const uint_fast8_t axis)
+vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
-    meshdata_t avg = 0;
+    integral_t avg = 0;
     for (size_t i=0; i<nMeshCells(axis); i++) {
         avg += _projection[axis][i]*x(axis,i);
     }
 
-    avg /= size(axis);
+    avg /= nMeshCells(axis)/size(axis);
+
     _moment[axis][0] = avg;
 
-    return avg;
+    return static_cast<meshaxis_t>(avg);
 }
 
 vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
@@ -179,7 +180,7 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
     for (size_t i=0; i<nMeshCells(axis); i++) {
         var += _projection[axis][i]*std::pow(x(axis,i)-avg,2);
     }
-    var /= size(axis);
+    var /= nMeshCells(axis)/size(axis);
 
     _moment[axis][1] = var;
 
