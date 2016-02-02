@@ -190,7 +190,7 @@ int main(int argc, char** argv)
                     (*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
                 }
             }
-//            mesh->syncCLMem(clCopyDirection::cpu2dev);
+            mesh->syncCLMem(clCopyDirection::cpu2dev);
             std::stringstream imgsize;
             imgsize << ps_size;
             Display::printText("Read phase space (a="+imgsize.str()+" px).");
