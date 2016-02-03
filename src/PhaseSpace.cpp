@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -161,6 +161,11 @@ vfps::integral_t vfps::PhaseSpace::integral()
 
 vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
+    if (axis == 0) {
+        updateXProjection();
+    } else {
+        updateYProjection();
+    }
     integral_t avg = 0;
     for (size_t i=0; i<nMeshCells(axis); i++) {
         avg += _projection[axis][i]*x(axis,i);
