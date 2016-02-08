@@ -152,7 +152,7 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
                   << INOVESA_VERSION_RELEASE << '.'
                   << INOVESA_VERSION_MINOR << '.'
                   << INOVESA_VERSION_FIX;
-        if (std::string(GIT_BRANCH) != "stable") {
+        if (std::string(GIT_BRANCH) != "master") {
             std::cout << " (Branch: " GIT_BRANCH ")";
         }
         std::cout << std::endl;
