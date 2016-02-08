@@ -42,8 +42,10 @@ void OCLH::prepareCLEnvironment()
         }
     }
 
+#ifdef INOVESA_USE_CLFFT
     clfftInitSetupData(&fft_setup);
     clfftSetup(&fft_setup);
+#endif // INOVESA_USE_CLFFT
 
     cl_context_properties properties[] =
         { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[plati])(), 0};
@@ -95,7 +97,9 @@ return p;
 
 void OCLH::teardownCLEnvironment()
 {
+#ifdef INOVESA_USE_CLFFT
     clfftTeardown();
+#endif // INOVESA_USE_CLFFT
 }
 
 void OCLH::listCLDevices()
@@ -152,7 +156,9 @@ cl::CommandQueue OCLH::queue;
 
 bool OCLH::ogl_sharing;
 
+#ifdef INOVESA_USE_CLFFT
 clfftSetupData OCLH::fft_setup;
+#endif // INOVESA_USE_CLFFT
 
 const std::string OCLH::custom_datatypes = R"(
         typedef struct { data_t real; data_t imag; } impedance_t;

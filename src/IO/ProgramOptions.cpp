@@ -122,6 +122,12 @@ vfps::ProgramOptions::ProgramOptions() :
             "Number of mesh points per dimension")
         ("rotations,T", po::value<double>(&rotations),
             "Simulated time (in number of synchrotron periods)")
+        ("derivation",po::value<unsigned int>(&deriv_type)->default_value(4u),
+            "Number of mesh points to be used to numerically find derivative")
+        ("InterpolationPoints",po::value<unsigned int>(&interpol_type)->default_value(4u),
+            "Number of mesh points to be used to numerically find derivative")
+        ("InterpolateSaturating",po::value<bool>(&interpol_sat)->default_value(true),
+            "Number of mesh points to be used to numerically find derivative")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);

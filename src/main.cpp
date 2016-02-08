@@ -118,6 +118,36 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
+    vfps::FokkerPlanckMap::DerivationType derivationtype;
+    switch (opts.getDerivationType()) {
+    case 3:
+        derivationtype = vfps::FokkerPlanckMap::DerivationType::two_sided;
+        break;
+    case 4:
+    default:
+        derivationtype = vfps::FokkerPlanckMap::DerivationType::cubic;
+        break;
+    }
+
+    vfps::HeritageMap::InterpolationType interpolationtype;
+    switch (opts.getInterpolationPoints()) {
+    case 1:
+        interpolationtype = vfps::HeritageMap::InterpolationType::none;
+        break;
+    case 2:
+        interpolationtype = vfps::HeritageMap::InterpolationType::linear;
+        break;
+    case 3:
+        interpolationtype = vfps::HeritageMap::InterpolationType::quadratic;
+        break;
+    default:
+    case 4:
+        interpolationtype = vfps::HeritageMap::InterpolationType::cubic;
+        break;
+    }
+
+    bool interpol_saturating = opts.getInterpolationSaturation();
+
     PhaseSpace* mesh;
     meshindex_t ps_size = opts.getMeshSize();
     const double qmax = opts.getPhaseSpaceSize();
@@ -322,9 +352,9 @@ int main(int argc, char** argv)
     }
     Display::printText(rotmapstring);
     RotationMap* rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
-                         HeritageMap::InterpolationType::cubic,
+                         interpolationtype,
                          RotationMap::RotationCoordinates::norm_pm1,
-                         true,rotmapsize);
+                         interpol_saturating,rotmapsize);
 
     double e0;
     if (t_d > 0) {
@@ -338,7 +368,7 @@ int main(int argc, char** argv)
         Display::printText("Building FokkerPlanckMap.");
         fpm = new FokkerPlanckMap( mesh_rotated,mesh_damdiff,ps_size,ps_size,
                                    FokkerPlanckMap::FPType::full,e0,
-                                   FokkerPlanckMap::DerivationType::cubic);
+                                   derivationtype);
     } else {
         fpm = new Identity(mesh_rotated,mesh_damdiff,ps_size,ps_size);
     }
@@ -362,14 +392,14 @@ int main(int argc, char** argv)
         ifs.close();
         Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
-                                  wake,HeritageMap::InterpolationType::cubic);
+                                  wake,interpolationtype);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
         field = new ElectricField(mesh,impedance,Ib,E0,sE,dt);
         Display::printText("Building WakeKickMap.");
         wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
-                                   HeritageMap::InterpolationType::cubic);
+                                   interpolationtype);
     }
 
     #ifdef INOVESA_USE_HDF5

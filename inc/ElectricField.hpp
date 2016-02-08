@@ -185,9 +185,9 @@ private:
 
     fftwf_plan _ffttw_bunchprofile;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_bunchprofile;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_CLFFT
 
     meshaxis_t* _wakefunction;
 
@@ -195,9 +195,9 @@ private:
 
     fftwf_complex* _wakelosses_fftw;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_CLFFT
     cl::Buffer _wakelosses_buf;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_CLFFT
 
     impedance_t* _wakepotential_complex;
 
@@ -220,9 +220,9 @@ private:
 
     fftwf_plan _fftw_wakelosses;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_wakelosses;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_CLFFT
 
     const meshdata_t _wakescaling;
 };

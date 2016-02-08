@@ -290,6 +290,7 @@ vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
 #ifdef INOVESA_USE_CL
 void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
 {
+    if (OCLH::active) {
     switch (dir) {
     case clCopyDirection::cpu2dev:
         OCLH::queue.enqueueWriteBuffer
@@ -303,6 +304,7 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0]);
         break;
+    }
     }
 }
 

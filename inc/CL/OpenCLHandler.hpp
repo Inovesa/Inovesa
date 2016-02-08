@@ -35,7 +35,9 @@ enum class clCopyDirection {
 #else
 #include <CL/cl.hpp>
 #endif
+#ifdef INOVESA_USE_CLFFT
 #include <clFFT.h>
+#endif // INOVESA_USE_CLFFT
 
 #include <climits>
 #include <iostream>
@@ -82,7 +84,9 @@ public:
 	static bool ogl_sharing;
 
 private:
+#ifdef INOVESA_USE_CLFFT
 	static clfftSetupData fft_setup;
+#endif // INOVESA_USE_CLFFT
 
     static const std::string custom_datatypes;
 

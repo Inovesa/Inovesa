@@ -28,6 +28,7 @@
 #include <sstream>
 
 #include "defines.hpp"
+#include "HM/FokkerPlanckMap.hpp"
 
 namespace po = boost::program_options;
 
@@ -83,6 +84,15 @@ public:
 
     inline int getRotationMapSize() const
         { return rotmapsize; }
+
+    inline unsigned int getDerivationType() const
+        { return deriv_type; }
+
+    inline unsigned int getInterpolationPoints() const
+        { return interpol_type; }
+
+    inline bool getInterpolationSaturation() const
+        { return interpol_sat; }
 
 public:
     inline double getBeamEnergy() const
@@ -141,6 +151,9 @@ private: // simulation parameters
     unsigned int steps;
     double rotations;
     int rotmapsize;
+    unsigned int deriv_type;
+    unsigned int interpol_type;
+    bool interpol_sat;
 
 private: // phsical parameters
     double E_0;
