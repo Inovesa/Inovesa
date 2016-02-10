@@ -139,3 +139,8 @@ void vfps::HeritageMap::calcCoefficiants(vfps::interpol_t* ic,
         break;
     }
 }
+
+void vfps::HeritageMap::notBoundMessage()
+{
+    Display::printText("\tBound interpolation not implemented for this scheme.");
+}

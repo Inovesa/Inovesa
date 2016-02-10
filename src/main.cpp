@@ -146,7 +146,7 @@ int main(int argc, char** argv)
         break;
     }
 
-    bool interpol_saturating = opts.getInterpolationSaturation();
+    bool interpol_bound = opts.getInterpolationBound();
 
     PhaseSpace* mesh;
     meshindex_t ps_size = opts.getMeshSize();
@@ -354,7 +354,7 @@ int main(int argc, char** argv)
     RotationMap* rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
                          interpolationtype,
                          RotationMap::RotationCoordinates::norm_pm1,
-                         interpol_saturating,rotmapsize);
+                         interpol_bound,rotmapsize);
 
     double e0;
     if (t_d > 0) {

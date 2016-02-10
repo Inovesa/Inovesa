@@ -126,7 +126,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Number of mesh points to be used to numerically find derivative")
         ("InterpolationPoints",po::value<unsigned int>(&interpol_type)->default_value(4u),
             "Number of mesh points to be used to numerically find derivative")
-        ("InterpolateSaturating",po::value<bool>(&interpol_sat)->default_value(true),
+        ("InterpolateBound",po::value<bool>(&interpol_bound)->default_value(true),
             "Number of mesh points to be used to numerically find derivative")
     ;
     _cfgfileopts.add(_physopts);

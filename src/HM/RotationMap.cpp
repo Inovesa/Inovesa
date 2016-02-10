@@ -51,10 +51,9 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
         } else
         #endif // INOVESA_USE_CL
         {
-        if (_sat) {
-            Display::printText("\tSaturation for \"ROTMAP_SIZE==0\" "
-                               "only implemented when using OpenCL.");
-        }
+            if (_sat) {
+                notBoundMessage();
+            }
         }
     } else {
         meshindex_t maxx;
@@ -96,6 +95,9 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                     }
                 }
             } else {
+                if (_sat) {
+                    notBoundMessage();
+                }
                 genCode4HM1D();
                 _cl_prog  = OCLH::prepareCLProg(_cl_code);
 

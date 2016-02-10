@@ -91,8 +91,8 @@ public:
     inline unsigned int getInterpolationPoints() const
         { return interpol_type; }
 
-    inline bool getInterpolationSaturation() const
-        { return interpol_sat; }
+    inline bool getInterpolationBound() const
+        { return interpol_bound; }
 
 public:
     inline double getBeamEnergy() const
@@ -153,7 +153,7 @@ private: // simulation parameters
     int rotmapsize;
     unsigned int deriv_type;
     unsigned int interpol_type;
-    bool interpol_sat;
+    bool interpol_bound;
 
 private: // phsical parameters
     double E_0;
