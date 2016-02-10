@@ -19,6 +19,7 @@
 
 #include <chrono>
 #include <climits>
+#include <cmath>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -169,6 +170,18 @@ int main(int argc, char** argv)
     const double Ib = opts.getBunchCurrent();
     const double Fk = opts.getStartDistParam();
     const double R = physcons::c/(2*M_PI*f0);
+
+    const unsigned int steps = std::max(opts.getSteps(),1u);
+    const unsigned int outstep = opts.getOutSteps();
+    const float rotations = opts.getNRotations();
+    const double t_d = opts.getDampingTime();
+    const double dt = 1.0/(fs*steps);
+
+    /* angle of one rotation step (in rad)
+     * (angle = 2*pi corresponds to 1 synchrotron period)
+     */
+    const double angle = 2*M_PI/steps;
+
     std::string startdistfile = opts.getStartDistFile();
 
     const double Ith = physcons::IAlfven/physcons::me*2*M_PI
@@ -177,8 +190,19 @@ int main(int argc, char** argv)
 
     sstream.str("");
     sstream << std::scientific << Ith;
-    Display::printText("Information: BBT-Threshold-Current at "
+    Display::printText("Information: BBT-Threshold-Current expected at "
                        +sstream.str()+" A.");
+
+    sstream.str("");
+    sstream << std::defaultfloat << 1/dt/f0;
+    Display::printText("Information: Using "
+                       +sstream.str()+" steps per revolution.");
+
+    sstream.str("");
+    double rotationoffset = std::tan(angle)*ps_size/2;
+    sstream << std::defaultfloat << rotationoffset;
+    Display::printText("Information: Maximum rotation offset is "
+                       +sstream.str()+". (Should be < 1.)");
 
     if (startdistfile.length() <= 4) {
         if (ps_size == 0) {
@@ -308,17 +332,6 @@ int main(int argc, char** argv)
         display = new Display();
     }
     #endif
-
-    const unsigned int steps = std::max(opts.getSteps(),1u);
-    const unsigned int outstep = opts.getOutSteps();
-    const float rotations = opts.getNRotations();
-    const double t_d = opts.getDampingTime();
-    const double dt = 1.0/(fs*steps);
-
-    /* angle of one rotation step (in rad)
-     * (angle = 2*pi corresponds to 1 synchrotron period)
-     */
-    const double angle = 2*M_PI/steps;
 
     /* CPU usually have plenty of memory,
      * so the default is to use a prebuilt RotationMap on CPU.

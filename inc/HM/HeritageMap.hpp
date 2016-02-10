@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "defines.hpp"
+#include "IO/Display.hpp"
 #include "PhaseSpace.hpp"
 
 namespace vfps
