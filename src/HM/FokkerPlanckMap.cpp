@@ -1,6 +1,6 @@
 /******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -25,12 +25,8 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 									   FPType fpt, timeaxis_t e1,
 									   DerivationType dt)
 	:
-	#if DERIVATION_TYPE == 1 // have to use type 2 for second derivative
-	  HeritageMap(in, out, 1, ysize, 3,3),
-	#else
-	  HeritageMap(in, out, 1, ysize, dt, dt),
-	#endif
-	  _meshxsize(xsize)
+    HeritageMap(in, out, 1, ysize, dt, dt),
+    _meshxsize(xsize)
 {
 	// the following doubles should be interpol_t
 	const interpol_t e1_2d = e1/(interpol_t(2)*in->getDelta(1));
