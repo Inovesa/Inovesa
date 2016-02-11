@@ -7,6 +7,7 @@ set(SRC_LIST
             ./src/HM/HeritageMap.cpp
             ./src/HM/FokkerPlanckMap.cpp
             ./src/HM/KickMap.cpp
+            ./src/HM/RFKickMap.cpp
             ./src/HM/RotationMap.cpp
             ./src/HM/WakeKickMap.cpp
             ./src/HM/WakePotentialMap.cpp
@@ -29,6 +30,7 @@ set(INC_LIST
             ./inc/HM/HeritageMap.hpp
             ./inc/HM/FokkerPlanckMap.hpp
             ./inc/HM/KickMap.hpp
+            ./inc/HM/RFKickMap.hpp
             ./inc/HM/Identity.hpp
             ./inc/HM/RotationMap.hpp
             ./inc/HM/WakePotentialMap.hpp
@@ -77,11 +79,11 @@ find_package(OpenCL)
 IF(OPENCL_FOUND)
     add_definitions( -DINOVESA_USE_CL)
     MESSAGE ("Found OpenCL. Will add support.")
-	find_package(clFFT)
-	IF(clFFT_FOUND)
-		add_definitions( -DINOVESA_USE_CLFFT)
-		MESSAGE ("Found clFFT. Will add support.")
-	ENDIF()
+    find_package(clFFT)
+    IF(clFFT_FOUND)
+        add_definitions( -DINOVESA_USE_CLFFT)
+        MESSAGE ("Found clFFT. Will add support.")
+    ENDIF()
 ENDIF()
 find_package(OpenGL)
 IF(OPENGL_FOUND)
