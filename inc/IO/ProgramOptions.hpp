@@ -60,6 +60,9 @@ public:
     inline std::string getStartDistFile() const
         { return _startdistfile; }
 
+    inline bool getVerbosity() const
+        { return _verbose; }
+
     inline std::string getWakeFile() const
         { return _wakefile; }
 
@@ -140,6 +143,8 @@ private: // program parameters
     std::string _startdistfile;
 
     std::string _configfile;
+
+    bool _verbose;
 
     std::string _wakefile;
 

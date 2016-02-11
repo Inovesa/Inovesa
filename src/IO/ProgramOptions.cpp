@@ -23,6 +23,7 @@ vfps::ProgramOptions::ProgramOptions() :
     _cldevice(1),
     _startdistfile(""),
     _configfile("default.cfg"),
+    _verbose(false),
     _wakefile(""),
     meshsize(256),
     outsteps(100),
@@ -50,7 +51,8 @@ vfps::ProgramOptions::ProgramOptions() :
 {
     _proginfoopts.add_options()
         ("help,h", "print help message")
-        ("version,v", "print version string")
+        ("version,V", "print version string")
+        ("verbose,v", "print information more detailed" )
     ;
     _physopts.add_options()
         ("RevolutionFrequency,F", po::value<double>(&f_rev),
@@ -149,6 +151,9 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     po::store(po::parse_command_line(ac, av, _commandlineopts), _vm);
     po::notify(_vm);
 
+    if (_vm.count("verbose")) {
+        _verbose = true;
+    }
     if (_vm.count("help")) {
         std::cout << _visibleopts << std::endl;
         return false;

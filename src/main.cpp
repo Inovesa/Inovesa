@@ -148,6 +148,7 @@ int main(int argc, char** argv)
     }
 
     bool interpol_bound = opts.getInterpolationBound();
+    bool verbose = opts.getVerbosity();
 
     PhaseSpace* mesh;
     meshindex_t ps_size = opts.getMeshSize();
@@ -163,10 +164,10 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
-    const double h = opts.getHarmonicNumber();
+    const double H = opts.getHarmonicNumber();
     const double V = opts.getRFVoltage();
     const double fs = opts.getSyncFreq();
-    const double bl = physcons::c*dE/h/std::pow(f0,2.0)/V*fs;
+    const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib = opts.getBunchCurrent();
     const double Fk = opts.getStartDistParam();
     const double R = physcons::c/(2*M_PI*f0);
@@ -185,9 +186,10 @@ int main(int argc, char** argv)
     std::string startdistfile = opts.getStartDistFile();
 
     const double Ith = physcons::IAlfven/physcons::me*2*M_PI
-                     * std::pow(dE*fs/f0,2)/V/h
+                     * std::pow(dE*fs/f0,2)/V/H
                      * std::pow(bl/R,1./3.)*0.482;
 
+    if (verbose) {
     sstream.str("");
     sstream << std::scientific << Ith;
     Display::printText("Information: BBT-Threshold-Current expected at "
@@ -195,14 +197,15 @@ int main(int argc, char** argv)
 
     sstream.str("");
     sstream << std::defaultfloat << 1/dt/f0;
-    Display::printText("Information: Using "
-                       +sstream.str()+" steps per revolution.");
+    Display::printText("Information: Doing " +sstream.str()+
+                       " simulation steps per revolution period.");
 
     sstream.str("");
     double rotationoffset = std::tan(angle)*ps_size/2;
     sstream << std::defaultfloat << rotationoffset;
     Display::printText("Information: Maximum rotation offset is "
-                       +sstream.str()+". (Should be < 1.)");
+                       +sstream.str()+" (should be < 1).");
+    }
 
     if (startdistfile.length() <= 4) {
         if (ps_size == 0) {
@@ -301,6 +304,13 @@ int main(int argc, char** argv)
         for (unsigned int y=0; y<ps_size; y++) {
             maxval = std::max(maxval,(*mesh)[x][y]);
         }
+    }
+
+    if (verbose) {
+    sstream.str("");
+    sstream << std::defaultfloat << maxval*Ib/f0/physcons::e;
+    Display::printText("Information: Maximum particles per mesh cell is "
+                       +sstream.str()+".");
     }
 
     const unsigned int padding =std::max(opts.getPadding(),1u);
