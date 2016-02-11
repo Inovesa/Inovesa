@@ -196,13 +196,13 @@ int main(int argc, char** argv)
                        +sstream.str()+" A.");
 
     sstream.str("");
-    sstream << std::defaultfloat << 1/dt/f0;
+    sstream << std::fixed << 1/dt/f0;
     Display::printText("Information: Doing " +sstream.str()+
                        " simulation steps per revolution period.");
 
     sstream.str("");
     double rotationoffset = std::tan(angle)*ps_size/2;
-    sstream << std::defaultfloat << rotationoffset;
+    sstream << std::fixed << rotationoffset;
     Display::printText("Information: Maximum rotation offset is "
                        +sstream.str()+" (should be < 1).");
     }
@@ -308,7 +308,7 @@ int main(int argc, char** argv)
 
     if (verbose) {
     sstream.str("");
-    sstream << std::defaultfloat << maxval*Ib/f0/physcons::e;
+    sstream << std::fixed << maxval*Ib/f0/physcons::e;
     Display::printText("Information: Maximum particles per mesh cell is "
                        +sstream.str()+".");
     }
