@@ -39,6 +39,12 @@ public:
         cubic = 4
     };
 
+    enum class RotationCoordinates : uint_fast8_t {
+        mesh = 1, // rotate on mesh
+        norm_0_1 = 2, // normalized space between 0 and 1
+        norm_pm1 = 3 // normalized space between -1 and +1
+    };
+
 protected:
     typedef struct {
         meshindex_t index;

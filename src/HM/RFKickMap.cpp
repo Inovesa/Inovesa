@@ -1,4 +1,4 @@
-#include "inc/HM/RFKickMap.hpp"
+#include "HM/RFKickMap.hpp"
 
 
 vfps::RFKickMap::RFKickMap(vfps::PhaseSpace *in, vfps::PhaseSpace *out,
@@ -9,5 +9,8 @@ vfps::RFKickMap::RFKickMap(vfps::PhaseSpace *in, vfps::PhaseSpace *out,
     :
       KickMap(in,out,xsize,ysize,it)
 {
-    ;
+    for(meshindex_t x=0; x<_xsize; x++) {
+        _force[x] = std::tan(angle)*(int(x)-int(_xsize/2));
+    }
+    updateHM();
 }
