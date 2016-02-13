@@ -24,6 +24,7 @@
 
 #include <array>
 #include <chrono>
+#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -48,13 +49,23 @@
 
 namespace vfps {
 
+class DisplayException : public std::exception {
+public:
+    DisplayException(std::string msg) : _msg(msg){}
+
+    const char* what() const _NOEXCEPT { return _msg.c_str(); }
+
+    private:
+        std::string _msg;
+};
+
 class Display
 {
 public:
 	static std::chrono::system_clock::time_point start_time;
 
 public:
-	Display();
+    Display(uint_fast8_t glversion=0);
 
 	~Display();
 
@@ -71,6 +82,8 @@ public:
     #endif // INOVESA_USE_GUI
 
 private:
+    void openWindow(uint_fast8_t glversion);
+
 	#ifdef INOVESA_USE_GUI
 	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow* window;

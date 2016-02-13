@@ -23,6 +23,7 @@ vfps::ProgramOptions::ProgramOptions() :
     _cldevice(1),
     _startdistfile(""),
     _configfile("default.cfg"),
+    _glversion(0),
     _verbose(false),
     _wakefile(""),
     meshsize(256),
@@ -85,9 +86,11 @@ vfps::ProgramOptions::ProgramOptions() :
     ;
     _programopts_file.add_options()
         ("cldev", po::value<int>(&_cldevice)->default_value(1),
-            "OpenCL device to use ('0' lists available devices)")
+            "OpenCL device to use\n('-1' lists available devices)")
         ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
             "Show phase space view")
+        ("ForceOpenGLVersion", po::value<int>(&_glversion),
+            "Force OpenGL version")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")

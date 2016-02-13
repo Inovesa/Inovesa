@@ -54,6 +54,9 @@ public:
     inline std::string getOutFile() const
         { return _outfile; }
 
+    inline int getOpenGLVersion() const
+        { return _glversion; }
+
     inline bool showPhaseSpace() const
         { return _showphasespace; }
 
@@ -143,6 +146,8 @@ private: // program parameters
     std::string _startdistfile;
 
     std::string _configfile;
+
+    int _glversion;
 
     bool _verbose;
 

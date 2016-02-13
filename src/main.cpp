@@ -337,9 +337,18 @@ int main(int argc, char** argv)
     PhaseSpace* mesh_damdiff = new PhaseSpace(*mesh);
 
     #ifdef INOVESA_USE_GUI
+    bool gui = opts.showPhaseSpace();
     Display* display = nullptr;
-    if (opts.showPhaseSpace()) {
-        display = new Display();
+    if (gui) {
+        try {
+        display = new Display(opts.getOpenGLVersion());
+        } catch (std::exception& e) {
+            std::string msg("ERROR: ");
+            Display::printText(msg+e.what());
+            delete display;
+            display = nullptr;
+            gui = false;
+        }
     }
     #endif
 
@@ -449,7 +458,6 @@ int main(int argc, char** argv)
     Plot2DLine* bpv = nullptr;
     Plot3DColormap* psv = nullptr;
     Plot2DLine* wpv = nullptr;
-    bool gui = opts.showPhaseSpace();
     if (gui) {
         try {
             psv = new Plot3DColormap(maxval);

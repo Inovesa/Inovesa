@@ -19,53 +19,39 @@
 
 #include "IO/Display.hpp"
 
-vfps::Display::Display()
+vfps::Display::Display(uint_fast8_t glversion)
     #ifdef INOVESA_USE_GUI
-        #if GLFW_VERSION_MAJOR == 3
+    #if GLFW_VERSION_MAJOR == 3
         :
         window(nullptr)
     #endif // GLFW_VERSION_MAJOR == 3
     #endif // INOVESA_USE_GUI
 {
     #ifdef INOVESA_USE_GUI
-        glfwInit();
+    if (glversion == 0) {
+        #if defined(__APPLE__) || defined(__MACOSX)
+        glversion = 2;
+        #else
+        glversion = 3;
+        #endif
+    }
+    glfwInit();
 
-    #if GLFW_VERSION_MAJOR == 3 // GLFW3
-    glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #else // GLFW2
+    // Open a window and create its OpenGL context
+    #if GLFW_VERSION_MAJOR < 3
     glfwOpenWindowHint(GLFW_FSAA_SAMPLES, 4);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    #endif // GLFW2
-
-    // Open a window and create its OpenGL context
-    #if GLFW_VERSION_MAJOR < 3
     glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
     glfwSetWindowTitle("Inovesa (GL2)");
     GUIElement::glversion = 2;
     #else // GLFW3
-    window = glfwCreateWindow( 512, 512, "Inovesa (GL3)", NULL, NULL);
+    openWindow(glversion);
     if( window == nullptr ) {
-        GUIElement::glversion = 2;
-
         glfwTerminate();
-        printText("Failed to open OpenGl 3 window, will try OpenGL 2.");
-        glfwInit();
-        glfwWindowHint(GLFW_SAMPLES, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        window = glfwCreateWindow( 512, 512, "Inovesa (GL2)", NULL, NULL);
-
-        if( window == nullptr ) {
-            std::cerr << "Failed to initialize GLFW." << std::endl;
-            glfwTerminate();
-        }
-    } else {
-        GUIElement::glversion = 3;
+        throw DisplayException("Failed to initialize GLFW.");
+        return;
     }
     glfwMakeContextCurrent(window);
     #endif // GLFW3
@@ -73,14 +59,14 @@ vfps::Display::Display()
     // Initialize GLEW
     glewExperimental = true; // Needed for core profile
     if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
+        throw DisplayException("Failed to initialize GLEW");
     }
 
     // Ensure we can capture the escape key being pressed below
-    #if GLFW_VERSION_MAJOR == 3
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-    #else
+    #if GLFW_VERSION_MAJOR < 3
     glfwEnable(GLFW_STICKY_KEYS);
+    #else
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     #endif // GLFW_VERSION_MAJOR == 3
 
     // White background
@@ -152,6 +138,29 @@ void vfps::Display::takeElement(vfps::GUIElement* item)
             i--;
         }
     }
+}
+
+void vfps::Display::openWindow(uint_fast8_t glversion)
+{
+    std::string title("Inovesa");
+    GUIElement::glversion = glversion;
+    switch (glversion) {
+    case 2:
+        glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+        title+=" (GL2)";
+        break;
+    case 3:
+    default:
+        glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        title+=" (GL3)";
+        break;
+    }
+    window = glfwCreateWindow( 512, 512, title.c_str(), NULL, NULL);
 }
 #endif // INOVESA_USE_GUI
 
