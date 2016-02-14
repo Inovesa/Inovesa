@@ -104,6 +104,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "name of a file containing a configuration.")
         ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
             "Show phase space view")
+        ("ForceOpenGLVersion", po::value<int>(&_glversion),
+            "Force OpenGL version")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
