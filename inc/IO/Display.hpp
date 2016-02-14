@@ -53,7 +53,7 @@ class DisplayException : public std::exception {
 public:
     DisplayException(std::string msg) : _msg(msg){}
 
-    const char* what() const _NOEXCEPT { return _msg.c_str(); }
+    const char* what() const noexcept { return _msg.c_str(); }
 
     private:
         std::string _msg;
