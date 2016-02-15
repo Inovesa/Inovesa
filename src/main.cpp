@@ -192,18 +192,18 @@ int main(int argc, char** argv)
     if (verbose) {
     sstream.str("");
     sstream << std::scientific << Ith;
-    Display::printText("Information: BBT-Threshold-Current expected at "
+    Display::printText("BBT-Threshold-Current expected at "
                        +sstream.str()+" A.");
 
     sstream.str("");
     sstream << std::fixed << 1/dt/f0;
-    Display::printText("Information: Doing " +sstream.str()+
+    Display::printText("Doing " +sstream.str()+
                        " simulation steps per revolution period.");
 
     sstream.str("");
     double rotationoffset = std::tan(angle)*ps_size/2;
     sstream << std::fixed << rotationoffset;
-    Display::printText("Information: Maximum rotation offset is "
+    Display::printText("Maximum rotation offset is "
                        +sstream.str()+" (should be < 1).");
     }
 
@@ -309,7 +309,7 @@ int main(int argc, char** argv)
     if (verbose) {
     sstream.str("");
     sstream << std::fixed << maxval*Ib/f0/physcons::e;
-    Display::printText("Information: Maximum particles per mesh cell is "
+    Display::printText("Maximum particles per mesh cell is "
                        +sstream.str()+".");
     }
 
