@@ -92,11 +92,29 @@ int main(int argc, char** argv)
                        +sstream.str()+") at "+timestring);
     }
 
+
+
+    #ifdef INOVESA_USE_GUI
+    bool gui = opts.showPhaseSpace();
+    Display* display = nullptr;
+    if (gui) {
+        try {
+        display = new Display(opts.getOpenGLVersion());
+        } catch (std::exception& e) {
+            std::string msg("ERROR: ");
+            Display::printText(msg+e.what());
+            delete display;
+            display = nullptr;
+            gui = false;
+        }
+    }
+    #endif
+
     #ifdef INOVESA_USE_CL
     OCLH::active = (opts.getCLDevice() != 0);
     if (OCLH::active) {
         try {
-            OCLH::prepareCLEnvironment();
+            OCLH::prepareCLEnvironment(gui);
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
@@ -335,22 +353,6 @@ int main(int argc, char** argv)
 
     PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
     PhaseSpace* mesh_damdiff = new PhaseSpace(*mesh);
-
-    #ifdef INOVESA_USE_GUI
-    bool gui = opts.showPhaseSpace();
-    Display* display = nullptr;
-    if (gui) {
-        try {
-        display = new Display(opts.getOpenGLVersion());
-        } catch (std::exception& e) {
-            std::string msg("ERROR: ");
-            Display::printText(msg+e.what());
-            delete display;
-            display = nullptr;
-            gui = false;
-        }
-    }
-    #endif
 
     /* CPU usually have plenty of memory,
      * so the default is to use a prebuilt RotationMap on CPU.

@@ -56,7 +56,7 @@ enum class clCopyDirection {
 class OCLH
 {
 public:
-	static void prepareCLEnvironment();
+	static void prepareCLEnvironment(bool glsharing);
 
 	static void prepareCLDevice(unsigned int device);
 
@@ -85,7 +85,7 @@ public:
 
 private:
 #ifdef INOVESA_USE_CLFFT
-	static clfftSetupData fft_setup;
+        static clfftSetupData fft_setup;
 #endif // INOVESA_USE_CLFFT
 
     static const std::string custom_datatypes;

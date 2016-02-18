@@ -21,10 +21,14 @@
 
 #include "CL/OpenCLHandler.hpp"
 #include "IO/Display.hpp"
+#ifdef __linux__
+#include <GL/glx.h>
+#endif
+#include <CL/cl_gl.h>
 
-void OCLH::prepareCLEnvironment()
+void OCLH::prepareCLEnvironment(bool glsharing)
 {
-        cl::Platform::get(&OCLH::platforms);
+    cl::Platform::get(&OCLH::platforms);
 
     std::string available_clversion;
         std::string needed_clversion = "OpenCL 1.";
@@ -47,10 +51,26 @@ void OCLH::prepareCLEnvironment()
     clfftSetup(&fft_setup);
 #endif // INOVESA_USE_CLFFT
 
-    cl_context_properties properties[] =
-        { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[plati])(), 0};
-
+    glsharing=false;
+    if (glsharing) {
+        cl_context_properties properties[] = {
+                        CL_GL_CONTEXT_KHR,
+                        (cl_context_properties)glXGetCurrentContext(),
+                        CL_GLX_DISPLAY_KHR,
+                        (cl_context_properties)glXGetCurrentDisplay(),
+                        CL_CONTEXT_PLATFORM,
+                        (cl_context_properties)(OCLH::platforms[plati])(),
+                        0
+                     };
         OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
+    } else {
+        cl_context_properties properties[] = {
+                        CL_CONTEXT_PLATFORM,
+                        (cl_context_properties)(OCLH::platforms[plati])(),
+                        0
+                     };
+        OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
+    }
 
         OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 }
