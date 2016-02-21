@@ -19,6 +19,8 @@
 
 #include "Impedance.hpp"
 
+#include <boost/math/special_functions/airy.hpp>
+
 vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
                            const double f_rev, const double f_max) :
     _nmax(n),
@@ -43,6 +45,25 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
             _data.push_back(Z0*std::pow(i*delta,csrpower_t(1.0/3.0)));
         }
         break;
+    case ImpedanceModel::ParallelPlates:
+        uint32_t maxp = 3;
+        csrpower_t h_r = 0.7;
+        constexpr impedance_t j(0,1);
+        for (size_t i=0; i<_nmax; i++) {
+            impedance_t Z=0;
+            csrpower_t b = std::pow(i*delta*h_r,-4./3.);
+            for (uint32_t p=1; p<=maxp;p+=2) {
+                csrpower_t u = std::pow(M_PI*p,2)/std::pow(2,2./3.)*b;
+                Z += boost::math::airy_ai_prime(u)
+                        *(boost::math::airy_ai_prime(u)
+                          -j*boost::math::airy_bi_prime(u))
+                  +u*boost::math::airy_ai(u)
+                        *(boost::math::airy_ai(u)
+                          -j*boost::math::airy_bi(u));
+            }
+            _data.push_back(csrpower_t(16)*Z*b*
+                            csrpower_t(std::pow(M_PI,3)*std::pow(2,1./3.)/3e8));
+        }
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

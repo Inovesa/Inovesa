@@ -36,7 +36,8 @@ class Impedance
 public:
     enum class ImpedanceModel : uint_fast8_t {
         ConstantOne = 0,
-        FreeSpaceCSR = 1
+        FreeSpaceCSR = 1,
+        ParallelPlates = 2
     };
 
 public:

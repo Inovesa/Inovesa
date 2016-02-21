@@ -24,7 +24,11 @@
 #ifdef __linux__
 #include <GL/glx.h>
 #endif
+#if defined(__APPLE__) || defined(__MACOSX)
+#include <OpenCL/cl_gl.h>
+#else
 #include <CL/cl_gl.h>
+#endif
 
 void OCLH::prepareCLEnvironment(bool glsharing)
 {
@@ -53,6 +57,7 @@ void OCLH::prepareCLEnvironment(bool glsharing)
 
     glsharing=false;
     if (glsharing) {
+        #ifdef __linux__
         cl_context_properties properties[] = {
                         CL_GL_CONTEXT_KHR,
                         (cl_context_properties)glXGetCurrentContext(),
@@ -61,7 +66,11 @@ void OCLH::prepareCLEnvironment(bool glsharing)
                         CL_CONTEXT_PLATFORM,
                         (cl_context_properties)(OCLH::platforms[plati])(),
                         0
-                     };
+        };
+        #else
+        cl_context_properties properties[] = {
+        };
+        #endif
         OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
     } else {
         cl_context_properties properties[] = {
