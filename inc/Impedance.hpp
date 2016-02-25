@@ -44,14 +44,15 @@ public:
     /**
      * @brief Impedance
      * @param model currently only FreeSpaceCSR is implemented
-     * @param n compute (at least) to n=f*f_nyq/f_rev,
-     *        where f_rev is the revolution frequency
-     *        and f_max is maximum frequency
+     * @param n compute n freuqencies
+     * @param f_rev revolution freuquency
+     * @param f_max maximum frequency
      *
      * @todo: make this constructor also use basic constructor
      */
     Impedance(ImpedanceModel model, size_t n,
-              const double f_rev, const double f_max);
+              const frequency_t f_rev, const frequency_t f_max,
+              const double h=0);
 
     /**
      * @brief Impedance basic constructor that initializes everything
@@ -76,8 +77,8 @@ public:
     inline const impedance_t operator[](size_t n) const
         { return _data[n]; }
 
-    inline size_t maxN() const
-        { return _nmax; }
+    inline size_t nFreqs() const
+        { return _nfreqs; }
 
     inline size_t size() const
         { return _data.size(); }
@@ -88,7 +89,7 @@ public:
     cl::Buffer data_buf;
 
 private:
-    size_t _nmax;
+    size_t _nfreqs;
 
     const Ruler<frequency_t> _axis;
 

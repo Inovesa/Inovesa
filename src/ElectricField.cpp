@@ -22,7 +22,7 @@
 vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
                                    const meshaxis_t wakescalining) :
-    _nmax(impedance->maxN()),
+    _nmax(impedance->nFreqs()),
     _bpmeshcells(ps->nMeshCells(0)),
     _axis_freq(Ruler<frequency_t>(_nmax,0,
                                   1/(ps->getDelta(0)),
@@ -216,14 +216,14 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
                     / (2*M_PI*fs*sigmaE*E0)/(M_PI*rbend);
 
 
-    std::copy_n(_impedance->data(),std::min(nmax,_impedance->maxN()),z);
-    if (_impedance->maxN() < nmax) {
+    std::copy_n(_impedance->data(),std::min(nmax,_impedance->nFreqs()),z);
+    if (_impedance->nFreqs() < nmax) {
         std::stringstream wavenumbers;
-        wavenumbers << "(Known: n=" <<_impedance->maxN()
+        wavenumbers << "(Known: n=" <<_impedance->nFreqs()
                     << ", needed: N=" << nmax << ")";
         Display::printText("Warning: Unknown impedance for high wavenumbers. "
                            +wavenumbers.str());
-        std::fill_n(&z[_impedance->maxN()],nmax-_impedance->maxN(),
+        std::fill_n(&z[_impedance->nFreqs()],nmax-_impedance->nFreqs(),
                     impedance_t(0));
     }
 

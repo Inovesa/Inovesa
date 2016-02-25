@@ -117,7 +117,7 @@ public:
         { return s_E; }
 
     inline double getHarmonicNumber() const
-        { return h; }
+        { return H; }
 
     inline double getRevolutionFrequency() const
         { return f_rev; }
@@ -133,6 +133,9 @@ public:
 
     inline double getDampingTime() const
         { return t_d; }
+
+    inline double getVacuumChamberHeight() const
+        { return h; }
 
 private: // program parameters
     int _cldevice;
@@ -172,6 +175,7 @@ private: // phsical parameters
     double f_s;
     double f_rev;
     double h;
+    double H;
     double I_b;
     double t_d;
     double r_bend;

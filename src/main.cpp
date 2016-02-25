@@ -334,17 +334,25 @@ int main(int argc, char** argv)
     const unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
+    double h = opts.getVacuumChamberHeight();
     if (opts.getImpedanceFile() == "") {
-        Display::printText("Will use free space CSR impedance.");
-        impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
-                                  ps_size*padding,f0,
-                                  ps_size*vfps::physcons::c/(2*qmax*bl));
+        if (h>0) {
+            Display::printText("Will use parallel plates CSR impedance.");
+            impedance = new Impedance(Impedance::ImpedanceModel::ParallelPlates,
+                                      ps_size*padding,f0,
+                                      ps_size*vfps::physcons::c/(2*qmax*bl),h);
+        } else {
+            Display::printText("Will use free space CSR impedance.");
+            impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
+                                      ps_size*padding,f0,
+                                      ps_size*vfps::physcons::c/(2*qmax*bl));
+        }
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
         impedance = new Impedance(opts.getImpedanceFile(),
                                   ps_size*vfps::physcons::c/(2*qmax*bl));
-        if (impedance->maxN() < ps_size) {
+        if (impedance->nFreqs() < ps_size) {
             Display::printText("No valid impedance file. "
                                "Will now quit.");
             return EXIT_SUCCESS;
