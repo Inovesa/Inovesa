@@ -61,7 +61,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Revolution frequency (Hz)")
         ("SyncFreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
         ("DampingTime,d", po::value<double>(&t_d),"Damping time (s)")
-        ("HarmonicNumber,H", po::value<double>(&H),
+        ("HarmonicNumber,h", po::value<double>(&H),
             "Harmonic Number (1)")
         ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
@@ -79,7 +79,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
-        ("VaccuumHeight,h", po::value<double>(&h),
+        ("VaccuumHeight", po::value<double>(&h),
             "Height of vacuum chamber (m)")
         ("CutoffFreq", po::value<double>(&f_c),"Beamline cutoff frequency (Hz)")
         ("RFVoltage,V", po::value<double>(&V_RF),
