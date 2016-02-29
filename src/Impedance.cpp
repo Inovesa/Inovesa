@@ -49,31 +49,30 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
         break;
     case ImpedanceModel::ParallelPlates:
         const double r_bend = physcons::c/(2*M_PI*f_rev);
-        const double h_r = h/r_bend;
         constexpr std::complex<double> j(0,1);
-        _data.push_back(0);
-        std::ofstream zdbg("impedance.dbg");
-        for (size_t i=1; i<_nfreqs; i++) {
+        for (size_t i=0; i<_nfreqs; i++) {
             std::complex<double> Z=0;
-            double n=i*delta;
-            zdbg << n << '\t';
-            const uint32_t maxp = 2*n*f_rev*h/physcons::c;
-            double b = std::pow(n*std::pow(h_r,3./2.),-4./3.);
+            double n = i*delta;
+            double m = n*std::pow(h/r_bend,3./2.);
+            const uint32_t maxp = 2*m*std::pow(r_bend/h,3./2.)*f_rev*h/physcons::c;
+            double b = std::pow(m,-4./3.);
             std::complex<double> zinc=1;
-            for (uint32_t p=1; p<=maxp && zinc.real()>=1e-8*Z.real();p+=2) {
+            for (uint32_t p=1; p<=maxp;p+=2) {
                 double u = std::pow(M_PI*p,2)/std::pow(2,2./3.)*b;
-                zinc = boost::math::airy_ai_prime(u)
-                     *(boost::math::airy_ai_prime(u)
-                        -j*boost::math::airy_bi_prime(u))
-                    +u*boost::math::airy_ai(u)
-                     *(boost::math::airy_ai(u)
-                        -j*boost::math::airy_bi(u));
-//                zdbg << zinc.imag() << '\t';
+                try {
+                    zinc = boost::math::airy_ai_prime(u)
+                        *(boost::math::airy_ai_prime(u)
+                            -j*boost::math::airy_bi_prime(u))
+                        +u*boost::math::airy_ai(u)
+                        *(boost::math::airy_ai(u)
+                            -j*boost::math::airy_bi(u));
+                } catch (...) {
+                    p=maxp+1;
+                    zinc=0;
+                }
                 Z += zinc;
             }
-            Z *= 16.0*Z*b*h/r_bend
-               *std::pow(M_PI,3)*std::pow(2,1./3.)/physcons::c;
-            zdbg << Z.real() << '\t' << Z.imag() << std::endl;
+            Z *= 4.0*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
             _data.push_back(impedance_t(Z));
         }
     }

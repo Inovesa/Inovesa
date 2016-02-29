@@ -64,7 +64,7 @@ namespace physcons
 constexpr double c=2.99792458e8;
 
 /// Vacuum permittivity (in F/m)
-constexpr double epsolon0 = 8.854187817e-12;
+constexpr double epsilon0 = 8.854187817e-12;
 
 /// charge of one electron (in C)
 constexpr double e=1.602e-19;
