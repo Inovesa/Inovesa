@@ -27,26 +27,28 @@ namespace vfps
 
 /**
  * @brief The KickMap class allows to apply position dependent forces
- *
- * @todo change to use 1D HeritageMap
  */
 class KickMap : public HeritageMap
 {
 public:
+    enum class DirectionOfKick : bool {
+        x=0, y=1
+    };
+
+public:
     KickMap(PhaseSpace* in, PhaseSpace* out,
             const meshindex_t xsize, const meshindex_t ysize,
-            const InterpolationType it);
+            const InterpolationType it,
+            const DirectionOfKick kd=DirectionOfKick::y);
 
     ~KickMap();
 
 public:
     const inline meshaxis_t* getForce() const
-        { return _force.data(); }
+        { return _offset.data(); }
 
 public:
     void apply();
-
-    void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);
 
     #ifdef INOVESA_USE_CL
     void syncCLMem(clCopyDirection dir);
@@ -54,15 +56,28 @@ public:
 
 protected:
     /**
-     * @brief _force in units of mesh points
+     * @brief _offset by one kick in units of mesh points
      */
-    std::vector<meshaxis_t> _force;
+    std::vector<meshaxis_t> _offset;
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _force_buf;
     #endif
 
-    const meshindex_t _meshysize;
+    /**
+     * @brief _kickdirection direction of the offset du to the kick
+     */
+    const DirectionOfKick _kickdirection;
+
+    /**
+     * @brief _meshsize_kd size of the mesh in direction of the kick
+     */
+    const meshindex_t _meshsize_kd;
+
+    /**
+     * @brief _meshsize_pd size of the mesh perpendicular to the kick
+     */
+    const meshindex_t _meshsize_pd;
 
     /**
      * @brief updateHM

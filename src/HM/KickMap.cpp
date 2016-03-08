@@ -21,13 +21,16 @@
 
 vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    const InterpolationType it) :
-    HeritageMap(in,out,xsize,1,it,it),
-    _meshysize(ysize)
+                    const InterpolationType it, const DirectionOfKick kd) :
+    HeritageMap(in,out,kd==DirectionOfKick::x?1:xsize,
+                       kd==DirectionOfKick::x?ysize:1,it,it),
+    _kickdirection(kd),
+    _meshsize_kd(kd==DirectionOfKick::x?xsize:ysize),
+    _meshsize_pd(kd==DirectionOfKick::x?ysize:xsize)
 {
-    _force.resize(xsize,meshaxis_t(0));
+    _offset.resize(_meshsize_pd,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
-    for (meshindex_t q_i=0; q_i<xsize; q_i++) {
+    for (meshindex_t q_i=0; q_i<_meshsize_pd; q_i++) {
         _hinfo[q_i*_ip].index = _meshysize/2;
         _hinfo[q_i*_ip].weight = 1;
         for (unsigned int j1=1; j1<_it; j1++) {
@@ -39,9 +42,9 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         _force_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
-                                sizeof(meshaxis_t)*_xsize);
+                                sizeof(meshaxis_t)*_meshsize_pd);
         _cl_code += R"(
-        __kernel void apply_Kick( const __global data_t* src,
+        __kernel void apply_yKick( const __global data_t* src,
                                   const __global data_t* dy,
                                   const uint ysize,
                                   __global data_t* dst)
@@ -74,10 +77,10 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         )";
         _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-        applyHM = cl::Kernel(_cl_prog, "apply_Kick");
+        applyHM = cl::Kernel(_cl_prog, "apply_yKick");
         applyHM.setArg(0, _in->data_buf);
         applyHM.setArg(1, _force_buf);
-        applyHM.setArg(2, _meshysize);
+        applyHM.setArg(2, _meshsize_kd);
         applyHM.setArg(3, _out->data_buf);
     }
     #endif // INOVESA_USE_CL
@@ -97,7 +100,7 @@ void vfps::KickMap::apply()
         OCLH::queue.enqueueNDRangeKernel (
                     applyHM,
                     cl::NullRange,
-                    cl::NDRange(_xsize));
+                    cl::NDRange(_meshsize_pd));
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2
@@ -114,36 +117,21 @@ void vfps::KickMap::apply()
 
 
     for (meshindex_t x=0; x< _xsize; x++) {
-        const meshindex_t offs = x*_meshysize;
-        for (meshindex_t y=0; y< _meshysize; y++) {
+        const meshindex_t offs = x*_meshsize_kd;
+        for (meshindex_t y=0; y< _meshsize_kd; y++) {
             data_out[offs+y] = 0;
             for (uint_fast8_t j=0; j<_ip; j++) {
                 hi h = _hinfo[x*_ip+j];
                 // the min makes sure not to have out of bounds accesses
                 // casting is to be sure about overflow behaviour
-                data_out[offs+y] += data_in[offs+std::min(_meshysize-1,
+                data_out[offs+y] += data_in[offs+std::min(_meshsize_kd-1,
                         static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
-                      - static_cast<int32_t>(_meshysize/2)))]
+                      - static_cast<int32_t>(_meshsize_kd/2)))]
                       * static_cast<meshdata_t>(h.weight);
             }
         }
     }
     }
-}
-
-void vfps::KickMap::laser(meshaxis_t amplitude,
-                          meshaxis_t pulselen,
-                          meshaxis_t wavelen)
-{
-    amplitude = amplitude*meshaxis_t(_meshysize/2)/_in->getMax(1);
-    meshaxis_t sinarg = meshaxis_t(2*M_PI)/(wavelen*meshaxis_t(_xsize)/_in->getMax(0));
-    pulselen = pulselen*meshaxis_t(_xsize)/_in->getMax(0)/meshaxis_t(2.35);
-    for(meshindex_t x=0; x<_xsize; x++) {
-        _force[x] =meshaxis_t(std::exp(-std::pow(-(int(x)-int(_xsize/2)),2)))
-                             /(meshaxis_t(2)*pulselen*pulselen)
-                *amplitude*meshaxis_t(std::sin(double(sinarg)*x));
-    }
-    updateHM();
 }
 
 #ifdef INOVESA_USE_CL
@@ -152,13 +140,13 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
     switch (dir) {
     case clCopyDirection::cpu2dev:
         OCLH::queue.enqueueWriteBuffer(_force_buf,CL_TRUE,0,
-                                      sizeof(meshaxis_t)*_xsize,
-                                      _force.data());
+                                      sizeof(meshaxis_t)*_meshsize_pd,
+                                      _offset.data());
         break;
     case clCopyDirection::dev2cpu:
         OCLH::queue.enqueueReadBuffer(_force_buf,CL_TRUE,0,
-                                      sizeof(meshaxis_t)*_xsize,
-                                      _force.data());
+                                      sizeof(meshaxis_t)*_meshsize_pd,
+                                      _offset.data());
         break;
     }
 }
@@ -176,9 +164,9 @@ void vfps::KickMap::updateHM()
     // arrays of interpolation coefficients
     interpol_t* hmc = new interpol_t[_it];
 
-    // translate force into HM
+    // translate offset into HM
     for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-        meshaxis_t poffs = _meshysize/2+_force[q_i];
+        meshaxis_t poffs = _meshsize_kd/2+_offset[q_i];
         meshaxis_t qp_int;
         //Scaled arguments of interpolation functions:
         meshindex_t jd; //numper of lower mesh point from p'
@@ -186,7 +174,7 @@ void vfps::KickMap::updateHM()
         xip = std::modf(poffs, &qp_int);
         jd = qp_int;
 
-        if (jd < _meshysize) {
+        if (jd < _meshsize_kd) {
             // create vectors containing interpolation coefficiants
             calcCoefficiants(hmc,xip,_it);
 
@@ -196,18 +184,18 @@ void vfps::KickMap::updateHM()
             // write heritage map
             for (unsigned int j1=0; j1<_it; j1++) {
                 unsigned int j0 = jd+j1-(_it-1)/2;
-                if(j0 < _meshysize ) {
+                if(j0 < _meshsize_kd ) {
                     ph[j1].index = j0;
                     ph[j1].weight = hmc[j1];
                 } else {
-                    ph[j1].index = _meshysize/2;
+                    ph[j1].index = _meshsize_kd/2;
                     ph[j1].weight = 0;
                 }
                 _hinfo[q_i*_ip+j1] = ph[j1];
             }
         } else {
             for (unsigned int j1=0; j1<_it; j1++) {
-                ph[j1].index = _meshysize/2;
+                ph[j1].index = _meshsize_kd/2;
                 ph[j1].weight = 0;
                 _hinfo[q_i*_ip+j1] = ph[j1];
             }

@@ -10,7 +10,7 @@ vfps::RFKickMap::RFKickMap(vfps::PhaseSpace *in, vfps::PhaseSpace *out,
       KickMap(in,out,xsize,ysize,it)
 {
     for(meshindex_t x=0; x<_xsize; x++) {
-        _force[x] = std::tan(angle)*(int(x)-int(_xsize/2));
+        _offset[x] = std::tan(angle)*(int(x)-int(_xsize/2));
     }
     updateHM();
 }

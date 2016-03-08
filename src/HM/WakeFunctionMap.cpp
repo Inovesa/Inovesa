@@ -71,9 +71,9 @@ void vfps::WakeFunctionMap::update()
     integral_t charge = _in->integral();
     const integral_t* density = _in->getProjection(0);
     for (unsigned int i=0;i<_xsize;i++) {
-        _force[i] = 0;
+        _offset[i] = 0;
         for (unsigned int j=0;j<_xsize;j++) {
-            _force[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
+            _offset[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
         }
     }
 }
