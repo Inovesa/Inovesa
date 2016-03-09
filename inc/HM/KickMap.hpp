@@ -72,12 +72,20 @@ protected:
     /**
      * @brief _meshsize_kd size of the mesh in direction of the kick
      */
+    #ifdef INOVESA_USE_CL
+    const cl_int _meshsize_kd;
+    #else
     const meshindex_t _meshsize_kd;
+    #endif
 
     /**
      * @brief _meshsize_pd size of the mesh perpendicular to the kick
      */
-    const meshindex_t _meshsize_pd;
+    #ifdef INOVESA_USE_CL
+    const cl_int _meshsize_pd;
+    #else
+    const meshindex_t _meshsize_kd;
+    #endif
 
     /**
      * @brief updateHM
