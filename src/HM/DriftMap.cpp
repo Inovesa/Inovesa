@@ -1,4 +1,6 @@
-#include "inc/HM/DriftMap.hpp"
+#include "HM/DriftMap.hpp"
+
+#include <iostream>
 
 vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
 						 const meshindex_t xsize,

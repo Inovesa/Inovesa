@@ -39,7 +39,9 @@
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
 #include "HM/KickMap.hpp"
+#include "HM/DriftMap.hpp"
 #include "HM/RotationMap.hpp"
+#include "HM/RFKickMap.hpp"
 #include "HM/WakeFunctionMap.hpp"
 #include "HM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
@@ -168,7 +170,7 @@ int main(int argc, char** argv)
     bool interpol_bound = opts.getInterpolationBound();
     bool verbose = opts.getVerbosity();
 
-    PhaseSpace* mesh;
+    PhaseSpace* mesh1;
     meshindex_t ps_size = opts.getMeshSize();
     const double qmax = opts.getPhaseSpaceSize();
     const double qmin = -qmax;
@@ -234,7 +236,7 @@ int main(int argc, char** argv)
         sstream << Fk;
         Display::printText("Generating initial distribution with F(k)="
                            +sstream.str()+".");
-        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -258,14 +260,14 @@ int main(int argc, char** argv)
         if (image.get_width() == image.get_height()) {
             ps_size = image.get_width();
 
-            mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
 
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
-                    (*mesh)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+                    (*mesh1)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
                 }
             }
-            mesh->syncCLMem(clCopyDirection::cpu2dev);
+            mesh1->syncCLMem(clCopyDirection::cpu2dev);
             std::stringstream imgsize;
             imgsize << ps_size;
             Display::printText("Read phase space (a="+imgsize.str()+" px).");
@@ -279,7 +281,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_PNG
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
-        mesh = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
 
         std::ifstream ifs;
         ifs.open(startdistfile);
@@ -302,11 +304,11 @@ int main(int argc, char** argv)
             meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
             meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
             if (x < ps_size && y < ps_size) {
-                (*mesh)[x][y] += 1.0/line_count;
+                (*mesh1)[x][y] += 1.0/line_count;
             }
         }
         ifs.close();
-        mesh->syncCLMem(clCopyDirection::cpu2dev);
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else {
         Display::printText("Unknown format of input file. Will now quit.");
         return EXIT_SUCCESS;
@@ -314,13 +316,13 @@ int main(int argc, char** argv)
     }
 
     // normalize integral to 1
-    mesh->normalize();
+    mesh1->normalize();
 
     // find highest peak (for display)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
     for (unsigned int x=0; x<ps_size; x++) {
         for (unsigned int y=0; y<ps_size; y++) {
-            maxval = std::max(maxval,(*mesh)[x][y]);
+            maxval = std::max(maxval,(*mesh1)[x][y]);
         }
     }
 
@@ -359,8 +361,7 @@ int main(int argc, char** argv)
         }
     }
 
-    PhaseSpace* mesh_rotated = new PhaseSpace(*mesh);
-    PhaseSpace* mesh_damdiff = new PhaseSpace(*mesh);
+    PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
 
     /* CPU usually have plenty of memory,
      * so the default is to use a prebuilt RotationMap on CPU.
@@ -393,10 +394,10 @@ int main(int argc, char** argv)
         break;
     }
     Display::printText(rotmapstring);
-    RotationMap* rm = new RotationMap(mesh,mesh_rotated,ps_size,ps_size,angle,
-                         interpolationtype,
-                         RotationMap::RotationCoordinates::norm_pm1,
-                         interpol_bound,rotmapsize);
+    RFKickMap* rfm = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
+                                   interpolationtype);
+    DriftMap* drm = new DriftMap(mesh2,mesh1,ps_size,ps_size,angle,
+                                 interpolationtype);
 
     double e0;
     if (t_d > 0) {
@@ -408,11 +409,11 @@ int main(int argc, char** argv)
     HeritageMap* fpm;
     if (e0 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( mesh_rotated,mesh_damdiff,ps_size,ps_size,
+        fpm = new FokkerPlanckMap( mesh1,mesh2,ps_size,ps_size,
                                    FokkerPlanckMap::FPType::full,e0,
                                    derivationtype);
     } else {
-        fpm = new Identity(mesh_rotated,mesh_damdiff,ps_size,ps_size);
+        fpm = new Identity(mesh1,mesh2,ps_size,ps_size);
     }
 
     ElectricField* field = nullptr;
@@ -421,7 +422,7 @@ int main(int argc, char** argv)
     std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
-        field = new ElectricField(mesh,impedance);
+        field = new ElectricField(mesh2,impedance);
         Display::printText("Reading WakeFunction from "+wakefile+".");
         std::ifstream ifs;
         ifs.open(wakefile);
@@ -433,14 +434,14 @@ int main(int argc, char** argv)
         }
         ifs.close();
         Display::printText("Building WakeFunctionMap.");
-        wfm = new WakeFunctionMap(mesh_damdiff,mesh,ps_size,ps_size,
+        wfm = new WakeFunctionMap(mesh2,mesh1,ps_size,ps_size,
                                   wake,interpolationtype);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh,impedance,Ib,E0,sE,dt);
+        field = new ElectricField(mesh2,impedance,Ib,E0,sE,dt);
         Display::printText("Building WakeKickMap.");
-        wkm = new WakePotentialMap(mesh_damdiff,mesh,ps_size,ps_size,field,
+        wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
                                    interpolationtype);
     }
 
@@ -451,7 +452,7 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh,field,impedance,wfm,Ib);
+        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib);
         Display::printText("Will save results to: \""+ofname+'\"');
     } else
     #endif // INOVESA_USE_HDF5
@@ -461,7 +462,7 @@ int main(int argc, char** argv)
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        mesh->syncCLMem(clCopyDirection::cpu2dev);
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_CL
     #ifdef INOVESA_USE_GUI
@@ -508,17 +509,17 @@ int main(int argc, char** argv)
         if (i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
-                mesh->syncCLMem(clCopyDirection::dev2cpu);
+                mesh1->syncCLMem(clCopyDirection::dev2cpu);
                 wkm->syncCLMem(clCopyDirection::dev2cpu);
             }
             #endif // INOVESA_USE_CL
-            mesh->normalize();
+            mesh1->normalize();
             #ifdef INOVESA_USE_HDF5
             if (file != nullptr) {
                 file->timeStep(i*dt);
-                mesh->variance(0);
-                mesh->variance(1);
-                file->append(mesh);
+                mesh1->variance(0);
+                mesh1->variance(1);
+                file->append(mesh1);
                 field->updateCSR(fc);
                 file->append(field);
                 file->append(wkm);
@@ -527,14 +528,14 @@ int main(int argc, char** argv)
             #ifdef INOVESA_USE_GUI
             if (gui) {
                 if (psv != nullptr) {
-                    psv->createTexture(mesh);
+                    psv->createTexture(mesh1);
                 }
                 if (bpv != nullptr) {
-                    bpv->updateLine(mesh->nMeshCells(0),
-                                    mesh->getProjection(0));
+                    bpv->updateLine(mesh1->nMeshCells(0),
+                                    mesh1->getProjection(0));
                 }
                 if (wpv != nullptr) {
-                    wpv->updateLine(mesh->nMeshCells(0),
+                    wpv->updateLine(mesh1->nMeshCells(0),
                                     wkm->getForce());
                 }
                 display->draw();
@@ -547,10 +548,11 @@ int main(int argc, char** argv)
             status.precision(3);
             status << std::setw(4) << static_cast<float>(i)/steps
                    << '/' << rotations;
-            status << "\t1-Q/Q_0=" << 1.0 - mesh->getIntegral();
+            status << "\t1-Q/Q_0=" << 1.0 - mesh1->getIntegral();
             Display::printText(status.str(),2.0f);
         }
-        rm->apply();
+        rfm->apply();
+        drm->apply();
         fpm->apply();
         wkm->apply();
     }
@@ -559,8 +561,8 @@ int main(int argc, char** argv)
     // save final result
     if (file != nullptr) {
         file->timeStep(dt*steps*rotations);
-        mesh->integral();
-        file->append(mesh);
+        mesh1->integral();
+        file->append(mesh1);
         field->updateCSR(fc);
         file->append(field);
         file->append(wkm);
@@ -570,7 +572,7 @@ int main(int argc, char** argv)
     std::stringstream status;
     status.precision(3);
     status << std::setw(4) << rotations << '/' << rotations;
-    status << "\t1-Q/Q_0=" << 1.0 - mesh->integral();
+    status << "\t1-Q/Q_0=" << 1.0 - mesh1->integral();
     Display::printText(status.str());
 
     #ifdef INOVESA_USE_CL
@@ -584,14 +586,14 @@ int main(int argc, char** argv)
     delete psv;
     #endif
 
-    delete mesh;
-    delete mesh_rotated;
-    delete mesh_damdiff;
+    delete mesh1;
+    delete mesh2;
 
     delete field;
     delete impedance;
 
-    delete rm;
+    delete rfm;
+    delete drm;
     delete wkm;
     delete fpm;
 
