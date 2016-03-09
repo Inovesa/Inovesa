@@ -124,7 +124,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Size of phase space (maximum sigma_{p/q})")
         ("ForceRotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
             "Size of rotation map\n"
-            "-1: use default for device\n"
+            "-1: on-axis displacements\n"
             " 0: none\n"
             " 1: full\n"
             " 2: half")

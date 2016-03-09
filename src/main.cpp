@@ -363,41 +363,42 @@ int main(int argc, char** argv)
 
     PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
 
-    /* CPU usually have plenty of memory,
-     * so the default is to use a prebuilt RotationMap on CPU.
-     * However, other CL devices (like GPU) might have limited RAM,
-     * or compute faster than load the information from memory,
-     * so we will default to not use a prebuilt RotationMap with them.
-     */
+    HeritageMap* rm1;
+    HeritageMap* rm2;
     int rotmaptype = opts.getRotationMapSize();
     if (rotmaptype < 0) {
-        #ifdef INOVESA_USE_CL
-        if (OCLH::active && OCLH::devicetype != CL_DEVICE_TYPE_CPU ) {
-            rotmaptype = 0;
-        } else
-        #endif
-        {
-            rotmaptype = 2;
+        if (interpol_bound) {
+            Display::printText("Bound interpolation only "
+                               "implemented for RotationMap.");
         }
+        Display::printText("Building RFKickMap.");
+        rm1 = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
+                            interpolationtype);
+
+        Display::printText("Building DriftMap.");
+        rm2 = new DriftMap(mesh2,mesh1,ps_size,ps_size,angle,
+                           interpolationtype);
+    } else {
+        size_t rotmapsize;
+        std::string rotmapstring;
+        switch (rotmaptype) {
+        case 0:
+            rotmapsize = 0;
+            rotmapstring = "Initializing RotationMap.";
+            break;
+        default:
+            rotmaptype = std::min(rotmaptype,2); // force to be 1 or 2
+            rotmapsize = ps_size*ps_size/rotmaptype;
+            rotmapstring = "Building RotationMap.";
+            break;
+        }
+        Display::printText(rotmapstring);
+        rm1 = new RotationMap(mesh1,mesh2,ps_size,ps_size,angle,
+                             HeritageMap::InterpolationType::cubic,
+                             RotationMap::RotationCoordinates::norm_pm1,
+                             interpol_bound,rotmapsize);
+        rm2 = new Identity(mesh2,mesh1,ps_size,ps_size);
     }
-    size_t rotmapsize;
-    std::string rotmapstring;
-    switch (rotmaptype) {
-    case 0:
-        rotmapsize = 0;
-        rotmapstring = "Initializing RotationMap.";
-        break;
-    default:
-        rotmaptype = std::min(rotmaptype,2); // force to be 1 or 2
-        rotmapsize = ps_size*ps_size/rotmaptype;
-        rotmapstring = "Building RotationMap.";
-        break;
-    }
-    Display::printText(rotmapstring);
-    RFKickMap* rfm = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
-                                   interpolationtype);
-    DriftMap* drm = new DriftMap(mesh2,mesh1,ps_size,ps_size,angle,
-                                 interpolationtype);
 
     double e0;
     if (t_d > 0) {
@@ -551,8 +552,8 @@ int main(int argc, char** argv)
             status << "\t1-Q/Q_0=" << 1.0 - mesh1->getIntegral();
             Display::printText(status.str(),2.0f);
         }
-        rfm->apply();
-        drm->apply();
+        rm1->apply();
+        rm2->apply();
         fpm->apply();
         wkm->apply();
     }
@@ -592,8 +593,8 @@ int main(int argc, char** argv)
     delete field;
     delete impedance;
 
-    delete rfm;
-    delete drm;
+    delete rm1;
+    delete rm2;
     delete wkm;
     delete fpm;
 
