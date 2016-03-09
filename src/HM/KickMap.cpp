@@ -43,14 +43,45 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     if (OCLH::active) {
         _force_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
+
         _cl_code += R"(
-        __kernel void apply_yKick( const __global data_t* src,
+        __kernel void apply_xKick(const __global data_t* src,
+                                  const __global data_t* dx,
+                                  const uint meshsize,
+                                  __global data_t* dst)
+        {
+            const int y = get_global_id(0);
+            const int dxi = floor(dx[y]);
+            const data_t dxf = dx[y] - dxi;
+            int x=0;
+            while (x-1+dxi<0) {
+                dst[x*meshsize+y]  = 0;
+                x++;
+            }
+            while (x+2+dxi<meshsize && x < meshsize) {
+                dst[x*meshsize+y] = mult(src[(x+dxi-1)*meshsize+y],
+                                        (dxf  )*(dxf-1)*(dxf-2)/(-6))
+                                  + mult(src[x   +dxi*meshsize+y],
+                                        (dxf+1)*(dxf-1)*(dxf-2)/( 2))
+                                  + mult(src[(x+1+dxi)*meshsize+y],
+                                        (dxf+1)*(dxf  )*(dxf-2)/(-2))
+                                  + mult(src[(x+2+dxi)*meshsize+y],
+                                        (dxf+1)*(dxf  )*(dxf-1)/( 6));
+                x++;
+            }
+            while (x < meshsize) {
+                dst[x*meshsize+y]  = 0;
+                x++;
+            }
+        }
+
+        __kernel void apply_yKick(const __global data_t* src,
                                   const __global data_t* dy,
-                                  const uint ysize,
+                                  const uint meshsize,
                                   __global data_t* dst)
         {
             const int x = get_global_id(0);
-            const int meshoffs = x*ysize;
+            const int meshoffs = x*meshsize;
             const int dyi = floor(dy[x]);
             const data_t dyf = dy[x] - dyi;
             int y=0;
@@ -58,7 +89,7 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                 dst[meshoffs+y]  = 0;
                 y++;
             }
-            while (y+2+dyi<ysize && y < ysize) {
+            while (y+2+dyi<meshsize && y < meshsize) {
                 dst[meshoffs+y] = mult(src[meshoffs+y-1+dyi],
                                       (dyf  )*(dyf-1)*(dyf-2)/(-6))
                                 + mult(src[meshoffs+y  +dyi],
@@ -69,7 +100,7 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                                       (dyf+1)*(dyf  )*(dyf-1)/( 6));
                 y++;
             }
-            while (y < ysize) {
+            while (y < meshsize) {
                 dst[meshoffs+y]  = 0;
                 y++;
             }
@@ -77,7 +108,11 @@ vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         )";
         _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-        applyHM = cl::Kernel(_cl_prog, "apply_yKick");
+        if (_kickdirection == DirectionOfKick::x) {
+            applyHM = cl::Kernel(_cl_prog, "apply_xKick");
+        } else {
+            applyHM = cl::Kernel(_cl_prog, "apply_yKick");
+        }
         applyHM.setArg(0, _in->data_buf);
         applyHM.setArg(1, _force_buf);
         applyHM.setArg(2, _meshsize_kd);
@@ -115,19 +150,36 @@ void vfps::KickMap::apply()
     meshdata_t* data_in = _in->getData();
     meshdata_t* data_out = _out->getData();
 
-
-    for (meshindex_t x=0; x< _xsize; x++) {
-        const meshindex_t offs = x*_meshsize_kd;
-        for (meshindex_t y=0; y< _meshsize_kd; y++) {
-            data_out[offs+y] = 0;
-            for (uint_fast8_t j=0; j<_ip; j++) {
-                hi h = _hinfo[x*_ip+j];
-                // the min makes sure not to have out of bounds accesses
-                // casting is to be sure about overflow behaviour
-                data_out[offs+y] += data_in[offs+std::min(_meshsize_kd-1,
+    if (_kickdirection == DirectionOfKick::x) {
+        for (meshindex_t x=0; x< _meshsize_kd; x++) {
+            for (meshindex_t y=0; y< _meshsize_pd; y++) {
+                data_out[x*_meshsize_pd+y] = 0;
+                for (uint_fast8_t j=0; j<_ip; j++) {
+                    hi h = _hinfo[y*_ip+j];
+                    // the min makes sure not to have out of bounds accesses
+                    // casting is to be sure about overflow behaviour
+                    const meshindex_t xs = std::min(_meshsize_pd-1,
+                         static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
+                                                - static_cast<int32_t>(_meshsize_pd/2)));
+                    data_out[x*_meshsize_kd+y] += data_in[xs*_meshsize_pd+y]
+                          * static_cast<meshdata_t>(h.weight);
+                }
+            }
+        }
+    } else {
+        for (meshindex_t x=0; x< _meshsize_pd; x++) {
+            const meshindex_t offs = x*_meshsize_kd;
+            for (meshindex_t y=0; y< _meshsize_kd; y++) {
+                data_out[offs+y] = 0;
+                for (uint_fast8_t j=0; j<_ip; j++) {
+                    hi h = _hinfo[x*_ip+j];
+                    // the min makes sure not to have out of bounds accesses
+                    // casting is to be sure about overflow behaviour
+                    const meshindex_t ys = std::min(_meshsize_kd-1,
                         static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
-                      - static_cast<int32_t>(_meshsize_kd/2)))]
-                      * static_cast<meshdata_t>(h.weight);
+                                               - static_cast<int32_t>(_meshsize_kd/2)));
+                    data_out[offs+y] += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+                }
             }
         }
     }
@@ -165,8 +217,8 @@ void vfps::KickMap::updateHM()
     interpol_t* hmc = new interpol_t[_it];
 
     // translate offset into HM
-    for (unsigned int q_i=0; q_i< _xsize; q_i++) {
-        meshaxis_t poffs = _meshsize_kd/2+_offset[q_i];
+    for (unsigned int i=0; i< _meshsize_pd; i++) {
+        meshaxis_t poffs = _meshsize_kd/2+_offset[i];
         meshaxis_t qp_int;
         //Scaled arguments of interpolation functions:
         meshindex_t jd; //numper of lower mesh point from p'
@@ -191,13 +243,13 @@ void vfps::KickMap::updateHM()
                     ph[j1].index = _meshsize_kd/2;
                     ph[j1].weight = 0;
                 }
-                _hinfo[q_i*_ip+j1] = ph[j1];
+                _hinfo[i*_ip+j1] = ph[j1];
             }
         } else {
             for (unsigned int j1=0; j1<_it; j1++) {
                 ph[j1].index = _meshsize_kd/2;
                 ph[j1].weight = 0;
-                _hinfo[q_i*_ip+j1] = ph[j1];
+                _hinfo[i*_ip+j1] = ph[j1];
             }
         }
     }

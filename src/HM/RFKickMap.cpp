@@ -1,16 +1,17 @@
 #include "HM/RFKickMap.hpp"
 
 
-vfps::RFKickMap::RFKickMap(vfps::PhaseSpace *in, vfps::PhaseSpace *out,
-                           const vfps::meshindex_t xsize,
-                           const vfps::meshindex_t ysize,
-                           const vfps::meshaxis_t angle,
-                           const vfps::HeritageMap::InterpolationType it)
+vfps::RFKickMap::RFKickMap(PhaseSpace *in, PhaseSpace *out,
+                           const meshindex_t xsize,
+                           const meshindex_t ysize,
+                           const meshaxis_t angle,
+                           const InterpolationType it)
     :
-      KickMap(in,out,xsize,ysize,it)
+      KickMap(in,out,xsize,ysize,it,DirectionOfKick::y)
 {
     for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = std::tan(angle)*(int(x)-int(_xsize/2));
+        _offset[x] = std::tan(angle)*( static_cast<int>(x)
+                                      -static_cast<int>(_xsize/2));
     }
     updateHM();
 }
