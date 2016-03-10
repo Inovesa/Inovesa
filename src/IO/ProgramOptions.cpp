@@ -61,7 +61,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Revolution frequency (Hz)")
         ("SyncFreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
         ("DampingTime,d", po::value<double>(&t_d),"Damping time (s)")
-        ("HarmonicNumber,h", po::value<double>(&H),
+        ("HarmonicNumber,H", po::value<double>(&H),
             "Harmonic Number (1)")
         ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
@@ -122,22 +122,22 @@ vfps::ProgramOptions::ProgramOptions() :
             "Factor for zero padding of bunch profile")
         ("PhaseSpaceSize,P", po::value<double>(&pq_max),
             "Size of phase space (maximum sigma_{p/q})")
-        ("ForceRotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
+        ("RotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
             "Size of rotation map\n"
             "-1: on-axis displacements\n"
             " 0: none\n"
             " 1: full\n"
             " 2: half")
-        ("MeshSize,s", po::value<unsigned int>(&meshsize),
+        ("GridSize,s", po::value<unsigned int>(&meshsize),
             "Number of mesh points per dimension")
         ("rotations,T", po::value<double>(&rotations),
             "Simulated time (in number of synchrotron periods)")
         ("derivation",po::value<unsigned int>(&deriv_type)->default_value(4u),
-            "Number of mesh points to be used to numerically find derivative")
+            "Number of grid points to be used to numerically find derivative")
         ("InterpolationPoints",po::value<unsigned int>(&interpol_type)->default_value(4u),
-            "Number of mesh points to be used to numerically find derivative")
+            "Number of grid points to be used to numerically find derivative")
         ("InterpolateBound",po::value<bool>(&interpol_bound)->default_value(true),
-            "Number of mesh points to be used to numerically find derivative")
+            "Number of grid points to be used to numerically find derivative")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);

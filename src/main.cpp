@@ -329,7 +329,7 @@ int main(int argc, char** argv)
     if (verbose) {
     sstream.str("");
     sstream << std::fixed << maxval*Ib/f0/physcons::e;
-    Display::printText("Maximum particles per mesh cell is "
+    Display::printText("Maximum particles per grid cell is "
                        +sstream.str()+".");
     }
 
