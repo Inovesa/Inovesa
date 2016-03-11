@@ -362,9 +362,10 @@ int main(int argc, char** argv)
     }
 
     PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
+    PhaseSpace* mesh3 = new PhaseSpace(*mesh1);
 
     HeritageMap* rm1;
-    HeritageMap* rm2;
+    HeritageMap* rm2 = nullptr;
     int rotmaptype = opts.getRotationMapSize();
     if (rotmaptype < 0) {
         if (interpol_bound) {
@@ -376,7 +377,7 @@ int main(int argc, char** argv)
                             interpolationtype);
 
         Display::printText("Building DriftMap.");
-        rm2 = new DriftMap(mesh2,mesh1,ps_size,ps_size,angle,
+        rm2 = new DriftMap(mesh2,mesh3,ps_size,ps_size,angle,
                            interpolationtype);
     } else {
         size_t rotmapsize;
@@ -393,11 +394,10 @@ int main(int argc, char** argv)
             break;
         }
         Display::printText(rotmapstring);
-        rm1 = new RotationMap(mesh1,mesh2,ps_size,ps_size,angle,
+        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
                              HeritageMap::InterpolationType::cubic,
                              RotationMap::RotationCoordinates::norm_pm1,
                              interpol_bound,rotmapsize);
-        rm2 = new Identity(mesh2,mesh1,ps_size,ps_size);
     }
 
     double e0;
@@ -410,11 +410,11 @@ int main(int argc, char** argv)
     HeritageMap* fpm;
     if (e0 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( mesh1,mesh2,ps_size,ps_size,
+        fpm = new FokkerPlanckMap( mesh3,mesh2,ps_size,ps_size,
                                    FokkerPlanckMap::FPType::full,e0,
                                    derivationtype);
     } else {
-        fpm = new Identity(mesh1,mesh2,ps_size,ps_size);
+        fpm = new Identity(mesh3,mesh2,ps_size,ps_size);
     }
 
     ElectricField* field = nullptr;
@@ -553,7 +553,9 @@ int main(int argc, char** argv)
             Display::printText(status.str(),2.0f);
         }
         rm1->apply();
-        rm2->apply();
+        if (rm2 != nullptr) {
+          rm2->apply();
+        }
         fpm->apply();
         wkm->apply();
     }
@@ -589,6 +591,7 @@ int main(int argc, char** argv)
 
     delete mesh1;
     delete mesh2;
+    delete mesh3;
 
     delete field;
     delete impedance;
