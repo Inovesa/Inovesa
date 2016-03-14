@@ -197,6 +197,7 @@ int main(int argc, char** argv)
     const float rotations = opts.getNRotations();
     const double t_d = opts.getDampingTime();
     const double dt = 1.0/(fs*steps);
+    const double t_sync = 1.0/fs;
 
     /* angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
@@ -452,13 +453,13 @@ int main(int argc, char** argv)
     if ( isOfFileType(".h5",ofname)) {
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
-        Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib);
-        Display::printText("Will save results to: \""+ofname+'\"');
+        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
+        Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_HDF5
     {
-        Display::printText("Information: Will not save results.");
+        Display::printText("Will not save results.");
     }
 
     #ifdef INOVESA_USE_CL
@@ -517,7 +518,8 @@ int main(int argc, char** argv)
             mesh1->normalize();
             #ifdef INOVESA_USE_HDF5
             if (file != nullptr) {
-                file->timeStep(i*dt);
+                file->timeStep(static_cast<double>(i)
+                               /static_cast<double>(steps));
                 mesh1->variance(0);
                 mesh1->variance(1);
                 file->append(mesh1);
@@ -563,7 +565,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (file != nullptr) {
-        file->timeStep(dt*steps*rotations);
+        file->timeStep(rotations);
         mesh1->integral();
         file->append(mesh1);
         field->updateCSR(fc);

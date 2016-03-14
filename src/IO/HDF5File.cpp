@@ -25,7 +25,8 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const ElectricField* ef,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
-                         const double BunchCurrent) :
+                         const double BunchCurrent,
+                         const double t_sync) :
     file( nullptr ),
     fname( fname ),
     ta_dims( 0 ),
@@ -134,6 +135,9 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     ta_dataset = file->createDataSet("/Info/AxisValues_t",ta_datatype,
                                      *ta_dataspace,ta_prop);
+    const double axtimescale = t_sync;
+    ta_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
 
     // get ready to save BunchCharge
     file->createGroup("BunchCurrent");
