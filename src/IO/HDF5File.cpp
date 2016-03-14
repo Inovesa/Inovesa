@@ -115,7 +115,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     axfreq_dataset = file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
                                          *axfreq_dataspace,axfreq_prop);
     const double axfreqscale = imp->getRuler()->scale();
-    axfreq_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+    axfreq_dataset.createAttribute("Factor4Hertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
     axfreq_dataset.write(imp->getRuler()->data(),axfreq_datatype);
 
@@ -136,7 +136,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     ta_dataset = file->createDataSet("/Info/AxisValues_t",ta_datatype,
                                      *ta_dataspace,ta_prop);
     const double axtimescale = t_sync;
-    ta_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+    ta_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
 
     // get ready to save BunchCharge
