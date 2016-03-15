@@ -197,6 +197,7 @@ int main(int argc, char** argv)
     const float rotations = opts.getNRotations();
     const double t_d = opts.getDampingTime();
     const double dt = 1.0/(fs*steps);
+    const double t_sync = 1.0/fs;
 
     /* angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
@@ -362,9 +363,10 @@ int main(int argc, char** argv)
     }
 
     PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
+    PhaseSpace* mesh3 = new PhaseSpace(*mesh1);
 
     HeritageMap* rm1;
-    HeritageMap* rm2;
+    HeritageMap* rm2 = nullptr;
     int rotmaptype = opts.getRotationMapSize();
     if (rotmaptype < 0) {
         if (interpol_bound) {
@@ -376,7 +378,7 @@ int main(int argc, char** argv)
                             interpolationtype);
 
         Display::printText("Building DriftMap.");
-        rm2 = new DriftMap(mesh2,mesh1,ps_size,ps_size,angle,
+        rm2 = new DriftMap(mesh2,mesh3,ps_size,ps_size,angle,
                            interpolationtype);
     } else {
         size_t rotmapsize;
@@ -393,11 +395,10 @@ int main(int argc, char** argv)
             break;
         }
         Display::printText(rotmapstring);
-        rm1 = new RotationMap(mesh1,mesh2,ps_size,ps_size,angle,
+        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
                              HeritageMap::InterpolationType::cubic,
                              RotationMap::RotationCoordinates::norm_pm1,
                              interpol_bound,rotmapsize);
-        rm2 = new Identity(mesh2,mesh1,ps_size,ps_size);
     }
 
     double e0;
@@ -410,11 +411,11 @@ int main(int argc, char** argv)
     HeritageMap* fpm;
     if (e0 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( mesh1,mesh2,ps_size,ps_size,
+        fpm = new FokkerPlanckMap( mesh3,mesh2,ps_size,ps_size,
                                    FokkerPlanckMap::FPType::full,e0,
                                    derivationtype);
     } else {
-        fpm = new Identity(mesh1,mesh2,ps_size,ps_size);
+        fpm = new Identity(mesh3,mesh2,ps_size,ps_size);
     }
 
     ElectricField* field = nullptr;
@@ -452,13 +453,13 @@ int main(int argc, char** argv)
     if ( isOfFileType(".h5",ofname)) {
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
-        Display::printText("Saved configuiration to: \""+cfgname+'\"');
-        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib);
-        Display::printText("Will save results to: \""+ofname+'\"');
+        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
+        Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_HDF5
     {
-        Display::printText("Information: Will not save results.");
+        Display::printText("Will not save results.");
     }
 
     #ifdef INOVESA_USE_CL
@@ -517,7 +518,8 @@ int main(int argc, char** argv)
             mesh1->normalize();
             #ifdef INOVESA_USE_HDF5
             if (file != nullptr) {
-                file->timeStep(i*dt);
+                file->timeStep(static_cast<double>(i)
+                               /static_cast<double>(steps));
                 mesh1->variance(0);
                 mesh1->variance(1);
                 file->append(mesh1);
@@ -553,7 +555,9 @@ int main(int argc, char** argv)
             Display::printText(status.str(),2.0f);
         }
         rm1->apply();
-        rm2->apply();
+        if (rm2 != nullptr) {
+          rm2->apply();
+        }
         fpm->apply();
         wkm->apply();
     }
@@ -561,7 +565,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (file != nullptr) {
-        file->timeStep(dt*steps*rotations);
+        file->timeStep(rotations);
         mesh1->integral();
         file->append(mesh1);
         field->updateCSR(fc);
@@ -589,6 +593,7 @@ int main(int argc, char** argv)
 
     delete mesh1;
     delete mesh2;
+    delete mesh3;
 
     delete field;
     delete impedance;
