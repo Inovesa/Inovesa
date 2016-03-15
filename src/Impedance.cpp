@@ -52,13 +52,13 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
         constexpr std::complex<double> j(0,1);
         for (size_t i=0; i<_nfreqs; i++) {
             std::complex<double> Z=0;
-            double n = i*delta;
-            double m = n*std::pow(h/r_bend,3./2.);
+            const double n = i*delta;
+            const double m = n*std::pow(h/r_bend,3./2.);
             const uint32_t maxp = 2*m*std::pow(r_bend/h,3./2.)*f_rev*h/physcons::c;
-            double b = std::pow(m,-4./3.);
+            const double b = std::pow(m,-4./3.);
             std::complex<double> zinc=1;
             for (uint32_t p=1; p<=maxp;p+=2) {
-                double u = std::pow(M_PI*p,2)/std::pow(2,2./3.)*b;
+                const double u = std::pow(M_PI*p,2)/std::pow(2,2./3.)*b;
                 try {
                     zinc = boost::math::airy_ai_prime(u)
                         *(boost::math::airy_ai_prime(u)
@@ -72,7 +72,7 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
                 }
                 Z += zinc;
             }
-            Z *= 4.0*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
+            Z *= 4.0*b*n*h_r*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
             _data.push_back(impedance_t(Z));
         }
     }
