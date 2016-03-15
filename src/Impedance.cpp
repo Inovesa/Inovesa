@@ -72,9 +72,10 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
                 }
                 Z += zinc;
             }
-            Z *= 4.0*b*n*h_r*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
+            Z *= 4.0*b*n*h/r_bend*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
             _data.push_back(impedance_t(Z));
         }
+        break;
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

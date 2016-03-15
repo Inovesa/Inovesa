@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_GUI
     bool gui = opts.showPhaseSpace();
     Display* display = nullptr;
-    if (gui) {
+    if (gui && opts.getCLDevice() >= 0) {
         try {
         display = new Display(opts.getOpenGLVersion());
         } catch (std::exception& e) {
