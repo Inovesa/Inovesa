@@ -50,7 +50,8 @@ vfps::Impedance::Impedance(vfps::Impedance::ImpedanceModel model, size_t n,
     case ImpedanceModel::ParallelPlates:
         const double r_bend = physcons::c/(2*M_PI*f_rev);
         constexpr std::complex<double> j(0,1);
-        for (size_t i=0; i<_nfreqs; i++) {
+        _data.push_back(impedance_t(0,0));
+        for (size_t i=1; i<_nfreqs; i++) {
             std::complex<double> Z=0;
             const double n = i*delta;
             const double m = n*std::pow(h/r_bend,3./2.);
