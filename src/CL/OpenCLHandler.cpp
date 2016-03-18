@@ -35,7 +35,7 @@ void OCLH::prepareCLEnvironment(bool glsharing)
     cl::Platform::get(&OCLH::platforms);
 
     std::string available_clversion;
-        std::string needed_clversion = "OpenCL 1.";
+    std::string needed_clversion = "OpenCL 1.";
 
     unsigned int plati = 0;
     std::string cl_plat_vendor;
@@ -106,20 +106,13 @@ cl::Program OCLH::prepareCLProg(std::string code)
         try {
                 p.build(OCLH::devices);
         } catch (cl::Error &e) {
-                e.what();
-        #ifdef DEBUG
-        // in debug builds, CL code and build log should always be displayed
-        }
-        #endif  // DEBUG
-                std::cout	<< "===== OpenCL Code =====\n"
-                                        << code << std::endl;
-                std::cout	<< "===== OpenCL Build Log =====\n"
-                                        << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
-                                        << std::endl;
-        #ifndef DEBUG
-        // in release builds show CL code and build log only when error occured
-        }
-        #endif // DEBUG
+            e.what();
+            std::cout	<< "===== OpenCL Code =====\n"
+                                    << code << std::endl;
+            std::cout	<< "===== OpenCL Build Log =====\n"
+                                    << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
+                                    << std::endl;
+    }
 
 return p;
 }

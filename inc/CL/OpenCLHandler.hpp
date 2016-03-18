@@ -56,7 +56,7 @@ enum class clCopyDirection {
 class OCLH
 {
 public:
-	static void prepareCLEnvironment(bool glsharing);
+    static void prepareCLEnvironment(bool glsharing);
 
 	static void prepareCLDevice(unsigned int device);
 
@@ -81,7 +81,7 @@ public:
 	 */
 	static cl::CommandQueue queue;
 
-	static bool ogl_sharing;
+    static bool ogl_sharing;
 
 private:
 #ifdef INOVESA_USE_CLFFT
