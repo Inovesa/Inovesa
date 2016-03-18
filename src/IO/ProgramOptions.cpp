@@ -54,7 +54,6 @@ vfps::ProgramOptions::ProgramOptions() :
     _proginfoopts.add_options()
         ("help,h", "print help message")
         ("version,V", "print version string")
-        ("verbose,v", "print information more detailed" )
     ;
     _physopts.add_options()
         ("RevolutionFrequency,F", po::value<double>(&f_rev),
@@ -94,6 +93,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "Show phase space view")
         ("ForceOpenGLVersion", po::value<int>(&_glversion),
             "Force OpenGL version")
+        ("verbose,v", po::value<bool>(&_verbose),
+            "print information more detailed")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
@@ -109,6 +110,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Show phase space view")
         ("ForceOpenGLVersion", po::value<int>(&_glversion),
             "Force OpenGL version")
+        ("verbose,v", "print information more detailed" )
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
