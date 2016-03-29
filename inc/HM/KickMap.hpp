@@ -1,6 +1,6 @@
 /******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2015: Patrik Schönfeldt                                 *
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -25,25 +25,74 @@
 namespace vfps
 {
 
+/**
+ * @brief The KickMap class allows to apply position dependent forces
+ */
 class KickMap : public HeritageMap
 {
 public:
-	KickMap(PhaseSpace* in, PhaseSpace* out,
-			const unsigned int xsize, const unsigned int ysize,
-			const InterpolationType it);
-
-	~KickMap();
+    enum class DirectionOfKick : bool {
+        x=0, y=1
+    };
 
 public:
-	void apply();
+    KickMap(PhaseSpace* in, PhaseSpace* out,
+            const meshindex_t xsize, const meshindex_t ysize,
+            const InterpolationType it,
+            const DirectionOfKick kd=DirectionOfKick::y);
 
-	void laser(meshaxis_t amplitude, meshaxis_t pulselen, meshaxis_t wavelen);
+    ~KickMap();
+
+public:
+    const inline meshaxis_t* getForce() const
+        { return _offset.data(); }
+
+public:
+    void apply();
+
+    #ifdef INOVESA_USE_CL
+    void syncCLMem(clCopyDirection dir);
+    #endif // INOVESA_USE_CL
 
 protected:
-	/**
-	 * @brief _force
-	 */
-	meshaxis_t* _force;
+    /**
+     * @brief _offset by one kick in units of mesh points
+     */
+    std::vector<meshaxis_t> _offset;
+
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _force_buf;
+    #endif
+
+    /**
+     * @brief _kickdirection direction of the offset du to the kick
+     */
+    const DirectionOfKick _kickdirection;
+
+    /**
+     * @brief _meshsize_kd size of the mesh in direction of the kick
+     */
+    #ifdef INOVESA_USE_CL
+    const cl_int _meshsize_kd;
+    #else
+    const meshindex_t _meshsize_kd;
+    #endif
+
+    /**
+     * @brief _meshsize_pd size of the mesh perpendicular to the kick
+     */
+    #ifdef INOVESA_USE_CL
+    const cl_int _meshsize_pd;
+    #else
+    const meshindex_t _meshsize_kd;
+    #endif
+
+    /**
+     * @brief updateHM
+     *
+     * @todo use OpenCL
+     */
+    void updateHM();
 };
 
 }

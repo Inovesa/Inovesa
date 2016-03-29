@@ -1,41 +1,37 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #include "HM/FokkerPlanckMap.hpp"
 
 vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 									   const meshindex_t xsize,
 									   const meshindex_t ysize,
-									   FPType fpt, double e1,
+									   FPType fpt, timeaxis_t e1,
 									   DerivationType dt)
 	:
-	#if DERIVATION_TYPE == 1 // have to use type 2 for second derivative
-	  HeritageMap(in, out, 1, ysize, 3,3),
-	#else
-	  HeritageMap(in, out, 1, ysize, dt, dt),
-	#endif
-	  _meshxsize(xsize)
+    HeritageMap(in, out, 1, ysize, dt, dt),
+    _meshxsize(xsize)
 {
 	// the following doubles should be interpol_t
-	const double e1_2d = e1/(2.*in->getDelta(1));
-	const double e1_6d = e1/(6.*static_cast<double>(in->getDelta(1)));
-	const double e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
+	const interpol_t e1_2d = e1/(interpol_t(2)*in->getDelta(1));
+	const interpol_t e1_6d = e1/(interpol_t(6)*in->getDelta(1));
+	const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
 
 	switch (dt) {
 	case DerivationType::two_sided:
@@ -49,15 +45,15 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 				_hinfo[j*_ip+2]={j+1,0};
 
 				if (fpt == FPType::full || fpt == FPType::damping_only) {
-					const double pos = in->x(1,j);
+					const meshaxis_t pos = in->x(1,j);
 					_hinfo[j*_ip  ].weight += -e1_2d*pos;
 					_hinfo[j*_ip+1].weight +=  e1;
-					_hinfo[j*_ip+2].weight += +e1_2d*pos;
+					_hinfo[j*_ip+2].weight +=  e1_2d*pos;
 				}
 				if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-					_hinfo[j*_ip  ].weight +=    e1_d2;
-					_hinfo[j*_ip+1].weight += -2*e1_d2;
-					_hinfo[j*_ip+2].weight +=    e1_d2;
+					_hinfo[j*_ip  ].weight +=				 e1_d2;
+					_hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
+					_hinfo[j*_ip+2].weight +=				 e1_d2;
 				}
 			}
 			_hinfo[(_ysize-1)*_ip+0] = {0,0};
@@ -75,40 +71,40 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 		_hinfo[_ip+2] = {0,0};
 		_hinfo[_ip+3] = {0,0};
 		for (meshindex_t j=2; j< _ysize/2; j++) {
-			const double pos = in->x(1,j);
+			const meshaxis_t pos = in->x(1,j);
 			_hinfo[j*_ip  ]={j-2,0};
 			_hinfo[j*_ip+1]={j-1,0};
 			_hinfo[j*_ip+2]={j  ,1};
 			_hinfo[j*_ip+3]={j+1,0};
 			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				_hinfo[j*_ip  ].weight +=    e1_6d*( 1.)*pos;
-				_hinfo[j*_ip+1].weight +=    e1_6d*(-6.)*pos;
-				_hinfo[j*_ip+2].weight += e1+e1_6d*( 3.)*pos;
-				_hinfo[j*_ip+3].weight +=    e1_6d*( 2.)*pos;
+				_hinfo[j*_ip  ].weight +=    e1_6d*interpol_t( 1)*pos;
+				_hinfo[j*_ip+1].weight +=    e1_6d*interpol_t(-6)*pos;
+				_hinfo[j*_ip+2].weight += e1+e1_6d*interpol_t( 3)*pos;
+				_hinfo[j*_ip+3].weight +=    e1_6d*interpol_t( 2)*pos;
 			}
 			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
 				_hinfo[j*_ip+1].weight +=    e1_d2;
-				_hinfo[j*_ip+2].weight += -2*e1_d2;
+				_hinfo[j*_ip+2].weight += interpol_t(-2)*e1_d2;
 				_hinfo[j*_ip+3].weight +=    e1_d2;
 			}
 		}
 		for (meshindex_t j=_ysize/2; j<static_cast<meshindex_t>(_ysize-2);j++) {
-			const double pos = in->x(1,j);
+			const meshaxis_t pos = in->x(1,j);
 			_hinfo[j*_ip  ]={j-1,0};
 			_hinfo[j*_ip+1]={j  ,1};
 			_hinfo[j*_ip+2]={j+1,0};
 			_hinfo[j*_ip+3]={j+2,0};
 
 			if (fpt == FPType::full || fpt == FPType::damping_only) {
-				_hinfo[j*_ip  ].weight +=    e1_6d*(-2.)*pos;
-				_hinfo[j*_ip+1].weight += e1+e1_6d*(-3.)*pos;
-				_hinfo[j*_ip+2].weight +=    e1_6d*( 6.)*pos;
-				_hinfo[j*_ip+3].weight +=    e1_6d*(-1.)*pos;
+				_hinfo[j*_ip  ].weight +=    e1_6d*interpol_t(-2)*pos;
+				_hinfo[j*_ip+1].weight += e1+e1_6d*interpol_t(-3)*pos;
+				_hinfo[j*_ip+2].weight +=    e1_6d*interpol_t( 6)*pos;
+				_hinfo[j*_ip+3].weight +=    e1_6d*interpol_t(-1)*pos;
 			}
 			if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-				_hinfo[j*_ip  ].weight +=    e1_d2;
-				_hinfo[j*_ip+1].weight += -2*e1_d2;
-				_hinfo[j*_ip+2].weight +=    e1_d2;
+				_hinfo[j*_ip  ].weight +=				 e1_d2;
+				_hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
+				_hinfo[j*_ip+2].weight +=				 e1_d2;
 			}
 		}
 		_hinfo[(_ysize-2)*_ip  ] = {0,0};
@@ -123,7 +119,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	}
 
 	#ifdef INOVESA_USE_CL
-
+	if (OCLH::active) {
 	_cl_code += R"(
 	__kernel void applyHM_Y(const __global data_t* src,
 							const __global hi* hm,
@@ -159,7 +155,8 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 		applyHM.setArg(3, _ysize);
 		applyHM.setArg(4, _out->data_buf);
 	}
-#endif
+	}
+	#endif
 }
 
 void vfps::FokkerPlanckMap::apply()
@@ -167,7 +164,7 @@ void vfps::FokkerPlanckMap::apply()
 	#ifdef INOVESA_USE_CL
 	if (OCLH::active) {
 		#ifdef INOVESA_SYNC_CL
-		_in->syncCLMem(PhaseSpace::clCopyDirection::cpu2dev);
+		_in->syncCLMem(clCopyDirection::cpu2dev);
 		#endif // INOVESA_SYNC_CL
 		OCLH::queue.enqueueNDRangeKernel (
 					applyHM,
@@ -179,7 +176,7 @@ void vfps::FokkerPlanckMap::apply()
 		OCLH::queue.enqueueBarrier();
 		#endif // CL_VERSION_1_2
 		#ifdef INOVESA_SYNC_CL
-		_out->syncCLMem(PhaseSpace::clCopyDirection::dev2cpu);
+		_out->syncCLMem(clCopyDirection::dev2cpu);
 		#endif // INOVESA_SYNC_CL
 	} else
 	#endif // INOVESA_USE_CL

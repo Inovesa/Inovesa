@@ -1,21 +1,21 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #ifndef PHASESPACE_HPP
 #define PHASESPACE_HPP
@@ -26,14 +26,18 @@
 #include <cmath>
 #include <fstream>
 #include <GL/glew.h>
+#ifndef __APPLE__
 #include <GL/gl.h>
+#else // non-Apple
+#include <OpenGL/gl.h>
+#endif // non-Apple
 #include <list>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
 
 namespace vfps {
-	class PhaseSpace; // forward declaration
+        class PhaseSpace; // forward declaration
 }
 
 #include "CL/OpenCLHandler.hpp"
@@ -46,17 +50,34 @@ namespace vfps
 class PhaseSpace
 {
 public:
-	PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis);
+    enum class IntegralType : uint_fast8_t {
+        sum,simpson
+    };
 
-	PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2);
+public:
+    /**
+     * @brief PhaseSpace
+     * @param axis
+     * @param Fk integral of initial Haissinski distribution:
+     *        Fk < 0: do not initialize
+     *        Fk == 0: gaussian
+     *        Fk > 0: Haissinski distribution
+     */
+    PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis, const double Fk=0,
+               meshindex_t xoffset = 0);
 
-	PhaseSpace(meshindex_t ps_size,
-			   meshaxis_t xmin, meshaxis_t xmax,
-			   meshaxis_t ymin, meshaxis_t ymax);
+    PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+               const double Fk=0);
 
-	PhaseSpace(const PhaseSpace& other);
+    PhaseSpace(meshindex_t ps_size,
+               meshaxis_t xmin, meshaxis_t xmax,
+               meshaxis_t ymin, meshaxis_t ymax,
+               double xscale=0, double yscale=0,
+               const double Fk=0);
 
-	~PhaseSpace();
+    PhaseSpace(const PhaseSpace& other);
+
+    ~PhaseSpace();
 
 	 /**
 	  * @brief getData gives direct access to held data
@@ -67,23 +88,59 @@ public:
 	{ return _data1D; }
 
 	inline meshaxis_t getDelta(const uint_fast8_t x) const
-	{ return _axis[x].getDelta(); }
+	{ return _axis[x].delta(); }
 
 	inline meshaxis_t getMax(const uint_fast8_t x) const
-	{ return _axis[x].getMax(); }
+	{ return _axis[x].max(); }
 
 	inline meshaxis_t getMin(const uint_fast8_t x) const
-	{ return _axis[x].getMin(); }
+	{ return _axis[x].min(); }
+
+	inline double getScale(const uint_fast8_t x) const
+	{ return _axis[x].scale(); }
+
+	/**
+	 * @brief getRuler
+	 * @param x
+	 * @return reference to the Ruler describing mesh in x direction
+	 */
+	inline const Ruler<meshaxis_t>* getRuler(const uint_fast8_t x) const
+	{ return &(_axis[x]); }
 
 	meshdata_t average(const uint_fast8_t axis);
 
-	integral_t* integral();
+	integral_t integral();
+
+	integral_t getIntegral() const
+	{ return _integral; }
 
 	meshdata_t variance(const uint_fast8_t axis);
 
-	integral_t* projectionToX();
+    meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
+        { return _moment[x][m]; }
 
-	integral_t* projectionToY();
+    const inline projection_t* getProjection(const uint_fast8_t x) const
+        { return _projection[x]; }
+
+    /**
+     * @brief projectionToX
+     * @return
+     *
+     * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
+     */
+    void updateXProjection();
+
+    void updateYProjection();
+
+    /**
+     * @brief normalize
+     * @return integral before normalization
+     *
+     * @todo: Use OpenCL
+     *
+     * normalize() does neither recompute the integral nor sets it to 1
+     */
+    integral_t normalize();
 
 	inline meshdata_t* operator[](const meshindex_t i) const
 	{ return _data[i]; }
@@ -91,17 +148,16 @@ public:
 	PhaseSpace& operator=(PhaseSpace other);
 
 	inline size_t nMeshCells() const
-	{ return _axis[0].getNSteps()*_axis[1].getNSteps(); }
+	{ return _axis[0].steps()*_axis[1].steps(); }
 
 	inline size_t nMeshCells(const uint_fast8_t x) const
-	{ return _axis[x].getNSteps(); }
+	{ return _axis[x].steps(); }
 
 	inline meshaxis_t size(const uint_fast8_t x) const
 	{ return _axis[x].size(); }
 
-	inline meshaxis_t x(const uint_fast8_t axis,
-						const size_t n) const
-	{ return _axis[axis][n]; }
+    inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
+        { return _axis[axis][n]; }
 
 	/**
 	 * @brief swap
@@ -110,11 +166,6 @@ public:
 	friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 	#ifdef INOVESA_USE_CL
-	enum class clCopyDirection {
-		cpu2dev,
-		dev2cpu
-	};
-
 	void syncCLMem(clCopyDirection dir);
 	#endif
 
@@ -123,9 +174,15 @@ protected:
 
 	integral_t _integral;
 
-	size_t _nmeshcells;
+	const std::array<projection_t*,2> _projection;
 
-	std::array<integral_t*,2> _projection;
+	const uint32_t _nmeshcellsX;
+
+	const uint32_t _nmeshcellsY;
+
+	const size_t _nmeshcells;
+
+	const IntegralType _integraltype;
 
 	meshdata_t** _data;
 
@@ -140,14 +197,42 @@ protected:
 	 * 2: skewness
 	 * 3: kurtosis
 	 */
-	std::array<std::vector<meshdata_t>,2> _moment;
+	std::array<std::array<meshdata_t,4>,2> _moment;
 
-	std::array<meshdata_t*,2> _ws;
+    meshdata_t* _ws;
 
 #ifdef INOVESA_USE_CL
 public:
-	cl::Buffer data_buf;
+    cl::Buffer data_buf;
+
+    cl::Buffer projectionX_buf;
+
+    cl::Buffer integral_buf;
+
+private:
+    cl::Program _clProgProjX;
+
+    cl::Kernel  _clKernProjX;
+
+    cl::Program _clProgIntegral;
+
+    cl::Kernel  _clKernIntegral;
+
+    cl::Buffer  ws_buf;
+
+    static std::string cl_code_integral;
+
+    static std::string cl_code_projection_x;
 #endif
+
+private:
+    /**
+     * @brief haissinski calculates haissinski distribution
+     * @param target
+     * @param kappa
+     * @param loops (maximum) number of loops (choose 0 for gaussian)
+     */
+    void haissinski(const uint_fast8_t x, const projection_t Fk);
 };
 
 /**

@@ -1,6 +1,6 @@
 /******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
+/* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   */
+/* Copyright (c) 2014-2016: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
 /* Inovesa is free software: you can redistribute it and/or modify            */
@@ -24,6 +24,7 @@
 
 #include <array>
 #include <chrono>
+#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -35,19 +36,28 @@
 #include <GL/glew.h>
 
 // Include GLFW
-#if GLFW_VERSION_MAJOR == 3
+#if GLFW_VERSION_MAJOR == 3 // GLFW3
 #include <GLFW/glfw3.h>
-#else
+#else // GLFW2
 #include <GL/glfw.h>
-#endif
-
-// Include GLM
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#endif // GLFW2
 #endif // INOVESA_USE_GUI
+#include <vector>
 
 #include "PhaseSpace.hpp"
+#include "IO/GUI/GUIElement.hpp"
+
+namespace vfps {
+
+class DisplayException : public std::exception {
+public:
+    DisplayException(std::string msg) : _msg(msg){}
+
+    const char* what() const noexcept { return _msg.c_str(); }
+
+    private:
+        std::string _msg;
+};
 
 class Display
 {
@@ -55,40 +65,37 @@ public:
 	static std::chrono::system_clock::time_point start_time;
 
 public:
-	Display();
+    Display(uint_fast8_t glversion=0);
 
 	~Display();
 
-	void createTexture(vfps::PhaseSpace* mesh);
-
-	void delTexture();
+    #ifdef INOVESA_USE_GUI
+	void addElement(GUIElement* newitem);
+    #endif // INOVESA_USE_GUI
 
 	void draw();
 
-	static void printText(std::string txt);
+	static void printText(std::string txt, float silentTime=0.0f);
 
-#ifdef INOVESA_USE_GUI
-	GLuint getTexture() const
-		{ return Texture; }
+    #ifdef INOVESA_USE_GUI
+	void takeElement(GUIElement* item);
+    #endif // INOVESA_USE_GUI
 
 private:
-	GLuint LoadShaders(const char* vertex_file_path,const char* fragment_file_path);
+    void openWindow(uint_fast8_t glversion);
 
+	#ifdef INOVESA_USE_GUI
 	#if GLFW_VERSION_MAJOR == 3
 	GLFWwindow* window;
-	#endif
-	bool gl2fallback;
+    #endif
 
-	GLuint vertexbuffer;
-	GLuint uvbuffer;
-	GLuint programID;
-	GLuint VertexArrayID;
-	GLuint MatrixID;
-	GLuint Texture;
-	GLuint TextureID;
-	glm::mat4 MVP;
-#endif // INOVESA_USE_GUI
+	std::vector<GUIElement*> _item;
+    #endif // INOVESA_USE_GUI
+
+    static std::chrono::system_clock::time_point _lastmessage;
 };
+
+} // namespace vfps
 
 #endif // DISPLAY_HPP
 

@@ -1,65 +1,56 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #ifndef WAKEKICKMAP_HPP
 #define WAKEKICKMAP_HPP
 
 #include <array>
+#include <fftw3.h>
 
 #include "defines.hpp"
-#include "KickMap.hpp"
+#include "IO/Display.hpp"
+#include "HM/KickMap.hpp"
+#include "ElectricField.hpp"
+#include "Ruler.hpp"
 
 namespace vfps
 {
 
 /**
- * @brief The KickMap class offers an option for one-dimensional kicks
- *
- * @todo implement option to have 1D interpolation with HeritageMap
+ * @brief The WakeKickMap class offers an option for one-dimensional kicks
  */
 class WakeKickMap : public KickMap
 {
 public:
-	/**
-	 * @brief WakeKickMap
-	 * @param in
-	 * @param out
-	 * @param xsize
-	 * @param ysize
-	 * @param wake has to be normalized in a way,
-	 *	      that plain multiplication with density gives the force
-	 */
-	WakeKickMap(PhaseSpace* in, PhaseSpace* out,
-			const unsigned int xsize, const unsigned int ysize,
-			const std::vector<integral_t> wake, const InterpolationType it);
+    WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+                const meshindex_t xsize, const meshindex_t ysize,
+                const InterpolationType it);
+
+    ~WakeKickMap();
 
 public:
-	/**
-	 * @brief overloads HeritageMap::apply() to have a variable HeritageMap
-	 */
-	void apply();
+    /**
+     * @brief overloads KickMap::apply() to have a variable HeritageMap
+     */
+    void apply();
 
-private:
-	/**
-	 * @brief _wake (normalized) wake
-	 */
-	const std::vector<vfps::integral_t> _wake;
+    virtual void update()=0;
 };
 
 } // namespace VFPS

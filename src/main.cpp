@@ -1,24 +1,25 @@
-/******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
-/*                                                                            */
-/* This file is part of Inovesa.                                              */
-/* Inovesa is free software: you can redistribute it and/or modify            */
-/* it under the terms of the GNU General Public License as published by       */
-/* the Free Software Foundation, either version 3 of the License, or          */
-/* (at your option) any later version.                                        */
-/*                                                                            */
-/* Inovesa is distributed in the hope that it will be useful,                 */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of             */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              */
-/* GNU General Public License for more details.                               */
-/*                                                                            */
-/* You should have received a copy of the GNU General Public License          */
-/* along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           */
-/******************************************************************************/
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
 
 #include <chrono>
 #include <climits>
+#include <cmath>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -31,16 +32,29 @@
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
+#include "IO/GUI/Plot2DLine.hpp"
+#include "IO/GUI/Plot3DColormap.hpp"
 #include "PhaseSpace.hpp"
+#include "Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "HM/FokkerPlanckMap.hpp"
 #include "HM/Identity.hpp"
 #include "HM/KickMap.hpp"
+#include "HM/DriftMap.hpp"
 #include "HM/RotationMap.hpp"
+#include "HM/RFKickMap.hpp"
+#include "HM/WakeFunctionMap.hpp"
+#include "HM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
+
+inline bool isOfFileType(std::string ending, std::string fname)
+{
+    return ( fname.size() > ending.size() &&
+        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+}
 
 int main(int argc, char** argv)
 {
@@ -50,16 +64,6 @@ int main(int argc, char** argv)
             = std::chrono::system_clock::to_time_t(Display::start_time);
     std::stringstream sstream;
     sstream << std::ctime(&start_ctime);
-    std::string timestring = sstream.str();
-    timestring.resize(timestring.size()-1);
-
-    sstream.str("");
-    sstream << INOVESA_VERSION_RELEASE << '.'
-            << INOVESA_VERSION_MINOR << '.'
-            << INOVESA_VERSION_FIX;
-
-    Display::printText("Started Inovesa (v"
-                       +sstream.str()+") at "+timestring);
 
     ProgramOptions opts;
 
@@ -72,11 +76,48 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+    std::string timestring = sstream.str();
+    timestring.resize(timestring.size()-1);
+
+    sstream.str("");
+    sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
+            << INOVESA_VERSION_MINOR << '.'
+            << INOVESA_VERSION_FIX;
+    if (std::string(GIT_BRANCH) != "master") {
+        sstream << ", Branch: "<< GIT_BRANCH;
+    }
+
     #ifdef INOVESA_USE_CL
-    OCLH::active = (opts.getCLDevice() >= 0);
+    if (opts.getCLDevice() >= 0)
+    #endif // INOVESA_USE_CL
+    {
+    Display::printText("Started Inovesa ("
+                       +sstream.str()+") at "+timestring);
+    }
+
+
+
+    #ifdef INOVESA_USE_GUI
+    bool gui = opts.showPhaseSpace();
+    Display* display = nullptr;
+    if (gui && opts.getCLDevice() >= 0) {
+        try {
+        display = new Display(opts.getOpenGLVersion());
+        } catch (std::exception& e) {
+            std::string msg("ERROR: ");
+            Display::printText(msg+e.what());
+            delete display;
+            display = nullptr;
+            gui = false;
+        }
+    }
+    #endif
+
+    #ifdef INOVESA_USE_CL
+    OCLH::active = (opts.getCLDevice() != 0);
     if (OCLH::active) {
         try {
-            OCLH::prepareCLEnvironment();
+            OCLH::prepareCLEnvironment(gui);
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
@@ -84,7 +125,7 @@ int main(int argc, char** argv)
         }
     }
     if (OCLH::active) {
-        if (opts.getCLDevice() == 0) {
+        if (opts.getCLDevice() < 0) {
             OCLH::listCLDevices();
             return EXIT_SUCCESS;
         } else {
@@ -99,17 +140,87 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
-    constexpr meshindex_t ps_size = 0x2000;
-    size_t nParticles = UINT32_MAX;
-    sstream.str("");
-    sstream << nParticles/ps_size;
+    vfps::FokkerPlanckMap::DerivationType derivationtype;
+    switch (opts.getDerivationType()) {
+    case 3:
+        derivationtype = vfps::FokkerPlanckMap::DerivationType::two_sided;
+        break;
+    case 4:
+    default:
+        derivationtype = vfps::FokkerPlanckMap::DerivationType::cubic;
+        break;
+    }
 
-    Display::printText("Generating initial particle distribution (using "+
-                       sstream.str()+" patricles per mesh cell).");
-    PhaseSpace* mesh;
-    constexpr double qmax = 5.0;
-    constexpr double pmax = 5.0;
-    mesh = new PhaseSpace(ps_size,-qmax,qmax,-pmax,pmax);
+    vfps::HeritageMap::InterpolationType interpolationtype;
+    switch (opts.getInterpolationPoints()) {
+    case 1:
+        interpolationtype = vfps::HeritageMap::InterpolationType::none;
+        break;
+    case 2:
+        interpolationtype = vfps::HeritageMap::InterpolationType::linear;
+        break;
+    case 3:
+        interpolationtype = vfps::HeritageMap::InterpolationType::quadratic;
+        break;
+    default:
+    case 4:
+        interpolationtype = vfps::HeritageMap::InterpolationType::cubic;
+        break;
+    }
+
+    bool interpol_bound = opts.getInterpolationBound();
+    bool verbose = opts.getVerbosity();
+
+    PhaseSpace* mesh1;
+    meshindex_t ps_size = opts.getMeshSize();
+    const double qmax = opts.getPhaseSpaceSize();
+    const double qmin = -qmax;
+    const double pmin = qmin;
+    const double pmax = qmax;
+
+    const double sE = opts.getEnergySpread();
+    const double E0 = opts.getBeamEnergy();
+    const double dE = sE*E0;
+    const double f0 = opts.getRevolutionFrequency();
+    #ifdef INOVESA_USE_HDF5
+    const double fc = opts.getCutoffFrequency();
+    #endif // INOVESA_USE_HDF5
+    const double H = opts.getHarmonicNumber();
+    const double V = opts.getRFVoltage();
+    const double fs = opts.getSyncFreq();
+    const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
+    const double Ib = opts.getBunchCurrent();
+    const double Fk = opts.getStartDistParam();
+    const double R = physcons::c/(2*M_PI*f0);
+
+    const unsigned int steps = std::max(opts.getSteps(),1u);
+    const unsigned int outstep = opts.getOutSteps();
+    const float rotations = opts.getNRotations();
+    const double t_d = opts.getDampingTime();
+    const double dt = 1.0/(fs*steps);
+    const double t_sync = 1.0/fs;
+
+    /* angle of one rotation step (in rad)
+     * (angle = 2*pi corresponds to 1 synchrotron period)
+     */
+    const double angle = 2*M_PI/steps;
+
+    std::string startdistfile = opts.getStartDistFile();
+
+    const double Ith = physcons::IAlfven/physcons::me*2*M_PI
+                     * std::pow(dE*fs/f0,2)/V/H
+                     * std::pow(bl/R,1./3.)*0.482;
+
+    if (verbose) {
+    sstream.str("");
+    sstream << std::scientific << Ith;
+    Display::printText("BBT-Threshold-Current expected at "
+                       +sstream.str()+" A.");
+
+    sstream.str("");
+    sstream << std::fixed << 1/dt/f0;
+    Display::printText("Doing " +sstream.str()+
+                       " simulation steps per revolution period.");
 
     std::random_device seed;
     std::default_random_engine engine(seed());
@@ -155,71 +266,259 @@ int main(int argc, char** argv)
         x++;
     }
 
-    HDF5File file(opts.getOutFile(),ps_size);
-    Display::printText("Will save reults to: \""+opts.getOutFile()+'\"');
-
-    PhaseSpace mesh_rotated(*mesh);
-
-    #ifdef INOVESA_USE_GUI
-    Display* display = nullptr;
-    if (opts.showPhaseSpace()) {
-        display = new Display();
+    if (verbose) {
+    sstream.str("");
+    sstream << std::fixed << maxval*Ib/f0/physcons::e;
+    Display::printText("Maximum particles per grid cell is "
+                       +sstream.str()+".");
     }
-    #endif
 
-    const unsigned int steps = opts.getSteps();
-    const unsigned int outstep = opts.getOutSteps();
-    const float rotations = opts.getNRotations();
-    const double f_s = opts.getSyncFreq();
-    const double t_d = opts.getDampingTime();
+    const unsigned int padding =std::max(opts.getPadding(),1u);
 
-    /* angle of one rotation step (in rad)
-     * (angle = 2*pi corresponds to 1 synchrotron period)
-     */
-    const double angle = 2*M_PI/steps;
+    Impedance* impedance = nullptr;
+    double h = opts.getVacuumChamberHeight();
+    if (opts.getImpedanceFile() == "") {
+        if (h>0) {
+            Display::printText("Will use parallel plates CSR impedance.");
+            impedance = new Impedance(Impedance::ImpedanceModel::ParallelPlates,
+                                      ps_size*padding,f0,
+                                      ps_size*vfps::physcons::c/(2*qmax*bl),h);
+        } else {
+            Display::printText("Will use free space CSR impedance.");
+            impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
+                                      ps_size*padding,f0,
+                                      ps_size*vfps::physcons::c/(2*qmax*bl));
+        }
+    } else {
+        Display::printText("Reading impedance from: \""
+                           +opts.getImpedanceFile()+"\"");
+        impedance = new Impedance(opts.getImpedanceFile(),
+                                  ps_size*vfps::physcons::c/(2*qmax*bl));
+        if (impedance->nFreqs() < ps_size) {
+            Display::printText("No valid impedance file. "
+                               "Will now quit.");
+            return EXIT_SUCCESS;
+        }
+    }
 
-    const double e0 = 2.0/(f_s*t_d*steps);
+    PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
+    PhaseSpace* mesh3 = new PhaseSpace(*mesh1);
 
-    Display::printText("Building FokkerPlanckMap.");
-    FokkerPlanckMap fpm(&mesh_rotated,mesh,ps_size,ps_size,
-                        FokkerPlanckMap::FPType::full,e0,
-                        FokkerPlanckMap::DerivationType::cubic);
+    HeritageMap* rm1;
+    HeritageMap* rm2 = nullptr;
+    int rotmaptype = opts.getRotationMapSize();
+    if (rotmaptype < 0) {
+        if (interpol_bound) {
+            Display::printText("Bound interpolation only "
+                               "implemented for RotationMap.");
+        }
+        Display::printText("Building RFKickMap.");
+        rm1 = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
+                            interpolationtype);
 
-    Display::printText("Building RotationMap.");
-    RotationMap rm(mesh,&mesh_rotated,ps_size,ps_size,angle,
-                   HeritageMap::InterpolationType::cubic,
-                   RotationMap::RotationCoordinates::norm_pm1,true);
+        Display::printText("Building DriftMap.");
+        rm2 = new DriftMap(mesh2,mesh3,ps_size,ps_size,angle,
+                           interpolationtype);
+    } else {
+        size_t rotmapsize;
+        std::string rotmapstring;
+        switch (rotmaptype) {
+        case 0:
+            rotmapsize = 0;
+            rotmapstring = "Initializing RotationMap.";
+            break;
+        default:
+            rotmaptype = std::min(rotmaptype,2); // force to be 1 or 2
+            rotmapsize = ps_size*ps_size/rotmaptype;
+            rotmapstring = "Building RotationMap.";
+            break;
+        }
+        Display::printText(rotmapstring);
+        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
+                             HeritageMap::InterpolationType::cubic,
+                             RotationMap::RotationCoordinates::norm_pm1,
+                             interpol_bound,rotmapsize);
+    }
+
+    double e0;
+    if (t_d > 0) {
+        e0 = 2.0/(fs*t_d*steps);
+    } else {
+        e0=0;
+    }
+
+    HeritageMap* fpm;
+    if (e0 > 0) {
+        Display::printText("Building FokkerPlanckMap.");
+        fpm = new FokkerPlanckMap( mesh3,mesh2,ps_size,ps_size,
+                                   FokkerPlanckMap::FPType::full,e0,
+                                   derivationtype);
+    } else {
+        fpm = new Identity(mesh3,mesh2,ps_size,ps_size);
+    }
+
+    ElectricField* field = nullptr;
+    WakeKickMap* wkm = nullptr;
+    WakeFunctionMap* wfm = nullptr;
+    std::vector<std::pair<meshaxis_t,double>> wake;
+    std::string wakefile = opts.getWakeFile();
+    if (wakefile.size() > 4) {
+        field = new ElectricField(mesh2,impedance);
+        Display::printText("Reading WakeFunction from "+wakefile+".");
+        std::ifstream ifs;
+        ifs.open(wakefile);
+
+        while (ifs.good()) {
+            double q,f;
+            ifs >> q >> f;
+            wake.push_back(std::pair<meshaxis_t,double>(q,f));
+        }
+        ifs.close();
+        Display::printText("Building WakeFunctionMap.");
+        wfm = new WakeFunctionMap(mesh2,mesh1,ps_size,ps_size,
+                                  wake,interpolationtype);
+        wkm = wfm;
+    } else {
+        Display::printText("Calculating WakePotential.");
+        field = new ElectricField(mesh2,impedance,Ib,E0,sE,dt);
+        Display::printText("Building WakeKickMap.");
+        wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
+                                   interpolationtype);
+    }
+
+    #ifdef INOVESA_USE_HDF5
+    HDF5File* file = nullptr;
+    std::string ofname = opts.getOutFile();
+    if ( isOfFileType(".h5",ofname)) {
+        std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
+        opts.save(cfgname);
+        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
+        Display::printText("Will save results to \""+ofname+"\".");
+    } else
+    #endif // INOVESA_USE_HDF5
+    {
+        Display::printText("Will not save results.");
+    }
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::cpu2dev);
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_CL
+    #ifdef INOVESA_USE_GUI
+    Plot2DLine* bpv = nullptr;
+    Plot3DColormap* psv = nullptr;
+    Plot2DLine* wpv = nullptr;
+    if (gui) {
+        try {
+            psv = new Plot3DColormap(maxval);
+            display->addElement(psv);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(psv);
+            delete psv;
+            psv = nullptr;
+            gui = false;
+        }
+        try {
+            bpv = new Plot2DLine(std::array<float,3>{{1,0,0}});
+            display->addElement(bpv);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(bpv);
+            delete bpv;
+            bpv = nullptr;
+        }
+        try {
+            wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
+            display->addElement(wpv);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(wpv);
+            delete wpv;
+            wpv = nullptr;
+        }
+    }
+    #endif // INOVESSA_USE_GUI
+
     Display::printText("Starting the simulation.");
-    for (unsigned int i=0;i<=steps*rotations;i++) {
+    // first update to have wkm for step0 in file
+    wkm->update();
+
+    for (unsigned int i=0;i<steps*rotations;i++) {
         if (i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
-                mesh->syncCLMem(vfps::PhaseSpace::clCopyDirection::dev2cpu);
+                mesh1->syncCLMem(clCopyDirection::dev2cpu);
+                wkm->syncCLMem(clCopyDirection::dev2cpu);
             }
             #endif // INOVESA_USE_CL
-            file.append(mesh);
-            #ifdef INOVESA_USE_GUI
-            if (opts.showPhaseSpace()) {
-                display->createTexture(mesh);
-                display->draw();
-                display->delTexture();
-            } else
-            #endif
-            {
-                std::stringstream status;
-                status << static_cast<float>(i)/steps << '/' << rotations;
-                Display::printText(status.str());
+            mesh1->normalize();
+            #ifdef INOVESA_USE_HDF5
+            if (file != nullptr) {
+                file->timeStep(static_cast<double>(i)
+                               /static_cast<double>(steps));
+                mesh1->variance(0);
+                mesh1->variance(1);
+                file->append(mesh1);
+                field->updateCSR(fc);
+                file->append(field);
+                file->append(wkm);
             }
+            #endif // INOVESA_USE_HDF5
+            #ifdef INOVESA_USE_GUI
+            if (gui) {
+                if (psv != nullptr) {
+                    psv->createTexture(mesh1);
+                }
+                if (bpv != nullptr) {
+                    bpv->updateLine(mesh1->nMeshCells(0),
+                                    mesh1->getProjection(0));
+                }
+                if (wpv != nullptr) {
+                    wpv->updateLine(mesh1->nMeshCells(0),
+                                    wkm->getForce());
+                }
+                display->draw();
+                if (psv != nullptr) {
+                    psv->delTexture();
+                }
+            }
+            #endif // INOVESSA_USE_GUI
+            std::stringstream status;
+            status.precision(3);
+            status << std::setw(4) << static_cast<float>(i)/steps
+                   << '/' << rotations;
+            status << "\t1-Q/Q_0=" << 1.0 - mesh1->getIntegral();
+            Display::printText(status.str(),2.0f);
         }
-        rm.apply();
-        fpm.apply();
+        rm1->apply();
+        if (rm2 != nullptr) {
+          rm2->apply();
+        }
+        fpm->apply();
+        wkm->apply();
     }
+
+    #ifdef INOVESA_USE_HDF5
+    // save final result
+    if (file != nullptr) {
+        file->timeStep(rotations);
+        mesh1->integral();
+        file->append(mesh1);
+        field->updateCSR(fc);
+        file->append(field);
+        file->append(wkm);
+    }
+    #endif // INOVESA_USE_HDF5
+
+    std::stringstream status;
+    status.precision(3);
+    status << std::setw(4) << rotations << '/' << rotations;
+    status << "\t1-Q/Q_0=" << 1.0 - mesh1->integral();
+    Display::printText(status.str());
+
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         OCLH::queue.flush();

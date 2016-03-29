@@ -1,2 +1,3 @@
-build/
+*.fftw
+build
 CMakeLists.txt.user

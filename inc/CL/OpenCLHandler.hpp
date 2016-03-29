@@ -1,6 +1,6 @@
 /******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   */
-/* Copyright (c) 2014-2015: Patrik Schönfeldt                                 */
+/* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   */
+/* Copyright (c) 2014-2016: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
 /* Inovesa is free software: you can redistribute it and/or modify            */
@@ -21,6 +21,11 @@
 #define OPENCLHANDLER_HPP
 #ifdef INOVESA_USE_CL
 
+enum class clCopyDirection {
+    cpu2dev,
+    dev2cpu
+};
+
 #include <GL/glew.h>
 
 #define __CL_ENABLE_EXCEPTIONS
@@ -30,6 +35,9 @@
 #else
 #include <CL/cl.hpp>
 #endif
+#ifdef INOVESA_USE_CLFFT
+#include <clFFT.h>
+#endif // INOVESA_USE_CLFFT
 
 #include <climits>
 #include <iostream>
@@ -51,11 +59,13 @@
 class OCLH
 {
 public:
-	static void prepareCLEnvironment();
+    static void prepareCLEnvironment(bool glsharing);
 
 	static void prepareCLDevice(unsigned int device);
 
 	static cl::Program prepareCLProg(std::string);
+
+	static void teardownCLEnvironment();
 
 	static void listCLDevices();
 
@@ -67,12 +77,23 @@ public:
 
 	static VECTOR_CLASS<cl::Device> devices;
 
+    static cl_device_type devicetype;
+
 	/**
 	 * @brief command queue for OpenCL
 	 */
 	static cl::CommandQueue queue;
 
-	static bool ogl_sharing;
+    static bool ogl_sharing;
+
+private:
+#ifdef INOVESA_USE_CLFFT
+        static clfftSetupData fft_setup;
+#endif // INOVESA_USE_CLFFT
+
+    static const std::string custom_datatypes;
+
+    static std::string datatype_aliases();
 };
 
 #endif // INOVESA_USE_CL
