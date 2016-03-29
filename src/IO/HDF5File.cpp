@@ -576,7 +576,7 @@ void vfps::HDF5File::append(const WakeKickMap* wkm)
     delete filespace;
 }
 
-void vfps::HDF5File::timeStep(const double t)
+void vfps::HDF5File::appendTime(const double t)
 {
     // append to TimeAxis
     hsize_t ta_offset = ta_dims;

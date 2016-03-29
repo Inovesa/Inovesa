@@ -518,8 +518,8 @@ int main(int argc, char** argv)
             mesh1->normalize();
             #ifdef INOVESA_USE_HDF5
             if (file != nullptr) {
-                file->timeStep(static_cast<double>(i)
-                               /static_cast<double>(steps));
+                file->appendTime(static_cast<double>(i)
+                                /static_cast<double>(steps));
                 mesh1->variance(0);
                 mesh1->variance(1);
                 file->append(mesh1);
@@ -565,7 +565,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (file != nullptr) {
-        file->timeStep(rotations);
+        file->appendTime(rotations);
         mesh1->integral();
         file->append(mesh1);
         field->updateCSR(fc);

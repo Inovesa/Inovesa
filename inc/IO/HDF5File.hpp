@@ -59,7 +59,7 @@ public:
 
     void append(const WakeKickMap* wkm);
 
-    void timeStep(const double t);
+    void appendTime(const double t);
 
 private:
 	H5::H5File* file;
