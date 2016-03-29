@@ -4,14 +4,22 @@ aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
   ./src/CL/OpenCLHandler.cpp
+  ./src/HM/DriftMap.cpp
   ./src/HM/HeritageMap.cpp
   ./src/HM/FokkerPlanckMap.cpp
   ./src/HM/KickMap.cpp
+  ./src/HM/RFKickMap.cpp
   ./src/HM/RotationMap.cpp
   ./src/HM/WakeKickMap.cpp
+  ./src/HM/WakePotentialMap.cpp
+  ./src/HM/WakeFunctionMap.cpp
   ./src/IO/Display.cpp
+  ./src/IO/GUI/GUIElement.cpp
+  ./src/IO/GUI/Plot2DLine.cpp
+  ./src/IO/GUI/Plot3DColormap.cpp
   ./src/IO/HDF5File.cpp
   ./src/IO/ProgramOptions.cpp
+  ./src/ElectricField.cpp
   ./src/Impedance.cpp
   ./src/PhaseSpace.cpp
   ./src/main.cpp
@@ -20,15 +28,23 @@ set(SRC_LIST
 set(INC_LIST
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
+  ./inc/HM/DriftMap.hpp
   ./inc/HM/HeritageMap.hpp
   ./inc/HM/FokkerPlanckMap.hpp
   ./inc/HM/KickMap.hpp
+  ./inc/HM/RFKickMap.hpp
   ./inc/HM/Identity.hpp
   ./inc/HM/RotationMap.hpp
+  ./inc/HM/WakePotentialMap.hpp
   ./inc/HM/WakeKickMap.hpp
+  ./inc/HM/WakeFunctionMap.hpp
   ./inc/IO/Display.hpp
+  ./inc/IO/GUI/GUIElement.hpp
+  ./inc/IO/GUI/Plot2DLine.hpp
+  ./inc/IO/GUI/Plot3DColormap.hpp
   ./inc/IO/HDF5File.hpp
   ./inc/IO/ProgramOptions.hpp
+  ./inc/ElectricField.hpp
   ./inc/Impedance.hpp
   ./inc/PhaseSpace.hpp
   ./inc/Ruler.hpp

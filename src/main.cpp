@@ -27,7 +27,6 @@
 #ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
 #endif
-#include <random>
 #include <sstream>
 
 #include "defines.hpp"
@@ -222,48 +221,110 @@ int main(int argc, char** argv)
     Display::printText("Doing " +sstream.str()+
                        " simulation steps per revolution period.");
 
-    std::random_device seed;
-    std::default_random_engine engine(seed());
-
-    std::uniform_real_distribution<> xdist(0.0,1.0);
-    std::normal_distribution<> ydist(0.0,1.0);
-
-    constexpr float amplitude = 2.0f;
-    constexpr float pulselen = 1.90e-3f;
-    meshindex_t pulsepix = std::ceil(5*pulselen/2.35f/pmax*ps_size);
-    constexpr float wavelen = 6.42e-5f;
-
-    meshindex_t x = 0;
-    while (x < ps_size/2-pulsepix) {
-        for (meshindex_t y = 0; y < ps_size; y++) {
-            (*mesh)[x][y]
-                =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
-                *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
-        }
-        x++;
+    sstream.str("");
+    double rotationoffset = std::tan(angle)*ps_size/2;
+    sstream << std::fixed << rotationoffset;
+    Display::printText("Maximum rotation offset is "
+                       +sstream.str()+" (should be < 1).");
     }
-    while (x < ps_size/2+pulsepix) {
-        meshdata_t weight = std::sqrt(2*M_PI)*ps_size/pmax/nParticles
-                * std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f);
-        for (size_t i=0; i<nParticles; i++) {
-            float xf = x+xdist(engine);
-            float yf = ydist(engine)
-                            + std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35f),2))
-                            * amplitude * std::sin(2*M_PI*xf/wavelen);
+
+    if (startdistfile.length() <= 4) {
+        if (ps_size == 0) {
+            Display::printText("Please give file for initial distribution "
+                               "or size of target mesh > 0.");
+        }
+        sstream.str("");
+        sstream << Fk;
+        Display::printText("Generating initial distribution with F(k)="
+                           +sstream.str()+".");
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk);
+    } else {
+        Display::printText("Reading in initial distribution from: \""
+                           +startdistfile+'\"');
+    #ifdef INOVESA_USE_PNG
+    // check for file ending .png
+    if (isOfFileType(".png",startdistfile)) {
+        // load pattern to start with
+        png::image<png::gray_pixel_16> image;
+        try {
+            image.read(opts.getStartDistFile());
+        } catch ( const png::std_error &e ) {
+            std::cerr << e.what() << std::endl;
+            return EXIT_SUCCESS;
+        }
+        catch ( const png::error &e ) {
+            std::cerr << "Problem loading " << startdistfile
+                      << ": " << e.what() << std::endl;
+            return EXIT_SUCCESS;
+        }
+
+        if (image.get_width() == image.get_height()) {
+            ps_size = image.get_width();
+
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+
+            for (unsigned int x=0; x<ps_size; x++) {
+                for (unsigned int y=0; y<ps_size; y++) {
+                    (*mesh1)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+                }
+            }
+            mesh1->syncCLMem(clCopyDirection::cpu2dev);
+            std::stringstream imgsize;
+            imgsize << ps_size;
+            Display::printText("Read phase space (a="+imgsize.str()+" px).");
+        } else {
+            std::cerr << "Phase space has to be quadratic. Please adjust "
+                      << startdistfile << std::endl;
+
+            return EXIT_SUCCESS;
+        }
+    } else
+    #endif // INOVESA_USE_PNG
+    if (isOfFileType(".txt",startdistfile)) {
+        ps_size = opts.getMeshSize();
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+
+        std::ifstream ifs;
+        ifs.open(startdistfile);
+
+        ifs.unsetf(std::ios_base::skipws);
+
+        // count the newlines with an algorithm specialized for counting:
+        size_t line_count = std::count(
+            std::istream_iterator<char>(ifs),
+            std::istream_iterator<char>(),
+            '\n');
+
+        ifs.setf(std::ios_base::skipws);
+        ifs.clear();
+        ifs.seekg(0,ifs.beg);
+
+        while (ifs.good()) {
+            float xf,yf;
+            ifs >> xf >> yf;
+            meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
             meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
-            if (y < ps_size) {
-                (*mesh)[x][y] += weight;
+            if (x < ps_size && y < ps_size) {
+                (*mesh1)[x][y] += 1.0/line_count;
             }
         }
-        x++;
+        ifs.close();
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+    } else {
+        Display::printText("Unknown format of input file. Will now quit.");
+        return EXIT_SUCCESS;
     }
-    while (x < ps_size) {
-        for (meshindex_t y = 0; y < ps_size; y++) {
-            (*mesh)[x][y]
-                =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
-                *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+    }
+
+    // normalize integral to 1
+    mesh1->normalize();
+
+    // find highest peak (for display)
+    meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+    for (unsigned int x=0; x<ps_size; x++) {
+        for (unsigned int y=0; y<ps_size; y++) {
+            maxval = std::max(maxval,(*mesh1)[x][y]);
         }
-        x++;
     }
 
     if (verbose) {
@@ -525,7 +586,28 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
-    delete mesh;
+    #ifdef INOVESA_USE_GUI
+    delete display;
+    delete psv;
+    #endif
+
+    delete mesh1;
+    delete mesh2;
+    delete mesh3;
+
+    delete field;
+    delete impedance;
+
+    delete rm1;
+    delete rm2;
+    delete wkm;
+    delete fpm;
+
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        OCLH::teardownCLEnvironment();
+    }
+    #endif // INOVESA_USE_CL
 
     Display::printText("Finished.");
 

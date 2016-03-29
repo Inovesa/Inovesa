@@ -51,6 +51,53 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                 _data[x][y] = _projection[0][(x+xoffset)%nMeshCells(0)]*_projection[1][y];
             }
         }
+        #ifdef INOVESA_CHG_BUNCH
+            std::random_device seed;
+            std::default_random_engine engine(seed());
+
+            std::uniform_real_distribution<> xdist(0.0,1.0);
+            std::normal_distribution<> ydist(0.0,1.0);
+
+
+            constexpr meshindex_t nParticles = UINT32_MAX;
+            constexpr float amplitude = 2.0f;
+            constexpr float pulselen = 1.90e-3f;
+            meshindex_t pulsepix = std::ceil(5*pulselen/2.35f/pmax*ps_size);
+            constexpr float wavelen = 6.42e-5f;
+
+            meshindex_t x = 0;
+            while (x < ps_size/2-pulsepix) {
+                for (meshindex_t y = 0; y < ps_size; y++) {
+                    (*mesh)[x][y]
+                        =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
+                        *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+                }
+                x++;
+            }
+            while (x < ps_size/2+pulsepix) {
+                meshdata_t weight = std::sqrt(2*M_PI)*ps_size/pmax/nParticles
+                        * std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f);
+                for (size_t i=0; i<nParticles; i++) {
+                    float xf = x+xdist(engine);
+                    float yf = ydist(engine)
+                                    + std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35f),2))
+                                    * amplitude * std::sin(2*M_PI*xf/wavelen);
+                    meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
+                    if (y < ps_size) {
+                        (*mesh)[x][y] += weight;
+                    }
+                }
+                x++;
+            }
+            while (x < ps_size) {
+                for (meshindex_t y = 0; y < ps_size; y++) {
+                    (*mesh)[x][y]
+                        =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
+                        *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+                }
+                x++;
+            }
+        #endif // INOVESA_CHG_BUNCH
     }
 
     const integral_t ca = 3.;
