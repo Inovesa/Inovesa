@@ -185,6 +185,7 @@ int main(int argc, char** argv)
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
     const double H = opts.getHarmonicNumber();
+    const double h = opts.getVacuumChamberHeight();
     const double V = opts.getRFVoltage();
     const double fs = opts.getSyncFreq();
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
@@ -206,9 +207,16 @@ int main(int argc, char** argv)
 
     std::string startdistfile = opts.getStartDistFile();
 
+    double shield;
+    if (h<=0) {
+        shield = 0;
+    } else {
+        shield = bl*std::sqrt(R)*std::pow(h,-3./2.);
+    }
+
     const double Ith = physcons::IAlfven/physcons::me*2*M_PI
                      * std::pow(dE*fs/f0,2)/V/H
-                     * std::pow(bl/R,1./3.)*0.482;
+                     * std::pow(bl/R,1./3.) * (0.5+0.34*shield);
 
     if (verbose) {
     sstream.str("");
@@ -337,7 +345,6 @@ int main(int argc, char** argv)
     const unsigned int padding =std::max(opts.getPadding(),1u);
 
     Impedance* impedance = nullptr;
-    double h = opts.getVacuumChamberHeight();
     if (opts.getImpedanceFile() == "") {
         if (h>0) {
             Display::printText("Will use parallel plates CSR impedance.");
