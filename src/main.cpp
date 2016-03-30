@@ -447,17 +447,25 @@ int main(int argc, char** argv)
                                    interpolationtype);
     }
 
-    #ifdef INOVESA_USE_HDF5
-    HDF5File* file = nullptr;
     std::string ofname = opts.getOutFile();
+    #ifdef INOVESA_USE_HDF5
+    HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)) {
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
-        file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_HDF5
+    #ifdef INOVESA_USE_PNG
+    if ( isOfFileType(".png",ofname)) {
+        std::string cfgname = ofname.substr(0,ofname.find(".png"))+".cfg";
+        opts.save(cfgname);
+        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        Display::printText("Will save results to \""+ofname+"\".");
+    } else
+    #endif // INOVESA_USE_PNG
     {
         Display::printText("Will not save results.");
     }
@@ -517,15 +525,15 @@ int main(int argc, char** argv)
             #endif // INOVESA_USE_CL
             mesh1->normalize();
             #ifdef INOVESA_USE_HDF5
-            if (file != nullptr) {
-                file->appendTime(static_cast<double>(i)
+            if (hdf_file != nullptr) {
+                hdf_file->appendTime(static_cast<double>(i)
                                 /static_cast<double>(steps));
                 mesh1->variance(0);
                 mesh1->variance(1);
-                file->append(mesh1);
+                hdf_file->append(mesh1);
                 field->updateCSR(fc);
-                file->append(field);
-                file->append(wkm);
+                hdf_file->append(field);
+                hdf_file->append(wkm);
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
@@ -564,15 +572,31 @@ int main(int argc, char** argv)
 
     #ifdef INOVESA_USE_HDF5
     // save final result
-    if (file != nullptr) {
-        file->appendTime(rotations);
+    if (hdf_file != nullptr) {
+        hdf_file->appendTime(rotations);
         mesh1->integral();
-        file->append(mesh1);
+        hdf_file->append(mesh1);
         field->updateCSR(fc);
-        file->append(field);
-        file->append(wkm);
+        hdf_file->append(field);
+        hdf_file->append(wkm);
     }
     #endif // INOVESA_USE_HDF5
+    #ifdef INOVESA_USE_PNG
+    if ( isOfFileType(".png",ofname)) {
+        meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+        meshdata_t* val = mesh1->getData();
+        for (meshindex_t i=0; i<mesh1->nMeshCells(); i++) {
+            maxval = std::max(val[i],maxval);
+        }
+        png::image< png::gray_pixel_16 > png_file(ps_size, ps_size);
+        for (unsigned int x=0; x<ps_size; x++) {
+            for (unsigned int y=0; y<ps_size; y++) {
+                png_file[ps_size-y-1][x]=(*mesh1)[x][y]/maxval*float(UINT16_MAX);
+            }
+        }
+        png_file.write(ofname);
+    }
+    #endif
 
     std::stringstream status;
     status.precision(3);
