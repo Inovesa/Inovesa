@@ -210,6 +210,9 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
     if (axis == 0) {
         updateXProjection();
+        OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+                                      sizeof(projection_t)*nMeshCells(0),
+                                      _projection[0]);
     } else {
         updateYProjection();
     }
@@ -251,7 +254,9 @@ void vfps::PhaseSpace::updateXProjection() {
                     cl::NDRange(nMeshCells(0)));
         OCLH::queue.enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
-        syncCLMem(clCopyDirection::dev2cpu);
+        OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+                                      sizeof(projection_t)*nMeshCells(0),
+                                      _projection[0]);
         #endif
     } else
     #endif
@@ -281,7 +286,8 @@ void vfps::PhaseSpace::updateXProjection() {
 void vfps::PhaseSpace::updateYProjection() {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        syncCLMem(clCopyDirection::dev2cpu);
+        OCLH::queue.enqueueReadBuffer
+            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
     }
     #endif
     switch (_integraltype) {
