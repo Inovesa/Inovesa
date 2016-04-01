@@ -408,18 +408,18 @@ int main(int argc, char** argv)
                              interpol_bound,rotmapsize);
     }
 
-    double e0;
+    double e1;
     if (t_d > 0) {
-        e0 = 2.0/(fs*t_d*steps);
+        e1 = 1.0/(fs*t_d*steps);
     } else {
-        e0=0;
+        e1=0;
     }
 
     HeritageMap* fpm;
-    if (e0 > 0) {
+    if (e1 > 0) {
         Display::printText("Building FokkerPlanckMap.");
         fpm = new FokkerPlanckMap( mesh3,mesh2,ps_size,ps_size,
-                                   FokkerPlanckMap::FPType::full,e0,
+                                   FokkerPlanckMap::FPType::full,e1,
                                    derivationtype);
     } else {
         fpm = new Identity(mesh3,mesh2,ps_size,ps_size);
