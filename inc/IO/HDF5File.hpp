@@ -22,7 +22,6 @@
 #define HDF5FILE_HPP
 
 #include <array>
-#include <gsl/gsl_const_mks.h>
 #include <H5Cpp.h>
 #include <string>
 
