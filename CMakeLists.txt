@@ -56,6 +56,7 @@ set(MISC_LIST
 )
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
+include(CheckIncludeFileCXX)
 
 execute_process(
   COMMAND git rev-parse --abbrev-ref HEAD
@@ -112,10 +113,11 @@ ELSE()
 ENDIF()
 find_package(PNG QUIET)
 IF(PNG_FOUND)
-    add_definitions( -DINOVESA_USE_PNG)
-    MESSAGE ("Found PNG. Will add support.")
-ELSE()
-	MESSAGE ("Did not find PNG. Will compile without PNG support.")
+	CHECK_INCLUDE_FILE_CXX("png++/png.hpp" PNGPP_FOUND QUIET)
+	IF(PNGPP_FOUND)
+		add_definitions( -DINOVESA_USE_PNG)
+		MESSAGE ("Found PNG++. Will add PNG support.")
+	ENDIF()
 ENDIF()
 
 include_directories(./inc
