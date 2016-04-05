@@ -23,7 +23,7 @@ vfps::ProgramOptions::ProgramOptions() :
     _cldevice(1),
     _startdistfile(""),
     _configfile("default.cfg"),
-    _glversion(0),
+    _glversion(2),
     _verbose(false),
     _wakefile(""),
     meshsize(256),

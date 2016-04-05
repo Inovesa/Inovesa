@@ -65,7 +65,7 @@ public:
 	static std::chrono::system_clock::time_point start_time;
 
 public:
-    Display(uint_fast8_t glversion=0);
+    Display(uint_fast8_t glversion);
 
 	~Display();
 
