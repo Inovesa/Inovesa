@@ -610,7 +610,8 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname)
 
     H5::H5File file(fname,H5F_ACC_RDONLY);
 
-    H5::DataSpace ps_space(file.openDataSet("/PhaseSpace/data").getSpace());
+    H5::DataSet ps_dataset = file.openDataSet("/PhaseSpace/data");
+    H5::DataSpace ps_space(ps_dataset.getSpace());
 
     hsize_t ps_dims[3];
     ps_space.getSimpleExtentDims( ps_dims, nullptr );
@@ -647,7 +648,7 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname)
     file.openDataSet("/Info/AxisValues_E").openAttribute("Scale").read(H5::PredType::IEEE_F64LE,&yscale);
 
     PhaseSpace ps(ps_size,-xdim,xdim,-ydim,ydim,xscale,yscale);
-    dataset.read(ps.getData(), datatype, memspace, ps_space);
+    ps_dataset.read(ps.getData(), datatype, memspace, ps_space);
 
     return ps;
 }
