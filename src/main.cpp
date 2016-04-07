@@ -288,6 +288,12 @@ int main(int argc, char** argv)
         }
     } else
     #endif // INOVESA_USE_PNG
+    #ifdef INOVESA_USE_HDF5
+    if (isOfFileType(".h5",startdistfile)) {
+        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile));
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+    } else
+    #endif
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
         mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);

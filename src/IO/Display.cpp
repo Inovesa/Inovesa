@@ -44,7 +44,7 @@ vfps::Display::Display(uint_fast8_t glversion)
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
-    glfwSetWindowTitle("Inovesa (GL2)");
+    glfwSetWindowTitle("Inovesa");
     GUIElement::glversion = 2;
     #else // GLFW3
     openWindow(glversion);
@@ -149,7 +149,6 @@ void vfps::Display::openWindow(uint_fast8_t glversion)
         glfwWindowHint(GLFW_SAMPLES, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-        title+=" (GL2)";
         break;
     case 3:
     default:

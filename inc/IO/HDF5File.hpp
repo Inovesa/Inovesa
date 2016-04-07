@@ -60,8 +60,11 @@ public:
 
     void appendTime(const double t);
 
+public:
+    static PhaseSpace readPhaseSpace(std::string fname);
+
 private:
-	H5::H5File* file;
+    H5::H5File* _file;
 
 	std::string fname;
 
@@ -82,7 +85,7 @@ private: // values for phase space axis
 
 	H5::DataSpace* ax1ps_dataspace;
 
-	H5::IntType axps_datatype;
+    H5::DataType axps_datatype;
 
 	H5::DSetCreatPropList axps_prop;
 
@@ -93,7 +96,7 @@ private: // values for frequency axis
 
 	H5::DataSpace* axfreq_dataspace;
 
-	H5::IntType axfreq_datatype;
+    H5::DataType axfreq_datatype;
 
 	H5::DSetCreatPropList axfreq_prop;
 
@@ -104,7 +107,7 @@ private: // time axis
 
     H5::DataSpace* ta_dataspace;
 
-    H5::IntType ta_datatype;
+    H5::DataType ta_datatype;
 
     hsize_t ta_dims;
 
@@ -117,7 +120,7 @@ private: // bunch current
 
 	H5::DataSpace* bc_dataspace;
 
-	H5::IntType bc_datatype;
+    H5::DataType bc_datatype;
 
 	hsize_t bc_dims;
 
@@ -134,7 +137,7 @@ private: // bunch profile
 
 	H5::DataSpace* bp_dataspace;
 
-	H5::IntType bp_datatype;
+    H5::DataType bp_datatype;
 
 	std::array<hsize_t,bp_rank> bp_dims;
 
@@ -147,7 +150,7 @@ private: // bunch length
 
     H5::DataSpace* bl_dataspace;
 
-    H5::IntType bl_datatype;
+    H5::DataType bl_datatype;
 
     hsize_t bl_dims;
 
@@ -160,7 +163,7 @@ private: // bunch position
 
     H5::DataSpace* qb_dataspace;
 
-    H5::IntType qb_datatype;
+    H5::DataType qb_datatype;
 
     hsize_t qb_dims;
 
@@ -173,7 +176,7 @@ private: // energy spread
 
     H5::DataSpace* es_dataspace;
 
-    H5::IntType es_datatype;
+    H5::DataType es_datatype;
 
     hsize_t es_dims;
 
@@ -186,7 +189,7 @@ private: // wake potential
 
     H5::DataSpace* wp_dataspace;
 
-    H5::IntType wp_datatype;
+    H5::DataType wp_datatype;
 
     std::array<hsize_t,wp_rank> wp_dims;
 
@@ -199,7 +202,7 @@ private: // csr spectrum
 
 	H5::DataSpace* csr_dataspace;
 
-	H5::IntType csr_datatype;
+    H5::DataType csr_datatype;
 
 	std::array<hsize_t,csr_rank> csr_dims;
 
@@ -214,7 +217,7 @@ private: // csr power
 
     H5::DataSpace* csrp_dataspace;
 
-    H5::IntType csrp_datatype;
+    H5::DataType csrp_datatype;
 
     hsize_t csrp_dims;
 
@@ -223,11 +226,11 @@ private: // csr power
 private: // phase space
 	static constexpr uint_fast8_t ps_rank = 3;
 
-	H5::DataSet ps_dataset;
+    H5::DataSet _ps_dataset;
 
 	H5::DataSpace* ps_dataspace;
 
-	H5::IntType ps_datatype;
+    H5::DataType ps_datatype;
 
 	std::array<hsize_t,ps_rank> ps_dims;
 
