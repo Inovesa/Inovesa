@@ -61,7 +61,9 @@ public:
     void appendTime(const double t);
 
 public:
-    static PhaseSpace readPhaseSpace(std::string fname);
+    static PhaseSpace readPhaseSpace(std::string fname,
+                                     meshaxis_t pq_size,
+                                     double bl, double dE);
 
 private:
     H5::H5File* _file;

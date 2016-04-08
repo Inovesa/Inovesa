@@ -593,7 +593,9 @@ void vfps::HDF5File::appendTime(const double t)
     delete filespace;
 }
 
-vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname)
+vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
+                                                meshaxis_t pq_size,
+                                                double bl, double dE)
 {
     H5::DataType datatype;
     if (std::is_same<vfps::meshdata_t,float>::value) {
@@ -636,18 +638,7 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname)
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    meshaxis_t xdim = 6;
-    meshaxis_t ydim = 6;
-
-    H5::DataSpace ax0_space(file.openDataSet("/Info/AxisValues_z").getSpace());
-    H5::DataSpace ax1_space(file.openDataSet("/Info/AxisValues_E").getSpace());
-
-    double xscale;
-    double yscale;
-    file.openDataSet("/Info/AxisValues_z").openAttribute("Scale").read(H5::PredType::IEEE_F64LE,&xscale);
-    file.openDataSet("/Info/AxisValues_E").openAttribute("Scale").read(H5::PredType::IEEE_F64LE,&yscale);
-
-    PhaseSpace ps(ps_size,-xdim,xdim,-ydim,ydim,xscale,yscale);
+    PhaseSpace ps(ps_size,-pq_size,pq_size,-pq_size,pq_size,bl,dE);
     ps_dataset.read(ps.getData(), datatype, memspace, ps_space);
 
     return ps;

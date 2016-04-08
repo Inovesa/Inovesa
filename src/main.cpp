@@ -290,7 +290,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_PNG
     #ifdef INOVESA_USE_HDF5
     if (isOfFileType(".h5",startdistfile)) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile));
+        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmax,bl,dE));
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
@@ -529,7 +529,7 @@ int main(int argc, char** argv)
     wkm->update();
 
     for (unsigned int i=0;i<steps*rotations;i++) {
-        if (i%outstep == 0) {
+        if (outstep > 0 && i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
                 mesh1->syncCLMem(clCopyDirection::dev2cpu);
