@@ -52,7 +52,7 @@ public:
 
     ~HDF5File();
 
-    void append(const ElectricField* ef);
+    void append(const ElectricField* ef, bool fullspectrum = true);
 
     void append(const PhaseSpace* ps);
 
@@ -68,39 +68,39 @@ public:
 private:
     H5::H5File* _file;
 
-	std::string fname;
+    std::string fname;
 
-	static constexpr uint_fast8_t compression = 6;
+    static constexpr uint_fast8_t compression = 6;
 
-	H5::DataType datatype_integral;
+    H5::DataType datatype_integral;
 
-	H5::DataType datatype_meshdata;
+    H5::DataType datatype_meshdata;
 
 private: // values for phase space axis
-	static constexpr uint_fast8_t axps_rank = 2;
+    static constexpr uint_fast8_t axps_rank = 2;
 
-	H5::DataSet ax0ps_dataset;
+    H5::DataSet ax0ps_dataset;
 
-	H5::DataSet ax1ps_dataset;
+    H5::DataSet ax1ps_dataset;
 
-	H5::DataSpace* ax0ps_dataspace;
+    H5::DataSpace* ax0ps_dataspace;
 
-	H5::DataSpace* ax1ps_dataspace;
+    H5::DataSpace* ax1ps_dataspace;
 
     H5::DataType axps_datatype;
 
-	H5::DSetCreatPropList axps_prop;
+    H5::DSetCreatPropList axps_prop;
 
 private: // values for frequency axis
-	static constexpr uint_fast8_t axfreq_rank = 2;
+    static constexpr uint_fast8_t axfreq_rank = 2;
 
-	H5::DataSet axfreq_dataset;
+    H5::DataSet axfreq_dataset;
 
-	H5::DataSpace* axfreq_dataspace;
+    H5::DataSpace* axfreq_dataspace;
 
     H5::DataType axfreq_datatype;
 
-	H5::DSetCreatPropList axfreq_prop;
+    H5::DSetCreatPropList axfreq_prop;
 
 private: // time axis
     static constexpr uint_fast8_t ta_rank = 1;
@@ -116,34 +116,34 @@ private: // time axis
     H5::DSetCreatPropList ta_prop;
 
 private: // bunch current
-	static constexpr uint_fast8_t bc_rank = 1;
+    static constexpr uint_fast8_t bc_rank = 1;
 
-	H5::DataSet bc_dataset;
+    H5::DataSet bc_dataset;
 
-	H5::DataSpace* bc_dataspace;
+    H5::DataSpace* bc_dataspace;
 
     H5::DataType bc_datatype;
 
-	hsize_t bc_dims;
+    hsize_t bc_dims;
 
-	H5::DSetCreatPropList bc_prop;
+    H5::DSetCreatPropList bc_prop;
 
     double bc;
 
     double bc_set;
 
 private: // bunch profile
-	static constexpr uint_fast8_t bp_rank = 2;
+    static constexpr uint_fast8_t bp_rank = 2;
 
-	H5::DataSet bp_dataset;
+    H5::DataSet bp_dataset;
 
-	H5::DataSpace* bp_dataspace;
+    H5::DataSpace* bp_dataspace;
 
     H5::DataType bp_datatype;
 
-	std::array<hsize_t,bp_rank> bp_dims;
+    std::array<hsize_t,bp_rank> bp_dims;
 
-	H5::DSetCreatPropList bp_prop;
+    H5::DSetCreatPropList bp_prop;
 
 private: // bunch length
     static constexpr uint_fast8_t bl_rank = 1;
@@ -206,11 +206,11 @@ private: // csr spectrum
 
     H5::DataType csr_datatype;
 
-	std::array<hsize_t,csr_rank> csr_dims;
+    std::array<hsize_t,csr_rank> csr_dims;
 
-	H5::DSetCreatPropList csr_prop;
+    H5::DSetCreatPropList csr_prop;
 
-	size_t maxn;
+    size_t maxn;
 
 private: // csr power
     static constexpr uint_fast8_t csrp_rank = 1;
@@ -226,19 +226,19 @@ private: // csr power
     H5::DSetCreatPropList csrp_prop;
 
 private: // phase space
-	static constexpr uint_fast8_t ps_rank = 3;
+    static constexpr uint_fast8_t ps_rank = 3;
 
     H5::DataSet _ps_dataset;
 
-	H5::DataSpace* ps_dataspace;
+    H5::DataSpace* ps_dataspace;
 
     H5::DataType ps_datatype;
 
-	std::array<hsize_t,ps_rank> ps_dims;
+    std::array<hsize_t,ps_rank> ps_dims;
 
-	H5::DSetCreatPropList ps_prop;
+    H5::DSetCreatPropList ps_prop;
 
-	meshindex_t ps_size;
+    meshindex_t ps_size;
 
 private: // impedance
     static constexpr uint_fast8_t imp_rank = 1;
