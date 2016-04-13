@@ -58,49 +58,49 @@ vfps::HDF5File::HDF5File(const std::string fname,
                 axps_datatype = H5::PredType::IEEE_F64LE;
         }
 
-	const std::array<hsize_t,axps_rank> psa_dims
-			= {{ 1, ps_size }};
-	const std::array<hsize_t,axps_rank> psa_maxdims
-			= {{ 1, ps_size }};
+    const std::array<hsize_t,axps_rank> psa_dims
+                    = {{ 1, ps_size }};
+    const std::array<hsize_t,axps_rank> psa_maxdims
+                    = {{ 1, ps_size }};
 
-	ax0ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
-									   psa_maxdims.data());
-	ax1ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
-									   psa_maxdims.data());
+    ax0ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
+                                        psa_maxdims.data());
+    ax1ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
+                                        psa_maxdims.data());
 
 
-	const std::array<hsize_t,axps_rank> psa_chunkdims
-			= {{1U,std::min(2048U,ps_size)}};
-	axps_prop.setChunk(axps_rank,psa_chunkdims.data());
-	axps_prop.setShuffle();
-	axps_prop.setDeflate(compression);
+    const std::array<hsize_t,axps_rank> psa_chunkdims
+                    = {{1U,std::min(2048U,ps_size)}};
+    axps_prop.setChunk(axps_rank,psa_chunkdims.data());
+    axps_prop.setShuffle();
+    axps_prop.setDeflate(compression);
 
     ax0ps_dataset = _file->createDataSet("/Info/AxisValues_z",axps_datatype,
-                                                                                        *ax0ps_dataspace,axps_prop);
-        const double ax0scale = ps->getScale(0);
-        ax0ps_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
-                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale);
+                                         *ax0ps_dataspace,axps_prop);
+    const double ax0scale = ps->getScale(0);
+    ax0ps_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale);
     ax1ps_dataset = _file->createDataSet("/Info/AxisValues_E",axps_datatype,
-                                                                                        *ax1ps_dataspace,axps_prop);
+                                         *ax1ps_dataspace,axps_prop);
         const double ax1scale = ps->getScale(1);
         ax1ps_dataset.createAttribute("Scale",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax1scale);
         ax0ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
         ax1ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
 
-	// save Values of Frequency Axis
-	if (std::is_same<vfps::meshaxis_t,float>::value) {
-		axfreq_datatype = H5::PredType::IEEE_F32LE;
-	} else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
-		axfreq_datatype = H5::PredType::STD_I64LE;
-	} else if (std::is_same<vfps::meshaxis_t,double>::value) {
-		axfreq_datatype = H5::PredType::IEEE_F64LE;
-	}
+    // save Values of Frequency Axis
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            axfreq_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            axfreq_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            axfreq_datatype = H5::PredType::IEEE_F64LE;
+    }
 
-	const std::array<hsize_t,axfreq_rank> axfreq_dims
-			= {{ 1, maxn }};
-	const std::array<hsize_t,axfreq_rank> axfreq_maxdims
-			= {{ 1, maxn }};
+    const std::array<hsize_t,axfreq_rank> axfreq_dims
+                    = {{ 1, maxn }};
+    const std::array<hsize_t,axfreq_rank> axfreq_maxdims
+                    = {{ 1, maxn }};
 
     axfreq_dataspace = new H5::DataSpace(axfreq_rank,axfreq_dims.data(),
                                          axfreq_maxdims.data());
@@ -156,23 +156,23 @@ vfps::HDF5File::HDF5File(const std::string fname,
     bc_dataset = _file->createDataSet("/BunchCurrent/data",bc_datatype,
                                      *bc_dataspace,bc_prop);
 
-        // get ready to save BunchProfiles
+    // get ready to save BunchProfiles
     _file->createGroup("BunchProfile");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/BunchProfile/axis0" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis1" );
 
-	if (std::is_same<vfps::integral_t,float>::value) {
-		bp_datatype = H5::PredType::IEEE_F32LE;
-	} else if (std::is_same<vfps::integral_t,fixp64>::value) {
-		bp_datatype = H5::PredType::STD_I64LE;
-	} else if (std::is_same<vfps::integral_t,double>::value) {
-		bp_datatype = H5::PredType::IEEE_F64LE;
-	}
+    if (std::is_same<vfps::integral_t,float>::value) {
+            bp_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::integral_t,fixp64>::value) {
+            bp_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::integral_t,double>::value) {
+            bp_datatype = H5::PredType::IEEE_F64LE;
+    }
 
-	const std::array<hsize_t,bp_rank> bp_maxdims
-			= {{H5S_UNLIMITED,ps_size}};
+    const std::array<hsize_t,bp_rank> bp_maxdims
+                    = {{H5S_UNLIMITED,ps_size}};
 
-	bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
+    bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
     const std::array<hsize_t,bp_rank> bp_chunkdims
         = {{64U,std::min(2048U,ps_size)}};
@@ -495,19 +495,19 @@ void vfps::HDF5File::append(const PhaseSpace* ps)
         delete memspace;
         delete filespace;
 
-	// append BunchProfile
-	std::array<hsize_t,bp_rank> bp_offset
-			= {{bp_dims[0],0}};
-	const std::array<hsize_t,bp_rank> bp_ext
-			= {{1,ps_size}};
-	bp_dims[0]++;
-	bp_dataset.extend(bp_dims.data());
-	filespace = new H5::DataSpace(bp_dataset.getSpace());
-	filespace->selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
-	memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
-	bp_dataset.write(ps->getProjection(0), bp_datatype,*memspace, *filespace);
-	delete memspace;
-	delete filespace;
+    // append BunchProfile
+    std::array<hsize_t,bp_rank> bp_offset
+                    = {{bp_dims[0],0}};
+    const std::array<hsize_t,bp_rank> bp_ext
+                    = {{1,ps_size}};
+    bp_dims[0]++;
+    bp_dataset.extend(bp_dims.data());
+    filespace = new H5::DataSpace(bp_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
+    memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
+    bp_dataset.write(ps->getProjection(0), bp_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
 
     // append Length
     hsize_t bl_offset = bl_dims;
