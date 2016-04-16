@@ -86,7 +86,13 @@ public:
         { return rotations; }
 
     inline double getPhaseSpaceSize() const
-        { return pq_max; }
+        { return pq_size; }
+
+    inline double getPSCenterP() const
+        { return p_center; }
+
+    inline double getPSCenterQ() const
+        { return q_center; }
 
     inline int getRotationMapSize() const
         { return rotmapsize; }
@@ -160,7 +166,9 @@ private: // simulation parameters
     unsigned int meshsize;
     unsigned int outsteps;
     unsigned int padding;
-    double pq_max;
+    double pq_size;
+    double p_center;
+    double q_center;
     unsigned int steps;
     double rotations;
     int rotmapsize;

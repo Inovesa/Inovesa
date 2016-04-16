@@ -28,9 +28,9 @@ vfps::RFKickMap::RFKickMap(PhaseSpace *in, PhaseSpace *out,
     :
       KickMap(in,out,xsize,ysize,it,DirectionOfKick::y)
 {
+    const meshaxis_t xcenter = in->getRuler(0)->zerobin();
     for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = std::tan(angle)*( static_cast<int>(_xsize/2)
-                                      -static_cast<int>(x));
+        _offset[x] = std::tan(angle)*(xcenter-x);
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

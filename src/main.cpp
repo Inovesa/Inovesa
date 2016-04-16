@@ -172,10 +172,13 @@ int main(int argc, char** argv)
 
     PhaseSpace* mesh1;
     meshindex_t ps_size = opts.getMeshSize();
-    const double qmax = opts.getPhaseSpaceSize();
-    const double qmin = -qmax;
-    const double pmin = qmin;
-    const double pmax = qmax;
+    const double pcenter = opts.getPSCenterP();
+    const double qcenter = opts.getPSCenterQ();
+    const double pqhalf = opts.getPhaseSpaceSize()/2;
+    const double qmax = -qcenter + pqhalf;
+    const double qmin = -qcenter - pqhalf;
+    const double pmax = -pcenter + pqhalf;
+    const double pmin = -pcenter - pqhalf;
 
     const double sE = opts.getEnergySpread();
     const double E0 = opts.getBeamEnergy();

@@ -28,9 +28,9 @@ namespace vfps
 class DriftMap : public KickMap
 {
 public:
-	DriftMap(PhaseSpace* in, PhaseSpace* out,
-			 const meshindex_t xsize, const meshindex_t ysize,
-			 const meshaxis_t angle, const InterpolationType it);
+    DriftMap(PhaseSpace* in, PhaseSpace* out,
+             const meshindex_t xsize, const meshindex_t ysize,
+             const meshaxis_t angle, const InterpolationType it);
 };
 
 } // namespace fvps

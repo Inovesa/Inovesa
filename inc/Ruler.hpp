@@ -37,7 +37,8 @@ public:
         _max(max),
         _min(min),
         _delta((max-min)/meshaxis_t(steps-1)),
-        _scale(scale)
+        _scale(scale),
+        _zerobin(((min+max)/(min-max)+1)*steps/2)
     {
         if (min >= max) {
             throw std::invalid_argument("Tried to set up Ruler with min >= max.");
@@ -56,7 +57,8 @@ public:
         _max(other._max),
         _min(other._min),
         _delta(other._delta),
-        _scale(other._scale)
+        _scale(other._scale),
+        _zerobin(other._zerobin)
     {
         meshaxis_t* meshaxis_tmp = new meshaxis_t[_steps];
         std::copy_n(other._data,_steps,meshaxis_tmp);
@@ -89,6 +91,9 @@ public:
     inline const meshaxis_t size() const
         { return _max - _min; }
 
+    inline const meshaxis_t zerobin() const
+        { return _zerobin; }
+
     inline const meshaxis_t& operator[](meshindex_t d) const
         {return _data[d];}
 
@@ -118,6 +123,8 @@ protected:
     const meshaxis_t _delta;
 
     const double _scale;
+
+    const meshaxis_t _zerobin;
 };
 
 }
