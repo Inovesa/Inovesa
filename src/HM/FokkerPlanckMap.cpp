@@ -28,12 +28,14 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
     HeritageMap(in, out, 1, ysize, dt, dt),
     _meshxsize(xsize)
 {
-	// the following doubles should be interpol_t
-	const interpol_t e1_2d = e1/(interpol_t(2)*in->getDelta(1));
-	const interpol_t e1_6d = e1/(interpol_t(6)*in->getDelta(1));
-	const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
+    // the following doubles should be interpol_t
+    const interpol_t e1_2d = e1/(interpol_t(2)*in->getDelta(1));
+    const interpol_t e1_6d = e1/(interpol_t(6)*in->getDelta(1));
+    const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
 
-	switch (dt) {
+    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
+
+    switch (dt) {
     case DerivationType::two_sided:
         _hinfo[0] = {0,0};
         _hinfo[1] = {0,0};
@@ -68,7 +70,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 		_hinfo[_ip+1] = {0,0};
 		_hinfo[_ip+2] = {0,0};
 		_hinfo[_ip+3] = {0,0};
-		for (meshindex_t j=2; j< _ysize/2; j++) {
+        for (meshindex_t j=2; j< ycenter; j++) {
 			const meshaxis_t pos = in->x(1,j);
 			_hinfo[j*_ip  ]={j-2,0};
 			_hinfo[j*_ip+1]={j-1,0};
@@ -86,7 +88,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 				_hinfo[j*_ip+3].weight +=    e1_d2;
 			}
 		}
-		for (meshindex_t j=_ysize/2; j<static_cast<meshindex_t>(_ysize-2);j++) {
+        for (meshindex_t j=ycenter; j<static_cast<meshindex_t>(_ysize-2);j++) {
 			const meshaxis_t pos = in->x(1,j);
 			_hinfo[j*_ip  ]={j-1,0};
 			_hinfo[j*_ip+1]={j  ,1};
