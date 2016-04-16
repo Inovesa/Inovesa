@@ -175,10 +175,10 @@ int main(int argc, char** argv)
     const double pcenter = opts.getPSCenterP();
     const double qcenter = opts.getPSCenterQ();
     const double pqhalf = opts.getPhaseSpaceSize()/2;
-    const double qmax = -qcenter + pqhalf;
-    const double qmin = -qcenter - pqhalf;
-    const double pmax = -pcenter + pqhalf;
-    const double pmin = -pcenter - pqhalf;
+    const double qmax = qcenter + pqhalf;
+    const double qmin = qcenter - pqhalf;
+    const double pmax = pcenter + pqhalf;
+    const double pmin = pcenter - pqhalf;
 
     const double sE = opts.getEnergySpread();
     const double E0 = opts.getBeamEnergy();
@@ -460,12 +460,14 @@ int main(int argc, char** argv)
         wfm = new WakeFunctionMap(mesh2,mesh1,ps_size,ps_size,
                                   wake,interpolationtype);
         wkm = wfm;
-    } else if (h >= 0) {
+    } else {
         Display::printText("Calculating WakePotential.");
         field = new ElectricField(mesh2,impedance,Ib,E0,sE,dt);
-        Display::printText("Building WakeKickMap.");
-        wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
-                                   interpolationtype);
+        if (h >= 0) {
+            Display::printText("Building WakeKickMap.");
+            wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
+                                       interpolationtype);
+        }
     }
     if (wkm != nullptr) {
         wm = wkm;

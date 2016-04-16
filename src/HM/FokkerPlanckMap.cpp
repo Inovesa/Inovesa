@@ -34,32 +34,30 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
 	const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
 
 	switch (dt) {
-	case DerivationType::two_sided:
-		for (meshindex_t i=0; i< _meshxsize; i++) {
-			_hinfo[0] = {0,0};
-			_hinfo[1] = {0,0};
-			_hinfo[2] = {0,0};
-			for (meshindex_t j=1; j< _ysize-1; j++) {
-				_hinfo[j*_ip  ]={j-1,0};
-				_hinfo[j*_ip+1]={j  ,1};
-				_hinfo[j*_ip+2]={j+1,0};
+    case DerivationType::two_sided:
+        _hinfo[0] = {0,0};
+        _hinfo[1] = {0,0};
+        _hinfo[2] = {0,0};
+        for (meshindex_t j=1; j< _ysize-1; j++) {
+            _hinfo[j*_ip  ]={j-1,0};
+            _hinfo[j*_ip+1]={j  ,1};
+            _hinfo[j*_ip+2]={j+1,0};
 
-				if (fpt == FPType::full || fpt == FPType::damping_only) {
-					const meshaxis_t pos = in->x(1,j);
-					_hinfo[j*_ip  ].weight += -e1_2d*pos;
-					_hinfo[j*_ip+1].weight +=  e1;
-					_hinfo[j*_ip+2].weight +=  e1_2d*pos;
-				}
-				if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-					_hinfo[j*_ip  ].weight +=				 e1_d2;
-					_hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
-					_hinfo[j*_ip+2].weight +=				 e1_d2;
-				}
-			}
-			_hinfo[(_ysize-1)*_ip+0] = {0,0};
-			_hinfo[(_ysize-1)*_ip+1] = {0,0};
-			_hinfo[(_ysize-1)*_ip+2] = {0,0};
-		}
+            if (fpt == FPType::full || fpt == FPType::damping_only) {
+                const meshaxis_t pos = in->x(1,j);
+                _hinfo[j*_ip  ].weight += -e1_2d*pos;
+                _hinfo[j*_ip+1].weight +=  e1;
+                _hinfo[j*_ip+2].weight +=  e1_2d*pos;
+            }
+            if (fpt == FPType::full || fpt == FPType::diffusion_only) {
+                _hinfo[j*_ip  ].weight +=				 e1_d2;
+                _hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
+                _hinfo[j*_ip+2].weight +=				 e1_d2;
+            }
+        }
+        _hinfo[(_ysize-1)*_ip+0] = {0,0};
+        _hinfo[(_ysize-1)*_ip+1] = {0,0};
+        _hinfo[(_ysize-1)*_ip+2] = {0,0};
 		break;
 	case DerivationType::cubic:
 		_hinfo[0] = {0,0};
