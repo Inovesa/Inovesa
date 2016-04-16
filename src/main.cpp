@@ -207,33 +207,37 @@ int main(int argc, char** argv)
 
     std::string startdistfile = opts.getStartDistFile();
 
-    double shield;
-    if (h<=0) {
-        shield = 0;
-    } else {
-        shield = bl*std::sqrt(R)*std::pow(h,-3./2.);
+    if (h>=0) {
+        double shield;
+        if (h==0) {
+            shield = 0;
+        } else {
+            shield = bl*std::sqrt(R)*std::pow(h,-3./2.);
+        }
+
+        const double Ith = physcons::IAlfven/physcons::me*2*M_PI
+                         * std::pow(dE*fs/f0,2)/V/H
+                 * std::pow(bl/R,1./3.) * (0.5+0.34*shield);
+
+        if (verbose) {
+            sstream.str("");
+            sstream << std::scientific << Ith;
+            Display::printText("BBT-Threshold-Current expected at "
+                               +sstream.str()+" A.");
+        }
     }
 
-    const double Ith = physcons::IAlfven/physcons::me*2*M_PI
-                     * std::pow(dE*fs/f0,2)/V/H
-                     * std::pow(bl/R,1./3.) * (0.5+0.34*shield);
-
     if (verbose) {
-    sstream.str("");
-    sstream << std::scientific << Ith;
-    Display::printText("BBT-Threshold-Current expected at "
-                       +sstream.str()+" A.");
+        sstream.str("");
+        sstream << std::fixed << 1/dt/f0;
+        Display::printText("Doing " +sstream.str()+
+                           " simulation steps per revolution period.");
 
-    sstream.str("");
-    sstream << std::fixed << 1/dt/f0;
-    Display::printText("Doing " +sstream.str()+
-                       " simulation steps per revolution period.");
-
-    sstream.str("");
-    double rotationoffset = std::tan(angle)*ps_size/2;
-    sstream << std::fixed << rotationoffset;
-    Display::printText("Maximum rotation offset is "
-                       +sstream.str()+" (should be < 1).");
+        sstream.str("");
+        double rotationoffset = std::tan(angle)*ps_size/2;
+        sstream << std::fixed << rotationoffset;
+        Display::printText("Maximum rotation offset is "
+                           +sstream.str()+" (should be < 1).");
     }
 
     if (startdistfile.length() <= 4) {
@@ -432,6 +436,7 @@ int main(int argc, char** argv)
     }
 
     ElectricField* field = nullptr;
+    HeritageMap* wm = nullptr;
     WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
     std::vector<std::pair<meshaxis_t,double>> wake;
@@ -452,12 +457,17 @@ int main(int argc, char** argv)
         wfm = new WakeFunctionMap(mesh2,mesh1,ps_size,ps_size,
                                   wake,interpolationtype);
         wkm = wfm;
-    } else {
+    } else if (h >= 0) {
         Display::printText("Calculating WakePotential.");
         field = new ElectricField(mesh2,impedance,Ib,E0,sE,dt);
         Display::printText("Building WakeKickMap.");
         wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
                                    interpolationtype);
+    }
+    if (wkm != nullptr) {
+        wm = wkm;
+    } else {
+        wm = new Identity(mesh2,mesh1,ps_size,ps_size);
     }
 
     std::string ofname = opts.getOutFile();
@@ -512,28 +522,34 @@ int main(int argc, char** argv)
             delete bpv;
             bpv = nullptr;
         }
-        try {
-            wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
-            display->addElement(wpv);
-        } catch (std::exception &e) {
-            std::cerr << e.what() << std::endl;
-            display->takeElement(wpv);
-            delete wpv;
-            wpv = nullptr;
+        if (wkm != nullptr) {
+            try {
+                wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
+                display->addElement(wpv);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                display->takeElement(wpv);
+                delete wpv;
+                wpv = nullptr;
+            }
         }
     }
     #endif // INOVESSA_USE_GUI
 
     Display::printText("Starting the simulation.");
     // first update to have wkm for step0 in file
-    wkm->update();
+    if (wkm != nullptr) {
+        wkm->update();
+    }
 
     for (unsigned int i=0;i<steps*rotations;i++) {
         if (outstep > 0 && i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
                 mesh1->syncCLMem(clCopyDirection::dev2cpu);
-                wkm->syncCLMem(clCopyDirection::dev2cpu);
+                if (wkm != nullptr) {
+                    wkm->syncCLMem(clCopyDirection::dev2cpu);
+                }
             }
             #endif // INOVESA_USE_CL
             mesh1->normalize();
@@ -546,7 +562,9 @@ int main(int argc, char** argv)
                 hdf_file->append(mesh1);
                 field->updateCSR(fc);
                 hdf_file->append(field);
-                hdf_file->append(wkm);
+                if (wkm != nullptr) {
+                    hdf_file->append(wkm);
+                }
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
@@ -580,7 +598,7 @@ int main(int argc, char** argv)
           rm2->apply();
         }
         fpm->apply();
-        wkm->apply();
+        wm->apply();
     }
 
     #ifdef INOVESA_USE_HDF5
@@ -591,7 +609,9 @@ int main(int argc, char** argv)
         hdf_file->append(mesh1);
         field->updateCSR(fc);
         hdf_file->append(field);
-        hdf_file->append(wkm);
+        if (wkm != nullptr) {
+            hdf_file->append(wkm);
+        }
     }
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
@@ -637,7 +657,7 @@ int main(int argc, char** argv)
 
     delete rm1;
     delete rm2;
-    delete wkm;
+    delete wm;
     delete fpm;
 
     #ifdef INOVESA_USE_CL

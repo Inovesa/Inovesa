@@ -64,7 +64,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
+            #ifdef INOVESA_USE_PNG
             "\tgrayscale png (.png) file\n"
+            #endif // INOVESA_USE_PNG
             "\ttext file (.txt) w/ particle coordinates")
         ("InitialDistParam,K",po::value<double>(&Fk),
             "Parameter F(k) of initial distribution")
@@ -79,7 +81,10 @@ vfps::ProgramOptions::ProgramOptions() :
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
         ("VaccuumHeight", po::value<double>(&h),
-            "Height of vacuum chamber (m)")
+            "Height of vacuum chamber (m)\n"
+            "<0: no CSR\n"
+            " 0: free space CSR\n"
+            ">0: parallel plates CSR")
         ("CutoffFreq", po::value<double>(&f_c),"Beamline cutoff frequency (Hz)")
         ("RFVoltage,V", po::value<double>(&V_RF),
             "Accelerating Voltage (V)")
@@ -233,6 +238,9 @@ void vfps::ProgramOptions::save(std::string fname)
             } else {
                 std::string val;
                 try {
+                    if (it->first == "config") {
+                        ofs << '#';
+                    }
                     val = _vm[it->first].as<std::string>();
                     ofs << it->first << '='
                         << val

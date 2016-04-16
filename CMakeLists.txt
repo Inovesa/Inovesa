@@ -117,6 +117,8 @@ IF(PNG_FOUND)
 	IF(PNGPP_FOUND)
 		add_definitions( -DINOVESA_USE_PNG)
 		MESSAGE ("Found PNG++. Will add PNG support.")
+	ELSE()
+		MESSAGE ("Did not find PNG++. Will compile without PNG support.")
 	ENDIF()
 ENDIF()
 
