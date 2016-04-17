@@ -172,9 +172,10 @@ int main(int argc, char** argv)
 
     PhaseSpace* mesh1;
     meshindex_t ps_size = opts.getMeshSize();
-    const double pcenter = opts.getPSCenterP();
-    const double qcenter = opts.getPSCenterQ();
-    const double pqhalf = opts.getPhaseSpaceSize()/2;
+    const double pqsize = opts.getPhaseSpaceSize();
+    const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
+    const double pcenter = -opts.getPSShiftY()*pqsize/(ps_size-1);
+    const double pqhalf = pqsize/2;
     const double qmax = qcenter + pqhalf;
     const double qmin = qcenter - pqhalf;
     const double pmax = pcenter + pqhalf;

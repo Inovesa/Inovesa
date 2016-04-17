@@ -38,7 +38,7 @@ public:
         _min(min),
         _delta((max-min)/meshaxis_t(steps-1)),
         _scale(scale),
-        _zerobin(((min+max)/(min-max)+1)*steps/2)
+        _zerobin(((min+max)/(min-max)+1)*(steps-1)/2)
     {
         if (min >= max) {
             throw std::invalid_argument("Tried to set up Ruler with min >= max.");

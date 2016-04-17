@@ -30,8 +30,8 @@ vfps::ProgramOptions::ProgramOptions() :
     outsteps(100),
     padding(0),
     pq_size(5.0),
-    p_center(0),
-    q_center(0),
+    meshshiftx(0),
+    meshshifty(0),
     steps(4000),
     rotations(1),
     rotmapsize(-1),
@@ -131,10 +131,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Factor for zero padding of bunch profile")
         ("PhaseSpaceSize,P", po::value<double>(&pq_size),
             "Size of phase space")
-        ("PhaseSpacePCenter",po::value<double>(&p_center),
-            "Central p value")
-        ("PhaseSpaceQCenter",po::value<double>(&q_center),
-            "Central q value")
+        ("PhaseSpaceShiftX",po::value<double>(&meshshiftx),
+            "Shift grid by X mesh points")
+        ("PhaseSpaceShiftY",po::value<double>(&meshshifty),
+            "Shift grid by Y mesh points")
         ("RotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
             "Size of rotation map\n"
             "-1: on-axis displacements\n"
