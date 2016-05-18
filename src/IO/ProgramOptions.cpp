@@ -44,7 +44,7 @@ vfps::ProgramOptions::ProgramOptions() :
     H(1),
     I_b(1),
     t_d(0.01),
-    r_bend(1.0),
+    r_bend(-1),
     s_E(4.7e-4),
     V_RF(1e6),
     _physopts("Physical Parameters for Simulation"),
@@ -75,7 +75,8 @@ vfps::ProgramOptions::ProgramOptions() :
         ("BunchCurrent,I", po::value<double>(&I_b),
             "Ring Current due to a single bunch (A)")
         ("BendingRadius,R", po::value<double>(&r_bend),
-            "Bending radius of accelerator (m)")
+            "Bending radius of accelerator (m)\n"
+            "negative: calculate from RevolutionFrequency")
         ("BeamEnergy,E", po::value<double>(&E_0),
             "Beam energy (GeV)")
         ("BeamEnergySpread,e", po::value<double>(&s_E),

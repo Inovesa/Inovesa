@@ -184,7 +184,14 @@ int main(int argc, char** argv)
     const double sE = opts.getEnergySpread();
     const double E0 = opts.getBeamEnergy();
     const double dE = sE*E0;
-    const double f0 = opts.getRevolutionFrequency();
+    double f0;
+    double R;
+    const double R_tmp = opts.getBendingRadius();
+    f0 = opts.getRevolutionFrequency();
+    R = physcons::c/(2*M_PI*f0);
+    if (R_tmp > 0) {
+        Display::printText("Non iso-magneting rings to be implemented.");
+    }
     #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
@@ -195,7 +202,6 @@ int main(int argc, char** argv)
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib = opts.getBunchCurrent();
     const double Fk = opts.getStartDistParam();
-    const double R = physcons::c/(2*M_PI*f0);
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
     const unsigned int outstep = opts.getOutSteps();
