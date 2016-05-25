@@ -29,18 +29,18 @@
 #include "ElectricField.hpp"
 #include "Impedance.hpp"
 #include "PhaseSpace.hpp"
-#include "HM/WakeFunctionMap.hpp"
+#include "SM/WakeFunctionMap.hpp"
 
 namespace vfps {
 
 class HDF5File
 {
 public:
-	/**
-	 * @brief HDF5File
-	 * @param fname file name to save HDF5 file to
-	 * @param ps_size size of one mesh dimension
-	 * @param maxn maximum index (==wavenumber?) of CSR spectrum
+    /**
+     * @brief HDF5File
+     * @param fname file name to save HDF5 file to
+     * @param ps_size size of one mesh dimension
+     * @param maxn maximum index (==wavenumber?) of CSR spectrum
      */
     HDF5File(const std::string fname,
              const PhaseSpace* ps,
@@ -198,11 +198,11 @@ private: // wake potential
     H5::DSetCreatPropList wp_prop;
 
 private: // csr spectrum
-	static constexpr uint_fast8_t csr_rank = 2;
+    static constexpr uint_fast8_t csr_rank = 2;
 
-	H5::DataSet csr_dataset;
+    H5::DataSet csr_dataset;
 
-	H5::DataSpace* csr_dataspace;
+    H5::DataSpace* csr_dataspace;
 
     H5::DataType csr_datatype;
 

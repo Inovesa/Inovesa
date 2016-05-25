@@ -20,17 +20,17 @@
 #ifndef IDENTITY_HPP
 #define IDENTITY_HPP
 
-#include "HeritageMap.hpp"
+#include "SM/SourceMap.hpp"
 
 namespace vfps
 {
 
-class Identity : public HeritageMap
+class Identity : public SourceMap
 {
 public:
     Identity(PhaseSpace* in, PhaseSpace* out,
              const meshindex_t xsize, const meshindex_t ysize) :
-        HeritageMap(in, out, xsize, ysize, 0, 0) {}
+        SourceMap(in, out, xsize, ysize, 0, 0) {}
 
     /**
      * @brief apply copys data from in to out

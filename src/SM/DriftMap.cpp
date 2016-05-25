@@ -17,73 +17,27 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef ROTATIONMAP_HPP
-#define ROTATIONMAP_HPP
+#include "SM/DriftMap.hpp"
 
-#include <array>
+#include <iostream>
 
-#include "defines.hpp"
-#include "HeritageMap.hpp"
-#include "IO/Display.hpp"
-
-using std::modf;
-
-namespace vfps
+vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
+                         const meshindex_t xsize,
+                         const meshindex_t ysize,
+                         const meshaxis_t angle,
+                         const InterpolationType it,
+                         const bool interpol_clamp)
+    :
+      KickMap(in,out,xsize,ysize,it,interpol_clamp,DirectionOfKick::x)
 {
-
-class RotationMap : public HeritageMap
-{
-public:
-    /**
-     * @brief RotationMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param angle
-     * @param it
-     * @param rt
-     * @param interpol_saturating
-     * @param rotmapsize size of rotation map (can be 0, _size or _size/2)
-     */
-    RotationMap(PhaseSpace* in, PhaseSpace* out,
-                const meshindex_t xsize, const meshindex_t ysize,
-                const meshaxis_t angle, const InterpolationType it,
-                const RotationCoordinates rt,
-                bool interpol_saturating, const size_t rotmapsize=0);
-
-    /**
-     * @brief apply
-     *
-     * Saturation only makes sense with quadratic/cubic interpolation.
-     * Enabling it with linear (or without) currently crashes the program.
-     */
-    void apply();
-
-private:
-    const uint32_t _rotmapsize;
-
-    const bool _sat;
-
-    void genHInfo(meshindex_t q_i, meshindex_t p_i, hi* myhinfo);
-
-    const RotationCoordinates _rt;
-    const meshaxis_t _cos_dt;
-    const meshaxis_t _sin_dt;
-
+    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
+    for(meshindex_t y=0; y<_ysize; y++) {
+        _offset[y] = std::tan(angle)*(y-ycenter);
+    }
     #ifdef INOVESA_USE_CL
-    void genCode4HM4_2sat();
-
-    void genCode4HM4sat();
-
-    void genCode4Rotation();
-
-    cl_int2 imgsize;
-
-    cl_float2 rot;
+    if (OCLH::active) {
+        syncCLMem(clCopyDirection::cpu2dev);
+    }
     #endif // INOVESA_USE_CL
-};
-
+    updateHM();
 }
-
-#endif // ROTATIONMAP_HPP

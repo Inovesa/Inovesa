@@ -17,25 +17,23 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "HM/RFKickMap.hpp"
+#include "SM/WakeKickMap.hpp"
 
-
-vfps::RFKickMap::RFKickMap(PhaseSpace *in, PhaseSpace *out,
-                           const meshindex_t xsize,
-                           const meshindex_t ysize,
-                           const meshaxis_t angle,
-                           const InterpolationType it)
-    :
-      KickMap(in,out,xsize,ysize,it,DirectionOfKick::y)
+vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+                               const meshindex_t xsize, const meshindex_t ysize,
+                               const InterpolationType it,
+                               const bool interpol_clamp)  :
+    KickMap(in,out,xsize,ysize,it,interpol_clamp)
 {
-    const meshaxis_t xcenter = in->getRuler(0)->zerobin();
-    for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = std::tan(angle)*(xcenter-x);
-    }
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
+}
+
+vfps::WakeKickMap::~WakeKickMap()
+{
+}
+
+void vfps::WakeKickMap::apply()
+{
+    update();
     updateHM();
+    KickMap::apply();
 }

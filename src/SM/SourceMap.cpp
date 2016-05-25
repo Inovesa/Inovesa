@@ -17,9 +17,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "HM/HeritageMap.hpp"
+#include "SM/SourceMap.hpp"
 
-vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
+vfps::SourceMap::SourceMap(PhaseSpace* in, PhaseSpace* out,
                                meshindex_t xsize, meshindex_t ysize,
                                size_t memsize,
                                uint_fast8_t interpoints,
@@ -38,21 +38,21 @@ vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
     #endif // INOVESA_USE_CL
 }
 
-vfps::HeritageMap::HeritageMap(PhaseSpace* in, PhaseSpace* out,
+vfps::SourceMap::SourceMap(PhaseSpace* in, PhaseSpace* out,
                                size_t xsize, size_t ysize,
                                uint_fast8_t interpoints,
                                uint_fast8_t intertype) :
-    HeritageMap(in,out,xsize,ysize,xsize*ysize*interpoints,
+    SourceMap(in,out,xsize,ysize,xsize*ysize*interpoints,
                 interpoints,intertype)
 {
 }
 
-vfps::HeritageMap::~HeritageMap()
+vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
 }
 
-void vfps::HeritageMap::apply()
+void vfps::SourceMap::apply()
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -89,7 +89,7 @@ void vfps::HeritageMap::apply()
 
 
 #ifdef INOVESA_USE_CL
-void vfps::HeritageMap::genCode4HM1D()
+void vfps::SourceMap::genCode4HM1D()
 {
     _cl_code += R"(
     __kernel void applyHM1D(const __global data_t* src,
@@ -110,7 +110,7 @@ void vfps::HeritageMap::genCode4HM1D()
 }
 #endif // INOVESA_USE_CL
 
-void vfps::HeritageMap::calcCoefficiants(vfps::interpol_t* ic,
+void vfps::SourceMap::calcCoefficiants(vfps::interpol_t* ic,
                                          const vfps::interpol_t f,
                                          const uint_fast8_t it) const
 {
@@ -140,7 +140,7 @@ void vfps::HeritageMap::calcCoefficiants(vfps::interpol_t* ic,
     }
 }
 
-void vfps::HeritageMap::notBoundMessage()
+void vfps::SourceMap::notBoundMessage()
 {
     Display::printText("WARNING: Bound interpolation not implemented for this interpolation scheme.");
 }

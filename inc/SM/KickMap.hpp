@@ -17,42 +17,84 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef WAKEKICKMAP_HPP
-#define WAKEKICKMAP_HPP
+#ifndef KICKMAP_HPP
+#define KICKMAP_HPP
 
-#include <array>
-#include <fftw3.h>
-
-#include "defines.hpp"
-#include "IO/Display.hpp"
-#include "HM/KickMap.hpp"
-#include "ElectricField.hpp"
-#include "Ruler.hpp"
+#include "SM/SourceMap.hpp"
 
 namespace vfps
 {
 
 /**
- * @brief The WakeKickMap class offers an option for one-dimensional kicks
+ * @brief The KickMap class allows to apply position dependent forces
  */
-class WakeKickMap : public KickMap
+class KickMap : public SourceMap
 {
 public:
-    WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-                const meshindex_t xsize, const meshindex_t ysize,
-                const InterpolationType it);
-
-    ~WakeKickMap();
+    enum class DirectionOfKick : bool {
+        x=0, y=1
+    };
 
 public:
-    /**
-     * @brief overloads KickMap::apply() to have a variable HeritageMap
-     */
+    KickMap(PhaseSpace* in, PhaseSpace* out,
+            const meshindex_t xsize, const meshindex_t ysize,
+            const InterpolationType it, const bool interpol_clamp,
+            const DirectionOfKick kd=DirectionOfKick::y);
+
+    ~KickMap();
+
+public:
+    const inline meshaxis_t* getForce() const
+        { return _offset.data(); }
+
+public:
     void apply();
 
-    virtual void update()=0;
+    #ifdef INOVESA_USE_CL
+    void syncCLMem(clCopyDirection dir);
+    #endif // INOVESA_USE_CL
+
+protected:
+    /**
+     * @brief _offset by one kick in units of mesh points
+     */
+    std::vector<meshaxis_t> _offset;
+
+    #ifdef INOVESA_USE_CL
+    cl::Buffer _force_buf;
+    #endif
+
+    /**
+     * @brief _kickdirection direction of the offset du to the kick
+     */
+    const DirectionOfKick _kickdirection;
+
+    /**
+     * @brief _meshsize_kd size of the mesh in direction of the kick
+     */
+    #ifdef INOVESA_USE_CL
+    const cl_int _meshsize_kd;
+    #else
+    const meshindex_t _meshsize_kd;
+    #endif
+
+    /**
+     * @brief _meshsize_pd size of the mesh perpendicular to the kick
+     */
+    #ifdef INOVESA_USE_CL
+    const cl_int _meshsize_pd;
+    #else
+    const meshindex_t _meshsize_kd;
+    #endif
+
+    /**
+     * @brief updateHM
+     *
+     * @todo use OpenCL
+     */
+    void updateHM();
 };
 
-} // namespace VFPS
+}
 
-#endif // WAKEKICKMAP_HPP
+#endif // KICKMAP_HPP

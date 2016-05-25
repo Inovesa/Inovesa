@@ -4,15 +4,15 @@ aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
   ./src/CL/OpenCLHandler.cpp
-  ./src/HM/DriftMap.cpp
-  ./src/HM/HeritageMap.cpp
-  ./src/HM/FokkerPlanckMap.cpp
-  ./src/HM/KickMap.cpp
-  ./src/HM/RFKickMap.cpp
-  ./src/HM/RotationMap.cpp
-  ./src/HM/WakeKickMap.cpp
-  ./src/HM/WakePotentialMap.cpp
-  ./src/HM/WakeFunctionMap.cpp
+  ./src/SM/DriftMap.cpp
+  ./src/SM/FokkerPlanckMap.cpp
+  ./src/SM/KickMap.cpp
+  ./src/SM/RFKickMap.cpp
+  ./src/SM/RotationMap.cpp
+  ./src/SM/SourceMap.cpp
+  ./src/SM/WakeKickMap.cpp
+  ./src/SM/WakePotentialMap.cpp
+  ./src/SM/WakeFunctionMap.cpp
   ./src/IO/Display.cpp
   ./src/IO/GUI/GUIElement.cpp
   ./src/IO/GUI/Plot2DLine.cpp
@@ -28,16 +28,16 @@ set(SRC_LIST
 set(INC_LIST
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
-  ./inc/HM/DriftMap.hpp
-  ./inc/HM/HeritageMap.hpp
-  ./inc/HM/FokkerPlanckMap.hpp
-  ./inc/HM/KickMap.hpp
-  ./inc/HM/RFKickMap.hpp
-  ./inc/HM/Identity.hpp
-  ./inc/HM/RotationMap.hpp
-  ./inc/HM/WakePotentialMap.hpp
-  ./inc/HM/WakeKickMap.hpp
-  ./inc/HM/WakeFunctionMap.hpp
+  ./inc/SM/DriftMap.hpp
+  ./inc/SM/FokkerPlanckMap.hpp
+  ./inc/SM/KickMap.hpp
+  ./inc/SM/RFKickMap.hpp
+  ./inc/SM/Identity.hpp
+  ./inc/SM/RotationMap.hpp
+  ./inc/SM/SourceMap.hpp
+  ./inc/SM/WakePotentialMap.hpp
+  ./inc/SM/WakeKickMap.hpp
+  ./inc/SM/WakeFunctionMap.hpp
   ./inc/IO/Display.hpp
   ./inc/IO/GUI/GUIElement.hpp
   ./inc/IO/GUI/Plot2DLine.hpp

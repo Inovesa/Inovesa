@@ -106,11 +106,11 @@ vfps::HDF5File::HDF5File(const std::string fname,
                                          axfreq_maxdims.data());
 
 
-	const std::array<hsize_t,bp_rank> axfreq_chunkdims
-			= {{1U,std::min(2048U,ps_size)}};
-	axfreq_prop.setChunk(axps_rank,axfreq_chunkdims.data());
-	axfreq_prop.setShuffle();
-	axfreq_prop.setDeflate(compression);
+    const std::array<hsize_t,bp_rank> axfreq_chunkdims
+            = {{1U,std::min(2048U,ps_size)}};
+    axfreq_prop.setChunk(axps_rank,axfreq_chunkdims.data());
+    axfreq_prop.setShuffle();
+    axfreq_prop.setDeflate(compression);
 
     axfreq_dataset = _file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
                                          *axfreq_dataspace,axfreq_prop);
@@ -333,22 +333,22 @@ vfps::HDF5File::HDF5File(const std::string fname,
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis0" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis1" );
 
-	if (std::is_same<vfps::meshdata_t,float>::value) {
-		ps_datatype = H5::PredType::IEEE_F32LE;
+    if (std::is_same<vfps::meshdata_t,float>::value) {
+        ps_datatype = H5::PredType::IEEE_F32LE;
 #if FXP_FRACPART < 31
-	} else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
-		ps_datatype = H5::PredType::STD_I32LE;
+    } else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
+        ps_datatype = H5::PredType::STD_I32LE;
 #endif
-	} else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
-		ps_datatype = H5::PredType::STD_I64LE;
-	}else if (std::is_same<vfps::meshdata_t,double>::value) {
-		ps_datatype = H5::PredType::IEEE_F64LE;
-	}
+    } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
+        ps_datatype = H5::PredType::STD_I64LE;
+    }else if (std::is_same<vfps::meshdata_t,double>::value) {
+        ps_datatype = H5::PredType::IEEE_F64LE;
+    }
 
-	const std::array<hsize_t,ps_rank> ps_maxdims
-			= {{H5S_UNLIMITED,ps_size,ps_size}};
+    const std::array<hsize_t,ps_rank> ps_maxdims
+            = {{H5S_UNLIMITED,ps_size,ps_size}};
 
-	ps_dataspace = new H5::DataSpace(ps_rank,ps_dims.data(),ps_maxdims.data());
+    ps_dataspace = new H5::DataSpace(ps_rank,ps_dims.data(),ps_maxdims.data());
 
 
     const std::array<hsize_t,ps_rank> ps_chunkdims
@@ -481,12 +481,12 @@ void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
 
 void vfps::HDF5File::append(const PhaseSpace* ps)
 {
-	// append PhaseSpace
-	std::array<hsize_t,ps_rank> ps_offset
-			= {{ps_dims[0],0,0}};
-	const std::array<hsize_t,ps_rank> ps_ext
-			= {{1,ps_size,ps_size}};
-	ps_dims[0]++;
+    // append PhaseSpace
+    std::array<hsize_t,ps_rank> ps_offset
+            = {{ps_dims[0],0,0}};
+    const std::array<hsize_t,ps_rank> ps_ext
+            = {{1,ps_size,ps_size}};
+    ps_dims[0]++;
     _ps_dataset.extend(ps_dims.data());
     H5::DataSpace* filespace = new H5::DataSpace(_ps_dataset.getSpace());
         H5::DataSpace* memspace = new H5::DataSpace(ps_rank,ps_ext.data(),nullptr);

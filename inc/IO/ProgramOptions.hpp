@@ -28,7 +28,7 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "HM/FokkerPlanckMap.hpp"
+#include "SM/FokkerPlanckMap.hpp"
 
 namespace po = boost::program_options;
 
@@ -104,7 +104,7 @@ public:
         { return interpol_type; }
 
     inline bool getInterpolationBound() const
-        { return interpol_bound; }
+        { return interpol_clamp; }
 
 public:
     inline double getBeamEnergy() const
@@ -174,7 +174,7 @@ private: // simulation parameters
     int rotmapsize;
     unsigned int deriv_type;
     unsigned int interpol_type;
-    bool interpol_bound;
+    bool interpol_clamp;
 
 private: // phsical parameters
     double E_0;

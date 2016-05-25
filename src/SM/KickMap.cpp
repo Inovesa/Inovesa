@@ -17,17 +17,23 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "HM/KickMap.hpp"
+#include "SM/KickMap.hpp"
 
-vfps::KickMap::KickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-                    const meshindex_t xsize, const meshindex_t ysize,
-                    const InterpolationType it, const DirectionOfKick kd) :
-    HeritageMap(in,out,kd==DirectionOfKick::x?1:xsize,
+vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
+                        const meshindex_t xsize, const meshindex_t ysize,
+                        const InterpolationType it, const bool interpol_clamp,
+                        const DirectionOfKick kd) :
+    SourceMap(in,out,kd==DirectionOfKick::x?1:xsize,
                        kd==DirectionOfKick::x?ysize:1,it,it),
     _kickdirection(kd),
     _meshsize_kd(kd==DirectionOfKick::x?xsize:ysize),
     _meshsize_pd(kd==DirectionOfKick::x?ysize:xsize)
 {
+
+    if (interpol_clamp) {
+        Display::printText("Clamped interpolation not "
+                           "implemented for KickMap.");
+    }
     _offset.resize(_meshsize_pd,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
     for (meshindex_t q_i=0; q_i<_meshsize_pd; q_i++) {

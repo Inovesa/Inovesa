@@ -17,22 +17,73 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "HM/WakeKickMap.hpp"
+#ifndef ROTATIONMAP_HPP
+#define ROTATIONMAP_HPP
 
-vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-                               const meshindex_t xsize, const meshindex_t ysize,
-                               const InterpolationType it)  :
-    KickMap(in,out,xsize,ysize,it)
+#include <array>
+
+#include "defines.hpp"
+#include "SM/SourceMap.hpp"
+#include "IO/Display.hpp"
+
+using std::modf;
+
+namespace vfps
 {
+
+class RotationMap : public SourceMap
+{
+public:
+    /**
+     * @brief RotationMap
+     * @param in
+     * @param out
+     * @param xsize
+     * @param ysize
+     * @param angle
+     * @param it
+     * @param rt
+     * @param interpol_saturating
+     * @param rotmapsize size of rotation map (can be 0, _size or _size/2)
+     */
+    RotationMap(PhaseSpace* in, PhaseSpace* out,
+                const meshindex_t xsize, const meshindex_t ysize,
+                const meshaxis_t angle, const InterpolationType it,
+                bool interpol_clamped,
+                const RotationCoordinates rt, const size_t rotmapsize=0);
+
+    /**
+     * @brief apply
+     *
+     * Saturation only makes sense with quadratic/cubic interpolation.
+     * Enabling it with linear (or without) currently crashes the program.
+     */
+    void apply();
+
+private:
+    const uint32_t _rotmapsize;
+
+    const bool _sat;
+
+    void genHInfo(meshindex_t q_i, meshindex_t p_i, hi* myhinfo);
+
+    const RotationCoordinates _rt;
+    const meshaxis_t _cos_dt;
+    const meshaxis_t _sin_dt;
+
+    #ifdef INOVESA_USE_CL
+    void genCode4HM4_2sat();
+
+    void genCode4HM4sat();
+
+    void genCode4Rotation();
+
+    cl_int2 imgsize;
+
+    cl_float2 rot;
+    #endif // INOVESA_USE_CL
+};
+
 }
 
-vfps::WakeKickMap::~WakeKickMap()
-{
-}
-
-void vfps::WakeKickMap::apply()
-{
-    update();
-    updateHM();
-    KickMap::apply();
-}
+#endif // ROTATIONMAP_HPP

@@ -36,14 +36,14 @@
 #include "PhaseSpace.hpp"
 #include "Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
-#include "HM/FokkerPlanckMap.hpp"
-#include "HM/Identity.hpp"
-#include "HM/KickMap.hpp"
-#include "HM/DriftMap.hpp"
-#include "HM/RotationMap.hpp"
-#include "HM/RFKickMap.hpp"
-#include "HM/WakeFunctionMap.hpp"
-#include "HM/WakePotentialMap.hpp"
+#include "SM/FokkerPlanckMap.hpp"
+#include "SM/Identity.hpp"
+#include "SM/KickMap.hpp"
+#include "SM/DriftMap.hpp"
+#include "SM/RotationMap.hpp"
+#include "SM/RFKickMap.hpp"
+#include "SM/WakeFunctionMap.hpp"
+#include "SM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
 
@@ -150,24 +150,24 @@ int main(int argc, char** argv)
         break;
     }
 
-    vfps::HeritageMap::InterpolationType interpolationtype;
+    vfps::SourceMap::InterpolationType interpolationtype;
     switch (opts.getInterpolationPoints()) {
     case 1:
-        interpolationtype = vfps::HeritageMap::InterpolationType::none;
+        interpolationtype = vfps::SourceMap::InterpolationType::none;
         break;
     case 2:
-        interpolationtype = vfps::HeritageMap::InterpolationType::linear;
+        interpolationtype = vfps::SourceMap::InterpolationType::linear;
         break;
     case 3:
-        interpolationtype = vfps::HeritageMap::InterpolationType::quadratic;
+        interpolationtype = vfps::SourceMap::InterpolationType::quadratic;
         break;
     default:
     case 4:
-        interpolationtype = vfps::HeritageMap::InterpolationType::cubic;
+        interpolationtype = vfps::SourceMap::InterpolationType::cubic;
         break;
     }
 
-    bool interpol_bound = opts.getInterpolationBound();
+    bool interpol_clamp = opts.getInterpolationBound();
     bool verbose = opts.getVerbosity();
 
     PhaseSpace* mesh1;
@@ -184,14 +184,12 @@ int main(int argc, char** argv)
     const double sE = opts.getEnergySpread();
     const double E0 = opts.getBeamEnergy();
     const double dE = sE*E0;
-    double f0;
-    double R;
+    const double f0 = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
-    f0 = opts.getRevolutionFrequency();
-    R = physcons::c/(2*M_PI*f0);
     if (R_tmp > 0) {
         Display::printText("Non iso-magneting rings to be implemented.");
     }
+    const double R = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f0);
     #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
@@ -392,21 +390,17 @@ int main(int argc, char** argv)
     PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
     PhaseSpace* mesh3 = new PhaseSpace(*mesh1);
 
-    HeritageMap* rm1;
-    HeritageMap* rm2 = nullptr;
+    SourceMap* rm1;
+    SourceMap* rm2 = nullptr;
     int rotmaptype = opts.getRotationMapSize();
     if (rotmaptype < 0) {
-        if (interpol_bound) {
-            Display::printText("Bound interpolation only "
-                               "implemented for RotationMap.");
-        }
         Display::printText("Building RFKickMap.");
         rm1 = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
-                            interpolationtype);
+                            interpolationtype,interpol_clamp);
 
         Display::printText("Building DriftMap.");
         rm2 = new DriftMap(mesh2,mesh3,ps_size,ps_size,angle,
-                           interpolationtype);
+                           interpolationtype,interpol_clamp);
     } else {
         size_t rotmapsize;
         std::string rotmapstring;
@@ -423,9 +417,9 @@ int main(int argc, char** argv)
         }
         Display::printText(rotmapstring);
         rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
-                             HeritageMap::InterpolationType::cubic,
+                             interpolationtype,interpol_clamp,
                              RotationMap::RotationCoordinates::norm_pm1,
-                             interpol_bound,rotmapsize);
+                             rotmapsize);
     }
 
     double e1;
@@ -435,7 +429,7 @@ int main(int argc, char** argv)
         e1=0;
     }
 
-    HeritageMap* fpm;
+    SourceMap* fpm;
     if (e1 > 0) {
         Display::printText("Building FokkerPlanckMap.");
         fpm = new FokkerPlanckMap( mesh3,mesh2,ps_size,ps_size,
@@ -446,7 +440,7 @@ int main(int argc, char** argv)
     }
 
     ElectricField* field = nullptr;
-    HeritageMap* wm = nullptr;
+    SourceMap* wm = nullptr;
     WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
     std::vector<std::pair<meshaxis_t,double>> wake;
@@ -465,7 +459,7 @@ int main(int argc, char** argv)
         ifs.close();
         Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh2,mesh1,ps_size,ps_size,
-                                  wake,interpolationtype);
+                                  wake,interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
@@ -473,7 +467,7 @@ int main(int argc, char** argv)
         if (h >= 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
-                                       interpolationtype);
+                                       interpolationtype,interpol_clamp);
         }
     }
     if (wkm != nullptr) {

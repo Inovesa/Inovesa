@@ -1,7 +1,7 @@
 #ifndef WAKEFUNCTIONMAP_HPP
 #define WAKEFUNCTIONMAP_HPP
 
-#include "HM/WakeKickMap.hpp"
+#include "SM/WakeKickMap.hpp"
 
 namespace vfps
 {
@@ -23,7 +23,7 @@ public:
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const std::vector<std::pair<meshaxis_t,double>> wake,
-                    const InterpolationType it);
+                    const InterpolationType it, const bool interpol_clamp);
 
     /**
      * @brief WakeFunctionMap
@@ -37,7 +37,7 @@ public:
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const vfps::ElectricField* csr,
-                    const InterpolationType it);
+                    const InterpolationType it, const bool interpol_clamp);
 
     ~WakeFunctionMap();
 
@@ -66,7 +66,7 @@ private:
      */
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    const InterpolationType it);
+                    const InterpolationType it, bool interpol_clamp);
 
     /**
      * @brief _wakefunktion (normalized single particle) wake,

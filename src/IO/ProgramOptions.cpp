@@ -150,7 +150,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Number of grid points to be used to numerically find derivative")
         ("InterpolationPoints",po::value<unsigned int>(&interpol_type)->default_value(4u),
             "Number of grid points to be used for interpolation")
-        ("InterpolateBound",po::value<bool>(&interpol_bound)->default_value(true),
+        ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(true),
             "Restrict result of interpolation to the values of the neighboring grid points")
     ;
     _cfgfileopts.add(_physopts);

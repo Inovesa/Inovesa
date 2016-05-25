@@ -17,8 +17,8 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef HERITAGEMAP_HPP
-#define HERITAGEMAP_HPP
+#ifndef SOURCEMAP_HPP
+#define SOURCEMAP_HPP
 
 #include <sstream>
 
@@ -29,7 +29,7 @@
 namespace vfps
 {
 
-class HeritageMap
+class SourceMap
 {
 public:
     enum InterpolationType : uint_fast8_t {
@@ -62,7 +62,7 @@ public:
      * @param interpoints
      * @param intertype number of points used for interpolation
      */
-    HeritageMap(PhaseSpace* in, PhaseSpace* out,
+    SourceMap(PhaseSpace* in, PhaseSpace* out,
                 meshindex_t xsize, meshindex_t ysize, size_t memsize,
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
@@ -74,11 +74,11 @@ public:
      * @param ysize
      * @param interpoints number of points used for interpolation
      */
-    HeritageMap(PhaseSpace* in, PhaseSpace* out,
+    SourceMap(PhaseSpace* in, PhaseSpace* out,
                 size_t xsize, size_t ysize,
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
-    virtual ~HeritageMap();
+    virtual ~SourceMap();
 
     /**
      * @brief apply
@@ -163,4 +163,4 @@ protected:
 
 }
 
-#endif // HERITAGEMAP_HPP
+#endif // SOURCEMAP_HPP

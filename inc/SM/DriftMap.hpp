@@ -17,26 +17,23 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "HM/DriftMap.hpp"
+#ifndef DRIFTMAP_HPP
+#define DRIFTMAP_HPP
 
-#include <iostream>
+#include "SM/KickMap.hpp"
 
-vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
-                         const meshindex_t xsize,
-                         const meshindex_t ysize,
-                         const meshaxis_t angle,
-                         const InterpolationType it)
-    :
-      KickMap(in,out,xsize,ysize,it,DirectionOfKick::x)
+namespace vfps
 {
-    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
-    for(meshindex_t y=0; y<_ysize; y++) {
-        _offset[y] = std::tan(angle)*(y-ycenter);
-    }
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
-    updateHM();
-}
+
+class DriftMap : public KickMap
+{
+public:
+    DriftMap(PhaseSpace* in, PhaseSpace* out,
+             const meshindex_t xsize, const meshindex_t ysize,
+             const meshaxis_t angle, const InterpolationType it,
+             const bool interpol_clamp);
+};
+
+} // namespace fvps
+
+#endif // DRIFTMAP_HPP

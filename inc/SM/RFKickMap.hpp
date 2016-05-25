@@ -17,22 +17,23 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef DRIFTMAP_HPP
-#define DRIFTMAP_HPP
+#ifndef RFKICKMAP_HPP
+#define RFKICKMAP_HPP
 
-#include "HM/KickMap.hpp"
+#include "SM/KickMap.hpp"
 
 namespace vfps
 {
 
-class DriftMap : public KickMap
+class RFKickMap : public KickMap
 {
 public:
-    DriftMap(PhaseSpace* in, PhaseSpace* out,
-             const meshindex_t xsize, const meshindex_t ysize,
-             const meshaxis_t angle, const InterpolationType it);
+    RFKickMap(PhaseSpace* in, PhaseSpace* out,
+              const meshindex_t xsize, const meshindex_t ysize,
+              const meshaxis_t angle, const InterpolationType it,
+              const bool interpol_clamp);
 };
 
-} // namespace fvps
+} // namespace vfps
 
-#endif // DRIFTMAP_HPP
+#endif // RFKICKMAP_HPP

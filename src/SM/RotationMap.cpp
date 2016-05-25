@@ -17,19 +17,19 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "HM/RotationMap.hpp"
+#include "SM/RotationMap.hpp"
 
 vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                                const meshindex_t xsize,
                                const meshindex_t ysize,
                                const meshaxis_t angle,
                                const InterpolationType it,
+                               bool interpol_clamped,
                                const RotationCoordinates rt,
-                               bool interpol_saturating,
                                const size_t rotmapsize) :
-    HeritageMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
+    SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
     _rotmapsize(rotmapsize),
-    _sat(interpol_saturating),
+    _sat(interpol_clamped),
     _rt(rt),
     _cos_dt(cos(-angle)),
     _sin_dt(sin(-angle))
@@ -203,7 +203,7 @@ void vfps::RotationMap::apply()
 
 void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
                                  vfps::meshindex_t p_i,
-                                 vfps::HeritageMap::hi* myhinfo)
+                                 vfps::SourceMap::hi* myhinfo)
 {
     // gridpoint matrix used for interpolation
     hi* ph1D = new hi[_ip];
