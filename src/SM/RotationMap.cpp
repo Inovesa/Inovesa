@@ -24,12 +24,12 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                                const meshindex_t ysize,
                                const meshaxis_t angle,
                                const InterpolationType it,
-                               bool interpol_clamped,
+                               const bool interpol_clamped,
                                const RotationCoordinates rt,
                                const size_t rotmapsize) :
     SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
     _rotmapsize(rotmapsize),
-    _sat(interpol_clamped),
+    _clamp(interpol_clamped),
     _rt(rt),
     _cos_dt(cos(-angle)),
     _sin_dt(sin(-angle))
@@ -51,8 +51,8 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
         } else
         #endif // INOVESA_USE_CL
         {
-            if (_sat) {
-                notBoundMessage();
+            if (_clamp) {
+                notClampedMessage();
             }
         }
     } else {
@@ -73,7 +73,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                  sizeof(hi)*_ip*_rotmapsize,
                                  _hinfo);
-            if (_sat) {
+            if (_clamp) {
                 if (it == InterpolationType::cubic) {
                     if (_rotmapsize == _size) {
                         genCode4HM4sat();
@@ -83,20 +83,11 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                         applyHM.setArg(0, _in->data_buf);
                         applyHM.setArg(1, _hi_buf);
                         applyHM.setArg(2, _out->data_buf);
-                    } else {
-                        genCode4HM4_2sat();
-                        _cl_prog  = OCLH::prepareCLProg(_cl_code);
-
-                        applyHM = cl::Kernel(_cl_prog, "applyHM4_2sat");
-                        applyHM.setArg(0, _in->data_buf);
-                        applyHM.setArg(1, _hi_buf);
-                        applyHM.setArg(2, _size);
-                        applyHM.setArg(3, _out->data_buf);
                     }
                 }
             } else {
-                if (_sat) {
-                    notBoundMessage();
+                if (_clamp) {
+                    notClampedMessage();
                 }
                 genCode4HM1D();
                 _cl_prog  = OCLH::prepareCLProg(_cl_code);
@@ -172,7 +163,7 @@ void vfps::RotationMap::apply()
                         data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
                     }
                 }
-                if (_sat) {
+                if (_clamp) {
                     // handle overshooting
                     meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
                     meshdata_t flor=std::numeric_limits<meshdata_t>::max();
@@ -318,138 +309,6 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
 
 #ifdef INOVESA_USE_CL
-void vfps::RotationMap::genCode4HM4_2sat()
-{
-    _cl_code += R"(
-    __kernel void applyHM4_2sat(const __global data_t* src,
-                                const __global hi* hm,
-                                const uint size,
-                                __global data_t* dst)
-    {
-        const uint i = get_global_id(0);
-        const uint offset = i*16;
-        data_t tmp;
-        data_t value;
-    )";
-    if (std::is_same<vfps::meshdata_t,float>::value) {
-        _cl_code += R"(
-        data_t ceil=0.0f;
-        data_t flor=10.0f;
-        )";
-    }
-    if (std::is_same<vfps::meshdata_t,double>::value) {
-        _cl_code += R"(
-        data_t ceil=0.0;
-        data_t flor=10.0;
-        )";
-    }
-    #if FXP_FRACPART < 31
-    if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
-        _cl_code += R"(
-        data_t ceil=INT_MIN;
-        data_t flor=INT_MAX;
-        )";
-    }
-    #endif
-    if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
-        _cl_code += R"(
-        data_t ceil=LONG_MIN;
-        data_t flor=LONG_MAX;
-        )";
-    }
-    _cl_code += R"(
-        value = mult(src[hm[offset].src],hm[offset].weight);
-        value += mult(src[hm[offset+1].src],hm[offset+1].weight);
-        value += mult(src[hm[offset+2].src],hm[offset+2].weight);
-        value += mult(src[hm[offset+3].src],hm[offset+3].weight);
-        value += mult(src[hm[offset+4].src],hm[offset+4].weight);
-        tmp = src[hm[offset+5].src];
-        value += mult(tmp,hm[offset+5].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        tmp = src[hm[offset+6].src];
-        value += mult(tmp,hm[offset+6].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        value += mult(src[hm[offset+7].src],hm[offset+7].weight);
-        value += mult(src[hm[offset+8].src],hm[offset+8].weight);
-        tmp = src[hm[offset+9].src];
-        value += mult(tmp,hm[offset+9].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        tmp = src[hm[offset+10].src];
-        value += mult(tmp,hm[offset+10].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        value += mult(src[hm[offset+11].src],hm[offset+11].weight);
-        value += mult(src[hm[offset+12].src],hm[offset+12].weight);
-        value += mult(src[hm[offset+13].src],hm[offset+13].weight);
-        value += mult(src[hm[offset+14].src],hm[offset+14].weight);
-        value += mult(src[hm[offset+15].src],hm[offset+15].weight);
-        dst[i] = clamp(value,flor,ceil);
-    )";
-
-    if (std::is_same<vfps::meshdata_t,float>::value) {
-        _cl_code += R"(
-        ceil=0.0f;
-        flor=10.0f;
-        )";
-    }
-    if (std::is_same<vfps::meshdata_t,double>::value) {
-        _cl_code += R"(
-        ceil=0.0;
-        flor=10.0;
-        )";
-    }
-    #if FXP_FRACPART < 31
-    if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
-        _cl_code += R"(
-        ceil=INT_MIN;
-        flor=INT_MAX;
-        )";
-    }
-    #endif
-    if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
-        _cl_code += R"(
-        ceil=LONG_MIN;
-        flor=LONG_MAX;
-        )";
-    }
-
-    _cl_code += R"(
-        value = mult(src[size-1-hm[offset].src],hm[offset].weight);
-        value += mult(src[size-1-hm[offset+1].src],hm[offset+1].weight);
-        value += mult(src[size-1-hm[offset+2].src],hm[offset+2].weight);
-        value += mult(src[size-1-hm[offset+3].src],hm[offset+3].weight);
-        value += mult(src[size-1-hm[offset+4].src],hm[offset+4].weight);
-        tmp = src[size-1-hm[offset+5].src];
-        value += mult(tmp,hm[offset+5].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        tmp = src[size-1-hm[offset+6].src];
-        value += mult(tmp,hm[offset+6].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        value += mult(src[size-1-hm[offset+7].src],hm[offset+7].weight);
-        value += mult(src[size-1-hm[offset+8].src],hm[offset+8].weight);
-        tmp = src[size-1-hm[offset+9].src];
-        value += mult(tmp,hm[offset+9].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        tmp = src[size-1-hm[offset+10].src];
-        value += mult(tmp,hm[offset+10].weight);
-        ceil = max(ceil,tmp);
-        flor = min(flor,tmp);
-        value += mult(src[size-1-hm[offset+11].src],hm[offset+11].weight);
-        value += mult(src[size-1-hm[offset+12].src],hm[offset+12].weight);
-        value += mult(src[size-1-hm[offset+13].src],hm[offset+13].weight);
-        value += mult(src[size-1-hm[offset+14].src],hm[offset+14].weight);
-        value += mult(src[size-1-hm[offset+15].src],hm[offset+15].weight);
-        dst[size-1-i] = clamp(value,flor,ceil);
-    })";
-
-}
-
 void vfps::RotationMap::genCode4HM4sat()
 {
     _cl_code+= R"(
@@ -568,7 +427,7 @@ void vfps::RotationMap::genCode4Rotation()
             break;
     }
 
-    if (_sat) {
+    if (_clamp) {
     _cl_code += R"(
         data_t hi = max(max(src[(xi  )*imgSize.y+yi],src[(xi  )*imgSize.y+yi+1]),
                        max(src[(xi+1)*imgSize.y+yi],src[(xi+1)*imgSize.y+yi+1]));
@@ -632,7 +491,7 @@ void vfps::RotationMap::genCode4Rotation()
         )";
         break;
     }
-    if (_sat) {
+    if (_clamp) {
     _cl_code += R"(
         ,lo,hi);})";
     } else {

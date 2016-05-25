@@ -140,7 +140,8 @@ void vfps::SourceMap::calcCoefficiants(vfps::interpol_t* ic,
     }
 }
 
-void vfps::SourceMap::notBoundMessage()
+void vfps::SourceMap::notClampedMessage()
 {
-    Display::printText("WARNING: Bound interpolation not implemented for this interpolation scheme.");
+    Display::printText("WARNING: Clamped interpolation not implemented "
+                       "for this interpolation scheme.");
 }

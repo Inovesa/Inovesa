@@ -34,7 +34,7 @@ vfps::ProgramOptions::ProgramOptions() :
     meshshifty(0),
     steps(4000),
     rotations(1),
-    rotmapsize(-1),
+    rotationtype(2),
     E_0(1.3e9),
     Fk(0),
     f_c(23e9),
@@ -136,12 +136,11 @@ vfps::ProgramOptions::ProgramOptions() :
             "Shift grid by X mesh points")
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty),
             "Shift grid by Y mesh points")
-        ("RotMapSize", po::value<int>(&rotmapsize)->default_value(-1),
-            "Size of rotation map\n"
-            "-1: on-axis displacements\n"
-            " 0: none\n"
-            " 1: full\n"
-            " 2: half")
+        ("RotationType", po::value<uint_fast8_t>(&rotationtype)->default_value(2),
+            "Used implementation for rotation\n"
+            " 0: Standard rotation without source map\n"
+            " 1: Standard rotation with source map\n"
+            " 2: Manhattan rotation")
         ("GridSize,s", po::value<unsigned int>(&meshsize),
             "Number of mesh points per dimension")
         ("rotations,T", po::value<double>(&rotations),

@@ -94,8 +94,8 @@ public:
     inline double getPSShiftY() const
         { return meshshifty; }
 
-    inline int getRotationMapSize() const
-        { return rotmapsize; }
+    inline int getRotationType() const
+        { return rotationtype; }
 
     inline unsigned int getDerivationType() const
         { return deriv_type; }
@@ -171,7 +171,7 @@ private: // simulation parameters
     double meshshifty;
     unsigned int steps;
     double rotations;
-    int rotmapsize;
+    uint_fast8_t rotationtype;
     unsigned int deriv_type;
     unsigned int interpol_type;
     bool interpol_clamp;

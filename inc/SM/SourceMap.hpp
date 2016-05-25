@@ -158,7 +158,7 @@ protected:
     void calcCoefficiants(interpol_t* ic, const interpol_t f,
                           const uint_fast8_t it) const;
 
-    void notBoundMessage();
+    void notClampedMessage();
 };
 
 }

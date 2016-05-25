@@ -392,8 +392,23 @@ int main(int argc, char** argv)
 
     SourceMap* rm1;
     SourceMap* rm2 = nullptr;
-    int rotmaptype = opts.getRotationMapSize();
-    if (rotmaptype < 0) {
+    const uint_fast8_t rotationtype = opts.getRotationType();
+    switch (rotationtype) {
+    case 0:
+        Display::printText("Initializing RotationMap.");
+        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
+                             interpolationtype,interpol_clamp,
+                             RotationMap::RotationCoordinates::norm_pm1,0);
+        break;
+    case 1:
+        Display::printText("Building RotationMap.");
+        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
+                             interpolationtype,interpol_clamp,
+                             RotationMap::RotationCoordinates::norm_pm1,
+                             ps_size*ps_size);
+        break;
+    case 2:
+    default:
         Display::printText("Building RFKickMap.");
         rm1 = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
                             interpolationtype,interpol_clamp);
@@ -401,25 +416,7 @@ int main(int argc, char** argv)
         Display::printText("Building DriftMap.");
         rm2 = new DriftMap(mesh2,mesh3,ps_size,ps_size,angle,
                            interpolationtype,interpol_clamp);
-    } else {
-        size_t rotmapsize;
-        std::string rotmapstring;
-        switch (rotmaptype) {
-        case 0:
-            rotmapsize = 0;
-            rotmapstring = "Initializing RotationMap.";
-            break;
-        default:
-            rotmaptype = std::min(rotmaptype,2); // force to be 1 or 2
-            rotmapsize = ps_size*ps_size/rotmaptype;
-            rotmapstring = "Building RotationMap.";
-            break;
-        }
-        Display::printText(rotmapstring);
-        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
-                             interpolationtype,interpol_clamp,
-                             RotationMap::RotationCoordinates::norm_pm1,
-                             rotmapsize);
+        break;
     }
 
     double e1;

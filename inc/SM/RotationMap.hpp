@@ -45,25 +45,26 @@ public:
      * @param rt
      * @param interpol_saturating
      * @param rotmapsize size of rotation map (can be 0, _size or _size/2)
+     *
+     * Saturation only makes sense with quadratic/cubic interpolation.
+     * Enabling it with linear (or without)
+     * interpolation currently crashes the program.
      */
     RotationMap(PhaseSpace* in, PhaseSpace* out,
                 const meshindex_t xsize, const meshindex_t ysize,
                 const meshaxis_t angle, const InterpolationType it,
-                bool interpol_clamped,
+                const bool interpol_clamped,
                 const RotationCoordinates rt, const size_t rotmapsize=0);
 
     /**
      * @brief apply
-     *
-     * Saturation only makes sense with quadratic/cubic interpolation.
-     * Enabling it with linear (or without) currently crashes the program.
      */
     void apply();
 
 private:
     const uint32_t _rotmapsize;
 
-    const bool _sat;
+    const bool _clamp;
 
     void genHInfo(meshindex_t q_i, meshindex_t p_i, hi* myhinfo);
 
@@ -72,8 +73,6 @@ private:
     const meshaxis_t _sin_dt;
 
     #ifdef INOVESA_USE_CL
-    void genCode4HM4_2sat();
-
     void genCode4HM4sat();
 
     void genCode4Rotation();
