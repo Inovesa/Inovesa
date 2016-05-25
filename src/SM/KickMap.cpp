@@ -29,10 +29,9 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     _meshsize_kd(kd==DirectionOfKick::x?xsize:ysize),
     _meshsize_pd(kd==DirectionOfKick::x?ysize:xsize)
 {
-
-    if (interpol_clamp) {
+    if (interpol_clamp && !OCLH::active) {
         Display::printText("Clamped interpolation not "
-                           "implemented for KickMap.");
+                           "implemented for KickMap w/o OpenCL.");
     }
     _offset.resize(_meshsize_pd,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
@@ -49,7 +48,6 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     if (OCLH::active) {
         _force_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
-
         _cl_code += R"(
         __kernel void apply_xKick(const __global data_t* src,
                                   const __global data_t* dx,
@@ -59,20 +57,39 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
             const int y = get_global_id(0);
             const int dxi = floor(dx[y]);
             const data_t dxf = dx[y] - dxi;
+            data_t value;
             int x=0;
             while (x-1+dxi<0) {
                 dst[x*meshsize+y]  = 0;
                 x++;
             }
             while (x+2+dxi<meshsize && x < meshsize) {
-                dst[x*meshsize+y] = mult(src[(x+dxi-1)*meshsize+y],
-                                        (dxf  )*(dxf-1)*(dxf-2)/(-6))
-                                  + mult(src[(x   +dxi)*meshsize+y],
-                                        (dxf+1)*(dxf-1)*(dxf-2)/( 2))
-                                  + mult(src[(x+1+dxi)*meshsize+y],
-                                        (dxf+1)*(dxf  )*(dxf-2)/(-2))
-                                  + mult(src[(x+2+dxi)*meshsize+y],
-                                        (dxf+1)*(dxf  )*(dxf-1)/( 6));
+        )";
+        if (interpol_clamp) {
+            _cl_code += R"(
+                data_t ceil = max(src[(x  +dxi)*meshsize+y],
+                                  src[(x+1+dxi)*meshsize+y]);
+                data_t flor = min(src[(x  +dxi)*meshsize+y],
+                                  src[(x+1+dxi)*meshsize+y]);
+            )";
+        }
+        _cl_code += R"(
+                value = mult(src[(x+dxi-1)*meshsize+y],
+                            (dxf  )*(dxf-1)*(dxf-2)/(-6))
+                      + mult(src[(x   +dxi)*meshsize+y],
+                            (dxf+1)*(dxf-1)*(dxf-2)/( 2))
+                      + mult(src[(x+1+dxi)*meshsize+y],
+                            (dxf+1)*(dxf  )*(dxf-2)/(-2))
+                      + mult(src[(x+2+dxi)*meshsize+y],
+                            (dxf+1)*(dxf  )*(dxf-1)/( 6));
+        )";
+        if (interpol_clamp) {
+            _cl_code += "dst[x*meshsize+y] = clamp(value,flor,ceil);";
+        } else {
+
+            _cl_code += "dst[x*meshsize+y] = value;";
+        }
+        _cl_code += R"(
                 x++;
             }
             while (x < meshsize) {
@@ -80,7 +97,9 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                 x++;
             }
         }
+        )";
 
+        _cl_code += R"(
         __kernel void apply_yKick(const __global data_t* src,
                                   const __global data_t* dy,
                                   const int meshsize,
@@ -90,20 +109,40 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
             const int meshoffs = x*meshsize;
             const int dyi = floor(dy[x]);
             const data_t dyf = dy[x] - dyi;
+            data_t value;
             int y=0;
             while (y-1+dyi<0) {
                 dst[meshoffs+y]  = 0;
                 y++;
             }
             while (y+2+dyi<meshsize && y < meshsize) {
-                dst[meshoffs+y] = mult(src[meshoffs+y-1+dyi],
-                                      (dyf  )*(dyf-1)*(dyf-2)/(-6))
-                                + mult(src[meshoffs+y  +dyi],
-                                      (dyf+1)*(dyf-1)*(dyf-2)/( 2))
-                                + mult(src[meshoffs+y+1+dyi],
-                                      (dyf+1)*(dyf  )*(dyf-2)/(-2))
-                                + mult(src[meshoffs+y+2+dyi],
-                                      (dyf+1)*(dyf  )*(dyf-1)/( 6));
+        )";
+        if (interpol_clamp) {
+            _cl_code += R"(
+                data_t ceil = max(src[meshoffs+y  +dyi],
+                                  src[meshoffs+y+1+dyi]);
+                data_t flor = min(src[meshoffs+y  +dyi],
+                                  src[meshoffs+y+1+dyi]);
+            )";
+        }
+        _cl_code += R"(
+                value = mult(src[meshoffs+y-1+dyi],
+                            (dyf  )*(dyf-1)*(dyf-2)/(-6))
+                      + mult(src[meshoffs+y  +dyi],
+                            (dyf+1)*(dyf-1)*(dyf-2)/( 2))
+                      + mult(src[meshoffs+y+1+dyi],
+                            (dyf+1)*(dyf  )*(dyf-2)/(-2))
+                      + mult(src[meshoffs+y+2+dyi],
+                            (dyf+1)*(dyf  )*(dyf-1)/( 6));
+        )";
+        if (interpol_clamp) {
+            _cl_code += "dst[x*meshsize+y] = clamp(value,flor,ceil);";
+        } else {
+
+            _cl_code += "dst[x*meshsize+y] = value;";
+        }
+        _cl_code += R"(
+                dst[meshoffs+y] = value;
                 y++;
             }
             while (y < meshsize) {
