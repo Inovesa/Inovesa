@@ -17,36 +17,28 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef WAKEIMPEDANCEMAP_HPP
-#define WAKEIMPEDANCEMAP_HPP
+#ifndef FREESPACECSR_HPP
+#define FREESPACECSR_HPP
 
-#include "SM/WakeKickMap.hpp"
-#include "ElectricField.hpp"
 #include "impedances/Impedance.hpp"
 
 namespace vfps
 {
 
-class WakePotentialMap : public WakeKickMap
+class FreeSpaceCSR : public Impedance
 {
 public:
-    WakePotentialMap(PhaseSpace* in, PhaseSpace* out,
-                     const meshindex_t xsize,
-                     const meshindex_t ysize,
-                     ElectricField* field,
-                     const InterpolationType it,
-                     bool interpol_clamp);
-
-public:
-    /**
-     * @brief update implements WakeKickMap
-     */
-    void update();
+    FreeSpaceCSR(const size_t n,
+                 const frequency_t f_rev,
+                 const frequency_t f_max);
 
 private:
-    ElectricField* _field;
+    static std::vector<vfps::impedance_t>
+    __calcImpedance(const size_t n,
+                    const frequency_t f_rev,
+                    const frequency_t f_max);
 };
 
 } // namespace vfps
 
-#endif // WAKEIMPEDANCEMAP_HPP
+#endif // FREESPACECSR_HPP

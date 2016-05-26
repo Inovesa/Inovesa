@@ -34,32 +34,12 @@ namespace vfps
 class Impedance
 {
 public:
-    enum class ImpedanceModel : uint_fast8_t {
-        ConstantOne = 0,
-        FreeSpaceCSR = 1,
-        ParallelPlates = 2
-    };
-
-public:
-    /**
-     * @brief Impedance
-     * @param model currently only FreeSpaceCSR is implemented
-     * @param n compute n freuqencies
-     * @param f_rev revolution freuquency
-     * @param f_max maximum frequency
-     *
-     * @todo: make this constructor also use basic constructor
-     */
-    Impedance(ImpedanceModel model, size_t n,
-              const frequency_t f_rev, const frequency_t f_max,
-              const double h=0);
-
     /**
      * @brief Impedance basic constructor that initializes everything
      * @param z
      * @param f_max
      */
-    Impedance(const std::vector<impedance_t>& z, double f_max);
+    Impedance(const std::vector<impedance_t>& z, const frequency_t f_max);
 
     /**
      * @brief Impedance
@@ -93,7 +73,10 @@ private:
 
     const Ruler<frequency_t> _axis;
 
+protected:
     std::vector<impedance_t> _data;
+
+    void syncCLMem();
 
 private:
     static std::vector<impedance_t> readData(std::string fname);

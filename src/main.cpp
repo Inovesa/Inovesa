@@ -34,7 +34,8 @@
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PhaseSpace.hpp"
-#include "Impedance.hpp"
+#include "impedances/FreeSpaceCSR.hpp"
+#include "impedances/ParallelPlatesCSR.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "SM/FokkerPlanckMap.hpp"
 #include "SM/Identity.hpp"
@@ -366,14 +367,12 @@ int main(int argc, char** argv)
     if (opts.getImpedanceFile() == "") {
         if (h>0) {
             Display::printText("Will use parallel plates CSR impedance.");
-            impedance = new Impedance(Impedance::ImpedanceModel::ParallelPlates,
-                                      ps_size*padding,f0,
-                                      ps_size*vfps::physcons::c/(2*qmax*bl),h);
+            impedance = new ParallelPlatesCSR(ps_size*padding,f0,
+                                     ps_size*vfps::physcons::c/(2*qmax*bl),h);
         } else {
             Display::printText("Will use free space CSR impedance.");
-            impedance = new Impedance(Impedance::ImpedanceModel::FreeSpaceCSR,
-                                      ps_size*padding,f0,
-                                      ps_size*vfps::physcons::c/(2*qmax*bl));
+            impedance = new FreeSpaceCSR(ps_size*padding,f0,
+                                         ps_size*vfps::physcons::c/(2*qmax*bl));
         }
     } else {
         Display::printText("Reading impedance from: \""

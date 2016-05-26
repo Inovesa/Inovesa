@@ -27,7 +27,7 @@
 #include "defines.hpp"
 #include "PhaseSpace.hpp"
 #include "Ruler.hpp"
-#include "Impedance.hpp"
+#include "impedances/Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
 
 #include "IO/Display.hpp"

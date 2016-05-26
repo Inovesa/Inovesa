@@ -27,7 +27,7 @@
 
 #include "defines.hpp"
 #include "ElectricField.hpp"
-#include "Impedance.hpp"
+#include "impedances/Impedance.hpp"
 #include "PhaseSpace.hpp"
 #include "SM/WakeFunctionMap.hpp"
 

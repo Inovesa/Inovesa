@@ -17,36 +17,33 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef WAKEIMPEDANCEMAP_HPP
-#define WAKEIMPEDANCEMAP_HPP
+#include "impedances/FreeSpaceCSR.hpp"
 
-#include "SM/WakeKickMap.hpp"
-#include "ElectricField.hpp"
-#include "impedances/Impedance.hpp"
-
-namespace vfps
+vfps::FreeSpaceCSR::FreeSpaceCSR(const size_t n,
+                                 const frequency_t f_rev,
+                                 const frequency_t f_max)
+    :
+      Impedance(__calcImpedance(n,f_rev,f_max),f_max)
 {
+}
 
-class WakePotentialMap : public WakeKickMap
+std::vector<vfps::impedance_t>
+vfps::FreeSpaceCSR::__calcImpedance(const size_t n,
+                                    const frequency_t f_rev,
+                                    const frequency_t f_max)
 {
-public:
-    WakePotentialMap(PhaseSpace* in, PhaseSpace* out,
-                     const meshindex_t xsize,
-                     const meshindex_t ysize,
-                     ElectricField* field,
-                     const InterpolationType it,
-                     bool interpol_clamp);
+    std::vector<vfps::impedance_t> rv;
+    rv.reserve(n);
 
-public:
-    /**
-     * @brief update implements WakeKickMap
-     */
-    void update();
+    // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
+    constexpr impedance_t Z0 = impedance_t(306.3,176.9);
 
-private:
-    ElectricField* _field;
-};
+    // frequency resolution: impedance will be sampled at multiples of delta
+    const frequency_t delta = f_max/f_rev/(n-1.0);
 
-} // namespace vfps
+    for (size_t i=0; i<n; i++) {
+        rv.push_back(Z0*std::pow(i*delta,csrpower_t(1.0/3.0)));
+    }
 
-#endif // WAKEIMPEDANCEMAP_HPP
+    return rv;
+}
