@@ -55,7 +55,7 @@ vfps::ProgramOptions::ProgramOptions() :
 {
     _proginfoopts.add_options()
         ("help,h", "print help message")
-        ("version,V", "print version string")
+        ("version", "print version string")
     ;
     _physopts.add_options()
         ("RevolutionFrequency,F", po::value<double>(&f_rev),
