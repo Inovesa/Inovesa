@@ -66,10 +66,13 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
-            #ifdef INOVESA_USE_PNG
-            "\tgrayscale png (.png) file\n"
-            #endif // INOVESA_USE_PNG
-            "\ttext file (.txt) w/ particle coordinates")
+             #ifdef INOVESA_USE_HDF5
+             "\tInovesa result file (HDF5, .h5)\n"
+             #endif // INOVESA_USE_HDF5
+             #ifdef INOVESA_USE_PNG
+             "\tgrayscale png (.png) file\n"
+             #endif // INOVESA_USE_PNG
+             "\ttext file (.txt) w/ particle coordinates")
         ("InitialDistParam,K",po::value<double>(&Fk),
             "Parameter F(k) of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b),
@@ -136,7 +139,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Shift grid by X mesh points")
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty),
             "Shift grid by Y mesh points")
-        ("RotationType", po::value<uint_fast8_t>(&rotationtype)->default_value(2),
+        ("RotationType", po::value<unsigned int>(&rotationtype)->default_value(2),
             "Used implementation for rotation\n"
             " 0: Standard rotation without source map\n"
             " 1: Standard rotation with source map\n"

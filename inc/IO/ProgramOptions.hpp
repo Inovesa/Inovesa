@@ -171,7 +171,7 @@ private: // simulation parameters
     double meshshifty;
     unsigned int steps;
     double rotations;
-    uint_fast8_t rotationtype;
+    unsigned int rotationtype;
     unsigned int deriv_type;
     unsigned int interpol_type;
     bool interpol_clamp;
