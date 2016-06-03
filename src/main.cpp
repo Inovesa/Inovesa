@@ -228,7 +228,18 @@ int main(int argc, char** argv)
                          * std::pow(dE*fs/f0,2)/V/H
                  * std::pow(bl/R,1./3.) * (0.5+0.34*shield);
 
+        const double S_csr = Ib * physcons::me*V*H/(physcons::IAlfven*2*M_PI)
+            * std::pow(dE*fs/f0,-2) * std::pow(R/bl,1./3.);
+
         if (verbose) {
+            sstream.str("");
+            sstream << std::scientific << shield;
+            Display::printText("Shielding parameter: "
+                               +sstream.str());
+            sstream.str("");
+            sstream << std::scientific << S_csr;
+            Display::printText("CSR strength: "
+                               +sstream.str());
             sstream.str("");
             sstream << std::scientific << Ith;
             Display::printText("BBT-Threshold-Current expected at "
