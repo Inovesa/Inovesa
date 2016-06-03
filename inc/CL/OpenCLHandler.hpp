@@ -30,11 +30,7 @@ enum class clCopyDirection {
 
 #define __CL_ENABLE_EXCEPTIONS
 
-#if defined(__APPLE__) || defined(__MACOSX)
 #include "CL/local_cl.hpp"
-#else
-#include <CL/cl.hpp>
-#endif
 #ifdef INOVESA_USE_CLFFT
 #include <clFFT.h>
 #endif // INOVESA_USE_CLFFT
