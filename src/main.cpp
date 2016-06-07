@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     Display* display = nullptr;
     if (gui && opts.getCLDevice() >= 0) {
         try {
-        display = new Display(opts.getOpenGLVersion());
+            display = new Display(opts.getOpenGLVersion());
         } catch (std::exception& e) {
             std::string msg("ERROR: ");
             Display::printText(msg+e.what());
@@ -215,21 +215,22 @@ int main(int argc, char** argv)
     const double angle = 2*M_PI/steps;
 
     std::string startdistfile = opts.getStartDistFile();
+    double shield = 0;
+    double Ith = 0;
+    double S_csr = 0;
+
 
     if (h>=0) {
-        double shield;
-        if (h==0) {
-            shield = 0;
-        } else {
+        if (h > 0) {
             shield = bl*std::sqrt(R)*std::pow(h,-3./2.);
         }
 
-        const double Ith = physcons::IAlfven/physcons::me*2*M_PI
+        Ith = physcons::IAlfven/physcons::me*2*M_PI
                          * std::pow(dE*fs/f0,2)/V/H
                  * std::pow(bl/R,1./3.) * (0.5+0.34*shield);
 
-        const double S_csr = Ib * physcons::me*V*H/(physcons::IAlfven*2*M_PI)
-            * std::pow(dE*fs/f0,-2) * std::pow(R/bl,1./3.);
+        S_csr = Ib * physcons::me*V*H/(physcons::IAlfven*2*M_PI)
+              * std::pow(dE*fs/f0,-2) * std::pow(R/bl,1./3.);
 
         if (verbose) {
             sstream.str("");
@@ -492,6 +493,11 @@ int main(int argc, char** argv)
         Display::printText("Saved configuiration to \""+cfgname+"\".");
         hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
         Display::printText("Will save results to \""+ofname+"\".");
+        opts.save(hdf_file);
+        hdf_file->addParameterToGroup("/Info","CSRStrength",
+                                      H5::PredType::IEEE_F64LE,&S_csr);
+        hdf_file->addParameterToGroup("/Info","ShieldingParameter",
+                                      H5::PredType::IEEE_F64LE,&shield);
     } else
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG

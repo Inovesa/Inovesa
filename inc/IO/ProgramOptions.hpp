@@ -29,6 +29,9 @@
 
 #include "defines.hpp"
 #include "SM/FokkerPlanckMap.hpp"
+#ifdef INOVESA_USE_HDF5
+#include "IO/HDF5File.hpp"
+#endif
 
 namespace po = boost::program_options;
 
@@ -43,6 +46,8 @@ public:
     bool parse(int argc, char** argv);
 
     void save(std::string fname);
+
+    void save(HDF5File* file);
 
 public:
     inline int getCLDevice() const
@@ -70,16 +75,16 @@ public:
         { return _wakefile; }
 
 public:
-    inline unsigned int getMeshSize() const
+    inline uint32_t getMeshSize() const
         { return meshsize; }
 
-    inline unsigned int getOutSteps() const
+    inline uint32_t getOutSteps() const
         { return outsteps; }
 
-    inline unsigned int getPadding() const
+    inline uint32_t getPadding() const
         { return padding; }
 
-    inline unsigned int getSteps() const
+    inline uint32_t getSteps() const
         { return steps; }
 
     inline float getNRotations() const
@@ -97,10 +102,10 @@ public:
     inline int getRotationType() const
         { return rotationtype; }
 
-    inline unsigned int getDerivationType() const
+    inline uint32_t getDerivationType() const
         { return deriv_type; }
 
-    inline unsigned int getInterpolationPoints() const
+    inline uint32_t getInterpolationPoints() const
         { return interpol_type; }
 
     inline bool getInterpolationBound() const
@@ -126,7 +131,7 @@ public:
         { return H; }
 
     inline double getRevolutionFrequency() const
-        { return f_rev; }
+        { return f0; }
 
     inline double getRFVoltage() const
         { return V_RF; }
@@ -163,17 +168,17 @@ private: // program parameters
     std::string _wakefile;
 
 private: // simulation parameters
-    unsigned int meshsize;
-    unsigned int outsteps;
-    unsigned int padding;
+    uint32_t meshsize;
+    uint32_t outsteps;
+    uint32_t padding;
     double pq_size;
     double meshshiftx;
     double meshshifty;
-    unsigned int steps;
+    uint32_t steps;
     double rotations;
-    unsigned int rotationtype;
-    unsigned int deriv_type;
-    unsigned int interpol_type;
+    uint32_t rotationtype;
+    uint32_t deriv_type;
+    uint32_t interpol_type;
     bool interpol_clamp;
 
 private: // phsical parameters
@@ -181,7 +186,7 @@ private: // phsical parameters
     double Fk;
     double f_c;
     double f_s;
-    double f_rev;
+    double f0;
     double h;
     double H;
     double I_b;

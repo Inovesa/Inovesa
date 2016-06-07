@@ -49,19 +49,19 @@ vfps::HDF5File::HDF5File(const std::string fname,
     _file = new H5::H5File(fname,H5F_ACC_TRUNC);
 
     _file->createGroup("Info");
-        // save Values of Phase Space Axis
-        if (std::is_same<vfps::meshaxis_t,float>::value) {
-                axps_datatype = H5::PredType::IEEE_F32LE;
-        } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
-                axps_datatype = H5::PredType::STD_I64LE;
-        } else if (std::is_same<vfps::meshaxis_t,double>::value) {
-                axps_datatype = H5::PredType::IEEE_F64LE;
-        }
+    // save Values of Phase Space Axis
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            axps_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            axps_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            axps_datatype = H5::PredType::IEEE_F64LE;
+    }
 
     const std::array<hsize_t,axps_rank> psa_dims
-                    = {{ 1, ps_size }};
+                    = {{ ps_size }};
     const std::array<hsize_t,axps_rank> psa_maxdims
-                    = {{ 1, ps_size }};
+                    = {{ ps_size }};
 
     ax0ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
                                         psa_maxdims.data());
@@ -69,26 +69,33 @@ vfps::HDF5File::HDF5File(const std::string fname,
                                         psa_maxdims.data());
 
 
-    const std::array<hsize_t,axps_rank> psa_chunkdims
-                    = {{1U,std::min(2048U,ps_size)}};
-    axps_prop.setChunk(axps_rank,psa_chunkdims.data());
+    const hsize_t psa_chunkdims = std::min(2048U,ps_size);
+    axps_prop.setChunk(axps_rank,&psa_chunkdims);
     axps_prop.setShuffle();
     axps_prop.setDeflate(compression);
 
     ax0ps_dataset = _file->createDataSet("/Info/AxisValues_z",axps_datatype,
                                          *ax0ps_dataspace,axps_prop);
-    const double ax0scale = ps->getScale(0);
+    const double ax0scale0 = ps->getScale(0);
     ax0ps_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale);
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
+    const double ax0scale1 = ax0scale0/physcons::c;
+    ax0ps_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
+
     ax1ps_dataset = _file->createDataSet("/Info/AxisValues_E",axps_datatype,
                                          *ax1ps_dataspace,axps_prop);
-        const double ax1scale = ps->getScale(1);
-        ax1ps_dataset.createAttribute("Factor4ElectronVolts"
-                                      ,H5::PredType::IEEE_F64LE,
-                                      H5::DataSpace()).write(
-              H5::PredType::IEEE_F64LE,&ax1scale);
-        ax0ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
-        ax1ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
+    const double ax1scale = ps->getScale(1);
+    ax1ps_dataset.createAttribute("Factor4ElectronVolts"
+                                  ,H5::PredType::IEEE_F64LE,
+                                  H5::DataSpace()).write(
+          H5::PredType::IEEE_F64LE,&ax1scale);
+    ax0ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
+    ax1ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
+
+
+    // create group for parameters
+    _file->createGroup("/Info/Parameters");
 
     // save Values of Frequency Axis
     if (std::is_same<vfps::meshaxis_t,float>::value) {
@@ -99,18 +106,15 @@ vfps::HDF5File::HDF5File(const std::string fname,
             axfreq_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    const std::array<hsize_t,axfreq_rank> axfreq_dims
-                    = {{ 1, maxn }};
-    const std::array<hsize_t,axfreq_rank> axfreq_maxdims
-                    = {{ 1, maxn }};
+    const hsize_t axfreq_dims = maxn;
+    const hsize_t axfreq_maxdims =  maxn;
 
-    axfreq_dataspace = new H5::DataSpace(axfreq_rank,axfreq_dims.data(),
-                                         axfreq_maxdims.data());
+    axfreq_dataspace = new H5::DataSpace(axfreq_rank,&axfreq_dims,
+                                         &axfreq_maxdims);
 
 
-    const std::array<hsize_t,bp_rank> axfreq_chunkdims
-            = {{1U,std::min(2048U,ps_size)}};
-    axfreq_prop.setChunk(axps_rank,axfreq_chunkdims.data());
+    const hsize_t axfreq_chunkdims = std::min(2048U,ps_size);
+    axfreq_prop.setChunk(axps_rank,&axfreq_chunkdims);
     axfreq_prop.setShuffle();
     axfreq_prop.setDeflate(compression);
 
@@ -280,10 +284,12 @@ vfps::HDF5File::HDF5File(const std::string fname,
     wp_dataset = _file->createDataSet("/WakePotential/data",wp_datatype,
                                      *wp_dataspace,wp_prop);
 
+    // get ready to save CSR Data
+    _file->createGroup("CSR/");
     // get ready to save CSR Spectrum
-    _file->createGroup("CSRSpectrum");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSRSpectrum/axis0" );
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSRSpectrum/axis1" );
+    _file->createGroup("CSR/Spectrum");
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR/Spectrum/axis0" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSR/Spectrum/axis1" );
 
     if (std::is_same<vfps::csrpower_t,float>::value) {
         csr_datatype = H5::PredType::IEEE_F32LE;
@@ -304,12 +310,12 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csr_prop.setShuffle();
     csr_prop.setDeflate(compression);
 
-    csr_dataset = _file->createDataSet("/CSRSpectrum/data",csr_datatype,
+    csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
                                       *csr_dataspace,csr_prop);
 
-    // get ready to save CSR Power
-    _file->createGroup("CSRPower");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSRPower/axis0" );
+    // get ready to save CSR Intensity
+    _file->createGroup("CSR/Intensity");
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR/Intensity/axis0" );
 
     if (std::is_same<vfps::csrpower_t,float>::value) {
         csrp_datatype = H5::PredType::IEEE_F32LE;
@@ -327,7 +333,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csrp_prop.setShuffle();
     csrp_prop.setDeflate(compression);
 
-    csrp_dataset = _file->createDataSet("/CSRPower/data",csrp_datatype,
+    csrp_dataset = _file->createDataSet("/CSR/Intensity/data",csrp_datatype,
                                       *csrp_dataspace,csrp_prop);
 
         // get ready to save PhaseSpace
@@ -442,7 +448,16 @@ vfps::HDF5File::~HDF5File()
     delete ax1ps_dataspace;
     delete bc_dataspace;
     delete bp_dataspace;
-    delete ps_dataspace;
+  delete ps_dataspace;
+}
+
+void vfps::HDF5File::addParameterToGroup(std::string groupname,
+                                         std::string paramname,
+                                         H5::PredType type,
+                                         void* data)
+{
+    H5::Group group = _file->openGroup(groupname);
+    group.createAttribute(paramname,type, H5::DataSpace()).write(type,data);
 }
 
 void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
@@ -467,7 +482,7 @@ void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
         delete filespace;
     }
 
-    // append CSR Power
+    // append CSR Intensity
     hsize_t csrp_offset = csrp_dims;
     const hsize_t csrp_ext = 1;
     csrp_dims++;

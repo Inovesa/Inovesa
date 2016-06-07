@@ -52,6 +52,11 @@ public:
 
     ~HDF5File();
 
+    void addParameterToGroup(std::string groupname,
+                             std::string paramname,
+                             H5::PredType type,
+                             void* data);
+
     void append(const ElectricField* ef, bool fullspectrum = true);
 
     void append(const PhaseSpace* ps);
@@ -77,7 +82,7 @@ private:
     H5::DataType datatype_meshdata;
 
 private: // values for phase space axis
-    static constexpr uint_fast8_t axps_rank = 2;
+    static constexpr uint_fast8_t axps_rank = 1;
 
     H5::DataSet ax0ps_dataset;
 
@@ -92,7 +97,7 @@ private: // values for phase space axis
     H5::DSetCreatPropList axps_prop;
 
 private: // values for frequency axis
-    static constexpr uint_fast8_t axfreq_rank = 2;
+    static constexpr uint_fast8_t axfreq_rank = 1;
 
     H5::DataSet axfreq_dataset;
 

@@ -20,33 +20,6 @@
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
-    _cldevice(1),
-    _startdistfile(""),
-    _configfile("default.cfg"),
-    _glversion(2),
-    _verbose(false),
-    _wakefile(""),
-    meshsize(256),
-    outsteps(100),
-    padding(0),
-    pq_size(5.0),
-    meshshiftx(0),
-    meshshifty(0),
-    steps(4000),
-    rotations(1),
-    rotationtype(2),
-    E_0(1.3e9),
-    Fk(0),
-    f_c(23e9),
-    f_s(8.5e3),
-    f_rev(2.7e6),
-    h(0),
-    H(1),
-    I_b(1),
-    t_d(0.01),
-    r_bend(-1),
-    s_E(4.7e-4),
-    V_RF(1e6),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),
@@ -58,11 +31,13 @@ vfps::ProgramOptions::ProgramOptions() :
         ("version", "print version string")
     ;
     _physopts.add_options()
-        ("RevolutionFrequency,F", po::value<double>(&f_rev),
+        ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(2.7e6,"2.7e6"),
             "Revolution frequency (Hz)")
-        ("SyncFreq,f", po::value<double>(&f_s),"Synchrotron frequency (Hz)")
-        ("DampingTime,d", po::value<double>(&t_d),"Damping time (s)")
-        ("HarmonicNumber,H", po::value<double>(&H),
+        ("SyncFreq,f", po::value<double>(&f_s)->default_value(8.5e3),
+            "Synchrotron frequency (Hz)")
+        ("DampingTime,d", po::value<double>(&t_d)->default_value(0.01),
+            "Damping time (s)")
+        ("HarmonicNumber,H", po::value<double>(&H)->default_value(1.0),
             "Harmonic Number (1)")
         ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
             "might be:\n"
@@ -73,26 +48,27 @@ vfps::ProgramOptions::ProgramOptions() :
              "\tgrayscale png (.png) file\n"
              #endif // INOVESA_USE_PNG
              "\ttext file (.txt) w/ particle coordinates")
-        ("InitialDistParam,K",po::value<double>(&Fk),
+        ("InitialDistParam,K",po::value<double>(&Fk)->default_value(0),
             "Parameter F(k) of initial distribution")
-        ("BunchCurrent,I", po::value<double>(&I_b),
+        ("BunchCurrent,I", po::value<double>(&I_b)->default_value(1e-3,"1e-3"),
             "Ring Current due to a single bunch (A)")
-        ("BendingRadius,R", po::value<double>(&r_bend),
+        ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
             "Bending radius of accelerator (m)\n"
             "negative: calculate from RevolutionFrequency")
-        ("BeamEnergy,E", po::value<double>(&E_0),
+        ("BeamEnergy,E", po::value<double>(&E_0)->default_value(1.3e9,"1.3e9"),
             "Beam energy (GeV)")
-        ("BeamEnergySpread,e", po::value<double>(&s_E),
+        ("BeamEnergySpread,e", po::value<double>(&s_E)->default_value(4.7e-4,"4.7e-4"),
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
-        ("VaccuumHeight", po::value<double>(&h),
+        ("VaccuumHeight", po::value<double>(&h)->default_value(0),
             "Height of vacuum chamber (m)\n"
             "<0: no CSR\n"
             " 0: free space CSR\n"
             ">0: parallel plates CSR")
-        ("CutoffFreq", po::value<double>(&f_c),"Beamline cutoff frequency (Hz)")
-        ("RFVoltage,V", po::value<double>(&V_RF),
+        ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
+            "Beamline cutoff frequency (Hz)")
+        ("RFVoltage,V", po::value<double>(&V_RF)->default_value(1e6,"1e6"),
             "Accelerating Voltage (V)")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing wake function.")
@@ -102,9 +78,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "OpenCL device to use\n('-1' lists available devices)")
         ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
             "Show phase space view")
-        ("ForceOpenGLVersion", po::value<int>(&_glversion),
+        ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("verbose,v", po::value<bool>(&_verbose),
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
             "print information more detailed")
         ("output,o",
             po::value<std::string>(&_outfile),
@@ -115,42 +91,42 @@ vfps::ProgramOptions::ProgramOptions() :
         ("cldev", po::value<int>(&_cldevice)->default_value(1),
             "OpenCL device to use\n('-1' lists available devices)")
         #endif // INOVESA_USE_CL
-        ("config,c", po::value<std::string>(&_configfile),
+        ("config,c", po::value<std::string>(&_configfile)->default_value("default.cfg"),
             "name of a file containing a configuration.")
         ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
             "Show phase space view")
-        ("ForceOpenGLVersion", po::value<int>(&_glversion),
+        ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("verbose,v", "print information more detailed" )
+        ("verbose,v", "print information more detailed")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
     ;
     _simulopts.add_options()
-        ("steps,N", po::value<unsigned int>(&steps),
+        ("steps,N", po::value<uint32_t>(&steps)->default_value(4000),
             "Steps for one synchrotron period")
-        ("outstep,n", po::value<unsigned int>(&outsteps),
+        ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
             "Save results every n steps.")
-        ("padding,p", po::value<unsigned int>(&padding),
+        ("padding,p", po::value<uint32_t>(&padding)->default_value(0),
             "Factor for zero padding of bunch profile")
-        ("PhaseSpaceSize,P", po::value<double>(&pq_size),
+        ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(5),
             "Size of phase space")
-        ("PhaseSpaceShiftX",po::value<double>(&meshshiftx),
+        ("PhaseSpaceShiftX",po::value<double>(&meshshiftx)->default_value(0),
             "Shift grid by X mesh points")
-        ("PhaseSpaceShiftY",po::value<double>(&meshshifty),
+        ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
-        ("RotationType", po::value<unsigned int>(&rotationtype)->default_value(2),
+        ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
             "Used implementation for rotation\n"
             " 0: Standard rotation without source map\n"
             " 1: Standard rotation with source map\n"
             " 2: Manhattan rotation")
-        ("GridSize,s", po::value<unsigned int>(&meshsize),
+        ("GridSize,s", po::value<uint32_t>(&meshsize)->default_value(256),
             "Number of mesh points per dimension")
-        ("rotations,T", po::value<double>(&rotations),
+        ("rotations,T", po::value<double>(&rotations)->default_value(5),
             "Simulated time (in number of synchrotron periods)")
-        ("derivation",po::value<unsigned int>(&deriv_type)->default_value(4u),
+        ("derivation",po::value<uint32_t>(&deriv_type)->default_value(4u),
             "Number of grid points to be used to numerically find derivative")
-        ("InterpolationPoints",po::value<unsigned int>(&interpol_type)->default_value(4u),
+        ("InterpolationPoints",po::value<uint32_t>(&interpol_type)->default_value(4u),
             "Number of grid points to be used for interpolation")
         ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(true),
             "Restrict result of interpolation to the values of the neighboring grid points")
@@ -227,18 +203,18 @@ void vfps::ProgramOptions::save(std::string fname)
     ofs << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
-        if (!it->second.value().empty() && !_vm[it->first].defaulted()) {
+        if (!it->second.value().empty()) {
             if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
                     << _vm[it->first].as<double>()
                     << std::endl;
-            } else if (it->second.value().type() == typeid(unsigned int)) {
+            } else if (it->second.value().type() == typeid(uint32_t)) {
                 ofs << it->first << '='
-                    << _vm[it->first].as<unsigned int>()
+                    << _vm[it->first].as<uint32_t>()
                     << std::endl;
-            } else if (it->second.value().type() == typeid(int)) {
+            } else if (it->second.value().type() == typeid(int32_t)) {
                 ofs << it->first << '='
-                    << _vm[it->first].as<int>()
+                    << _vm[it->first].as<int32_t>()
                     << std::endl;
             } else if (it->second.value().type() == typeid(bool)) {
                 ofs << it->first << '='
@@ -255,6 +231,27 @@ void vfps::ProgramOptions::save(std::string fname)
                         << val
                         << std::endl;
                 } catch(const boost::bad_any_cast &){}
+            }
+        }
+    }
+}
+
+void vfps::ProgramOptions::save(vfps::HDF5File* file)
+{
+    for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
+        if (!it->second.value().empty()) {
+            if (it->second.value().type() == typeid(double)) {
+                double data = _vm[it->first].as<double>();
+                file->addParameterToGroup("/Info/Parameters",it->first,
+                                          H5::PredType::IEEE_F64LE,&data);
+            } else if (it->second.value().type() == typeid(uint32_t)) {
+                uint32_t data = _vm[it->first].as<uint32_t>();
+                file->addParameterToGroup("/Info/Parameters",it->first,
+                                          H5::PredType::STD_U32LE,&data);
+            } else if (it->second.value().type() == typeid(int32_t)) {
+                int32_t data = _vm[it->first].as<int32_t>();
+                file->addParameterToGroup("/Info/Parameters",it->first,
+                                          H5::PredType::STD_I32LE,&data);
             }
         }
     }
