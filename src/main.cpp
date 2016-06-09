@@ -95,8 +95,6 @@ int main(int argc, char** argv)
                        +sstream.str()+") at "+timestring);
     }
 
-
-
     #ifdef INOVESA_USE_GUI
     bool gui = opts.showPhaseSpace();
     Display* display = nullptr;
@@ -490,7 +488,8 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync,
+                                opts.getSavePhaseSpace());
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -624,7 +623,7 @@ int main(int argc, char** argv)
     if (hdf_file != nullptr) {
         hdf_file->appendTime(rotations);
         mesh1->integral();
-        hdf_file->append(mesh1);
+        hdf_file->append(mesh1,true);
         field->updateCSR(fc);
         hdf_file->append(field);
         if (wkm != nullptr) {

@@ -26,7 +26,8 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
                          const double BunchCurrent,
-                         const double t_sync) :
+                         const double t_sync,
+                         const bool save_phasespace) :
     _file( nullptr ),
     fname( fname ),
     ta_dims( 0 ),
@@ -41,6 +42,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csr_dims( {{ 0, ef->getNMax()/static_cast<size_t>(2) }} ),
     maxn( ef->getNMax()/static_cast<size_t>(2) ),
     csrp_dims( 0 ),
+    _save_phasespace(save_phasespace),
     ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     ps_size( ps->nMeshCells(0) ),
     imp_size( imp->nFreqs() ),
@@ -336,17 +338,17 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csrp_dataset = _file->createDataSet("/CSR/Intensity/data",csrp_datatype,
                                       *csrp_dataspace,csrp_prop);
 
-        // get ready to save PhaseSpace
+    // get ready to save PhaseSpace
     _file->createGroup("PhaseSpace");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis0" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis1" );
 
     if (std::is_same<vfps::meshdata_t,float>::value) {
         ps_datatype = H5::PredType::IEEE_F32LE;
-#if FXP_FRACPART < 31
+    #if FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
         ps_datatype = H5::PredType::STD_I32LE;
-#endif
+    #endif
     } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
         ps_datatype = H5::PredType::STD_I64LE;
     }else if (std::is_same<vfps::meshdata_t,double>::value) {
@@ -366,7 +368,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     ps_prop.setDeflate(compression);
 
     _ps_dataset = _file->createDataSet("/PhaseSpace/data",ps_datatype,
-                                                                                        *ps_dataspace,ps_prop);
+                                       *ps_dataspace,ps_prop);
 
     // save Impedance
     _file->createGroup("Impedance");
@@ -496,21 +498,26 @@ void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
     delete filespace;
 }
 
-void vfps::HDF5File::append(const PhaseSpace* ps)
+void vfps::HDF5File::append(const PhaseSpace* ps, const bool force_ps)
 {
-    // append PhaseSpace
-    std::array<hsize_t,ps_rank> ps_offset
-            = {{ps_dims[0],0,0}};
-    const std::array<hsize_t,ps_rank> ps_ext
-            = {{1,ps_size,ps_size}};
-    ps_dims[0]++;
-    _ps_dataset.extend(ps_dims.data());
-    H5::DataSpace* filespace = new H5::DataSpace(_ps_dataset.getSpace());
-        H5::DataSpace* memspace = new H5::DataSpace(ps_rank,ps_ext.data(),nullptr);
+    H5::DataSpace* filespace;
+    H5::DataSpace* memspace;
+
+    if (_save_phasespace && !force_ps) {
+        // append PhaseSpace
+        std::array<hsize_t,ps_rank> ps_offset
+                = {{ps_dims[0],0,0}};
+        const std::array<hsize_t,ps_rank> ps_ext
+                = {{1,ps_size,ps_size}};
+        ps_dims[0]++;
+        _ps_dataset.extend(ps_dims.data());
+        filespace = new H5::DataSpace(_ps_dataset.getSpace());
+        memspace = new H5::DataSpace(ps_rank,ps_ext.data(),nullptr);
         filespace->selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());
-    _ps_dataset.write(ps->getData(), ps_datatype, *memspace, *filespace);
+        _ps_dataset.write(ps->getData(), ps_datatype, *memspace, *filespace);
         delete memspace;
         delete filespace;
+    }
 
     // append BunchProfile
     std::array<hsize_t,bp_rank> bp_offset

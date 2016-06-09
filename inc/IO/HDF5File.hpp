@@ -48,7 +48,8 @@ public:
              const Impedance* imp,
              const WakeFunctionMap *wfm,
              const double BunchCurrent,
-             const double t_sync);
+             const double t_sync,
+             const bool save_phasespace=false);
 
     ~HDF5File();
 
@@ -59,7 +60,7 @@ public:
 
     void append(const ElectricField* ef, bool fullspectrum = true);
 
-    void append(const PhaseSpace* ps);
+    void append(const PhaseSpace* ps, const bool force_ps = false);
 
     void append(const WakeKickMap* wkm);
 
@@ -231,6 +232,8 @@ private: // csr power
     H5::DSetCreatPropList csrp_prop;
 
 private: // phase space
+    const bool _save_phasespace;
+
     static constexpr uint_fast8_t ps_rank = 3;
 
     H5::DataSet _ps_dataset;

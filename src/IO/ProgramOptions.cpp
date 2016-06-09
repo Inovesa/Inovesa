@@ -76,15 +76,18 @@ vfps::ProgramOptions::ProgramOptions() :
     _programopts_file.add_options()
         ("cldev", po::value<int>(&_cldevice)->default_value(1),
             "OpenCL device to use\n('-1' lists available devices)")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
-            "Show phase space view")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
-            "print information more detailed")
+        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+            "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
+        ("SavePhaseSpace",
+            po::value<bool>(&_savephasespace)->default_value(false),
+            "save every outstep's phase space to HDF5 file")
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+            "print information more detailed")
     ;
     _programopts_cli.add_options()
         #ifdef INOVESA_USE_CL
@@ -93,14 +96,17 @@ vfps::ProgramOptions::ProgramOptions() :
         #endif // INOVESA_USE_CL
         ("config,c", po::value<std::string>(&_configfile)->default_value("default.cfg"),
             "name of a file containing a configuration.")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
-            "Show phase space view")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("verbose,v", "print information more detailed")
+        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+            "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
+        ("SavePhaseSpace",
+            po::value<bool>(&_savephasespace)->default_value(false),
+            "save every outstep's phase space to HDF5 file")
+        ("verbose,v", "print information more detailed")
     ;
     _simulopts.add_options()
         ("steps,N", po::value<uint32_t>(&steps)->default_value(4000),

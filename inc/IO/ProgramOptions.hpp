@@ -59,6 +59,9 @@ public:
     inline std::string getOutFile() const
         { return _outfile; }
 
+    inline bool getSavePhaseSpace() const
+        { return _savephasespace; }
+
     inline int getOpenGLVersion() const
         { return _glversion; }
 
@@ -154,6 +157,8 @@ private: // program parameters
     std::string _impedancefile;
 
     std::string _outfile;
+
+    bool _savephasespace;
 
     bool _showphasespace;
 
