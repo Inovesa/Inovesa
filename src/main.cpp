@@ -199,6 +199,7 @@ int main(int argc, char** argv)
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib = opts.getBunchCurrent();
     const double Fk = opts.getStartDistParam();
+    const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
     const unsigned int outstep = opts.getOutSteps();
@@ -264,10 +265,10 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         sstream.str("");
-        sstream << Fk;
+        sstream << Fk << ", zoom=" << Iz;
         Display::printText("Generating initial distribution with F(k)="
                            +sstream.str()+".");
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk,Iz);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');

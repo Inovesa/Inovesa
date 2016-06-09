@@ -142,6 +142,9 @@ public:
     inline double getStartDistParam() const
         { return Fk; }
 
+    inline double getStartDistZoom() const
+        { return zoom; }
+
     inline double getSyncFreq() const
         { return f_s; }
 
@@ -189,6 +192,11 @@ private: // simulation parameters
 private: // phsical parameters
     double E_0;
     double Fk;
+
+    /**
+     * @brief zoom initial distribution
+     */
+    double zoom;
     double f_c;
     double f_s;
     double f0;

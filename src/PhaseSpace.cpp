@@ -20,7 +20,8 @@
 #include "PhaseSpace.hpp"
 
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
-                             const double Fk,meshindex_t xoffset) :
+                             const double Fk,const double zoom,
+                             meshindex_t xoffset) :
     _axis(axis),
     _integral(0),
     _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
@@ -40,11 +41,11 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 
     if (Fk >= 0) {
         if (Fk > 0) {
-            haissinski(0,Fk); // 50 iterations haissinski for y axis
+            haissinski(0,Fk,zoom); // 50 iterations haissinski for y axis
         } else {
-            haissinski(0,0); // creates gaussian for x axis
+            haissinski(0,0,zoom); // creates gaussian for x axis
         }
-        haissinski(1,0); // creates gaussian for y axis
+        haissinski(1,0,zoom); // creates gaussian for y axis
 
         for (meshindex_t x = 0; x < nMeshCells(0); x++) {
             for (meshindex_t y = 0; y < nMeshCells(1); y++) {
@@ -148,18 +149,18 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 
 
 vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
-                             const double Fk) :
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},Fk)
+                             const double Fk, const double zoom) :
+    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},Fk,zoom)
 {}
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              meshaxis_t xmin, meshaxis_t xmax,
                              meshaxis_t ymin, meshaxis_t ymax,
                              double xscale, double yscale,
-                             const double Fk) :
+                             const double Fk, const double zoom) :
     PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
                Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale),
-               Fk)
+               Fk,zoom)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -366,13 +367,15 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
 }
 
 void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
-                                  const projection_t Fk)
+                                  const projection_t Fk,
+                                  const double zoom)
 {
     constexpr uint32_t maxloops = 200;
     constexpr double kappamax=0.291030514208;
     constexpr double kappamin=0.01;
     constexpr double p=1.50088;
     constexpr double q=1.05341;
+    const double zoom2 = zoom*zoom;
     projection_t kappa = std::max(kappamax*(1.0-std::exp(-p*std::pow(Fk,q))),
                                   kappamin);
     projection_t* I = new projection_t[nMeshCells(x)];
@@ -382,7 +385,7 @@ void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
         F=0;
         for(uint32_t i=0; i<nMeshCells(x); i++){
             data_t tv=0; // vorheriges t
-            _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]+I[i]);
+            _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]/zoom2+I[i]);
             F+=_projection[x][i]*getDelta(x);
             I[i]=0;
             for(uint32_t j=0; j<=i; j++){ //Berechnet neuen Wert I[i]

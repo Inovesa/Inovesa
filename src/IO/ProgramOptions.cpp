@@ -48,8 +48,10 @@ vfps::ProgramOptions::ProgramOptions() :
              "\tgrayscale png (.png) file\n"
              #endif // INOVESA_USE_PNG
              "\ttext file (.txt) w/ particle coordinates")
-        ("InitialDistParam,K",po::value<double>(&Fk)->default_value(0),
+        ("InitialDistParam",po::value<double>(&Fk)->default_value(0),
             "Parameter F(k) of initial distribution")
+        ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
+            "Zoom initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b)->default_value(1e-3,"1e-3"),
             "Ring Current due to a single bunch (A)")
         ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
