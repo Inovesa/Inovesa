@@ -102,6 +102,9 @@ public:
     inline double getPSShiftY() const
         { return meshshifty; }
 
+    inline bool getRenormalizeCharge() const
+        { return renormalize; }
+
     inline int getRotationType() const
         { return rotationtype; }
 
@@ -183,6 +186,7 @@ private: // simulation parameters
     double meshshiftx;
     double meshshifty;
     uint32_t steps;
+    bool renormalize;
     double rotations;
     uint32_t rotationtype;
     uint32_t deriv_type;

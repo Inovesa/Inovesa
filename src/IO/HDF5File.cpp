@@ -503,7 +503,7 @@ void vfps::HDF5File::append(const PhaseSpace* ps, const bool force_ps)
     H5::DataSpace* filespace;
     H5::DataSpace* memspace;
 
-    if (_save_phasespace && !force_ps) {
+    if (_save_phasespace || force_ps) {
         // append PhaseSpace
         std::array<hsize_t,ps_rank> ps_offset
                 = {{ps_dims[0],0,0}};
@@ -646,8 +646,8 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
     ps_space.getSimpleExtentDims( ps_dims, nullptr );
 
     meshindex_t ps_size = ps_dims[1];
-    size_t ntimesteps = ps_dims[0];
-    const std::array<hsize_t,ps_rank> ps_offset = {{ntimesteps-2,0,0}};
+    size_t ntimesteps = std::min(static_cast<hsize_t>(0),ps_dims[0]-1);
+    const std::array<hsize_t,ps_rank> ps_offset = {{ntimesteps,0,0}};
     const std::array<hsize_t,ps_rank> ps_ext = {{1,ps_size,ps_size}};
     H5::DataSpace memspace(ps_rank,ps_ext.data(),nullptr);
     ps_space.selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());

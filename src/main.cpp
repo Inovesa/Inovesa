@@ -168,6 +168,7 @@ int main(int argc, char** argv)
 
     bool interpol_clamp = opts.getInterpolationBound();
     bool verbose = opts.getVerbosity();
+    bool renormalize = opts.getRenormalizeCharge();
 
     PhaseSpace* mesh1;
     meshindex_t ps_size = opts.getMeshSize();
@@ -570,7 +571,9 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESA_USE_CL
-            mesh1->normalize();
+            if (renormalize) {
+                mesh1->normalize();
+            }
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
                 hdf_file->appendTime(static_cast<double>(i)
