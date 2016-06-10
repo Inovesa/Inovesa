@@ -300,6 +300,9 @@ int main(int argc, char** argv)
                     (*mesh1)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
                 }
             }
+            // normalize integral to 1
+            mesh1->normalize();
+
             mesh1->syncCLMem(clCopyDirection::cpu2dev);
             std::stringstream imgsize;
             imgsize << ps_size;
@@ -347,15 +350,15 @@ int main(int argc, char** argv)
             }
         }
         ifs.close();
+
+        // normalize integral to 1
+        mesh1->normalize();
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else {
         Display::printText("Unknown format of input file. Will now quit.");
         return EXIT_SUCCESS;
     }
     }
-
-    // normalize integral to 1
-    mesh1->normalize();
 
     // find highest peak (for display)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
@@ -412,7 +415,7 @@ int main(int argc, char** argv)
         break;
     case 1:
         Display::printText("Building RotationMap.");
-        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
+        rm1 = new RotationMap(mesh2,mesh3,ps_size,ps_size,angle,
                              interpolationtype,interpol_clamp,
                              RotationMap::RotationCoordinates::norm_pm1,
                              ps_size*ps_size);
@@ -420,11 +423,11 @@ int main(int argc, char** argv)
     case 2:
     default:
         Display::printText("Building RFKickMap.");
-        rm1 = new RFKickMap(mesh1,mesh2,ps_size,ps_size,angle,
+        rm1 = new RFKickMap(mesh2,mesh1,ps_size,ps_size,angle,
                             interpolationtype,interpol_clamp);
 
         Display::printText("Building DriftMap.");
-        rm2 = new DriftMap(mesh2,mesh3,ps_size,ps_size,angle,
+        rm2 = new DriftMap(mesh1,mesh3,ps_size,ps_size,angle,
                            interpolationtype,interpol_clamp);
         break;
     }
@@ -439,11 +442,11 @@ int main(int argc, char** argv)
     SourceMap* fpm;
     if (e1 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( mesh3,mesh2,ps_size,ps_size,
+        fpm = new FokkerPlanckMap( mesh3,mesh1,ps_size,ps_size,
                                    FokkerPlanckMap::FPType::full,e1,
                                    derivationtype);
     } else {
-        fpm = new Identity(mesh3,mesh2,ps_size,ps_size);
+        fpm = new Identity(mesh3,mesh1,ps_size,ps_size);
     }
 
     ElectricField* field = nullptr;
@@ -465,7 +468,7 @@ int main(int argc, char** argv)
         }
         ifs.close();
         Display::printText("Building WakeFunctionMap.");
-        wfm = new WakeFunctionMap(mesh2,mesh1,ps_size,ps_size,
+        wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
                                   wake,interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
@@ -473,14 +476,14 @@ int main(int argc, char** argv)
         field = new ElectricField(mesh1,impedance,Ib,E0,sE,dt);
         if (height >= 0) {
             Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
+            wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
                                        interpolationtype,interpol_clamp);
         }
     }
     if (wkm != nullptr) {
         wm = wkm;
     } else {
-        wm = new Identity(mesh2,mesh1,ps_size,ps_size);
+        wm = new Identity(mesh1,mesh2,ps_size,ps_size);
     }
 
     std::string ofname = opts.getOutFile();
@@ -573,7 +576,7 @@ int main(int argc, char** argv)
             if (renormalize) {
                 meshintegral = mesh1->normalize();
             } else {
-                meshintegral = mesh1->getIntegral();
+                meshintegral = mesh1->integral();
             }
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
@@ -609,8 +612,8 @@ int main(int argc, char** argv)
             }
             #endif // INOVESSA_USE_GUI
             std::stringstream status;
-            status.precision(3);
-            status << std::setw(4) << static_cast<float>(i)/steps
+            status.precision(5);
+            status << std::setw(6) << static_cast<float>(i)/steps
                    << '/' << rotations;
             status << "\t1-Q/Q_0=" << 1.0 - meshintegral;
             Display::printText(status.str(),2.0f);
@@ -626,6 +629,17 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (hdf_file != nullptr) {
+        if (wkm != nullptr) {
+            wkm->update();
+        }
+        #ifdef INOVESA_USE_CL
+        if (OCLH::active) {
+            mesh1->syncCLMem(clCopyDirection::dev2cpu);
+            if (wkm != nullptr) {
+                wkm->syncCLMem(clCopyDirection::dev2cpu);
+            }
+        }
+        #endif // INOVESA_USE_CL
         hdf_file->appendTime(rotations);
         mesh1->integral();
         mesh1->variance(0);
@@ -656,8 +670,8 @@ int main(int argc, char** argv)
     #endif
 
     std::stringstream status;
-    status.precision(3);
-    status << std::setw(4) << rotations << '/' << rotations;
+    status.precision(5);
+    status << std::setw(6) << rotations << '/' << rotations;
     status << "\t1-Q/Q_0=" << 1.0 - mesh1->integral();
     Display::printText(status.str());
 

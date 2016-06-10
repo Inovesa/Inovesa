@@ -29,7 +29,7 @@
 #define INOVESA_VERSION_MINOR   9
 #define INOVESA_VERSION_FIX     3
 
-#define INOVESA_SYNC_CL
+//#define INOVESA_SYNC_CL
 
 namespace vfps
 {

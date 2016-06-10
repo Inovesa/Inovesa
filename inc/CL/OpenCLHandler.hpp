@@ -48,8 +48,8 @@ enum class clCopyDirection {
  * If several platforms are available,
  * AMD plattforms are prefered.
  *
- * @todo: check if OpenCL 1.0 or 2.x do the job
- * (currently "OpenCL 1." is set to be the required version)
+ * @todo: update to recent OpenCL version
+ *        (currently OpenCL 1.1 or 1.2 is  required)
  */
 class OCLH
 {
