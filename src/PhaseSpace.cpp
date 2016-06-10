@@ -210,7 +210,6 @@ vfps::integral_t vfps::PhaseSpace::integral()
 vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
     if (axis == 0) {
-        updateXProjection();
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
         OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
@@ -218,8 +217,6 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
                                       _projection[0]);
         }
         #endif
-    } else {
-        updateYProjection();
     }
     integral_t avg = 0;
     for (size_t i=0; i<nMeshCells(axis); i++) {

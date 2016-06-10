@@ -45,7 +45,7 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     #endif
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        _force_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
+        _offset_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
         _cl_code += R"(
         __kernel void apply_xKick(const __global data_t* src,
@@ -157,7 +157,7 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
             applyHM = cl::Kernel(_cl_prog, "apply_yKick");
         }
         applyHM.setArg(0, _in->data_buf);
-        applyHM.setArg(1, _force_buf);
+        applyHM.setArg(1, _offset_buf);
         applyHM.setArg(2, _meshsize_kd);
         applyHM.setArg(3, _out->data_buf);
     }
@@ -238,12 +238,12 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::queue.enqueueWriteBuffer(_force_buf,CL_TRUE,0,
+        OCLH::queue.enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
                                       sizeof(meshaxis_t)*_meshsize_pd,
                                       _offset.data());
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::queue.enqueueReadBuffer(_force_buf,CL_TRUE,0,
+        OCLH::queue.enqueueReadBuffer(_offset_buf,CL_TRUE,0,
                                       sizeof(meshaxis_t)*_meshsize_pd,
                                       _offset.data());
         break;

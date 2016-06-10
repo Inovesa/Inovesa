@@ -134,6 +134,11 @@ public:
      */
     meshaxis_t* wakePotential();
 
+    #ifdef INOVESA_USE_CL
+    void syncCLMem(clCopyDirection dir);
+    #endif
+
+
 private:
     enum class fft_direction : uint_fast8_t {
         forward, backward

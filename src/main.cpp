@@ -453,7 +453,7 @@ int main(int argc, char** argv)
     std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
-        field = new ElectricField(mesh2,impedance);
+        field = new ElectricField(mesh1,impedance);
         Display::printText("Reading WakeFunction from "+wakefile+".");
         std::ifstream ifs;
         ifs.open(wakefile);
@@ -470,7 +470,7 @@ int main(int argc, char** argv)
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh2,impedance,Ib,E0,sE,dt);
+        field = new ElectricField(mesh1,impedance,Ib,E0,sE,dt);
         if (height >= 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh2,mesh1,ps_size,ps_size,field,
@@ -556,12 +556,10 @@ int main(int argc, char** argv)
     #endif // INOVESSA_USE_GUI
 
     Display::printText("Starting the simulation.");
-    // first update to have wkm for step0 in file
-    if (wkm != nullptr) {
-        wkm->update();
-    }
-
     for (unsigned int i=0;i<steps*rotations;i++) {
+        if (wkm != nullptr) {
+            wkm->update();
+        }
         if (outstep > 0 && i%outstep == 0) {
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
@@ -571,8 +569,11 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESA_USE_CL
+            integral_t meshintegral; // normalized charge (should be 1)
             if (renormalize) {
-                mesh1->normalize();
+                meshintegral = mesh1->normalize();
+            } else {
+                meshintegral = mesh1->getIntegral();
             }
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
@@ -611,15 +612,15 @@ int main(int argc, char** argv)
             status.precision(3);
             status << std::setw(4) << static_cast<float>(i)/steps
                    << '/' << rotations;
-            status << "\t1-Q/Q_0=" << 1.0 - mesh1->getIntegral();
+            status << "\t1-Q/Q_0=" << 1.0 - meshintegral;
             Display::printText(status.str(),2.0f);
         }
+        wm->apply();
         rm1->apply();
         if (rm2 != nullptr) {
           rm2->apply();
         }
         fpm->apply();
-        wm->apply();
     }
 
     #ifdef INOVESA_USE_HDF5
@@ -627,6 +628,8 @@ int main(int argc, char** argv)
     if (hdf_file != nullptr) {
         hdf_file->appendTime(rotations);
         mesh1->integral();
+        mesh1->variance(0);
+        mesh1->variance(1);
         hdf_file->append(mesh1,true);
         field->updateCSR(fc);
         hdf_file->append(field);

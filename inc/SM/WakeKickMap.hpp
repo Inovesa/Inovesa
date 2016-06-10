@@ -45,11 +45,6 @@ public:
     ~WakeKickMap();
 
 public:
-    /**
-     * @brief overloads KickMap::apply() to have a variable HeritageMap
-     */
-    void apply();
-
     virtual void update()=0;
 };
 

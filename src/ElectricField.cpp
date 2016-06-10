@@ -345,18 +345,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
-        OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
-                                      sizeof(*_bp_padded)*_nmax,_bp_padded);
-        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
-                                      sizeof(*_formfactor)*_nmax,_formfactor);
-        OCLH::queue.enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
-                                      sizeof(*_wakelosses)*_nmax,_wakelosses);
-        OCLH::queue.enqueueReadBuffer(_wakepotential_complex_buf,CL_TRUE,0,
-                                      sizeof(*_wakepotential_complex)*_nmax,
-                                      _wakepotential_complex);
-        OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
-                                      sizeof(*_wakepotential)*_bpmeshcells,
-                                      _wakepotential);
+        syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #elif defined INOVESA_USE_CL
@@ -402,8 +391,46 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         #endif // INOVESA_USE_CLFFT
         #endif // INOVESA_USE_CL
     }
-
     return _wakepotential;
+}
+
+void vfps::ElectricField::syncCLMem(clCopyDirection dir)
+{
+    if (OCLH::active) {
+    switch (dir) {
+    case clCopyDirection::cpu2dev:
+        OCLH::queue.enqueueWriteBuffer(_bp_padded_buf,CL_TRUE,0,
+                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
+        OCLH::queue.enqueueWriteBuffer(_formfactor_buf,CL_TRUE,0,
+                                       sizeof(*_formfactor)*_nmax,_formfactor);
+        #ifdef INOVESA_USE_CLFFT
+        OCLH::queue.enqueueWriteBuffer(_wakelosses_buf,CL_TRUE,0,
+                                       sizeof(*_wakelosses)*_nmax,_wakelosses);
+        #endif // INOVESA_USE_CLFFT
+        OCLH::queue.enqueueWriteBuffer(_wakepotential_complex_buf,CL_TRUE,0,
+                                       sizeof(*_wakepotential_complex)*_nmax,
+                                       _wakepotential_complex);
+        OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
+                                       sizeof(*_wakepotential)*_bpmeshcells,
+                                       _wakepotential);
+    case clCopyDirection::dev2cpu:
+        OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
+                                      sizeof(*_bp_padded)*_nmax,_bp_padded);
+        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
+                                      sizeof(*_formfactor)*_nmax,_formfactor);
+        #ifdef INOVESA_USE_CLFFT
+        OCLH::queue.enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
+                                      sizeof(*_wakelosses)*_nmax,_wakelosses);
+        #endif // INOVESA_USE_CLFFT
+        OCLH::queue.enqueueReadBuffer(_wakepotential_complex_buf,CL_TRUE,0,
+                                      sizeof(*_wakepotential_complex)*_nmax,
+                                      _wakepotential_complex);
+        OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
+                                      sizeof(*_wakepotential)*_bpmeshcells,
+                                      _wakepotential);
+        break;
+    }
+    }
 }
 
 fftwf_plan vfps::ElectricField::prepareFFT( size_t n, csrpower_t* in,

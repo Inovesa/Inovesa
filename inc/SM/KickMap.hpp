@@ -61,7 +61,7 @@ protected:
     std::vector<meshaxis_t> _offset;
 
     #ifdef INOVESA_USE_CL
-    cl::Buffer _force_buf;
+    cl::Buffer _offset_buf;
     #endif
 
     /**
@@ -90,7 +90,7 @@ protected:
     /**
      * @brief updateHM
      *
-     * @todo use OpenCL
+     * does nothing when OpenCL is used
      */
     void updateHM();
 };

@@ -78,4 +78,5 @@ void vfps::WakeFunctionMap::update()
             _offset[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
         }
     }
+    updateHM();
 }
