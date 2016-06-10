@@ -28,9 +28,11 @@ enum class clCopyDirection {
 
 #include <GL/glew.h>
 
-#define __CL_ENABLE_EXCEPTIONS
-
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_MINIMUM_OPENCL_VERSION 110
+#define CL_HPP_TARGET_OPENCL_VERSION 120
 #include "CL/local_cl.hpp"
+
 #ifdef INOVESA_USE_CLFFT
 #include <clFFT.h>
 #endif // INOVESA_USE_CLFFT
@@ -64,11 +66,11 @@ public:
 
 	static bool active;
 
-	static VECTOR_CLASS<cl::Platform> platforms;
+    static cl::vector<cl::Platform> platforms;
 
 	static cl::Context context;
 
-	static VECTOR_CLASS<cl::Device> devices;
+    static cl::vector<cl::Device> devices;
 
     static cl_device_type devicetype;
 

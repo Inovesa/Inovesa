@@ -87,31 +87,33 @@ void OCLH::prepareCLEnvironment(bool glsharing)
 void
 OCLH::prepareCLDevice(unsigned int device)
 {
-        OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
+    OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
     devicetype = OCLH::devices[device].getInfo<CL_DEVICE_TYPE>();
-        // cl_VENDOR_gl_sharing is present, when string contains the substring
-        OCLH::ogl_sharing
-                        = OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
-                                "_gl_sharing") != std::string::npos;
-        std::string devicename;
-        OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
-        vfps::Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
+    // cl_VENDOR_gl_sharing is present, when string contains the substring
+    OCLH::ogl_sharing
+                    = OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
+                            "_gl_sharing") != std::string::npos;
+    std::string devicename;
+    OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
+    vfps::Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
 }
 
 cl::Program OCLH::prepareCLProg(std::string code)
 {
     code = datatype_aliases()+custom_datatypes+code;
-        cl::Program::Sources source(1,std::make_pair(code.c_str(),code.length()));
-        cl::Program p(OCLH::context, source);
-        try {
-                p.build(OCLH::devices);
-        } catch (cl::Error &e) {
-            e.what();
-            std::cout	<< "===== OpenCL Code =====\n"
-                                    << code << std::endl;
-            std::cout	<< "===== OpenCL Build Log =====\n"
-                                    << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
-                                    << std::endl;
+    cl::vector<std::string> codevec;
+    codevec.push_back(code);
+    cl::Program::Sources source(codevec);
+    cl::Program p(OCLH::context, source);
+    try {
+            p.build(OCLH::devices);
+    } catch (cl::Error &e) {
+        e.what();
+        std::cout	<< "===== OpenCL Code =====\n"
+                                << code << std::endl;
+        std::cout	<< "===== OpenCL Build Log =====\n"
+                                << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
+                                << std::endl;
     }
 
 return p;
@@ -132,7 +134,7 @@ void OCLH::listCLDevices()
         cl_context_properties tmp_properties[] =
             { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
         cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
-        VECTOR_CLASS<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
+        cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
         for (unsigned int d=0; d<OCLH::devices.size(); d++) {
             std::string tmpdevicetype;
             switch(tmp_devices[d].getInfo<CL_DEVICE_TYPE>()) {
@@ -166,11 +168,11 @@ void OCLH::listCLDevices()
 
 bool OCLH::active;
 
-VECTOR_CLASS<cl::Platform> OCLH::platforms;
+cl::vector<cl::Platform> OCLH::platforms;
 
 cl::Context OCLH::context;
 
-VECTOR_CLASS<cl::Device> OCLH::devices;
+cl::vector<cl::Device> OCLH::devices;
 
 cl_device_type OCLH::devicetype;
 
