@@ -368,6 +368,27 @@ int main(int argc, char** argv)
         }
     }
 
+
+    #ifdef INOVESA_USE_GUI
+    Plot2DLine* bpv = nullptr;
+    Plot3DColormap* psv = nullptr;
+    Plot2DLine* wpv = nullptr;
+    if (gui) {
+        try {
+            psv = new Plot3DColormap(maxval);
+            display->addElement(psv);
+            psv->createTexture(mesh1);
+            display->draw();
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(psv);
+            delete psv;
+            psv = nullptr;
+            gui = false;
+        }
+    }
+    #endif // INOVESSA_USE_GUI
+
     if (verbose) {
     sstream.str("");
     sstream << std::fixed << maxval*Ib/f0/physcons::e;
@@ -486,6 +507,31 @@ int main(int argc, char** argv)
         wm = new Identity(mesh1,mesh2,ps_size,ps_size);
     }
 
+    #ifdef INOVESA_USE_GUI
+    if (gui) {
+        try {
+            bpv = new Plot2DLine(std::array<float,3>{{1,0,0}});
+            display->addElement(bpv);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(bpv);
+            delete bpv;
+            bpv = nullptr;
+        }
+        if (wkm != nullptr) {
+            try {
+                wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
+                display->addElement(wpv);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                display->takeElement(wpv);
+                delete wpv;
+                wpv = nullptr;
+            }
+        }
+    }
+    #endif // INOVESA_USE_GUI
+
     std::string ofname = opts.getOutFile();
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
@@ -519,43 +565,6 @@ int main(int argc, char** argv)
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_CL
-    #ifdef INOVESA_USE_GUI
-    Plot2DLine* bpv = nullptr;
-    Plot3DColormap* psv = nullptr;
-    Plot2DLine* wpv = nullptr;
-    if (gui) {
-        try {
-            psv = new Plot3DColormap(maxval);
-            display->addElement(psv);
-        } catch (std::exception &e) {
-            std::cerr << e.what() << std::endl;
-            display->takeElement(psv);
-            delete psv;
-            psv = nullptr;
-            gui = false;
-        }
-        try {
-            bpv = new Plot2DLine(std::array<float,3>{{1,0,0}});
-            display->addElement(bpv);
-        } catch (std::exception &e) {
-            std::cerr << e.what() << std::endl;
-            display->takeElement(bpv);
-            delete bpv;
-            bpv = nullptr;
-        }
-        if (wkm != nullptr) {
-            try {
-                wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
-                display->addElement(wpv);
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                display->takeElement(wpv);
-                delete wpv;
-                wpv = nullptr;
-            }
-        }
-    }
-    #endif // INOVESSA_USE_GUI
 
     #ifdef INOVESA_USE_HDF5
     const HDF5File::AppendType h5save =
