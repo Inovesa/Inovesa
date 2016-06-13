@@ -166,9 +166,9 @@ int main(int argc, char** argv)
         break;
     }
 
-    bool interpol_clamp = opts.getInterpolationBound();
-    bool verbose = opts.getVerbosity();
-    bool renormalize = opts.getRenormalizeCharge();
+    const bool interpol_clamp = opts.getInterpolationBound();
+    const bool verbose = opts.getVerbosity();
+    const bool renormalize = opts.getRenormalizeCharge();
 
     PhaseSpace* mesh1;
     meshindex_t ps_size = opts.getMeshSize();
@@ -493,8 +493,7 @@ int main(int argc, char** argv)
         std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync,
-                                opts.getSavePhaseSpace());
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -558,12 +557,33 @@ int main(int argc, char** argv)
     }
     #endif // INOVESSA_USE_GUI
 
+    #ifdef INOVESA_USE_HDF5
+    const HDF5File::AppendType h5save =
+        opts.getSavePhaseSpace()? HDF5File::AppendType::All:
+                                  HDF5File::AppendType::Defaults;
+    if (hdf_file != nullptr && h5save == HDF5File::AppendType::Defaults) {
+        // save initial phase space
+        hdf_file->append(mesh1,HDF5File::AppendType::PhaseSpace);
+    }
+    #endif
+
     Display::printText("Starting the simulation.");
     for (unsigned int i=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
             wkm->update();
         }
         if (outstep > 0 && i%outstep == 0) {
+            integral_t meshintegral; // normalized charge (should be 1)
+            if (renormalize) {
+                // works on XProjection (and recalculates it)
+                meshintegral = mesh1->normalize();
+            } else {
+                // works on XProjection (and recalculates it)
+                meshintegral = mesh1->integral();
+            }
+            mesh1->variance(0);
+            mesh1->updateYProjection();
+            mesh1->variance(1);
             #ifdef INOVESA_USE_CL
             if (OCLH::active) {
                 mesh1->syncCLMem(clCopyDirection::dev2cpu);
@@ -572,19 +592,11 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESA_USE_CL
-            integral_t meshintegral; // normalized charge (should be 1)
-            if (renormalize) {
-                meshintegral = mesh1->normalize();
-            } else {
-                meshintegral = mesh1->integral();
-            }
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
                 hdf_file->appendTime(static_cast<double>(i)
                                 /static_cast<double>(steps));
-                mesh1->variance(0);
-                mesh1->variance(1);
-                hdf_file->append(mesh1);
+                hdf_file->append(mesh1,h5save);
                 field->updateCSR(fc);
                 hdf_file->append(field);
                 if (wkm != nullptr) {
@@ -632,6 +644,10 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             wkm->update();
         }
+        mesh1->integral(); // works on XProjection (and recalculates it)
+        mesh1->variance(0);
+        mesh1->updateYProjection();
+        mesh1->variance(1);
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
             mesh1->syncCLMem(clCopyDirection::dev2cpu);
@@ -641,10 +657,7 @@ int main(int argc, char** argv)
         }
         #endif // INOVESA_USE_CL
         hdf_file->appendTime(rotations);
-        mesh1->integral();
-        mesh1->variance(0);
-        mesh1->variance(1);
-        hdf_file->append(mesh1,true);
+        hdf_file->append(mesh1,HDF5File::AppendType::All);
         field->updateCSR(fc);
         hdf_file->append(field);
         if (wkm != nullptr) {

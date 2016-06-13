@@ -48,8 +48,7 @@ public:
              const Impedance* imp,
              const WakeFunctionMap *wfm,
              const double BunchCurrent,
-             const double t_sync,
-             const bool save_phasespace=false);
+             const double t_sync);
 
     ~HDF5File();
 
@@ -60,7 +59,11 @@ public:
 
     void append(const ElectricField* ef, bool fullspectrum = true);
 
-    void append(const PhaseSpace* ps, const bool force_ps = false);
+    enum class AppendType : uint_fast16_t {
+        All, Defaults, PhaseSpace
+    };
+
+    void append(const PhaseSpace* ps, const AppendType at=AppendType::Defaults);
 
     void append(const WakeKickMap* wkm);
 
@@ -89,10 +92,6 @@ private: // values for phase space axis
 
     H5::DataSet ax1ps_dataset;
 
-    H5::DataSpace* ax0ps_dataspace;
-
-    H5::DataSpace* ax1ps_dataspace;
-
     H5::DataType axps_datatype;
 
     H5::DSetCreatPropList axps_prop;
@@ -102,8 +101,6 @@ private: // values for frequency axis
 
     H5::DataSet axfreq_dataset;
 
-    H5::DataSpace* axfreq_dataspace;
-
     H5::DataType axfreq_datatype;
 
     H5::DSetCreatPropList axfreq_prop;
@@ -112,8 +109,6 @@ private: // time axis
     static constexpr uint_fast8_t ta_rank = 1;
 
     H5::DataSet ta_dataset;
-
-    H5::DataSpace* ta_dataspace;
 
     H5::DataType ta_datatype;
 
@@ -125,8 +120,6 @@ private: // bunch current
     static constexpr uint_fast8_t bc_rank = 1;
 
     H5::DataSet bc_dataset;
-
-    H5::DataSpace* bc_dataspace;
 
     H5::DataType bc_datatype;
 
@@ -143,8 +136,6 @@ private: // bunch profile
 
     H5::DataSet bp_dataset;
 
-    H5::DataSpace* bp_dataspace;
-
     H5::DataType bp_datatype;
 
     std::array<hsize_t,bp_rank> bp_dims;
@@ -155,8 +146,6 @@ private: // bunch length
     static constexpr uint_fast8_t bl_rank = 1;
 
     H5::DataSet bl_dataset;
-
-    H5::DataSpace* bl_dataspace;
 
     H5::DataType bl_datatype;
 
@@ -169,20 +158,27 @@ private: // bunch position
 
     H5::DataSet qb_dataset;
 
-    H5::DataSpace* qb_dataspace;
-
     H5::DataType qb_datatype;
 
     hsize_t qb_dims;
 
     H5::DSetCreatPropList qb_prop;
 
+private: // energy profile
+    static constexpr uint_fast8_t ep_rank = 2;
+
+    H5::DataSet ep_dataset;
+
+    H5::DataType ep_datatype;
+
+    std::array<hsize_t,ep_rank> ep_dims;
+
+    H5::DSetCreatPropList ep_prop;
+
 private: // energy spread
     static constexpr uint_fast8_t es_rank = 1;
 
     H5::DataSet es_dataset;
-
-    H5::DataSpace* es_dataspace;
 
     H5::DataType es_datatype;
 
@@ -195,8 +191,6 @@ private: // wake potential
 
     H5::DataSet wp_dataset;
 
-    H5::DataSpace* wp_dataspace;
-
     H5::DataType wp_datatype;
 
     std::array<hsize_t,wp_rank> wp_dims;
@@ -207,8 +201,6 @@ private: // csr spectrum
     static constexpr uint_fast8_t csr_rank = 2;
 
     H5::DataSet csr_dataset;
-
-    H5::DataSpace* csr_dataspace;
 
     H5::DataType csr_datatype;
 
@@ -223,8 +215,6 @@ private: // csr power
 
     H5::DataSet csrp_dataset;
 
-    H5::DataSpace* csrp_dataspace;
-
     H5::DataType csrp_datatype;
 
     hsize_t csrp_dims;
@@ -232,13 +222,9 @@ private: // csr power
     H5::DSetCreatPropList csrp_prop;
 
 private: // phase space
-    const bool _save_phasespace;
-
     static constexpr uint_fast8_t ps_rank = 3;
 
     H5::DataSet _ps_dataset;
-
-    H5::DataSpace* ps_dataspace;
 
     H5::DataType ps_datatype;
 
@@ -254,8 +240,6 @@ private: // impedance
     H5::DataSet imp_dataset_real;
     H5::DataSet imp_dataset_imag;
 
-    H5::DataSpace* imp_dataspace;
-
     H5::DataType imp_datatype;
 
     hsize_t imp_size;
@@ -266,8 +250,6 @@ private: // wake function
     static constexpr uint_fast8_t wf_rank = 1;
 
     H5::DataSet wf_dataset;
-
-    H5::DataSpace* wf_dataspace;
 
     H5::DataType wf_datatype;
 

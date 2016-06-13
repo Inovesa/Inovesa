@@ -26,8 +26,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
                          const double BunchCurrent,
-                         const double t_sync,
-                         const bool save_phasespace) :
+                         const double t_sync) :
     _file( nullptr ),
     fname( fname ),
     ta_dims( 0 ),
@@ -37,12 +36,12 @@ vfps::HDF5File::HDF5File(const std::string fname,
     bp_dims( {{ 0, ps->nMeshCells(0) }} ),
     bl_dims( 0 ),
     qb_dims( 0 ),
+    ep_dims( {{ 0, ps->nMeshCells(0) }} ),
     es_dims( 0 ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
     csr_dims( {{ 0, ef->getNMax()/static_cast<size_t>(2) }} ),
     maxn( ef->getNMax()/static_cast<size_t>(2) ),
     csrp_dims( 0 ),
-    _save_phasespace(save_phasespace),
     ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     ps_size( ps->nMeshCells(0) ),
     imp_size( imp->nFreqs() ),
@@ -65,9 +64,9 @@ vfps::HDF5File::HDF5File(const std::string fname,
     const std::array<hsize_t,axps_rank> psa_maxdims
                     = {{ ps_size }};
 
-    ax0ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
+    H5::DataSpace ax0ps_dataspace(axps_rank,psa_dims.data(),
                                         psa_maxdims.data());
-    ax1ps_dataspace = new H5::DataSpace(axps_rank,psa_dims.data(),
+    H5::DataSpace ax1ps_dataspace(axps_rank,psa_dims.data(),
                                         psa_maxdims.data());
 
 
@@ -77,7 +76,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     axps_prop.setDeflate(compression);
 
     ax0ps_dataset = _file->createDataSet("/Info/AxisValues_z",axps_datatype,
-                                         *ax0ps_dataspace,axps_prop);
+                                         ax0ps_dataspace,axps_prop);
     const double ax0scale0 = ps->getScale(0);
     ax0ps_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
@@ -86,7 +85,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
 
     ax1ps_dataset = _file->createDataSet("/Info/AxisValues_E",axps_datatype,
-                                         *ax1ps_dataspace,axps_prop);
+                                         ax1ps_dataspace,axps_prop);
     const double ax1scale = ps->getScale(1);
     ax1ps_dataset.createAttribute("Factor4ElectronVolts"
                                   ,H5::PredType::IEEE_F64LE,
@@ -111,8 +110,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     const hsize_t axfreq_dims = maxn;
     const hsize_t axfreq_maxdims =  maxn;
 
-    axfreq_dataspace = new H5::DataSpace(axfreq_rank,&axfreq_dims,
-                                         &axfreq_maxdims);
+    H5::DataSpace axfreq_dataspace(axfreq_rank,&axfreq_dims,&axfreq_maxdims);
 
 
     const hsize_t axfreq_chunkdims = std::min(2048U,ps_size);
@@ -121,7 +119,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     axfreq_prop.setDeflate(compression);
 
     axfreq_dataset = _file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
-                                         *axfreq_dataspace,axfreq_prop);
+                                          axfreq_dataspace,axfreq_prop);
     const double axfreqscale = imp->getRuler()->scale();
     axfreq_dataset.createAttribute("Factor4Hertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
@@ -133,7 +131,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     hsize_t ta_maxdims = H5S_UNLIMITED;
 
-    ta_dataspace = new H5::DataSpace(ta_rank,&ta_dims,&ta_maxdims);
+    H5::DataSpace ta_dataspace(ta_rank,&ta_dims,&ta_maxdims);
 
 
     const hsize_t ta_chunkdims = 256;
@@ -142,7 +140,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     ta_prop.setDeflate(compression);
 
     ta_dataset = _file->createDataSet("/Info/AxisValues_t",ta_datatype,
-                                     *ta_dataspace,ta_prop);
+                                      ta_dataspace,ta_prop);
     const double axtimescale = t_sync;
     ta_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
@@ -154,7 +152,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     hsize_t bc_maxdims = H5S_UNLIMITED;
 
-    bc_dataspace = new H5::DataSpace(bc_rank,&bc_dims,&bc_maxdims);
+     H5::DataSpace bc_dataspace(bc_rank,&bc_dims,&bc_maxdims);
 
     const hsize_t bc_chunkdims = 256;
     bc_prop.setChunk(bc_rank,&bc_chunkdims);
@@ -162,7 +160,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     bc_prop.setDeflate(compression);
 
     bc_dataset = _file->createDataSet("/BunchCurrent/data",bc_datatype,
-                                     *bc_dataspace,bc_prop);
+                                      bc_dataspace,bc_prop);
 
     // get ready to save BunchProfiles
     _file->createGroup("BunchProfile");
@@ -180,7 +178,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     const std::array<hsize_t,bp_rank> bp_maxdims
                     = {{H5S_UNLIMITED,ps_size}};
 
-    bp_dataspace = new H5::DataSpace(bp_rank,bp_dims.data(),bp_maxdims.data());
+    H5::DataSpace bp_dataspace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
     const std::array<hsize_t,bp_rank> bp_chunkdims
         = {{64U,std::min(2048U,ps_size)}};
@@ -189,7 +187,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     bp_prop.setDeflate(compression);
 
     bp_dataset = _file->createDataSet("/BunchProfile/data",bp_datatype,
-                                         *bp_dataspace,bp_prop);
+                                      bp_dataspace,bp_prop);
 
     // get ready to save BunchLength
     _file->createGroup("BunchLength");
@@ -204,7 +202,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     hsize_t bl_maxdims = H5S_UNLIMITED;
 
-    bl_dataspace = new H5::DataSpace(bl_rank,&bl_dims,&bl_maxdims);
+    H5::DataSpace bl_dataspace(bl_rank,&bl_dims,&bl_maxdims);
 
     const hsize_t bl_chunkdims = 256;
     bl_prop.setChunk(bl_rank,&bl_chunkdims);
@@ -212,7 +210,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     bl_prop.setDeflate(compression);
 
     bl_dataset = _file->createDataSet("/BunchLength/data",bl_datatype,
-                                     *bl_dataspace,bl_prop);
+                                      bl_dataspace,bl_prop);
 
     // get ready to save BunchPosition
     _file->createGroup("BunchPosition");
@@ -227,7 +225,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     hsize_t qb_maxdims = H5S_UNLIMITED;
 
-    qb_dataspace = new H5::DataSpace(qb_rank,&qb_dims,&qb_maxdims);
+    H5::DataSpace qb_dataspace(qb_rank,&qb_dims,&qb_maxdims);
 
     const hsize_t qb_chunkdims = 256;
     qb_prop.setChunk(qb_rank,&qb_chunkdims);
@@ -235,7 +233,36 @@ vfps::HDF5File::HDF5File(const std::string fname,
     qb_prop.setDeflate(compression);
 
     qb_dataset = _file->createDataSet("/BunchPosition/data",qb_datatype,
-                                     *qb_dataspace,qb_prop);
+                                      qb_dataspace,qb_prop);
+
+
+
+    // get ready to save EnergyProfiles
+    _file->createGroup("EnergyProfile");
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/EnergyProfile/axis0" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyProfile/axis1" );
+
+    if (std::is_same<vfps::integral_t,float>::value) {
+            ep_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::integral_t,fixp64>::value) {
+            ep_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::integral_t,double>::value) {
+            ep_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    const std::array<hsize_t,ep_rank> ep_maxdims
+                    = {{H5S_UNLIMITED,ps_size}};
+
+    H5::DataSpace ep_dataspace(ep_rank,ep_dims.data(),ep_maxdims.data());
+
+    const std::array<hsize_t,ep_rank> ep_chunkdims
+        = {{64U,std::min(2048U,ps_size)}};
+    ep_prop.setChunk(ep_rank,ep_chunkdims.data());
+    ep_prop.setShuffle();
+    ep_prop.setDeflate(compression);
+
+    ep_dataset = _file->createDataSet("/EnergyProfile/data",ep_datatype,
+                                      ep_dataspace,ep_prop);
 
     // get ready to save Energy Spread
     _file->createGroup("EnergySpread");
@@ -250,7 +277,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     hsize_t es_maxdims = H5S_UNLIMITED;
 
-    es_dataspace = new H5::DataSpace(es_rank,&es_dims,&es_maxdims);
+    H5::DataSpace es_dataspace(es_rank,&es_dims,&es_maxdims);
 
     const hsize_t es_chunkdims = 256;
     es_prop.setChunk(es_rank,&es_chunkdims);
@@ -258,7 +285,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     es_prop.setDeflate(compression);
 
     es_dataset = _file->createDataSet("/EnergySpread/data",es_datatype,
-                                     *es_dataspace,es_prop);
+                                      es_dataspace,es_prop);
 
     // get ready to save WakePotential
     _file->createGroup("WakePotential");
@@ -275,7 +302,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     const std::array<hsize_t,wp_rank> wp_maxdims
             = {{H5S_UNLIMITED,ps_size}};
 
-    wp_dataspace = new H5::DataSpace(wp_rank,wp_dims.data(),wp_maxdims.data());
+    H5::DataSpace wp_dataspace(wp_rank,wp_dims.data(),wp_maxdims.data());
 
     const std::array<hsize_t,wp_rank> wp_chunkdims
             = {{64U,std::min(2048U,ps_size)}};
@@ -284,7 +311,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     wp_prop.setDeflate(compression);
 
     wp_dataset = _file->createDataSet("/WakePotential/data",wp_datatype,
-                                     *wp_dataspace,wp_prop);
+                                      wp_dataspace,wp_prop);
 
     // get ready to save CSR Data
     _file->createGroup("CSR/");
@@ -302,8 +329,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     const std::array<hsize_t,csr_rank> csr_maxdims
         = {{H5S_UNLIMITED,csr_dims[1]}};
 
-    csr_dataspace = new H5::DataSpace(csr_rank,csr_dims.data(),
-                                      csr_maxdims.data());
+    H5::DataSpace csr_dataspace(csr_rank,csr_dims.data(),csr_maxdims.data());
 
 
     const std::array<hsize_t,csr_rank> csr_chunkdims
@@ -313,7 +339,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csr_prop.setDeflate(compression);
 
     csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
-                                      *csr_dataspace,csr_prop);
+                                       csr_dataspace,csr_prop);
 
     // get ready to save CSR Intensity
     _file->createGroup("CSR/Intensity");
@@ -327,7 +353,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     const hsize_t csrp_maxdims = H5S_UNLIMITED;
 
-    csrp_dataspace = new H5::DataSpace(csrp_rank,&csrp_dims,&csrp_maxdims);
+    H5::DataSpace csrp_dataspace(csrp_rank,&csrp_dims,&csrp_maxdims);
 
 
     const hsize_t csrp_chunkdims = std::min(2048U,ps_size);
@@ -336,7 +362,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csrp_prop.setDeflate(compression);
 
     csrp_dataset = _file->createDataSet("/CSR/Intensity/data",csrp_datatype,
-                                      *csrp_dataspace,csrp_prop);
+                                        csrp_dataspace,csrp_prop);
 
     // get ready to save PhaseSpace
     _file->createGroup("PhaseSpace");
@@ -358,7 +384,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     const std::array<hsize_t,ps_rank> ps_maxdims
             = {{H5S_UNLIMITED,ps_size,ps_size}};
 
-    ps_dataspace = new H5::DataSpace(ps_rank,ps_dims.data(),ps_maxdims.data());
+    H5::DataSpace ps_dataspace(ps_rank,ps_dims.data(),ps_maxdims.data());
 
 
     const std::array<hsize_t,ps_rank> ps_chunkdims
@@ -368,7 +394,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     ps_prop.setDeflate(compression);
 
     _ps_dataset = _file->createDataSet("/PhaseSpace/data",ps_datatype,
-                                       *ps_dataspace,ps_prop);
+                                       ps_dataspace,ps_prop);
 
     // save Impedance
     _file->createGroup("Impedance");
@@ -382,7 +408,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
         imp_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    imp_dataspace = new H5::DataSpace(imp_rank,&imp_size,&imp_size);
+    H5::DataSpace imp_dataspace(imp_rank,&imp_size,&imp_size);
 
     const hsize_t imp_chunkdims = std::min(hsize_t(4096),imp_size);
     imp_prop.setChunk(imp_rank,&imp_chunkdims);
@@ -391,9 +417,9 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
     _file->createGroup("Impedance/data");
     imp_dataset_real = _file->createDataSet("/Impedance/data/real",imp_datatype,
-                                           *imp_dataspace,imp_prop);
+                                            imp_dataspace,imp_prop);
     imp_dataset_imag = _file->createDataSet("/Impedance/data/imag",imp_datatype,
-                                           *imp_dataspace,imp_prop);
+                                            imp_dataspace,imp_prop);
 
     std::vector<csrpower_t> imp_real;
     std::vector<csrpower_t> imp_imag;
@@ -418,7 +444,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
         wf_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    wf_dataspace = new H5::DataSpace(wf_rank,&wf_size,&wf_size);
+    H5::DataSpace wf_dataspace(wf_rank,&wf_size,&wf_size);
 
     const hsize_t wf_chunkdims = std::min(hsize_t(4096),wf_size);
     wf_prop.setChunk(wf_rank,&wf_chunkdims);
@@ -426,7 +452,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     wf_prop.setDeflate(compression);
 
     wf_dataset = _file->createDataSet("/WakeFunction/data",wf_datatype,
-                                     *wf_dataspace,wf_prop);
+                                      wf_dataspace,wf_prop);
 
     wf_dataset.write(wfm->getWakeFunction(),wf_datatype);
     }
@@ -445,12 +471,6 @@ vfps::HDF5File::HDF5File(const std::string fname,
 vfps::HDF5File::~HDF5File()
 {
     delete _file;
-    delete axfreq_dataspace;
-    delete ax0ps_dataspace;
-    delete ax1ps_dataspace;
-    delete bc_dataspace;
-    delete bp_dataspace;
-  delete ps_dataspace;
 }
 
 void vfps::HDF5File::addParameterToGroup(std::string groupname,
@@ -498,12 +518,13 @@ void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
     delete filespace;
 }
 
-void vfps::HDF5File::append(const PhaseSpace* ps, const bool force_ps)
+void vfps::HDF5File::append(const PhaseSpace* ps, const AppendType at)
 {
     H5::DataSpace* filespace;
     H5::DataSpace* memspace;
 
-    if (_save_phasespace || force_ps) {
+    if ( at == AppendType::All ||
+         at == AppendType::PhaseSpace) {
         // append PhaseSpace
         std::array<hsize_t,ps_rank> ps_offset
                 = {{ps_dims[0],0,0}};
@@ -519,71 +540,87 @@ void vfps::HDF5File::append(const PhaseSpace* ps, const bool force_ps)
         delete filespace;
     }
 
-    // append BunchProfile
-    std::array<hsize_t,bp_rank> bp_offset
-                    = {{bp_dims[0],0}};
-    const std::array<hsize_t,bp_rank> bp_ext
-                    = {{1,ps_size}};
-    bp_dims[0]++;
-    bp_dataset.extend(bp_dims.data());
-    filespace = new H5::DataSpace(bp_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
-    memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
-    bp_dataset.write(ps->getProjection(0), bp_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
+    if (at != AppendType::PhaseSpace) {
+        // append BunchProfile
+        std::array<hsize_t,bp_rank> bp_offset
+                        = {{bp_dims[0],0}};
+        const std::array<hsize_t,bp_rank> bp_ext
+                        = {{1,ps_size}};
+        bp_dims[0]++;
+        bp_dataset.extend(bp_dims.data());
+        filespace = new H5::DataSpace(bp_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
+        memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
+        bp_dataset.write(ps->getProjection(0), bp_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
 
-    // append Length
-    hsize_t bl_offset = bl_dims;
-    const hsize_t bl_ext = 1;
-    bl_dims++;
-    bl_dataset.extend(&bl_dims);
-    filespace = new H5::DataSpace(bl_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
-    memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
-    meshaxis_t bunchlength = ps->getMoment(0,1);
-    bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
+        // append Length
+        hsize_t bl_offset = bl_dims;
+        const hsize_t bl_ext = 1;
+        bl_dims++;
+        bl_dataset.extend(&bl_dims);
+        filespace = new H5::DataSpace(bl_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
+        memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
+        meshaxis_t bunchlength = ps->getMoment(0,1);
+        bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
 
-    // append Position
-    hsize_t qb_offset = qb_dims;
-    const hsize_t qb_ext = 1;
-    qb_dims++;
-    qb_dataset.extend(&qb_dims);
-    filespace = new H5::DataSpace(qb_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, &qb_ext, &qb_offset);
-    memspace = new H5::DataSpace(qb_rank,&qb_ext,nullptr);
-    meshaxis_t bunchposition = ps->getMoment(0,0);
-    qb_dataset.write(&bunchposition, qb_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
+        // append Position
+        hsize_t qb_offset = qb_dims;
+        const hsize_t qb_ext = 1;
+        qb_dims++;
+        qb_dataset.extend(&qb_dims);
+        filespace = new H5::DataSpace(qb_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, &qb_ext, &qb_offset);
+        memspace = new H5::DataSpace(qb_rank,&qb_ext,nullptr);
+        meshaxis_t bunchposition = ps->getMoment(0,0);
+        qb_dataset.write(&bunchposition, qb_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
 
-    // append energy spread
-    hsize_t es_offset = es_dims;
-    const hsize_t es_ext = 1;
-    es_dims++;
-    es_dataset.extend(&es_dims);
-    filespace = new H5::DataSpace(es_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
-    memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
-    meshaxis_t energyspread = ps->getMoment(1,1);
-    es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
+        // append energy profile
+        std::array<hsize_t,ep_rank> ep_offset
+                        = {{ep_dims[0],0}};
+        const std::array<hsize_t,ep_rank> ep_ext
+                        = {{1,ps_size}};
+        ep_dims[0]++;
+        ep_dataset.extend(ep_dims.data());
+        filespace = new H5::DataSpace(ep_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, ep_ext.data(), ep_offset.data());
+        memspace = new H5::DataSpace(ep_rank,ep_ext.data(),nullptr);
+        ep_dataset.write(ps->getProjection(1), ep_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
 
-    // append BunchCurrent
-    hsize_t bc_offset = bc_dims;
-    const hsize_t bc_ext = 1;
-    bc_dims++;
-    bc_dataset.extend(&bc_dims);
-    filespace = new H5::DataSpace(bc_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
-    memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
-    bc = ps->getIntegral()*bc_set;
-    bc_dataset.write(&bc, bc_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
+        // append energy spread
+        hsize_t es_offset = es_dims;
+        const hsize_t es_ext = 1;
+        es_dims++;
+        es_dataset.extend(&es_dims);
+        filespace = new H5::DataSpace(es_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
+        memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
+        meshaxis_t energyspread = ps->getMoment(1,1);
+        es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
+
+        // append BunchCurrent
+        hsize_t bc_offset = bc_dims;
+        const hsize_t bc_ext = 1;
+        bc_dims++;
+        bc_dataset.extend(&bc_dims);
+        filespace = new H5::DataSpace(bc_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
+        memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
+        bc = ps->getIntegral()*bc_set;
+        bc_dataset.write(&bc, bc_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
+    }
 }
 
 void vfps::HDF5File::append(const WakeKickMap* wkm)
