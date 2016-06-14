@@ -317,7 +317,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_PNG
     #ifdef INOVESA_USE_HDF5
     if (isOfFileType(".h5",startdistfile)) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmax,bl,dE));
+        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmin,qmax,pmin,pmax,bl,dE));
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif

@@ -71,7 +71,8 @@ public:
 
 public:
     static PhaseSpace readPhaseSpace(std::string fname,
-                                     meshaxis_t pq_size,
+                                     meshaxis_t qmin, meshaxis_t qmax,
+                                     meshaxis_t pmin, meshaxis_t pmax,
                                      double bl, double dE);
 
 private:

@@ -658,7 +658,8 @@ void vfps::HDF5File::appendTime(const double t)
 }
 
 vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
-                                                meshaxis_t pq_size,
+                                                meshaxis_t qmin,meshaxis_t qmax,
+                                                meshaxis_t pmin,meshaxis_t pmax,
                                                 double bl, double dE)
 {
     H5::DataType datatype;
@@ -702,7 +703,7 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    PhaseSpace ps(ps_size,-pq_size,pq_size,-pq_size,pq_size,bl,dE);
+    PhaseSpace ps(ps_size,qmin,qmax,pmin,pmax,bl,dE);
     ps_dataset.read(ps.getData(), datatype, memspace, ps_space);
 
     return ps;
