@@ -96,7 +96,7 @@ public:
     ~ElectricField();
 
     inline csrpower_t getCSRPower() const
-        { return _csrpower; }
+        { return _csrintensity; }
 
     inline csrpower_t* getCSRSpectrum() const
         { return _csrspectrum; }
@@ -160,7 +160,7 @@ private:
 
     PhaseSpace* _phasespace;
 
-    csrpower_t _csrpower;
+    csrpower_t _csrintensity;
 
     csrpower_t* _csrspectrum;
 

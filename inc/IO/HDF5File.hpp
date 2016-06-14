@@ -210,16 +210,16 @@ private: // csr spectrum
 
     size_t maxn;
 
-private: // csr power
-    static constexpr uint_fast8_t csrp_rank = 1;
+private: // csr intensity
+    static constexpr uint_fast8_t csri_rank = 1;
 
-    H5::DataSet csrp_dataset;
+    H5::DataSet csri_dataset;
 
-    H5::DataType csrp_datatype;
+    H5::DataType csri_datatype;
 
-    hsize_t csrp_dims;
+    hsize_t csri_dims;
 
-    H5::DSetCreatPropList csrp_prop;
+    H5::DSetCreatPropList csri_prop;
 
 private: // phase space
     static constexpr uint_fast8_t ps_rank = 3;
