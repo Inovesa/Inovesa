@@ -26,8 +26,8 @@
 #include "fixed_point.h"
 
 #define INOVESA_VERSION_RELEASE 0
-#define INOVESA_VERSION_MINOR   9
-#define INOVESA_VERSION_FIX     4
+#define INOVESA_VERSION_MINOR   10
+#define INOVESA_VERSION_FIX     0
 
 //#define INOVESA_SYNC_CL
 
