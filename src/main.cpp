@@ -233,11 +233,23 @@ int main(int argc, char** argv)
 
         if (verbose) {
             sstream.str("");
-            sstream << std::scientific << shield;
-            Display::printText("Shielding parameter: "
+            sstream << std::fixed << shield;
+            Display::printText("Shielding parameter (h=height):   "
+                               +sstream.str());
+            if (height>0) {
+                shield = bl*std::sqrt(R)*std::pow(height/2,-3./2.);
+            }
+            sstream.str("");
+            sstream << std::fixed << shield;
+            Display::printText("Shielding parameter (h=height/2): "
                                +sstream.str());
             sstream.str("");
-            sstream << std::scientific << S_csr;
+            sstream << std::fixed << S_csr;
+            if (Ib > Ith) {
+                sstream << " (> " << 0.5+0.12*shield << ')';
+            } else {
+                sstream << " (< " << 0.5+0.12*shield << ')';
+            }
             Display::printText("CSR strength: "
                                +sstream.str());
             sstream.str("");
@@ -266,7 +278,8 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         sstream.str("");
-        sstream << Fk << ", zoom=" << Iz;
+        sstream.precision(2);
+        sstream << std::fixed << Fk << ", zoom=" << Iz;
         Display::printText("Generating initial distribution with F(k)="
                            +sstream.str()+".");
         mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk,Iz);
@@ -391,7 +404,7 @@ int main(int argc, char** argv)
 
     if (verbose) {
     sstream.str("");
-    sstream << std::fixed << maxval*Ib/f0/physcons::e;
+    sstream << std::scientific << maxval*Ib/f0/physcons::e;
     Display::printText("Maximum particles per grid cell is "
                        +sstream.str()+".");
     }
