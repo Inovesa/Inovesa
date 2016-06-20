@@ -45,7 +45,7 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
     const double r_bend = physcons::c/(2*M_PI*f_rev);
     constexpr std::complex<double> j(0,1);
     rv.push_back(impedance_t(0,0));
-    for (size_t i=1; i<n; i++) {
+    for (size_t i=1; i<=n/2; i++) {
         std::complex<double> Z=0;
         const double n = i*delta;
         const double m = n*std::pow(h/r_bend,3./2.);
@@ -69,6 +69,9 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
         }
         Z *= 4.0*b*n*h/r_bend*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
         rv.push_back(impedance_t(Z));
+    }
+    for (size_t i=n/2+1; i<n; i++) {
+        rv.push_back(impedance_t(0,0));
     }
 
     return rv;
