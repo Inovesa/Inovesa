@@ -8,20 +8,23 @@ Build Requirenments
 -------------------
 
 CMake will check whether build requirenmens are met.
-On Debian 8 the following packages have to be installed:
+On Debian 8 the following packages have to be installed.
 
+Mandatory:
 * cmake
 * g++
 * libboost-dev
 * libboost-system-dev
 * libboost-filesystem-dev
 * libboost-program-options-dev
-* libclfft-dev (optional for faster FFT)
 * libfftw3-dev
-* libglew-dev (optional for GUI support)
-* libglfw3-dev (optional for GUI support)
-* libhdf5-dev (optional for data writeout)
-* libpng++-dev (optional for PNG support)
-* libxrandr-dev (optional for GUI support)
+
+Optional:
+* libglew-dev (for GUI support)
+* libglfw3-dev (for GUI support)
+* libhdf5-dev (for HDF5 support)
+* libpng++-dev (for PNG support)
+* libxrandr-dev (for GUI support)
 * opencl-dev (optional for parallelization)
+* libclfft-dev (for faster FFT using parallelization)
 

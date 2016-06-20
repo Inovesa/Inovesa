@@ -44,7 +44,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     csri_dims( 0 ),
     ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     ps_size( ps->nMeshCells(0) ),
-    imp_size( imp->nFreqs() ),
+    imp_size( imp->nFreqs()/2 ),
     wf_size( 2*ps_size )
 {
     _file = new H5::H5File(fname,H5F_ACC_TRUNC);
