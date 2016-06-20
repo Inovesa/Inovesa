@@ -56,7 +56,8 @@ set(INC_LIST
   ./inc/fixed_point.h
 )
 set(MISC_LIST
-	default.cfg
+  default.cfg
+  README.md
 )
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
@@ -72,70 +73,70 @@ add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
 
 add_definitions(-std=c++11)
 if(DEFINED CMAKE_BUILD_TYPE)
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		add_definitions(-g -Wall -Wextra -DDEBUG)
-		MESSAGE ("Doing debug compile, including debug symbols.")
-	else()
-		add_definitions(-O3 -w )
-		MESSAGE ("Doing release compile, using optimization flags.")
-	endif()
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_definitions(-g -Wall -Wextra -DDEBUG)
+        MESSAGE ("Doing debug compile, including debug symbols.")
+    else()
+        add_definitions(-O3 -w )
+        MESSAGE ("Doing release compile, using optimization flags.")
+    endif()
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake")
 find_package(OpenCL QUIET)
 IF(OPENCL_FOUND)
-	add_definitions( -DINOVESA_USE_CL)
-	MESSAGE ("Found OpenCL. Will add support.")
-	find_package(clFFT QUIET)
-	IF(clFFT_FOUND)
-		add_definitions( -DINOVESA_USE_CLFFT)
-		MESSAGE ("Found clFFT. Will add support.")
-	ENDIF()
+    add_definitions( -DINOVESA_USE_CL)
+    MESSAGE ("Found OpenCL. Will add support.")
+    find_package(clFFT QUIET)
+    IF(clFFT_FOUND)
+        add_definitions( -DINOVESA_USE_CLFFT)
+        MESSAGE ("Found clFFT. Will add support.")
+    ENDIF()
 ELSE()
-	MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
+    MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
 ENDIF()
 find_package(OpenGL QUIET)
 IF(OPENGL_FOUND)
-	add_definitions( -DINOVESA_USE_GUI)
-	MESSAGE ("Found OpenGL. Will add support.")
-	find_package(GLEW REQUIRED QUIET)
-	find_package(GLFW REQUIRED QUIET)
-	add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
+    add_definitions( -DINOVESA_USE_GUI)
+    MESSAGE ("Found OpenGL. Will add support.")
+    find_package(GLEW REQUIRED QUIET)
+    find_package(GLFW REQUIRED QUIET)
+    add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
 ELSE()
-	MESSAGE ("Did not find OpenGL. Will compile without OpenGL support.")
+    MESSAGE ("Did not find OpenGL. Will compile without OpenGL support.")
 ENDIF()
 find_package(Boost COMPONENTS filesystem program_options system REQUIRED QUIET)
 find_package(FFTW REQUIRED QUIET)
 find_package(HDF5 COMPONENTS CXX QUIET)
 IF(HDF5_FOUND)
-	add_definitions( -DINOVESA_USE_HDF5)
-	MESSAGE ("Found HDF5. Will add support.")
-	set (INOVESA_HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
-	set (INOVESA_HDF5_LIBRARIES ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
+    add_definitions( -DINOVESA_USE_HDF5)
+    MESSAGE ("Found HDF5. Will add support.")
+    set (INOVESA_HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
+    set (INOVESA_HDF5_LIBRARIES ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
 ELSE()
-	MESSAGE ("Did not find HDF5. Will compile without HDF5 support.")
+    MESSAGE ("Did not find HDF5. Will compile without HDF5 support.")
 ENDIF()
 find_package(PNG QUIET)
 IF(PNG_FOUND)
-	CHECK_INCLUDE_FILE_CXX("png++/png.hpp" PNGPP_FOUND QUIET)
-	IF(PNGPP_FOUND)
-		add_definitions( -DINOVESA_USE_PNG)
-		MESSAGE ("Found PNG++. Will add PNG support.")
-	ELSE()
-		MESSAGE ("Did not find PNG++. Will compile without PNG support.")
-	ENDIF()
+    CHECK_INCLUDE_FILE_CXX("png++/png.hpp" PNGPP_FOUND QUIET)
+    IF(PNGPP_FOUND)
+        add_definitions( -DINOVESA_USE_PNG)
+        MESSAGE ("Found PNG++. Will add PNG support.")
+    ELSE()
+        MESSAGE ("Did not find PNG++. Will compile without PNG support.")
+    ENDIF()
 ENDIF()
 
 include_directories(./inc
-	${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS}
-	${INOVESA_HDF5_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS}
-	${OPENCL_INCLUDE_DIRS} ${CLFFT_INCLUDE_DIRS}
+    ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS}
+    ${INOVESA_HDF5_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS}
+    ${OPENCL_INCLUDE_DIRS} ${CLFFT_INCLUDE_DIRS}
 )
 SET(LIBS ${LIBS} ${Boost_LIBRARIES}
-	${GLFW_LIBRARIES} ${GLEW_LIBRARIES}
-	${GL_LIBRARY} ${INOVESA_HDF5_LIBRARIES}
-	${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES}
-	${PNG_LIBRARIES} ${FFTW_LIBRARIES}
-	${CLFFT_LIBRARIES}
+    ${GLFW_LIBRARIES} ${GLEW_LIBRARIES}
+    ${GL_LIBRARY} ${INOVESA_HDF5_LIBRARIES}
+    ${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES}
+    ${PNG_LIBRARIES} ${FFTW_LIBRARIES}
+    ${CLFFT_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME} ${LIBS})
