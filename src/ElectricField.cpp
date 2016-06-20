@@ -311,7 +311,10 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
     }
     _csrintensity = 0;
     for (unsigned int i=0; i<_nmax; i++) {
-        frequency_t highpass=(1-std::exp(-std::pow((_axis_freq.scale()*_axis_freq[i]/cutoff),2)));
+        frequency_t highpass = 1;
+        if (cutoff > 0) {
+            highpass -= std::exp(-std::pow((_axis_freq.scale()*_axis_freq[i]/cutoff),2));
+        }
 
         // norm = squared magnitude
         _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
