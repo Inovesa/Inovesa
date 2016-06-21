@@ -39,7 +39,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Damping time (s)")
         ("HarmonicNumber,H", po::value<double>(&H)->default_value(1.0),
             "Harmonic Number (1)")
-        ("InitialDistFile,D", po::value<std::string>(&_startdistfile),
+        ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
              #ifdef INOVESA_USE_HDF5
              "\tInovesa result file (HDF5, .h5)\n"
