@@ -58,7 +58,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Bending radius of accelerator (m)\n"
             "negative: calculate from RevolutionFrequency")
         ("BeamEnergy,E", po::value<double>(&E_0)->default_value(1.3e9,"1.3e9"),
-            "Beam energy (GeV)")
+            "Beam energy (eV)")
         ("BeamEnergySpread,e", po::value<double>(&s_E)->default_value(4.7e-4,"4.7e-4"),
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
