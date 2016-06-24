@@ -1,5 +1,5 @@
 /******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   */
+/* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   */
 /* Copyright (c) 2014-2016: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
@@ -54,30 +54,28 @@ enum class clCopyDirection {
 class OCLH
 {
 public:
-    static void prepareCLEnvironment(bool glsharing);
+    static void prepareCLEnvironment(bool glsharing, uint32_t device);
 
-	static void prepareCLDevice(unsigned int device);
+    static cl::Program prepareCLProg(std::string);
 
-	static cl::Program prepareCLProg(std::string);
+    static void teardownCLEnvironment();
 
-	static void teardownCLEnvironment();
+    static void listCLDevices();
 
-	static void listCLDevices();
-
-	static bool active;
+    static bool active;
 
     static cl::vector<cl::Platform> platforms;
 
-	static cl::Context context;
+    static cl::Context context;
 
     static cl::vector<cl::Device> devices;
 
     static cl_device_type devicetype;
 
-	/**
-	 * @brief command queue for OpenCL
-	 */
-	static cl::CommandQueue queue;
+    /**
+     * @brief command queue for OpenCL
+     */
+    static cl::CommandQueue queue;
 
     static bool ogl_sharing;
 

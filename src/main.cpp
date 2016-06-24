@@ -1,5 +1,5 @@
 /******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
@@ -112,28 +112,19 @@ int main(int argc, char** argv)
     #endif
 
     #ifdef INOVESA_USE_CL
-    OCLH::active = (opts.getCLDevice() != 0);
+    if (opts.getCLDevice() < 0) {
+        OCLH::listCLDevices();
+        return EXIT_SUCCESS;
+    }
+
+    OCLH::active = (opts.getCLDevice() > 0);
     if (OCLH::active) {
         try {
-            OCLH::prepareCLEnvironment(gui);
+            OCLH::prepareCLEnvironment(gui,opts.getCLDevice()-1);
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
             OCLH::active = false;
-        }
-    }
-    if (OCLH::active) {
-        if (opts.getCLDevice() < 0) {
-            OCLH::listCLDevices();
-            return EXIT_SUCCESS;
-        } else {
-            try {
-                OCLH::prepareCLDevice(opts.getCLDevice()-1);
-            } catch (cl::Error& e) {
-                Display::printText(e.what());
-                Display::printText("Will fall back to sequential version.");
-                OCLH::active = false;
-            }
         }
     }
     #endif // INOVESA_USE_CL

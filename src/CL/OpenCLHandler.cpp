@@ -1,5 +1,5 @@
 /******************************************************************************/
-/* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   */
+/* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   */
 /* Copyright (c) 2014-2016: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
@@ -30,23 +30,27 @@
 #include <CL/cl_gl.h>
 #endif
 
-void OCLH::prepareCLEnvironment(bool glsharing)
+void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
 {
     cl::Platform::get(&OCLH::platforms);
 
-    std::string available_clversion;
-    std::string needed_clversion = "OpenCL 1.";
+    uint32_t devicescount = 0;
+    uint32_t selectedplatform = 0;
+    uint32_t selecteddevice = 0;
 
-    unsigned int plati = 0;
-    std::string cl_plat_vendor;
     for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
-        OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
-        if (available_clversion.substr(0,needed_clversion.length()) == needed_clversion) {
-                        // stick with AMD (if available)
-                        if (cl_plat_vendor != "Advanced Micro Devices, Inc.") {
-                plati = p;
-                cl_plat_vendor = OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>();
-            }
+        cl_context_properties tmp_properties[] =
+            { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
+        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
+        cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
+        if (devicescount + tmp_devices.size() < device) {
+            // device is on later platform
+            devicescount += tmp_devices.size();
+        } else {
+            selectedplatform = p;
+            // subtract devices on previous platforms
+            selecteddevice = device-devicescount;
+            break;
         }
     }
 
@@ -64,7 +68,7 @@ void OCLH::prepareCLEnvironment(bool glsharing)
                         CL_GLX_DISPLAY_KHR,
                         (cl_context_properties)glXGetCurrentDisplay(),
                         CL_CONTEXT_PLATFORM,
-                        (cl_context_properties)(OCLH::platforms[plati])(),
+                        (cl_context_properties)(OCLH::platforms[selectedplatform])(),
                         0
         };
         #else
@@ -75,26 +79,22 @@ void OCLH::prepareCLEnvironment(bool glsharing)
     } else {
         cl_context_properties properties[] = {
                         CL_CONTEXT_PLATFORM,
-                        (cl_context_properties)(OCLH::platforms[plati])(),
+                        (cl_context_properties)(OCLH::platforms[selectedplatform])(),
                         0
                      };
         OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
     }
 
-        OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
-}
+    OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 
-void
-OCLH::prepareCLDevice(unsigned int device)
-{
-    OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[device]);
-    devicetype = OCLH::devices[device].getInfo<CL_DEVICE_TYPE>();
+    OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[selecteddevice]);
+    devicetype = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_TYPE>();
     // cl_VENDOR_gl_sharing is present, when string contains the substring
     OCLH::ogl_sharing
-                    = OCLH::devices[device].getInfo<CL_DEVICE_EXTENSIONS>().find(
+                    = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_EXTENSIONS>().find(
                             "_gl_sharing") != std::string::npos;
     std::string devicename;
-    OCLH::devices[device].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
+    OCLH::devices[selecteddevice].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
     vfps::Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
 }
 
@@ -130,12 +130,23 @@ void OCLH::listCLDevices()
 {
     std::cout << "OpenCL device options available on this computer:" << std::endl
               << " 0: (Do not use OpenCL.)" << std::endl;
+    cl::Platform::get(&OCLH::platforms);
+
+    uint32_t devicescount = 0;
+
     for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
+        std::string available_clversion;
+        OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
+        std::string platformname;
+        OCLH::platforms[p].getInfo(CL_PLATFORM_NAME,&platformname);
+        std::cout << "On platform " << platformname
+                  << " (" << available_clversion << ")" << ":" << std::endl;
         cl_context_properties tmp_properties[] =
             { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
         cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
         cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
-        for (unsigned int d=0; d<OCLH::devices.size(); d++) {
+        for (unsigned int d=0; d<tmp_devices.size(); d++) {
+            devicescount++;
             std::string tmpdevicetype;
             switch(tmp_devices[d].getInfo<CL_DEVICE_TYPE>()) {
             case CL_DEVICE_TYPE_CPU:
@@ -148,7 +159,7 @@ void OCLH::listCLDevices()
                 tmpdevicetype = "unknown";
                 break;
             }
-            std::cout << " " << d+1 << ": "
+            std::cout << " " << devicescount << ": "
                       << tmpdevicetype << ", "
                       << tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
                       << tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << "CU "
