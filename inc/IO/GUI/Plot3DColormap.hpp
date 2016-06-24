@@ -1,5 +1,5 @@
 /******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Algorithms   *
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
