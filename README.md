@@ -1,7 +1,7 @@
 INOVESA
 =======
 
-INOVESA Numerical OpenCL Vlasov Equation Solver Algorithms
+Inovesa Numerical OpenCL Vlasov Equation Solver Application
 
 
 Build Requirenments
