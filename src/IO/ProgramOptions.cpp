@@ -20,6 +20,7 @@
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
+    _configfile("default.cfg"),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),
@@ -96,7 +97,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("cldev", po::value<int>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
         #endif // INOVESA_USE_CL
-        ("config,c", po::value<std::string>(&_configfile)->default_value(""),
+        ("config,c", po::value<std::string>(&_configfile),
             "name of a file containing a configuration.")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
@@ -153,7 +154,7 @@ vfps::ProgramOptions::ProgramOptions() :
 
     std::stringstream timestamp;
     timestamp << time(nullptr);
-    _outfile = "result_" + timestamp.str() + ".h5";
+    _outfile = "inovesa-result_" + timestamp.str() + ".h5";
 }
 
 bool vfps::ProgramOptions::parse(int ac, char** av)
@@ -179,16 +180,23 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << std::endl;
         return false;
     }
-    if (_configfile != "" && _configfile != "/dev/null") {
+    if (boost::filesystem::exists(_configfile) &&
+        boost::filesystem::is_regular_file(_configfile) ) {
         std::ifstream ifs(_configfile.c_str());
         if (!ifs) {
             std::cout << "Cannot open config file: " << _configfile
                       << std::endl;
             return false;
         } else {
+            std::string message = "Loading configuration from \""
+                                 + _configfile + "\".";
+            Display::printText(message);
             store(parse_config_file(ifs, _cfgfileopts), _vm);
             notify(_vm);
         }
+    } else if (_configfile != "default.cfg") {
+        std::cout << "Config file \"" << _configfile
+                  << "\" does not exist."<< std::endl;
     }
     #ifndef INOVESA_USE_CL
     if (_vm.count("cldev")) {

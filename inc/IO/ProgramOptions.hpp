@@ -20,6 +20,7 @@
 #ifndef PROGRAMOPTIONS_HPP
 #define PROGRAMOPTIONS_HPP
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <ctime>
 #include <iostream>
