@@ -55,10 +55,7 @@ set(INC_LIST
   ./inc/defines.hpp
   ./inc/fixed_point.h
 )
-set(MISC_LIST
-  default.cfg
-  README.md
-)
+
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
 include(CheckIncludeFileCXX)

@@ -20,7 +20,7 @@
 #ifdef INOVESA_USE_HDF5
 #include "IO/HDF5File.hpp"
 
-vfps::HDF5File::HDF5File(const std::string fname,
+vfps::HDF5File::HDF5File(const std::string filename,
                          const PhaseSpace* ps,
                          const ElectricField* ef,
                          const Impedance* imp,
@@ -28,7 +28,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
                          const double BunchCurrent,
                          const double t_sync) :
     _file( nullptr ),
-    fname( fname ),
+    fname( filename ),
     ta_dims( 0 ),
     bc_dims( 0 ),
     bc( 0 ),
@@ -47,7 +47,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
     imp_size( imp->nFreqs()/2 ),
     wf_size( 2*ps_size )
 {
-    _file = new H5::H5File(fname,H5F_ACC_TRUNC);
+    _file = new H5::H5File(filename,H5F_ACC_TRUNC);
 
     _file->createGroup("Info");
     // save Values of Phase Space Axis
@@ -113,7 +113,8 @@ vfps::HDF5File::HDF5File(const std::string fname,
     H5::DataSpace axfreq_dataspace(axfreq_rank,&axfreq_dims,&axfreq_maxdims);
 
 
-    const hsize_t axfreq_chunkdims = std::min(2048U,ps_size);
+    const hsize_t axfreq_chunkdims = std::min(static_cast<size_t>(2048),
+                                              maxn);
     axfreq_prop.setChunk(axps_rank,&axfreq_chunkdims);
     axfreq_prop.setShuffle();
     axfreq_prop.setDeflate(compression);
@@ -333,7 +334,7 @@ vfps::HDF5File::HDF5File(const std::string fname,
 
 
     const std::array<hsize_t,csr_rank> csr_chunkdims
-        = {{64U,std::min(2048U,ps_size)}};
+        = {{64U,std::min(static_cast<size_t>(2048),maxn)}};
     csr_prop.setChunk(csr_rank,csr_chunkdims.data());
     csr_prop.setShuffle();
     csr_prop.setDeflate(compression);

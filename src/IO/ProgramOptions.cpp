@@ -31,13 +31,13 @@ vfps::ProgramOptions::ProgramOptions() :
         ("version", "print version string")
     ;
     _physopts.add_options()
-        ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(2.7e6,"2.7e6"),
+        ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")
-        ("SyncFreq,f", po::value<double>(&f_s)->default_value(8.5e3),
+        ("SyncFreq,f", po::value<double>(&f_s)->default_value(45e3),
             "Synchrotron frequency (Hz)")
-        ("DampingTime,d", po::value<double>(&t_d)->default_value(0.01),
+        ("DampingTime,d", po::value<double>(&t_d)->default_value(0.001),
             "Damping time (s)")
-        ("HarmonicNumber,H", po::value<double>(&H)->default_value(1.0),
+        ("HarmonicNumber,H", po::value<double>(&H)->default_value(50),
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
@@ -52,7 +52,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Parameter F(k) of initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Zoom initial distribution")
-        ("BunchCurrent,I", po::value<double>(&I_b)->default_value(1e-3,"1e-3"),
+        ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),
             "Ring Current due to a single bunch (A)")
         ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
             "Bending radius of accelerator (m)\n"
@@ -63,8 +63,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
-        ("VaccuumHeight", po::value<double>(&h)->default_value(0),
-            "Height of vacuum chamber (m)\n"
+        ("VaccuumHeight", po::value<double>(&h)->default_value(0.03,"0.03"),
+            "Full height of vacuum chamber (m)\n"
             "<0: no CSR\n"
             " 0: free space CSR\n"
             ">0: parallel plates CSR")
@@ -93,10 +93,10 @@ vfps::ProgramOptions::ProgramOptions() :
     ;
     _programopts_cli.add_options()
         #ifdef INOVESA_USE_CL
-        ("cldev", po::value<int>(&_cldevice)->default_value(1),
+        ("cldev", po::value<int>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
         #endif // INOVESA_USE_CL
-        ("config,c", po::value<std::string>(&_configfile)->default_value("default.cfg"),
+        ("config,c", po::value<std::string>(&_configfile)->default_value(""),
             "name of a file containing a configuration.")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
@@ -111,19 +111,19 @@ vfps::ProgramOptions::ProgramOptions() :
         ("verbose,v", "print information more detailed")
     ;
     _simulopts.add_options()
-        ("steps,N", po::value<uint32_t>(&steps)->default_value(4000),
+        ("steps,N", po::value<uint32_t>(&steps)->default_value(1000),
             "Steps for one synchrotron period")
         ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
             "Save results every n steps.")
-        ("padding,p", po::value<uint32_t>(&padding)->default_value(0),
+        ("padding,p", po::value<uint32_t>(&padding)->default_value(8),
             "Factor for zero padding of bunch profile")
-        ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(5),
+        ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),
             "Size of phase space")
         ("PhaseSpaceShiftX",po::value<double>(&meshshiftx)->default_value(0),
             "Shift grid by X mesh points")
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
-        ("RenormalizeCharge",po::value<bool>(&renormalize)->default_value(true),
+        ("RenormalizeCharge",po::value<bool>(&renormalize)->default_value(false),
             "Reset charge every outstep")
         ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
             "Used implementation for rotation\n"
@@ -138,7 +138,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Number of grid points to be used to numerically find derivative")
         ("InterpolationPoints",po::value<uint32_t>(&interpol_type)->default_value(4u),
             "Number of grid points to be used for interpolation")
-        ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(true),
+        ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(false),
             "Restrict result of interpolation to the values of the neighboring grid points")
     ;
     _cfgfileopts.add(_physopts);
@@ -179,14 +179,16 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << std::endl;
         return false;
     }
-    std::ifstream ifs(_configfile.c_str());
-    if (!ifs) {
-        std::cout << "Cannot open config file: " << _configfile
-                  << std::endl;
-        return false;
-    } else {
-        store(parse_config_file(ifs, _cfgfileopts), _vm);
-        notify(_vm);
+    if (_configfile != "" && _configfile != "/dev/null") {
+        std::ifstream ifs(_configfile.c_str());
+        if (!ifs) {
+            std::cout << "Cannot open config file: " << _configfile
+                      << std::endl;
+            return false;
+        } else {
+            store(parse_config_file(ifs, _cfgfileopts), _vm);
+            notify(_vm);
+        }
     }
     #ifndef INOVESA_USE_CL
     if (_vm.count("cldev")) {

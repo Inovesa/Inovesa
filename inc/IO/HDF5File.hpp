@@ -42,7 +42,7 @@ public:
      * @param ps_size size of one mesh dimension
      * @param maxn maximum index (==wavenumber?) of CSR spectrum
      */
-    HDF5File(const std::string fname,
+    HDF5File(const std::string filename,
              const PhaseSpace* ps,
              const ElectricField* ef,
              const Impedance* imp,

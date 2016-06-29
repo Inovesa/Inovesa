@@ -320,7 +320,8 @@ int main(int argc, char** argv)
     } else
     #endif // INOVESA_USE_PNG
     #ifdef INOVESA_USE_HDF5
-    if (isOfFileType(".h5",startdistfile)) {
+    if (  isOfFileType(".h5",startdistfile)
+       || isOfFileType(".hdf5",startdistfile) ) {
         mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmin,qmax,pmin,pmax,bl,dE));
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
@@ -539,8 +540,15 @@ int main(int argc, char** argv)
     std::string ofname = opts.getOutFile();
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
-    if ( isOfFileType(".h5",ofname)) {
-        std::string cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
+    if ( isOfFileType(".h5",ofname)
+      || isOfFileType(".hdf5",startdistfile) ) {
+        std::string cfgname;
+        if (isOfFileType(".h5",ofname)) {
+            cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
+        }
+        if (isOfFileType(".hdf5",ofname)) {
+            cfgname = ofname.substr(0,ofname.find(".hdf5"))+".cfg";
+        }
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
         hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
