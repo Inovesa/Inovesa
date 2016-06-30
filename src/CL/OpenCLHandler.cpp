@@ -43,7 +43,7 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
             { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
         cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
         cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
-        if (devicescount + tmp_devices.size() < device) {
+        if (devicescount + tmp_devices.size() <= device) {
             // device is on later platform
             devicescount += tmp_devices.size();
         } else {
@@ -53,11 +53,10 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
             break;
         }
     }
-
-#ifdef INOVESA_USE_CLFFT
+    #ifdef INOVESA_USE_CLFFT
     clfftInitSetupData(&fft_setup);
     clfftSetup(&fft_setup);
-#endif // INOVESA_USE_CLFFT
+    #endif // INOVESA_USE_CLFFT
 
     glsharing=false;
     if (glsharing) {
@@ -93,9 +92,11 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
     OCLH::ogl_sharing
                     = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_EXTENSIONS>().find(
                             "_gl_sharing") != std::string::npos;
-    std::string devicename;
-    OCLH::devices[selecteddevice].getInfo<std::string>(CL_DEVICE_NAME,&devicename);
-    vfps::Display::printText("Initialized \""+devicename+"\" for use with OpenCL.");
+    vfps::Display::printText("Initialized \""
+                             + OCLH::devices[selecteddevice].getInfo<CL_DEVICE_NAME>()
+                             + "\" (on platform \""
+                             + OCLH::platforms[selectedplatform].getInfo<CL_PLATFORM_NAME>()
+                             + "\") for use with OpenCL.");
 }
 
 cl::Program OCLH::prepareCLProg(std::string code)
