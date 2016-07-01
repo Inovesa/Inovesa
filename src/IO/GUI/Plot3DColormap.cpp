@@ -158,18 +158,20 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 	size_t npixels = mesh->nMeshCells();
-	float* data = new float[npixels];
+    float* data = new float[3*npixels];
 	vfps::meshdata_t* meshdata = mesh->getData();
 	vfps::meshdata_t newmax=std::numeric_limits<vfps::meshdata_t>::min();
-	for (vfps::meshindex_t i=0; i<npixels; i++) {
-		data[i] = meshdata[i]/maxValue;
+    for (vfps::meshindex_t i=0; i<npixels; i++) {
+        // type uint8_t will make shure the indexing (256) works correctly
+        uint8_t index = std::min(std::max(0.0f,meshdata[i]/maxValue),1.0f)*255;
+        std::copy_n(&(inferno[3*index]),3,&(data[3*i]));
 		newmax= std::max(newmax,meshdata[i]);
 	}
 	maxValue = newmax;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
                  mesh->nMeshCells(0), mesh->nMeshCells(1),
-                 0, GL_RED, GL_FLOAT, data);
-        delete [] data;
+                 0, GL_RGB, GL_FLOAT, data);
+    delete [] data;
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,  GL_CLAMP_TO_BORDER );
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,  GL_CLAMP_TO_BORDER );
@@ -193,7 +195,7 @@ void vfps::Plot3DColormap::draw()
     glUniform1i(textureSampler, 0);
 
     glEnableVertexAttribArray(position);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glVertexAttribPointer(position,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
     glEnableVertexAttribArray(vertexUV);
@@ -206,5 +208,7 @@ void vfps::Plot3DColormap::draw()
     glDisableVertexAttribArray(position);
     glDisableVertexAttribArray(vertexUV);
 }
+
+constexpr std::array<float,256*3> vfps::Plot3DColormap::inferno;
 
 #endif // INOVESA_USE_GUI
