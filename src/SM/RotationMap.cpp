@@ -86,9 +86,6 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                     }
                 }
             } else {
-                if (_clamp) {
-                    notClampedMessage();
-                }
                 genCode4HM1D();
                 _cl_prog  = OCLH::prepareCLProg(_cl_code);
 

@@ -112,10 +112,15 @@ cl::Program OCLH::prepareCLProg(std::string code)
         e.what();
         std::cout	<< "===== OpenCL Code =====\n"
                                 << code << std::endl;
+    #ifdef DEBUG
+    }
+    #endif
         std::cout	<< "===== OpenCL Build Log =====\n"
                                 << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
                                 << std::endl;
+    #ifndef DEBUG
     }
+    #endif
 
 return p;
 }
