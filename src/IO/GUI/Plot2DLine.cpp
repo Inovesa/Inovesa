@@ -81,7 +81,9 @@ vfps::Plot2DLine::~Plot2DLine()
     glDeleteVertexArrays(1, &position);
 }
 
-void vfps::Plot2DLine::updateLine(const size_t npoints, const float* points)
+void vfps::Plot2DLine::updateLine(const size_t npoints,
+                                  const float* points,
+                                  const bool vertical)
 {
     _npoints=npoints;
     _line.resize(_npoints*2);
@@ -90,10 +92,18 @@ void vfps::Plot2DLine::updateLine(const size_t npoints, const float* points)
     for (size_t n=0; n<_npoints; n++) {
         max = std::max(max,points[n]);
     }
-    max*=4.0f;
-    for (size_t n=0; n<_npoints; n++) {
-        _line[2*n  ] = -1.0f+n*step;
-        _line[2*n+1] = -0.8f+points[n]/max;
+    if (vertical) {
+        max*=2.0f;
+        for (size_t n=0; n<_npoints; n++) {
+            _line[2*n  ] = 0.5f+points[n]/max;
+            _line[2*n+1] = -0.5f+n*step;
+        }
+    } else {
+        max*=4.0f;
+        for (size_t n=0; n<_npoints; n++) {
+            _line[2*n  ] = -1.0f+n*step;
+            _line[2*n+1] = -0.8f+points[n]/max;
+        }
     }
 
     // The following commands will talk about our 'vertexbuffer' buffer

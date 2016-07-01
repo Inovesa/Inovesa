@@ -378,6 +378,10 @@ int main(int argc, char** argv)
     Plot2DLine* bpv = nullptr;
     Plot3DColormap* psv = nullptr;
     Plot2DLine* wpv = nullptr;
+
+    std::array<float,256> csrlog;
+    csrlog.fill(0.0f);
+    Plot2DLine* history = nullptr;
     if (gui) {
         try {
             psv = new Plot3DColormap(maxval);
@@ -534,6 +538,15 @@ int main(int argc, char** argv)
                 wpv = nullptr;
             }
         }
+        try {
+            history = new Plot2DLine(std::array<float,3>{{0,0,0}});
+            display->addElement(history);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            display->takeElement(wpv);
+            delete wpv;
+            wpv = nullptr;
+        }
     }
     #endif // INOVESA_USE_GUI
 
@@ -637,6 +650,10 @@ int main(int argc, char** argv)
                 if (wpv != nullptr) {
                     wpv->updateLine(mesh1->nMeshCells(0),
                                     wkm->getForce());
+                }
+                if (history != nullptr) {
+                    csrlog[(i/outstep)%csrlog.size()] = field->getCSRPower();
+                    history->updateLine(csrlog.size(),csrlog.data(),true);
                 }
                 display->draw();
                 if (psv != nullptr) {

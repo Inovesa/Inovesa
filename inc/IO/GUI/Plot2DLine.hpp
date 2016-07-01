@@ -38,7 +38,9 @@ public:
 
     ~Plot2DLine();
 
-    void updateLine(const size_t npoints, const float* points);
+    void updateLine(const size_t npoints,
+                    const float* points,
+                    const bool vertical=false);
 
     void draw();
 
