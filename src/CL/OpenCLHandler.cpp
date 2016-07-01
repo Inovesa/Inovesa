@@ -107,7 +107,11 @@ cl::Program OCLH::prepareCLProg(std::string code)
     cl::Program::Sources source(codevec);
     cl::Program p(OCLH::context, source);
     try {
-            p.build(OCLH::devices);
+        #ifdef DEBUG
+        p.build(OCLH::devices,"-g");
+        #else
+        p.build(OCLH::devices);
+        #endif
     } catch (cl::Error &e) {
         e.what();
         std::cout	<< "===== OpenCL Code =====\n"

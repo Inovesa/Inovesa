@@ -92,7 +92,7 @@ vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
                 applyHM = cl::Kernel(_cl_prog, "applyHM1D");
                 applyHM.setArg(0, _in->data_buf);
                 applyHM.setArg(1, _hi_buf);
-                applyHM.setArg(2, _size);
+                applyHM.setArg(2, _ip);
                 applyHM.setArg(3, _out->data_buf);
             }
         }
