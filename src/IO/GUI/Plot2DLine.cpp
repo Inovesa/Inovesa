@@ -87,7 +87,7 @@ void vfps::Plot2DLine::updateLine(const size_t npoints,
 {
     _npoints=npoints;
     _line.resize(_npoints*2);
-    float step = 1.5f/_npoints;
+    float step = 1.5f/(_npoints-1);
     float max =0.0f;
     for (size_t n=0; n<_npoints; n++) {
         max = std::max(max,points[n]);

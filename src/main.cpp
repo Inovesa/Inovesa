@@ -379,8 +379,7 @@ int main(int argc, char** argv)
     Plot3DColormap* psv = nullptr;
     Plot2DLine* wpv = nullptr;
 
-    std::array<float,256> csrlog;
-    csrlog.fill(0.0f);
+    std::vector<float> csrlog;
     Plot2DLine* history = nullptr;
     if (gui) {
         try {
@@ -601,12 +600,16 @@ int main(int argc, char** argv)
     }
     #endif
 
+    if (gui) {
+        csrlog.resize(steps*rotations/outstep,0);
+    }
     Display::printText("Starting the simulation.");
-    for (unsigned int i=0;i<steps*rotations;i++) {
+    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
             wkm->update();
         }
         if (outstep > 0 && i%outstep == 0) {
+            outstepnr++;
             integral_t meshintegral; // normalized charge (should be 1)
             if (renormalize) {
                 // works on XProjection (and recalculates it)
@@ -652,7 +655,10 @@ int main(int argc, char** argv)
                                     wkm->getForce());
                 }
                 if (history != nullptr) {
-                    csrlog[(i/outstep)%csrlog.size()] = field->getCSRPower();
+                    if (hdf_file == nullptr) {
+                        field->updateCSR(fc);
+                    }
+                    csrlog[outstepnr] = field->getCSRPower();
                     history->updateLine(csrlog.size(),csrlog.data(),true);
                 }
                 display->draw();
