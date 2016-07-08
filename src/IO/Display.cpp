@@ -116,16 +116,23 @@ void vfps::Display::draw() {
 
 void vfps::Display::printText(std::string txt, float silentTime)
 {
+    std::stringstream message;
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     if (std::chrono::duration<float>(now-_lastmessage).count() > silentTime) {
-        std::cout.setf( std::ios::fixed, std:: ios::floatfield );
-        std::cout.precision(2);
-        std::cout << "[ " << std::setw(9)
-                  << std::chrono::duration<float>(now-start_time).count()
-                  << " ]: "
-                  << txt
-                  << std::endl;
+        message.setf( std::ios::fixed, std:: ios::floatfield );
+        message.precision(2);
+        message << "[ " << std::setw(9)
+                << std::chrono::duration<float>(now-start_time).count()
+                << " ]: "
+                << txt
+                << std::endl;
         _lastmessage = now;
+    }
+    std::cout << message.str();
+    std::cout.flush();
+    if (logfile.is_open()) {
+        logfile << message.str();
+        logfile.flush();
     }
 }
 
@@ -166,4 +173,6 @@ void vfps::Display::openWindow(uint_fast8_t glversion)
 std::chrono::system_clock::time_point vfps::Display::start_time;
 
 std::chrono::system_clock::time_point vfps::Display::_lastmessage;
+
+std::ofstream vfps::Display::logfile;
 

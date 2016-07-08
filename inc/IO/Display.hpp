@@ -55,8 +55,8 @@ public:
 
     const char* what() const noexcept { return _msg.c_str(); }
 
-    private:
-        std::string _msg;
+private:
+    std::string _msg;
 };
 
 class Display
@@ -80,6 +80,8 @@ public:
     #ifdef INOVESA_USE_GUI
         void takeElement(GUIElement* item);
     #endif // INOVESA_USE_GUI
+
+    static std::ofstream logfile;
 
 private:
     void openWindow(uint_fast8_t glversion);

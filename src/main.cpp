@@ -76,6 +76,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
+
     std::string timestring = sstream.str();
     timestring.resize(timestring.size()-1);
 
@@ -87,12 +88,19 @@ int main(int argc, char** argv)
         sstream << ", Branch: "<< GIT_BRANCH;
     }
 
+    std::string ofname = opts.getOutFile();
     #ifdef INOVESA_USE_CL
     if (opts.getCLDevice() >= 0)
     #endif // INOVESA_USE_CL
     {
+    if (ofname != "/dev/null") {
+        Display::logfile.open(ofname+".log");
+    }
     Display::printText("Started Inovesa ("
                        +sstream.str()+") at "+timestring);
+    if (ofname != "/dev/null") {
+        Display::printText("Will create log at \""+ofname+".log\".");
+    }
     }
 
     #ifdef INOVESA_USE_GUI
@@ -549,11 +557,10 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_GUI
 
-    std::string ofname = opts.getOutFile();
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
-      || isOfFileType(".hdf5",startdistfile) ) {
+      || isOfFileType(".hdf5",ofname) ) {
         std::string cfgname;
         if (isOfFileType(".h5",ofname)) {
             cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
