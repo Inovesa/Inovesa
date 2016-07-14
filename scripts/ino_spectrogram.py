@@ -21,8 +21,8 @@ def main():
   parser.add_argument('--currentmax', type=float,default=None, help='maximum of bunch current axis')
   parser.add_argument('--freqmin', type=float,default=None, help='minimum of frequency axis')
   parser.add_argument('--freqmax', type=float,default=None, help='maximum of frequency axis')
-  parser.add_argument('--colmin', type=float,default=10, help='minimum of intensity (color) axis')
-  parser.add_argument('--colmax', type=float,default=5e7, help='maximum of intensity (color) axis')
+  parser.add_argument('--colmin', type=float,default=None, help='minimum of intensity (color) axis')
+  parser.add_argument('--colmax', type=float,default=None, help='maximum of intensity (color) axis')
   parser.add_argument('--title', action='store_true', help='print title in plot (derived from directory)')
   parser.add_argument('--scaling', type=float,default=0.31621, help='args.scaling factor, default 0.31621 (for ANKA equivalent)')
   parser.add_argument('--xlog', action='store_true', help='set x axis logarithmic')
@@ -33,12 +33,11 @@ def main():
 
   import matplotlib
 
-  if not args.showplot:
-    matplotlib.use('Agg')
-
   if args.saveplot:
     if args.saveplot.split('.')[-1] == 'eps':
       matplotlib.use('PS')
+    if not args.showplot:
+      matplotlib.use('Agg')
 
   import matplotlib.pyplot as plt
   from matplotlib.ticker import FuncFormatter
@@ -50,12 +49,14 @@ def main():
   timename='/Info/AxisValues_t'
 
   fnames = []
-
+  
   for fname in os.listdir(args.directory):
-    if fname[-4:] == args.filenameending:
+    if fname[-len(args.filenameending):] == args.filenameending:
       fnames.append(fname)
-
-  fnames.sort()
+  
+  if len(fnames) == 0:
+    print("No such file: '"+ args.directory+"/*"+args.filenameending+"'")
+    exit()
 
   title=args.directory.split('/')[-1] if args.title else None
 
@@ -69,6 +70,7 @@ def main():
       tmp=deltat
       deltat = h5file1['/Info/AxisValues_t'].attrs['Factor4Seconds']*h5file1['/Info/AxisValues_t'][1]  
       assert tmp==deltat or tmp==1, 'not same deltat in all files (at file %s)' %fname
+      assert len(h5file1[dataname]) > 2*args.datalen, 'to few data points (in file %s)' %fname
       data.append(np.abs(np.fft.rfft(h5file1[dataname][-2*args.datalen:]))[1:])
       currents.append(h5file1['/Info/Parameters'].attrs['BunchCurrent'])
       h5file1.close()
@@ -87,7 +89,9 @@ def main():
 
   if args.saveplot:
     if args.saveplot.split('.')[-1]=='npz':
-      np.savez(os.path.dirname(args.saveplot)+os.path.basename(args.saveplot),freqs=freqs,currents=currents,data=data)
+      npzfname = os.path.dirname(args.saveplot)+os.path.basename(args.saveplot)
+      np.savez(npzfname,freqs=freqs,currents=currents,data=data)
+      print("Saving data to " + args.saveplot)
       exit()
 
   font = {'size' : 19 }
@@ -116,9 +120,10 @@ def main():
   plt.title(title)
 
   if args.saveplot:
+    print("Saving plot to " + args.saveplot)
     plt.savefig(args.saveplot,dpi=200)
 
-  if args.showplot:
+  if not args.saveplot or args.showplot:
     plt.show()
   else:
     plt.close()
