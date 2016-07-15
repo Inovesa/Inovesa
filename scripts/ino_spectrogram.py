@@ -13,7 +13,7 @@ def minor_format(x, i=None):
 def main():
   parser = argparse.ArgumentParser(description='Generating CSR Spectrogramms from Inovesa result files')
   parser.add_argument('directory', type=str, help='relativ path of the Inovesa hdf5 files')
-  parser.add_argument('--filenameending', type=str, default='b.h5', help='only files with the specified filenameending are used')
+  parser.add_argument('--ending', type=str, default='b.h5', help='only files ending with the specified string are used')
   parser.add_argument('--saveplot', type=str, nargs='?', default=False, const='replace by args.directory', help='save plot under filename (including path). Without additional argument, plot is save with standard name in path of hdf5 files. ')
   parser.add_argument('--showplot', action='store_true', help='shows plot')
   parser.add_argument('--datalen', type=int, default=10000, help='spezifies how many simulations steps (starting from the end of the file) will be used')
@@ -31,13 +31,16 @@ def main():
   args = parser.parse_args()
   args.saveplot = "%s/simulated-spectogram.png" %(args.directory) if args.saveplot=='replace by args.directory' else args.saveplot
 
+  if not args.showplot and not args.saveplot:
+    print("Nothing to do?!?")
+
   import matplotlib
 
+  if not args.showplot:
+      matplotlib.use('Agg')
   if args.saveplot:
     if args.saveplot.split('.')[-1] == 'eps':
       matplotlib.use('PS')
-    if not args.showplot:
-      matplotlib.use('Agg')
 
   import matplotlib.pyplot as plt
   from matplotlib.ticker import FuncFormatter
@@ -51,14 +54,14 @@ def main():
   fnames = []
   
   for fname in os.listdir(args.directory):
-    if fname[-len(args.filenameending):] == args.filenameending:
+    if fname[-len(args.ending):] == args.ending:
       fnames.append(fname)
   
   if len(fnames) == 0:
-    print("No such file: '"+ args.directory+"/*"+args.filenameending+"'")
+    print("No such file: '"+ args.directory+"/*"+args.ending+"'")
     exit()
 
-  title=args.directory.split('/')[-1] if args.title else None
+  title = filter(None,args.directory.split('/'))[-1] if args.title else ""
 
   data = []
   currents = []
@@ -70,7 +73,7 @@ def main():
       tmp=deltat
       deltat = h5file1['/Info/AxisValues_t'].attrs['Factor4Seconds']*h5file1['/Info/AxisValues_t'][1]  
       assert tmp==deltat or tmp==1, 'not same deltat in all files (at file %s)' %fname
-      assert len(h5file1[dataname]) > 2*args.datalen, 'to few data points (in file %s)' %fname
+      assert len(h5file1[dataname][...]) > 2*args.datalen, 'to few data points (in file %s)' %fname
       data.append(np.abs(np.fft.rfft(h5file1[dataname][-2*args.datalen:]))[1:])
       currents.append(h5file1['/Info/Parameters'].attrs['BunchCurrent'])
       h5file1.close()
@@ -123,7 +126,7 @@ def main():
     print("Saving plot to " + args.saveplot)
     plt.savefig(args.saveplot,dpi=200)
 
-  if not args.saveplot or args.showplot:
+  if args.showplot:
     plt.show()
   else:
     plt.close()
