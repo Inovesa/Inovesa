@@ -21,8 +21,8 @@
 #define WAKEIMPEDANCEMAP_HPP
 
 #include "SM/WakeKickMap.hpp"
-#include "ElectricField.hpp"
-#include "impedances/Impedance.hpp"
+#include "PS/ElectricField.hpp"
+#include "Z/Impedance.hpp"
 
 namespace vfps
 {

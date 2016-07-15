@@ -39,7 +39,7 @@ class GUIElement;
 #include <GL/glfw.h>
 #endif
 
-#include "PhaseSpace.hpp"
+#include "PS/PhaseSpace.hpp"
 
 namespace vfps
 {

@@ -26,7 +26,7 @@
 
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
-#include "Ruler.hpp"
+#include "PS/Ruler.hpp"
 
 namespace vfps
 {

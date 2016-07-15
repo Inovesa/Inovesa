@@ -25,9 +25,9 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "PhaseSpace.hpp"
-#include "Ruler.hpp"
-#include "impedances/Impedance.hpp"
+#include "PS/PhaseSpace.hpp"
+#include "PS/Ruler.hpp"
+#include "Z/Impedance.hpp"
 #include "CL/OpenCLHandler.hpp"
 
 #include "IO/Display.hpp"

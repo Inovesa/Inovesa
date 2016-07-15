@@ -44,7 +44,7 @@
 #endif // INOVESA_USE_GUI
 #include <vector>
 
-#include "PhaseSpace.hpp"
+#include "PS/PhaseSpace.hpp"
 #include "IO/GUI/GUIElement.hpp"
 
 namespace vfps {

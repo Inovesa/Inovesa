@@ -4,6 +4,14 @@ aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
   ./src/CL/OpenCLHandler.cpp
+  ./src/IO/Display.cpp
+  ./src/IO/GUI/GUIElement.cpp
+  ./src/IO/GUI/Plot2DLine.cpp
+  ./src/IO/GUI/Plot3DColormap.cpp
+  ./src/IO/HDF5File.cpp
+  ./src/IO/ProgramOptions.cpp
+  ./src/PS/ElectricField.cpp
+  ./src/PS/PhaseSpace.cpp
   ./src/SM/DriftMap.cpp
   ./src/SM/FokkerPlanckMap.cpp
   ./src/SM/KickMap.cpp
@@ -13,17 +21,9 @@ set(SRC_LIST
   ./src/SM/WakeKickMap.cpp
   ./src/SM/WakePotentialMap.cpp
   ./src/SM/WakeFunctionMap.cpp
-  ./src/IO/Display.cpp
-  ./src/IO/GUI/GUIElement.cpp
-  ./src/IO/GUI/Plot2DLine.cpp
-  ./src/IO/GUI/Plot3DColormap.cpp
-  ./src/IO/HDF5File.cpp
-  ./src/IO/ProgramOptions.cpp
-  ./src/ElectricField.cpp
-  ./src/impedances/Impedance.cpp
-  ./src/impedances/FreeSpaceCSR.cpp
-  ./src/impedances/ParallelPlatesCSR.cpp
-  ./src/PhaseSpace.cpp
+  ./src/Z/Impedance.cpp
+  ./src/Z/FreeSpaceCSR.cpp
+  ./src/Z/ParallelPlatesCSR.cpp
   ./src/main.cpp
 )
 
@@ -31,6 +31,15 @@ set(INC_LIST
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
   ./inc/SM/DriftMap.hpp
+  ./inc/PS/ElectricField.hpp
+  ./inc/PS/PhaseSpace.hpp
+  ./inc/PS/Ruler.hpp
+  ./inc/IO/Display.hpp
+  ./inc/IO/GUI/GUIElement.hpp
+  ./inc/IO/GUI/Plot2DLine.hpp
+  ./inc/IO/GUI/Plot3DColormap.hpp
+  ./inc/IO/HDF5File.hpp
+  ./inc/IO/ProgramOptions.hpp
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
   ./inc/SM/RFKickMap.hpp
@@ -40,18 +49,9 @@ set(INC_LIST
   ./inc/SM/WakePotentialMap.hpp
   ./inc/SM/WakeKickMap.hpp
   ./inc/SM/WakeFunctionMap.hpp
-  ./inc/IO/Display.hpp
-  ./inc/IO/GUI/GUIElement.hpp
-  ./inc/IO/GUI/Plot2DLine.hpp
-  ./inc/IO/GUI/Plot3DColormap.hpp
-  ./inc/IO/HDF5File.hpp
-  ./inc/IO/ProgramOptions.hpp
-  ./inc/ElectricField.hpp
-  ./inc/impedances/Impedance.hpp
-  ./inc/impedances/FreeSpaceCSR.hpp
-  ./inc/impedances/ParallelPlatesCSR.hpp
-  ./inc/PhaseSpace.hpp
-  ./inc/Ruler.hpp
+  ./inc/Z/Impedance.hpp
+  ./inc/Z/FreeSpaceCSR.hpp
+  ./inc/Z/ParallelPlatesCSR.hpp
   ./inc/defines.hpp
   ./inc/fixed_point.h
 )
