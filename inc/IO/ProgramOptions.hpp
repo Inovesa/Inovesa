@@ -156,7 +156,7 @@ public:
         { return t_d; }
 
     inline double getVacuumChamberHeight() const
-        { return h; }
+        { return g; }
 
 private: // program parameters
     int _cldevice;
@@ -205,7 +205,7 @@ private: // phsical parameters
     double f_c;
     double f_s;
     double f0;
-    double h;
+    double g;
     double H;
     double I_b;
     double t_d;

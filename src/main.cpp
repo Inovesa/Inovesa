@@ -193,7 +193,7 @@ int main(int argc, char** argv)
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
     const double H = opts.getHarmonicNumber();
-    const double height = opts.getVacuumChamberHeight();
+    const double g = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
     const double fs = opts.getSyncFreq();
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
@@ -218,9 +218,9 @@ int main(int argc, char** argv)
     double Ith = 0;
     double S_csr = 0;
 
-    if (height>=0) {
-        if (height>0) {
-            shield = bl*std::sqrt(R)*std::pow(height,-3./2.);
+    if (g!=0) {
+        if (g>0) {
+            shield = bl*std::sqrt(R)*std::pow(g,-3./2.);
         }
 
         const double Inorm = physcons::IAlfven/physcons::me*2*M_PI
@@ -233,10 +233,10 @@ int main(int argc, char** argv)
         if (verbose) {
             sstream.str("");
             sstream << std::fixed << shield;
-            Display::printText("Shielding parameter (h=height):   "
+            Display::printText("Shielding parameter (g=gap):   "
                                +sstream.str());
-            if (height>0) {
-                shield = bl*std::sqrt(R)*std::pow(height/2,-3./2.);
+            if (g>0) {
+                shield = bl*std::sqrt(R)*std::pow(g/2,-3./2.);
             }
             sstream.str("");
             sstream << std::fixed << shield;
@@ -416,10 +416,10 @@ int main(int argc, char** argv)
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
-        if (height>0) {
+        if (g>0) {
             Display::printText("Will use parallel plates CSR impedance.");
             impedance = new ParallelPlatesCSR(ps_size*padding,f0,
-                                     ps_size*vfps::physcons::c/(2*qmax*bl),height);
+                                     ps_size*vfps::physcons::c/(2*qmax*bl),g);
         } else {
             Display::printText("Will use free space CSR impedance.");
             impedance = new FreeSpaceCSR(ps_size*padding,f0,
@@ -511,7 +511,7 @@ int main(int argc, char** argv)
     } else {
         Display::printText("Calculating WakePotential.");
         field = new ElectricField(mesh1,impedance,Ib,E0,sE,dt);
-        if (height >= 0) {
+        if (g >= 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
                                        interpolationtype,interpol_clamp);

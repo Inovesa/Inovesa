@@ -48,7 +48,7 @@ def main():
   plt.register_cmap(name='inferno', cmap=inferno)
 
 
-  dataname='/CSR/Intensity/data'
+  dataname='/EnergySpread/data'
   timename='/Info/AxisValues_t'
 
   fnames = []

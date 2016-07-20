@@ -64,10 +64,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
-        ("VaccuumHeight", po::value<double>(&h)->default_value(0.03,"0.03"),
+        ("VaccuumGap,g", po::value<double>(&g)->default_value(0.03,"0.03"),
             "Full height of vacuum chamber (m)\n"
-            "<0: no CSR\n"
-            " 0: free space CSR\n"
+            "<0: free space CSR\n"
+            " 0: no CSR\n"
             ">0: parallel plates CSR")
         ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
             "Beamline cutoff frequency (Hz)")
