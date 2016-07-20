@@ -155,7 +155,7 @@ public:
     inline double getDampingTime() const
         { return t_d; }
 
-    inline double getVacuumChamberHeight() const
+    inline double getVacuumChamberGap() const
         { return g; }
 
 private: // program parameters
