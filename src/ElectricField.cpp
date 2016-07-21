@@ -38,11 +38,11 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     _impedance(impedance),
     _wakefunction(nullptr),
     _wakelosses(nullptr),
-    _wakelosses_fftw(nullptr),
+    _wakelosses_fft(nullptr),
     _wakepotential_complex(nullptr),
-    _wakepotential_fftw(nullptr),
+    _wakepotential_fft(nullptr),
     _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
-    _fftw_wakelosses(nullptr),
+    _fft_wakelosses(nullptr),
     #ifdef INOVESA_USE_CLFFT
     _wakescaling(OCLH::active?
                    2*wakescalining*_axis_freq.delta()*_axis_wake.delta()*_nmax:
@@ -91,11 +91,11 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
     } else
     #endif // INOVESA_USE_CLFFT
     {
-        _bp_padded_fftw = fftw_alloc_real(_nmax);
-        _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fftw);
+        _bp_padded_fft = fft_alloc_real(_nmax);
+        _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fft);
         std::fill_n(_bp_padded,_nmax,integral_t(0));
-        _formfactor_fftw = fftw_alloc_complex(_nmax);
-        _formfactor = reinterpret_cast<impedance_t*>(_formfactor_fftw);
+        _formfactor_fft = fft_alloc_complex(_nmax);
+        _formfactor = reinterpret_cast<impedance_t*>(_formfactor_fft);
         std::fill_n(_formfactor,_nmax,integral_t(0));
         _ffttw_bunchprofile = prepareFFT(_nmax,_bp_padded,_formfactor);
     }
@@ -172,14 +172,14 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
     } else
     #endif // !INOVESA_USE_CLFFT
     {
-        _wakelosses_fftw = fftw_alloc_complex(_nmax);
-        _wakepotential_fftw = fftw_alloc_complex(_nmax);
+        _wakelosses_fft = fft_alloc_complex(_nmax);
+        _wakepotential_fft = fft_alloc_complex(_nmax);
 
-        _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fftw);
-        _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fftw);
-        _fftw_wakelosses = prepareFFT(_nmax,_wakelosses,
-                                    _wakepotential_complex,
-                                  fft_direction::backward);
+        _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
+        _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fft);
+        _fft_wakelosses = prepareFFT(_nmax,_wakelosses,
+                                     _wakepotential_complex,
+                                     fft_direction::backward);
     }
 }
 
@@ -199,19 +199,6 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
     impedance_t* zcsrf = reinterpret_cast<impedance_t*>(zcsrf_fftw);
     impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
 
-    /* Marit's original code names eq1 in comment, but it uses eq2.
-     *
-     *    eq1:
-     *     const double g = -Ic * phaseSpace.getDelta<0>() / M_PI
-     *                    * (deltat*omega0);
-     *
-     *    eq2:
-     *    const double g  = -Ic * phaseSpace.getDelta<0>() / M_PI
-     *                    * deltat * physcons::c * beta0 / R
-     *
-     * Marit's comment:
-     * !!! omega0 is here a function of R !!!, deltat in Einheiten von 2*pi?
-     */
      const double g = - Ib*physcons::c*ps->getDelta(1)*dt
                     / (2*M_PI*fs*sigmaE*E0)/(M_PI*rbend);
 
@@ -227,13 +214,13 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
                     impedance_t(0));
     }
 
-    fftw_plan p3 = prepareFFT( nmax, z, zcsrf, fft_direction::forward );
-    fftw_plan p4 = prepareFFT( nmax, z, zcsrb, fft_direction::backward);
+    fft_plan p3 = prepareFFT( nmax, z, zcsrf, fft_direction::forward );
+    fft_plan p4 = prepareFFT( nmax, z, zcsrb, fft_direction::backward);
 
-    fftw_execute(p3);
-    fftw_destroy_plan(p3);
-    fftw_execute(p4);
-    fftw_destroy_plan(p4);
+    fft_execute(p3);
+    fft_destroy_plan(p3);
+    fft_execute(p4);
+    fft_destroy_plan(p4);
 
     /* This method works like a DFT of Z with Z(-n) = Z*(n).
      *
@@ -267,19 +254,19 @@ vfps::ElectricField::~ElectricField()
     } else
     #endif // INOVESA_USE_CLFFT
     {
-        fftw_free(_bp_padded_fftw);
-        fftw_free(_formfactor_fftw);
-        if(_wakelosses_fftw != nullptr) {
-            fftw_free(_wakelosses_fftw);
+        fft_free(_bp_padded_fft);
+        fft_free(_formfactor_fft);
+        if(_wakelosses_fft != nullptr) {
+            fft_free(_wakelosses_fft);
         }
-        if(_wakepotential_fftw != nullptr) {
-            fftw_free(_wakepotential_fftw);
+        if(_wakepotential_fft != nullptr) {
+            fft_free(_wakepotential_fft);
         }
-        fftw_destroy_plan(_ffttw_bunchprofile);
-        if (_fftw_wakelosses != nullptr) {
-            fftw_destroy_plan(_fftw_wakelosses);
+        fft_destroy_plan(_ffttw_bunchprofile);
+        if (_fft_wakelosses != nullptr) {
+            fft_destroy_plan(_fft_wakelosses);
         }
-        fftw_cleanup();
+        fft_cleanup();
     }
 }
 
@@ -307,7 +294,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
         std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
         std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
         //FFT charge density
-        fftw_execute(_ffttw_bunchprofile);
+        fft_execute(_ffttw_bunchprofile);
     }
     _csrintensity = 0;
     for (unsigned int i=0; i<_nmax; i++) {
@@ -368,7 +355,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         // This is because Y[n-i] = Y[i].
         // We will use this, and choose the wake losses
         // for negetive frequencies to be 0, equivalent to Z(-|f|)=0.
-        fftw_execute(_ffttw_bunchprofile);
+        fft_execute(_ffttw_bunchprofile);
 
         for (unsigned int i=0; i<_nmax/2; i++) {
             _wakelosses[i]= (*_impedance)[i] *_formfactor[i];
@@ -376,7 +363,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
 
         //Fourier transorm wakelosses
-        fftw_execute(_fftw_wakelosses);
+        fft_execute(_fft_wakelosses);
 
         for (size_t i=0; i<_bpmeshcells/2; i++) {
             _wakepotential[_bpmeshcells/2+i]
@@ -436,38 +423,120 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
     }
 }
 
-fftw_plan vfps::ElectricField::prepareFFT( size_t n, csrpower_t* in,
+vfps::fft_complex* vfps::ElectricField::fft_alloc_complex(size_t n)
+{
+    if (std::is_same<vfps::csrpower_t,float>::value) {
+        return reinterpret_cast<fft_complex*>(fftwf_alloc_complex(n));
+    } else if (std::is_same<vfps::csrpower_t,double>::value) {
+        return reinterpret_cast<fft_complex*>(fftw_alloc_complex(n));
+    }
+}
+
+vfps::integral_t* vfps::ElectricField::fft_alloc_real(size_t n)
+{
+    if (std::is_same<vfps::csrpower_t,float>::value) {
+        return reinterpret_cast<integral_t*>(fftwf_alloc_real(n));
+    } else if (std::is_same<vfps::csrpower_t,double>::value) {
+        return reinterpret_cast<integral_t*>(fftw_alloc_real(n));
+    }
+}
+
+void vfps::ElectricField::fft_cleanup()
+{
+    if (std::is_same<vfps::csrpower_t,float>::value) {
+        fftwf_cleanup();
+    } else if (std::is_same<vfps::csrpower_t,double>::value) {
+        fftw_cleanup();
+    }
+}
+
+void vfps::ElectricField::fft_destroy_plan(vfps::fft_plan plan)
+{
+    if (std::is_same<vfps::csrpower_t,float>::value) {
+        fftwf_destroy_plan(reinterpret_cast<fftwf_plan>(plan));
+    } else if (std::is_same<vfps::csrpower_t,double>::value) {
+        fftw_destroy_plan(reinterpret_cast<fftw_plan>(plan));
+    }
+}
+
+void vfps::ElectricField::fft_execute(const vfps::fft_plan plan)
+{
+    if (std::is_same<vfps::csrpower_t,float>::value) {
+        fftwf_execute(reinterpret_cast<fftwf_plan>(plan));
+    } else if (std::is_same<vfps::csrpower_t,double>::value) {
+        fftw_execute(reinterpret_cast<fftw_plan>(plan));
+    }
+}
+
+void vfps::ElectricField::fft_free(vfps::integral_t* addr)
+{
+    if (std::is_same<vfps::integral_t,float>::value) {
+        fftwf_free(addr);
+    } else if (std::is_same<vfps::integral_t,double>::value) {
+        fftw_free(addr);
+    }
+}
+
+void vfps::ElectricField::fft_free(vfps::fft_complex* addr)
+{
+    if (std::is_same<vfps::csrpower_t,float>::value) {
+        fftwf_free(addr);
+    } else if (std::is_same<vfps::csrpower_t,double>::value) {
+        fftw_free(addr);
+    }
+}
+
+vfps::fft_plan vfps::ElectricField::prepareFFT( size_t n, csrpower_t* in,
                                             impedance_t* out)
 {
-    fftw_plan plan = nullptr;
+    fft_plan plan = nullptr;
 
     std::stringstream wisdomfile;
-    // get ready to save BunchCharge
     if (std::is_same<vfps::csrpower_t,float>::value) {
         wisdomfile << "wisdom_r2c32_" << n << ".fftw";
+        // use wisdomfile, if it exists
+        if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+            plan = reinterpret_cast<fft_plan>(fftwf_plan_dft_r2c_1d(n,
+                                         reinterpret_cast<float*>(in),
+                                         reinterpret_cast<fftwf_complex*>(out),
+                                         FFTW_WISDOM_ONLY|FFTW_PATIENT));
+        }
+        // if there was no wisdom (no or bad file), create some
+        if (plan == nullptr) {
+            plan = reinterpret_cast<fft_plan>(fftwf_plan_dft_r2c_1d(n,
+                                         reinterpret_cast<float*>(in),
+                                         reinterpret_cast<fftwf_complex*>(out),
+                                         FFTW_PATIENT));
+            fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
+            Display::printText("Created some wisdom at "+wisdomfile.str());
+        }
     } else if (std::is_same<vfps::csrpower_t,double>::value) {
         wisdomfile << "wisdom_r2c64_" << n << ".fftw";
-    }
-    // use wisdomfile, if it exists
-    if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
-        plan = fftw_plan_dft_r2c_1d(n,in,reinterpret_cast<fftw_complex*>(out),
-                                    FFTW_WISDOM_ONLY|FFTW_PATIENT);
-    }
-    // if there was no wisdom (no or bad file), create some
-    if (plan == nullptr) {
-        plan = fftw_plan_dft_r2c_1d(n,in,reinterpret_cast<fftw_complex*>(out),
-                                    FFTW_PATIENT);
-        fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        // use wisdomfile, if it exists
+        if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+            plan = reinterpret_cast<fft_plan>(fftw_plan_dft_r2c_1d(n,
+                                        reinterpret_cast<double*>(in),
+                                        reinterpret_cast<fftw_complex*>(out),
+                                        FFTW_WISDOM_ONLY|FFTW_PATIENT));
+        }
+        // if there was no wisdom (no or bad file), create some
+        if (plan == nullptr) {
+            plan = reinterpret_cast<fft_plan>(fftw_plan_dft_r2c_1d(n,
+                                        reinterpret_cast<double*>(in),
+                                        reinterpret_cast<fftw_complex*>(out),
+                                        FFTW_PATIENT));
+            fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
+            Display::printText("Created some wisdom at "+wisdomfile.str());
+        }
     }
     return plan;
 }
 
-fftw_plan vfps::ElectricField::prepareFFT(size_t n, vfps::impedance_t* in,
-                                    vfps::impedance_t* out,
-                                    fft_direction direction)
+vfps::fft_plan vfps::ElectricField::prepareFFT(size_t n, vfps::impedance_t* in,
+                                               vfps::impedance_t* out,
+                                               fft_direction direction)
 {
-    fftw_plan plan = nullptr;
+    fft_plan plan = nullptr;
 
     char dir;
     int_fast8_t sign;
@@ -483,26 +552,44 @@ fftw_plan vfps::ElectricField::prepareFFT(size_t n, vfps::impedance_t* in,
     // find filename for wisdom
     if (std::is_same<vfps::csrpower_t,float>::value) {
         wisdomfile << "wisdom_c" << dir << "c32_" << n << ".fftw";
+        // use wisdomfile, if it exists
+        if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+            plan = reinterpret_cast<fft_plan>(fftwf_plan_dft_1d(n,
+                                            reinterpret_cast<fftwf_complex*>(in),
+                                            reinterpret_cast<fftwf_complex*>(out),
+                                            sign,
+                                            FFTW_WISDOM_ONLY|FFTW_PATIENT));
+        }
+        // if there was no wisdom (no or bad file), create some
+        if (plan == nullptr) {
+            plan = reinterpret_cast<fft_plan>(fftwf_plan_dft_1d(n,
+                                            reinterpret_cast<fftwf_complex*>(in),
+                                            reinterpret_cast<fftwf_complex*>(out),
+                                            sign,
+                                            FFTW_PATIENT));
+            fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
+            Display::printText("Created some wisdom at "+wisdomfile.str());
+        }
     } else {
         wisdomfile << "wisdom_c" << dir << "c64_" << n << ".fftw";
-    }
-    // use wisdomfile, if it exists
-    if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
-        plan = fftw_plan_dft_1d(    n,
-                                        reinterpret_cast<fftw_complex*>(in),
-                                        reinterpret_cast<fftw_complex*>(out),
-                                        sign,
-                                        FFTW_WISDOM_ONLY|FFTW_PATIENT);
-    }
-    // if there was no wisdom (no or bad file), create some
-    if (plan == nullptr) {
-        plan = fftw_plan_dft_1d(    n,
-                                        reinterpret_cast<fftw_complex*>(in),
-                                        reinterpret_cast<fftw_complex*>(out),
-                                        sign,
-                                        FFTW_PATIENT);
-        fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        // use wisdomfile, if it exists
+        if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+            plan = reinterpret_cast<fft_plan>(fftw_plan_dft_1d(n,
+                                            reinterpret_cast<fftw_complex*>(in),
+                                            reinterpret_cast<fftw_complex*>(out),
+                                            sign,
+                                            FFTW_WISDOM_ONLY|FFTW_PATIENT));
+        }
+        // if there was no wisdom (no or bad file), create some
+        if (plan == nullptr) {
+            plan = reinterpret_cast<fft_plan>(fftw_plan_dft_1d(n,
+                                            reinterpret_cast<fftw_complex*>(in),
+                                            reinterpret_cast<fftw_complex*>(out),
+                                            sign,
+                                            FFTW_PATIENT));
+            fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
+            Display::printText("Created some wisdom at "+wisdomfile.str());
+        }
     }
     return plan;
 

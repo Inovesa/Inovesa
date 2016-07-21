@@ -34,6 +34,9 @@
 
 namespace vfps {
 
+typedef fftw_plan fft_plan;
+typedef fftw_complex fft_complex;
+
 class ElectricField
 {
 public:
@@ -144,9 +147,17 @@ private:
         forward, backward
     };
 
-    fftw_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
+    fft_complex* fft_alloc_complex(size_t n);
+    integral_t* fft_alloc_real(size_t n);
+    void fft_cleanup();
+    void fft_destroy_plan(fft_plan plan);
+    void fft_execute(const fft_plan plan);
+    void fft_free(integral_t* addr);
+    void fft_free(fft_complex* addr);
 
-    fftw_plan prepareFFT(size_t n, impedance_t* in, impedance_t* out,
+    fft_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
+
+    fft_plan prepareFFT(size_t n, impedance_t* in, impedance_t* out,
                           fft_direction direction);
 
 private:
@@ -168,7 +179,7 @@ private:
 
     integral_t* _bp_padded;
 
-    integral_t* _bp_padded_fftw;
+    integral_t* _bp_padded_fft;
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _bp_padded_buf;
@@ -179,7 +190,7 @@ private:
 
     impedance_t* _formfactor;
 
-    fftw_complex* _formfactor_fftw;
+    fft_complex* _formfactor_fft;
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _formfactor_buf;
@@ -188,7 +199,7 @@ private:
     cl::Kernel _clKernWakelosses;
     #endif // INOVESA_USE_CL
 
-    fftw_plan _ffttw_bunchprofile;
+    fft_plan _ffttw_bunchprofile;
 
     #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_bunchprofile;
@@ -198,7 +209,7 @@ private:
 
     impedance_t* _wakelosses;
 
-    fftw_complex* _wakelosses_fftw;
+    fft_complex* _wakelosses_fft;
 
     #ifdef INOVESA_USE_CLFFT
     cl::Buffer _wakelosses_buf;
@@ -206,7 +217,7 @@ private:
 
     impedance_t* _wakepotential_complex;
 
-    fftw_complex* _wakepotential_fftw;
+    fft_complex* _wakepotential_fft;
 
     #ifdef INOVESA_USE_CL
 public:
@@ -223,7 +234,7 @@ private:
 
     meshaxis_t* _wakepotential;
 
-    fftw_plan _fftw_wakelosses;
+    fft_plan _fft_wakelosses;
 
     #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_wakelosses;
