@@ -114,6 +114,17 @@ void vfps::Plot2DLine::updateLine(const size_t npoints,
                  _line.data(), GL_STATIC_DRAW);
 }
 
+void vfps::Plot2DLine::updateLine(const size_t npoints,
+                                  const double* points,
+                                  const bool vertical)
+{
+    std::vector<float> fltpoints(npoints);
+    for (size_t i=0; i<npoints; i++) {
+        fltpoints[i] = points[i];
+    }
+    updateLine(npoints,fltpoints.data(),vertical);
+}
+
 void vfps::Plot2DLine::draw()
 {
     glUseProgram(programID);

@@ -144,9 +144,9 @@ private:
         forward, backward
     };
 
-    fftwf_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
+    fftw_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
 
-    fftwf_plan prepareFFT(size_t n, impedance_t* in, impedance_t* out,
+    fftw_plan prepareFFT(size_t n, impedance_t* in, impedance_t* out,
                           fft_direction direction);
 
 private:
@@ -179,7 +179,7 @@ private:
 
     impedance_t* _formfactor;
 
-    fftwf_complex* _formfactor_fftw;
+    fftw_complex* _formfactor_fftw;
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _formfactor_buf;
@@ -188,7 +188,7 @@ private:
     cl::Kernel _clKernWakelosses;
     #endif // INOVESA_USE_CL
 
-    fftwf_plan _ffttw_bunchprofile;
+    fftw_plan _ffttw_bunchprofile;
 
     #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_bunchprofile;
@@ -198,7 +198,7 @@ private:
 
     impedance_t* _wakelosses;
 
-    fftwf_complex* _wakelosses_fftw;
+    fftw_complex* _wakelosses_fftw;
 
     #ifdef INOVESA_USE_CLFFT
     cl::Buffer _wakelosses_buf;
@@ -206,7 +206,7 @@ private:
 
     impedance_t* _wakepotential_complex;
 
-    fftwf_complex* _wakepotential_fftw;
+    fftw_complex* _wakepotential_fftw;
 
     #ifdef INOVESA_USE_CL
 public:
@@ -223,7 +223,7 @@ private:
 
     meshaxis_t* _wakepotential;
 
-    fftwf_plan _fftw_wakelosses;
+    fftw_plan _fftw_wakelosses;
 
     #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_wakelosses;

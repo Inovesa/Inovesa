@@ -42,6 +42,11 @@ public:
                     const float* points,
                     const bool vertical=false);
 
+
+    void updateLine(const size_t npoints,
+                    const double* points,
+                    const bool vertical=false);
+
     void draw();
 
 private:
