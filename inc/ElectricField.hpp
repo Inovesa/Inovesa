@@ -34,8 +34,8 @@
 
 namespace vfps {
 
-typedef fftw_plan fft_plan;
-typedef fftw_complex fft_complex;
+typedef fftwf_plan fft_plan;
+typedef fftwf_complex fft_complex;
 
 class ElectricField
 {
