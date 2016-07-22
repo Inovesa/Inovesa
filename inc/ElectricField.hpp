@@ -142,22 +142,62 @@ public:
     #endif
 
 
-private:
+private: // wrappers for FFTW
     enum class fft_direction : uint_fast8_t {
         forward, backward
     };
 
     fft_complex* fft_alloc_complex(size_t n);
     integral_t* fft_alloc_real(size_t n);
-    void fft_cleanup();
-    void fft_destroy_plan(fft_plan plan);
-    void fft_execute(const fft_plan plan);
-    void fft_free(integral_t* addr);
-    void fft_free(fft_complex* addr);
 
-    fft_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
+    /**
+     * @brief fft_cleanup to be implemented
+     */
+    void fft_cleanup(){}
 
-    fft_plan prepareFFT(size_t n, impedance_t* in, impedance_t* out,
+    inline void fft_destroy_plan(fftw_plan plan)
+        { fftw_destroy_plan(plan); }
+    inline void fft_destroy_plan(fftwf_plan plan)
+        { fftwf_destroy_plan(plan); }
+
+    inline void fft_execute(const fftw_plan plan)
+        { fftw_execute(plan); }
+    inline void fft_execute(const fftwf_plan plan)
+        { fftwf_execute(plan); }
+
+    inline void fft_free(double* addr)
+        { fftw_free(addr); }
+    inline void fft_free(float* addr)
+        { fftwf_free(addr); }
+
+    inline void fft_free(fftw_complex* addr)
+        { fftw_free(addr); }
+    inline void fft_free(fftwf_complex* addr)
+        { fftwf_free(addr); }
+
+    inline fftw_plan prepareFFT(size_t n, double* in, std::complex<double>* out)
+        {return prepareFFT(n,in, reinterpret_cast<fftw_complex*>(out)); }
+    fftw_plan prepareFFT(size_t n, double* in, fftw_complex* out);
+    inline fftwf_plan prepareFFT(size_t n, float* in, std::complex<float>* out)
+        {return prepareFFT(n,in, reinterpret_cast<fftwf_complex*>(out)); }
+    fftwf_plan prepareFFT(size_t n, float* in, fftwf_complex* out);
+
+
+    inline fftw_plan prepareFFT(size_t n, std::complex<double>* in,
+                                std::complex<double>* out,
+                                fft_direction direction)
+        { return prepareFFT(n,reinterpret_cast<fftw_complex*>(in),
+                            reinterpret_cast<fftw_complex*>(out),direction); }
+    fftw_plan prepareFFT(size_t n, fftw_complex *in,
+                         fftw_complex *out,
+                         fft_direction direction);
+    inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in,
+                                std::complex<float>* out,
+                                fft_direction direction)
+        { return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in),
+                            reinterpret_cast<fftwf_complex*>(out),direction); }
+    fftwf_plan prepareFFT(size_t n, fftwf_complex* in,
+                          fftwf_complex* out,
                           fft_direction direction);
 
 private:
@@ -199,7 +239,7 @@ private:
     cl::Kernel _clKernWakelosses;
     #endif // INOVESA_USE_CL
 
-    fft_plan _ffttw_bunchprofile;
+    fft_plan _fft_bunchprofile;
 
     #ifdef INOVESA_USE_CLFFT
     clfftPlanHandle _clfft_bunchprofile;
