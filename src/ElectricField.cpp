@@ -149,10 +149,10 @@ vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
         _clKernWakelosses.setArg(2, _formfactor_buf);
 
         std::string cl_code_wakepotential = R"(
-            __kernel void scalewp(__global float* wakepot,
+            __kernel void scalewp(__global data_t* wakepot,
                                   const ulong paddedsize,
                                   const uint bpmeshcells,
-                                  const float scaling,
+                                  const data_t scaling,
                                   const __global impedance_t* wakepot_padded)
             {
                 const uint g = get_global_id(0);

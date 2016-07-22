@@ -108,7 +108,7 @@ cl::Program OCLH::prepareCLProg(std::string code)
     cl::Program p(OCLH::context, source);
     try {
         #ifdef DEBUG
-        p.build(OCLH::devices,"-g");
+        p.build(OCLH::devices,"-g -cl-opt-disable");
         #else
         p.build(OCLH::devices);
         #endif

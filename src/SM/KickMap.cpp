@@ -34,8 +34,8 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
     }
     _offset.resize(_meshsize_pd,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
-    for (meshindex_t q_i=0; q_i<_meshsize_pd; q_i++) {
-        _hinfo[q_i*_ip].index = _meshysize/2;
+    for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {
+        _hinfo[q_i*_ip].index = _meshsize_kd/2;
         _hinfo[q_i*_ip].weight = 1;
         for (unsigned int j1=1; j1<_it; j1++) {
             _hinfo[q_i*_ip+j1].index = 0;
