@@ -81,7 +81,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+        ("gui,G", po::value<bool>(&_showphasespace)->default_value(true),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),

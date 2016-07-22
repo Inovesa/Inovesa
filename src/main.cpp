@@ -608,7 +608,7 @@ int main(int argc, char** argv)
     #endif
 
     if (gui) {
-        csrlog.resize(steps*rotations/outstep,0);
+        csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
     }
     Display::printText("Starting the simulation.");
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
