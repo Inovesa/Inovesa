@@ -142,7 +142,7 @@ public:
     #endif
 
 
-private:
+private: // wrappers for FFTW
     enum class fft_direction : uint_fast8_t {
         forward, backward
     };
@@ -150,10 +150,26 @@ private:
     fft_complex* fft_alloc_complex(size_t n);
     integral_t* fft_alloc_real(size_t n);
     void fft_cleanup();
-    void fft_destroy_plan(fft_plan plan);
-    void fft_execute(const fft_plan plan);
-    void fft_free(integral_t* addr);
-    void fft_free(fft_complex* addr);
+
+    inline void fft_destroy_plan(fftw_plan plan)
+        { fftw_destroy_plan(plan); }
+    inline void fft_destroy_plan(fftwf_plan plan)
+        { fftwf_destroy_plan(plan); }
+
+    inline void fft_execute(const fftw_plan plan)
+        { fftw_execute(plan); }
+    inline void fft_execute(const fftwf_plan plan)
+        { fftwf_execute(plan); }
+
+    inline void fft_free(double* addr)
+        { fftw_free(addr); }
+    inline void fft_free(float* addr)
+        { fftwf_free(addr); }
+
+    inline void fft_free(fftw_complex* addr)
+        { fftw_free(addr); }
+    inline void fftf_free(fftwf_complex* addr)
+        { fftwf_free(addr); }
 
     fft_plan prepareFFT(size_t n, csrpower_t* in, impedance_t* out);
 

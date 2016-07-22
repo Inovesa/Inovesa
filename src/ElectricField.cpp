@@ -450,41 +450,6 @@ void vfps::ElectricField::fft_cleanup()
     }
 }
 
-void vfps::ElectricField::fft_destroy_plan(vfps::fft_plan plan)
-{
-    if (std::is_same<vfps::csrpower_t,float>::value) {
-        fftwf_destroy_plan(reinterpret_cast<fftwf_plan>(plan));
-    } else if (std::is_same<vfps::csrpower_t,double>::value) {
-        fftw_destroy_plan(reinterpret_cast<fftw_plan>(plan));
-    }
-}
-
-void vfps::ElectricField::fft_execute(const vfps::fft_plan plan)
-{
-    if (std::is_same<vfps::csrpower_t,float>::value) {
-        fftwf_execute(reinterpret_cast<fftwf_plan>(plan));
-    } else if (std::is_same<vfps::csrpower_t,double>::value) {
-        fftw_execute(reinterpret_cast<fftw_plan>(plan));
-    }
-}
-
-void vfps::ElectricField::fft_free(vfps::integral_t* addr)
-{
-    if (std::is_same<vfps::integral_t,float>::value) {
-        fftwf_free(addr);
-    } else if (std::is_same<vfps::integral_t,double>::value) {
-        fftw_free(addr);
-    }
-}
-
-void vfps::ElectricField::fft_free(vfps::fft_complex* addr)
-{
-    if (std::is_same<vfps::csrpower_t,float>::value) {
-        fftwf_free(addr);
-    } else if (std::is_same<vfps::csrpower_t,double>::value) {
-        fftw_free(addr);
-    }
-}
 
 vfps::fft_plan vfps::ElectricField::prepareFFT( size_t n, csrpower_t* in,
                                             impedance_t* out)
