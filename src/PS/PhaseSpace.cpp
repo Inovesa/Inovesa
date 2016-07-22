@@ -17,7 +17,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "PhaseSpace.hpp"
+#include "PS/PhaseSpace.hpp"
 
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                              const double Fk,const double zoom,

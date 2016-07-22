@@ -17,7 +17,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "impedances/ParallelPlatesCSR.hpp"
+#include "Z/ParallelPlatesCSR.hpp"
 
 #include <boost/math/special_functions/airy.hpp>
 

@@ -26,9 +26,9 @@
 #include <string>
 
 #include "defines.hpp"
-#include "ElectricField.hpp"
-#include "impedances/Impedance.hpp"
-#include "PhaseSpace.hpp"
+#include "PS/ElectricField.hpp"
+#include "Z/Impedance.hpp"
+#include "PS/PhaseSpace.hpp"
 #include "SM/WakeFunctionMap.hpp"
 
 namespace vfps {

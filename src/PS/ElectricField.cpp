@@ -17,7 +17,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "ElectricField.hpp"
+#include "PS/ElectricField.hpp"
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,

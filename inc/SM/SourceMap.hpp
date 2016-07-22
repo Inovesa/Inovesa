@@ -24,7 +24,7 @@
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
-#include "PhaseSpace.hpp"
+#include "PS/PhaseSpace.hpp"
 
 namespace vfps
 {

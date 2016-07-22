@@ -26,8 +26,8 @@
 #include "defines.hpp"
 #include "IO/Display.hpp"
 #include "SM/KickMap.hpp"
-#include "ElectricField.hpp"
-#include "Ruler.hpp"
+#include "PS/ElectricField.hpp"
+#include "PS/Ruler.hpp"
 
 namespace vfps
 {

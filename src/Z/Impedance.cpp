@@ -14,33 +14,62 @@
  * GNU General Public License for more details.                               *
  *                                                                            *
  * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ *along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.            *
  ******************************************************************************/
 
-#ifndef PARALLELPLATESCSR_HPP
-#define PARALLELPLATESCSR_HPP
+#include "Z/Impedance.hpp"
 
-#include "impedances/Impedance.hpp"
+#include <fstream>
 
-namespace vfps
+vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
+                           const frequency_t f_max) :
+    _nfreqs(z.size()),
+    _axis(Ruler<frequency_t>(_nfreqs,0,f_max,1)),
+    _data(z)
 {
+    syncCLMem();
+}
 
-class ParallelPlatesCSR : public Impedance
+vfps::Impedance::Impedance(std::string datafile, double f_max) :
+    Impedance(readData(datafile),f_max)
 {
-public:
-    ParallelPlatesCSR(const size_t n,
-                      const frequency_t f_rev,
-                      const frequency_t f_max,
-                      const double h);
+}
 
-private:
-    static std::vector<vfps::impedance_t>
-    __calcImpedance(const size_t n,
-                    const frequency_t f_rev,
-                    const frequency_t f_max,
-                    const double h);
-};
+void vfps::Impedance::syncCLMem()
+{
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        data_buf = cl::Buffer(OCLH::context,
+                              CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                             _nfreqs*sizeof(impedance_t),_data.data());
+    }
+    #endif
+}
 
-} // namespace VFPS
+std::vector<vfps::impedance_t> vfps::Impedance::readData(std::string fname)
+{
+    std::vector<vfps::impedance_t> rv;
+    std::ifstream is(fname);
+    size_t lineno;
+    double real;
+    double imag;
 
-#endif // PARALLELPLATESCSR_HPP
+    while(is.good()) {
+        is >> lineno >> real >> imag;
+        rv.push_back(impedance_t(real,imag));
+    }
+    return rv;
+}
+
+uint64_t vfps::Impedance::upper_power_of_two(uint64_t v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v |= v >> 32;
+    v++;
+    return v;
+}
