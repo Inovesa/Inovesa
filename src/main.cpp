@@ -471,7 +471,7 @@ int main(int argc, char** argv)
 
     double e1;
     if (t_d > 0) {
-        e1 = 1.0/(fs*t_d*steps);
+        e1 = 2.0/(fs*t_d*steps);
     } else {
         e1=0;
     }
