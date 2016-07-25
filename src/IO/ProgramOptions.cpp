@@ -64,7 +64,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
-        ("VacuumGap,g", po::value<double>(&g)->default_value(0.03,"0.03"),
+        ("VacuumHeight", po::value<double>(&g)->default_value(0.03,"0.03"),
             "Full height of vacuum chamber (m)\n"
             "<0: free space CSR\n"
             " 0: no CSR\n"
