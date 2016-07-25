@@ -170,14 +170,15 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         return false;
     }
     if (_vm.count("version")) {
-        std::cout << "Inovesa v"
-                  << INOVESA_VERSION_RELEASE << '.'
-                  << INOVESA_VERSION_MINOR << '.'
-                  << INOVESA_VERSION_FIX;
-        if (std::string(GIT_BRANCH) != "master") {
-            std::cout << " (Branch: " GIT_BRANCH ")";
+        std::stringstream sstream;
+        sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
+                << INOVESA_VERSION_MINOR;
+        std::string version(sstream.str());
+        sstream << '.' << INOVESA_VERSION_FIX;
+        if (std::string(GIT_BRANCH) != version) {
+            sstream << ", Branch: "<< GIT_BRANCH;
         }
-        std::cout << std::endl;
+        std::cout << sstream.str() << std::endl;
         return false;
     }
     if (boost::filesystem::exists(_configfile) &&

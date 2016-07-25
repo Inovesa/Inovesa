@@ -82,9 +82,10 @@ int main(int argc, char** argv)
 
     sstream.str("");
     sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
-            << INOVESA_VERSION_MINOR << '.'
-            << INOVESA_VERSION_FIX;
-    if (std::string(GIT_BRANCH) != "master") {
+            << INOVESA_VERSION_MINOR;
+    std::string version(sstream.str());
+    sstream << '.' << INOVESA_VERSION_FIX;
+    if (std::string(GIT_BRANCH) != version) {
         sstream << ", Branch: "<< GIT_BRANCH;
     }
 
