@@ -64,7 +64,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Natural energy spread (relative)")
         ("Impedance,Z", po::value<std::string>(&_impedancefile),
             "File containing impedance information.")
-        ("VacuumGap,g", po::value<double>(&g)->default_value(0.03,"0.03"),
+        ("VacuumGap,G", po::value<double>(&g)->default_value(0.03,"0.03"),
             "Full height of vacuum chamber (m)\n"
             "<0: free space CSR\n"
             " 0: no CSR\n"
@@ -81,7 +81,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,G", po::value<bool>(&_showphasespace)->default_value(true),
+        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
