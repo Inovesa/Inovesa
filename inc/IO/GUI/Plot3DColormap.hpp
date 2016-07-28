@@ -54,7 +54,7 @@ private:
 
     vfps::meshdata_t maxValue;
 
-    static constexpr std::array<float,256*3> inferno = {
+    static constexpr std::array<float,256*3> inferno = {{
                       0.001462f, 0.000466f, 0.013866f,
                       0.002267f, 0.001270f, 0.018570f,
                       0.003299f, 0.002249f, 0.024239f,
@@ -311,7 +311,7 @@ private:
                       0.976511f, 0.989753f, 0.616760f,
                       0.982257f, 0.994109f, 0.631017f,
                       0.988362f, 0.998364f, 0.644924f
-    };
+    }};
 };
 
 } // namespace vfps
