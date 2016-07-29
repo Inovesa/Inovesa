@@ -64,8 +64,7 @@ public:
      *        Fk > 0: Haissinski distribution
      */
     PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
-               const double Fk=0, const double zoom=1,
-               meshindex_t xoffset = 0);
+               const double Fk=0, const double zoom=1);
 
     PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
                const double Fk=0, const double zoom=1);

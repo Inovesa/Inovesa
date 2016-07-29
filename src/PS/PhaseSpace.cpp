@@ -20,8 +20,7 @@
 #include "PS/PhaseSpace.hpp"
 
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
-                             const double Fk,const double zoom,
-                             meshindex_t xoffset) :
+                             const double Fk, const double zoom) :
     _axis(axis),
     _integral(0),
     _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
@@ -49,7 +48,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 
         for (meshindex_t x = 0; x < nMeshCells(0); x++) {
             for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-                _data[x][y] = _projection[0][(x+xoffset)%nMeshCells(0)]*_projection[1][y];
+                _data[x][y] = _projection[0][(x)%nMeshCells(0)]*_projection[1][y];
             }
         }
         #ifdef INOVESA_CHG_BUNCH
