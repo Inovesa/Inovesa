@@ -361,6 +361,7 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
     }
     }
 }
+#endif // INOVESA_USE_CL
 
 void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
                                   const projection_t Fk,
@@ -399,7 +400,6 @@ void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
     }
     delete [] I;
 }
-#endif // INOVESA_USE_CL
 
 void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
 {
