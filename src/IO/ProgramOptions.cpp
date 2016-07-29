@@ -49,8 +49,6 @@ vfps::ProgramOptions::ProgramOptions() :
              "\tgrayscale png (.png) file\n"
              #endif // INOVESA_USE_PNG
              "\ttext file (.txt) w/ particle coordinates")
-        ("InitialDistParam",po::value<double>(&Fk)->default_value(0),
-            "Parameter F(k) for generation of initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),

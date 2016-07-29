@@ -58,22 +58,17 @@ public:
     /**
      * @brief PhaseSpace
      * @param axis
-     * @param Fk integral of initial Haissinski distribution:
-     *        Fk < 0: do not initialize
-     *        Fk == 0: gaussian
-     *        Fk > 0: Haissinski distribution
      */
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
-               const double Fk=0, const double zoom=1);
+    PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis, const double zoom=1);
 
     PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
-               const double Fk=0, const double zoom=1);
+               const double zoom=1);
 
     PhaseSpace(meshindex_t ps_size,
                meshaxis_t xmin, meshaxis_t xmax,
                meshaxis_t ymin, meshaxis_t ymax,
                double xscale=0, double yscale=0,
-               const double Fk=0, const double zoom=1);
+               const double zoom=1);
 
     PhaseSpace(const PhaseSpace& other);
 
@@ -227,14 +222,11 @@ private:
 
 private:
     /**
-     * @brief haissinski calculates haissinski distribution
-     * @param target
-     * @param kappa
-     * @param loops (maximum) number of loops (choose 0 for gaussian)
+     * @brief gaus calculates gaussian distribution
+     * @param axis
+     * @param zoom
      */
-    void haissinski(const uint_fast8_t x,
-                    const projection_t Fk,
-                    const double zoom);
+    void gaus(const uint_fast8_t axis, const double zoom);
 };
 
 /**

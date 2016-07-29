@@ -143,9 +143,6 @@ public:
     inline double getRFVoltage() const
         { return V_RF; }
 
-    inline double getStartDistParam() const
-        { return Fk; }
-
     inline double getStartDistZoom() const
         { return zoom; }
 
@@ -196,7 +193,6 @@ private: // simulation parameters
 
 private: // phsical parameters
     double E_0;
-    double Fk;
 
     /**
      * @brief zoom initial distribution

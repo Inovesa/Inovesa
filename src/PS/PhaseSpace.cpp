@@ -20,7 +20,7 @@
 #include "PS/PhaseSpace.hpp"
 
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
-                             const double Fk, const double zoom) :
+                             const double zoom) :
     _axis(axis),
     _integral(0),
     _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
@@ -38,19 +38,14 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
     }
     _ws = new meshdata_t[nMeshCells(0)];
 
-    if (Fk >= 0) {
-        if (Fk > 0) {
-            haissinski(0,Fk,zoom); // 50 iterations haissinski for y axis
-        } else {
-            haissinski(0,0,zoom); // creates gaussian for x axis
-        }
-        haissinski(1,0,zoom); // creates gaussian for y axis
+    gaus(0,zoom); // creates gaussian for x axis
+    gaus(1,zoom); // creates gaussian for y axis
 
-        for (meshindex_t x = 0; x < nMeshCells(0); x++) {
-            for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-                _data[x][y] = _projection[0][(x)%nMeshCells(0)]*_projection[1][y];
-            }
+    for (meshindex_t x = 0; x < nMeshCells(0); x++) {
+        for (meshindex_t y = 0; y < nMeshCells(1); y++) {
+            _data[x][y] = _projection[0][(x)%nMeshCells(0)]*_projection[1][y];
         }
+    }
         #ifdef INOVESA_CHG_BUNCH
             std::random_device seed;
             std::default_random_engine engine(seed());
@@ -98,7 +93,6 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                 x++;
             }
         #endif // INOVESA_CHG_BUNCH
-    }
 
     const integral_t ca = 3.;
     integral_t dc = 1;
@@ -148,18 +142,17 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 
 
 vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
-                             const double Fk, const double zoom) :
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},Fk,zoom)
+                             const double zoom) :
+    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},zoom)
 {}
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              meshaxis_t xmin, meshaxis_t xmax,
                              meshaxis_t ymin, meshaxis_t ymax,
-                             double xscale, double yscale,
-                             const double Fk, const double zoom) :
+                             double xscale, double yscale, const double zoom) :
     PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
                Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale),
-               Fk,zoom)
+               zoom)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -363,42 +356,17 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
 }
 #endif // INOVESA_USE_CL
 
-void vfps::PhaseSpace::haissinski(const uint_fast8_t x,
-                                  const projection_t Fk,
-                                  const double zoom)
+void vfps::PhaseSpace::gaus(const uint_fast8_t axis, const double zoom)
 {
-    constexpr uint32_t maxloops = 200;
-    constexpr double kappamax=0.291030514208;
-    constexpr double kappamin=0.01;
-    constexpr double p=1.50088;
-    constexpr double q=1.05341;
-    const double zoom2 = zoom*zoom;
-    projection_t kappa = std::max(kappamax*(1.0-std::exp(-p*std::pow(Fk,q))),
-                                  kappamin);
-    projection_t* I = new projection_t[nMeshCells(x)];
-    std::fill_n(I,nMeshCells(x),0);
-    projection_t F=-1;
-    for(uint32_t k=0;k<=maxloops && F<Fk;k++){ // fuehrt Iterationen durch
-        F=0;
-        for(uint32_t i=0; i<nMeshCells(x); i++){
-            data_t tv=0; // vorheriges t
-            _projection[x][i]=kappa*std::exp((-0.5)*_axis[x][i]*_axis[x][i]/zoom2+I[i]);
-            F+=_projection[x][i]*getDelta(x);
-            I[i]=0;
-            for(uint32_t j=0; j<=i; j++){ //Berechnet neuen Wert I[i]
-                data_t tn =std::pow(((j+1)*getDelta(x)),2./3.); // naechstes t
-                data_t b  = (tn-tv)*0.5;
-                I[i]+= _projection[x][i-j]*b;
-                tv =std::pow((j*getDelta(x)),2./3.);
-            }
-            I[i]*=1.5;
-        }
+    double charge =0;
+    const double zoom2=zoom*zoom;
+    for(uint32_t i=0; i<nMeshCells(axis); i++){
+        _projection[axis][i]=std::exp((-0.5)*_axis[axis][i]*_axis[axis][i]/zoom2);
+        charge+=_projection[axis][i]*getDelta(axis);
     }
-
-    for (uint32_t i=0;i<nMeshCells(x);i++){ // Normalize Haissinski distribution
-        _projection[x][i]/=F;
+    for (uint32_t i=0;i<nMeshCells(axis);i++){ // Normalize distribution
+        _projection[axis][i]/=charge;
     }
-    delete [] I;
 }
 
 void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
