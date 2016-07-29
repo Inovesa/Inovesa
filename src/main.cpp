@@ -186,8 +186,8 @@ int main(int argc, char** argv)
     const double dE = sE*E0;
     const double f_rev = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
-    const double R = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f_rev);
-    const double f0 = (R_tmp<=0) ? f_rev : physcons::c/(2*M_PI*R);
+    const double R_bend = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f_rev);
+    const double f0 = (R_tmp<=0) ? f_rev : physcons::c/(2*M_PI*R_bend);
 
     // scaling for isomagnetic approximation, defined to be <= 1
     const double isoscale = f_rev/f0;
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
     const double fs_unscaled = opts.getSyncFreq();
-    const double fs = isoscale*fs_unscaled;
+    const double fs = fs_unscaled/isoscale;
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Ib = Ib_unscaled/isoscale;
@@ -225,11 +225,11 @@ int main(int argc, char** argv)
 
     if (gap!=0) {
         if (gap>0) {
-            shield = bl*std::sqrt(R)*std::pow(gap,-3./2.);
+            shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }
 
         const double Inorm = physcons::IAlfven/physcons::me*2*M_PI
-                           * std::pow(dE*fs/f0,2)/V/H* std::pow(bl/R,1./3.);
+                           * std::pow(dE*fs/f0,2)/V/H* std::pow(bl/R_bend,1./3.);
 
         Ith = Inorm * (0.5+0.34*shield);
 
@@ -241,7 +241,7 @@ int main(int argc, char** argv)
             Display::printText("Shielding parameter (g=gap):   "
                                +sstream.str());
             if (gap>0) {
-                shield = bl*std::sqrt(R)*std::pow(gap/2,-3./2.);
+                shield = bl*std::sqrt(R_bend)*std::pow(gap/2,-3./2.);
             }
             sstream.str("");
             sstream << std::fixed << shield;
