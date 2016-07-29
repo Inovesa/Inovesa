@@ -556,6 +556,35 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_GUI
 
+    projection_t* xproj = mesh1->getProjection(0);
+    const Ruler<meshaxis_t>* q_axis = mesh1->getRuler(0);
+    for (uint32_t i=0;i<200;i++) {
+        wkm->update();
+        const meshaxis_t* wake = wkm->getForce();
+        integral_t charge = 0;
+        for (meshindex_t x=0; x<ps_size; x++) {
+            xproj[x] = std::exp(-0.5f*std::pow((*q_axis)[x],2)-wake[x]);
+            charge += xproj[x]*q_axis->delta();
+        }
+        for (meshindex_t x=0; x<ps_size; x++) {
+            xproj[x] /=charge;
+        }
+        mesh1->createFromProjections();
+        if (psv != nullptr) {
+            psv->createTexture(mesh1);
+        }
+        if (bpv != nullptr) {
+            bpv->updateLine(mesh1->nMeshCells(0),xproj);
+        }
+        if (wpv != nullptr) {
+            wpv->updateLine(mesh1->nMeshCells(0),wake);
+        }
+        display->draw();
+        if (psv != nullptr) {
+            psv->delTexture();
+        }
+    }
+
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
