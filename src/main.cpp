@@ -184,30 +184,34 @@ int main(int argc, char** argv)
     const double sE = opts.getEnergySpread();
     const double E0 = opts.getBeamEnergy();
     const double dE = sE*E0;
-    const double f0 = opts.getRevolutionFrequency();
+    const double f_rev = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
-    if (R_tmp > 0) {
-        Display::printText("Non iso-magneting rings to be implemented.");
-    }
-    const double R = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f0);
+    const double R = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f_rev);
+    const double f0 = (R_tmp<=0) ? f_rev : physcons::c/(2*M_PI*R);
+
+    // scaling for isomagnetic approximation, defined to be <= 1
+    const double isoscale = f_rev/f0;
+
     #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
-    const double H = opts.getHarmonicNumber();
+    const double H = isoscale*opts.getHarmonicNumber();
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
-    const double fs = opts.getSyncFreq();
+    const double fs_unscaled = opts.getSyncFreq();
+    const double fs = isoscale*fs_unscaled;
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
-    const double Ib = opts.getBunchCurrent();
+    const double Ib_unscaled = opts.getBunchCurrent();
+    const double Ib = Ib_unscaled/isoscale;
     const double Fk = opts.getStartDistParam();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
     const unsigned int outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
-    const double t_d = opts.getDampingTime();
+    const double t_d = isoscale*opts.getDampingTime();
     const double dt = 1.0/(fs*steps);
-    const double t_sync = 1.0/fs;
+    const double t_sync_unscaled = 1.0/fs_unscaled;
 
     /* angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
@@ -571,7 +575,8 @@ int main(int argc, char** argv)
         }
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,Ib,t_sync);
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
+                                Ib_unscaled,t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
