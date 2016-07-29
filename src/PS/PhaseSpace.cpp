@@ -41,11 +41,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
     gaus(0,zoom); // creates gaussian for x axis
     gaus(1,zoom); // creates gaussian for y axis
 
-    for (meshindex_t x = 0; x < nMeshCells(0); x++) {
-        for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-            _data[x][y] = _projection[0][(x)%nMeshCells(0)]*_projection[1][y];
-        }
-    }
+    createFromProjections();
         #ifdef INOVESA_CHG_BUNCH
             std::random_device seed;
             std::default_random_engine engine(seed());
@@ -352,6 +348,15 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
                                       _projection[0]);
         break;
     }
+    }
+}
+
+void vfps::PhaseSpace::createFromProjections()
+{
+    for (meshindex_t x = 0; x < nMeshCells(0); x++) {
+        for (meshindex_t y = 0; y < nMeshCells(1); y++) {
+            _data[x][y] = _projection[0][(x)%nMeshCells(0)]*_projection[1][y];
+        }
     }
 }
 #endif // INOVESA_USE_CL

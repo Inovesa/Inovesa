@@ -114,7 +114,7 @@ public:
     meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
 
-    const inline projection_t* getProjection(const uint_fast8_t x) const
+    inline projection_t* getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
     /**
@@ -220,7 +220,9 @@ private:
     static std::string cl_code_projection_x;
 #endif
 
-private:
+public:
+    void createFromProjections();
+
     /**
      * @brief gaus calculates gaussian distribution
      * @param axis
