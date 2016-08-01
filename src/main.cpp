@@ -257,8 +257,8 @@ int main(int argc, char** argv)
             Display::printText("CSR strength: "
                                +sstream.str());
             sstream.str("");
-            sstream << std::scientific << Ith;
-            Display::printText("BBT-Threshold-Current expected at "
+            sstream << std::scientific << Ith*isoscale;
+            Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
         }
     }
