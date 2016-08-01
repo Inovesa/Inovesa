@@ -260,6 +260,9 @@ int main(int argc, char** argv)
             sstream << std::scientific << Ith*isoscale;
             Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
+            sstream.str("");
+            sstream << std::scientific << 1/t_d/fs/(2*M_PI);
+            Display::printText("Damping beta: " +sstream.str());
         }
     }
 
