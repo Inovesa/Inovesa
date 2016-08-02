@@ -498,23 +498,13 @@ int main(int argc, char** argv)
     SourceMap* wm = nullptr;
     WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
-    std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
         field = new ElectricField(mesh1,impedance);
         Display::printText("Reading WakeFunction from "+wakefile+".");
-        std::ifstream ifs;
-        ifs.open(wakefile);
-
-        while (ifs.good()) {
-            double q,f;
-            ifs >> q >> f;
-            wake.push_back(std::pair<meshaxis_t,double>(q,f));
-        }
-        ifs.close();
-        Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
-                                  wake,interpolationtype,interpol_clamp);
+                                  wakefile,E0,sE,Ib,dt,
+                                  interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");

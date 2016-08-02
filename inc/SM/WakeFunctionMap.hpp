@@ -15,14 +15,13 @@ public:
      * @param out
      * @param xsize
      * @param ysize
-     * @param wake wakefunction from -xsize to xsize-1, normalized in a way
-     *             that plain multiplication with density gives an offset
-     *
-     * @todo interpolation when wake does not match PhaseSpace
+     * @param fname
      */
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    const std::vector<std::pair<meshaxis_t,double>> wake,
+                    const std::string fname,
+                    const double sigmaE, const double E0,
+                    const double Ib, const double dt,
                     const InterpolationType it, const bool interpol_clamp);
 
     /**
@@ -53,6 +52,14 @@ public:
     void update();
 
 private:
+    /**
+     * @brief wakeFromFile
+     * @param fname file name to read wake from
+     * @return
+     *
+     * reads in a file and scales wake to internal units
+     */
+    void _wakeFromFile(const std::string fname, const double scaling);
 
 
 private:
@@ -67,6 +74,9 @@ private:
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it, bool interpol_clamp);
+
+
+    const Ruler<meshaxis_t> _xaxis;
 
     /**
      * @brief _wakefunktion (normalized single particle) wake,
