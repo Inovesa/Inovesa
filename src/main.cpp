@@ -130,6 +130,7 @@ int main(int argc, char** argv)
     if (OCLH::active) {
         try {
             OCLH::prepareCLEnvironment(gui,opts.getCLDevice()-1);
+            std::atexit(OCLH::teardownCLEnvironment);
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
@@ -355,6 +356,7 @@ int main(int argc, char** argv)
             std::cerr << startdistfile
                       << " does not match set GridSize." << std::endl;
 
+            delete mesh1;
             return EXIT_SUCCESS;
         }
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
@@ -778,12 +780,6 @@ int main(int argc, char** argv)
     delete rm2;
     delete wm;
     delete fpm;
-
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        OCLH::teardownCLEnvironment();
-    }
-    #endif // INOVESA_USE_CL
 
     Display::printText("Finished.");
 
