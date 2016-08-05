@@ -33,7 +33,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
     const interpol_t e1_6d = e1/(interpol_t(6)*in->getDelta(1));
     const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
 
-    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
+    const meshaxis_t ycenter = in->getAxis(1)->zerobin();
 
     switch (dt) {
     case DerivationType::two_sided:

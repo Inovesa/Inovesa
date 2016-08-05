@@ -73,3 +73,5 @@ uint64_t vfps::Impedance::upper_power_of_two(uint64_t v)
     v++;
     return v;
 }
+
+constexpr double vfps::Impedance::factor4Ohms;

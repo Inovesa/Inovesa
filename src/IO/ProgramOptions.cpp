@@ -116,7 +116,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Steps for one synchrotron period")
         ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
             "Save results every n steps.")
-        ("padding,p", po::value<uint32_t>(&padding)->default_value(8),
+        ("padding,p", po::value<double>(&padding)->default_value(8.0),
             "Factor for zero padding of bunch profile")
         ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),
             "Size of phase space")

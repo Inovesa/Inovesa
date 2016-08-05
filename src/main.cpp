@@ -130,6 +130,7 @@ int main(int argc, char** argv)
     if (OCLH::active) {
         try {
             OCLH::prepareCLEnvironment(gui,opts.getCLDevice()-1);
+            std::atexit(OCLH::teardownCLEnvironment);
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
@@ -202,7 +203,8 @@ int main(int argc, char** argv)
     const double fs = fs_unscaled/isoscale;
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib_unscaled = opts.getBunchCurrent();
-    const double Ib = Ib_unscaled/isoscale;
+    const double Qb = Ib_unscaled/f_rev;
+    const double Ib_scaled = Ib_unscaled/isoscale;
     const double Fk = opts.getStartDistParam();
     const double Iz = opts.getStartDistZoom();
 
@@ -233,7 +235,7 @@ int main(int argc, char** argv)
 
         Ith = Inorm * (0.5+0.34*shield);
 
-        S_csr = Ib/Inorm;
+        S_csr = Ib_scaled/Inorm;
 
         if (verbose) {
             sstream.str("");
@@ -249,7 +251,7 @@ int main(int argc, char** argv)
                                +sstream.str());
             sstream.str("");
             sstream << std::fixed << S_csr;
-            if (Ib > Ith) {
+            if (Ib_scaled > Ith) {
                 sstream << " (> " << 0.5+0.12*shield << ')';
             } else {
                 sstream << " (< " << 0.5+0.12*shield << ')';
@@ -257,9 +259,12 @@ int main(int argc, char** argv)
             Display::printText("CSR strength: "
                                +sstream.str());
             sstream.str("");
-            sstream << std::scientific << Ith;
-            Display::printText("BBT-Threshold-Current expected at "
+            sstream << std::scientific << Ith*isoscale;
+            Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
+            sstream.str("");
+            sstream << std::scientific << 1/t_d/fs/(2*M_PI);
+            Display::printText("Damping beta: " +sstream.str());
         }
     }
 
@@ -286,7 +291,8 @@ int main(int argc, char** argv)
         sstream << std::fixed << Fk << ", zoom=" << Iz;
         Display::printText("Generating initial distribution with F(k)="
                            +sstream.str()+".");
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk,Iz);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE,Fk,Iz);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -308,9 +314,15 @@ int main(int argc, char** argv)
         }
 
         if (image.get_width() == image.get_height()) {
-            ps_size = image.get_width();
+            if (ps_size != image.get_width()) {
+                std::cerr << startdistfile
+                          << " does not match set GridSize." << std::endl;
 
-            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+                return EXIT_SUCCESS;
+            }
+
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                                   Qb,Ib_unscaled,bl);
 
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
@@ -335,13 +347,24 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmin,qmax,pmin,pmax,bl,dE));
+        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
+                                                        qmin,qmax,
+                                                        pmin,pmax,
+                                                        Qb,Ib_unscaled,
+                                                        bl,dE));
+        if (ps_size != mesh1->nMeshCells(0)) {
+            std::cerr << startdistfile
+                      << " does not match set GridSize." << std::endl;
+
+            delete mesh1;
+            return EXIT_SUCCESS;
+        }
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl);
 
         std::ifstream ifs;
         ifs.open(startdistfile);
@@ -412,12 +435,12 @@ int main(int argc, char** argv)
 
     if (verbose) {
     sstream.str("");
-    sstream << std::scientific << maxval*Ib/f0/physcons::e;
+    sstream << std::scientific << maxval*Ib_scaled/f0/physcons::e;
     Display::printText("Maximum particles per grid cell is "
                        +sstream.str()+".");
     }
 
-    const unsigned int padding =std::max(opts.getPadding(),1u);
+    const double padding =std::max(opts.getPadding(),1.0);
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
@@ -495,27 +518,17 @@ int main(int argc, char** argv)
     SourceMap* wm = nullptr;
     WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
-    std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
         field = new ElectricField(mesh1,impedance);
         Display::printText("Reading WakeFunction from "+wakefile+".");
-        std::ifstream ifs;
-        ifs.open(wakefile);
-
-        while (ifs.good()) {
-            double q,f;
-            ifs >> q >> f;
-            wake.push_back(std::pair<meshaxis_t,double>(q,f));
-        }
-        ifs.close();
-        Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
-                                  wake,interpolationtype,interpol_clamp);
+                                  wakefile,E0,sE,Ib_scaled,dt,
+                                  interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh1,impedance,Ib,E0,sE,dt);
+        field = new ElectricField(mesh1,impedance,Ib_scaled,E0,sE,dt);
         if (gap != 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
@@ -576,7 +589,7 @@ int main(int argc, char** argv)
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
         hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
-                                Ib_unscaled,t_sync_unscaled);
+                                t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -767,12 +780,6 @@ int main(int argc, char** argv)
     delete rm2;
     delete wm;
     delete fpm;
-
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        OCLH::teardownCLEnvironment();
-    }
-    #endif // INOVESA_USE_CL
 
     Display::printText("Finished.");
 

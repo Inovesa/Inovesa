@@ -30,7 +30,7 @@ vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
     :
       KickMap(in,out,xsize,ysize,it,interpol_clamp,DirectionOfKick::x)
 {
-    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
+    const meshaxis_t ycenter = in->getAxis(1)->zerobin();
     for(meshindex_t y=0; y<_ysize; y++) {
         _offset[y] = std::tan(angle)*(y-ycenter);
     }

@@ -47,7 +47,6 @@ public:
              const ElectricField* ef,
              const Impedance* imp,
              const WakeFunctionMap *wfm,
-             const double BunchCurrent,
              const double t_sync);
 
     ~HDF5File();
@@ -73,6 +72,7 @@ public:
     static PhaseSpace readPhaseSpace(std::string fname,
                                      meshaxis_t qmin, meshaxis_t qmax,
                                      meshaxis_t pmin, meshaxis_t pmax,
+                                     double Qb, double Ib_unscaled,
                                      double bl, double dE);
 
 private:
@@ -127,10 +127,6 @@ private: // bunch current
     hsize_t bc_dims;
 
     H5::DSetCreatPropList bc_prop;
-
-    double bc;
-
-    double bc_set;
 
 private: // bunch profile
     static constexpr uint_fast8_t bp_rank = 2;

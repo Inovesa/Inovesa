@@ -85,7 +85,7 @@ public:
     inline uint32_t getOutSteps() const
         { return outsteps; }
 
-    inline uint32_t getPadding() const
+    inline double getPadding() const
         { return padding; }
 
     inline uint32_t getSteps() const
@@ -182,7 +182,7 @@ private: // program parameters
 private: // simulation parameters
     uint32_t meshsize;
     uint32_t outsteps;
-    uint32_t padding;
+    double padding;
     double pq_size;
     double meshshiftx;
     double meshshifty;
