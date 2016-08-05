@@ -25,14 +25,11 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const ElectricField* ef,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
-                         const double BunchCurrent,
                          const double t_sync) :
     _file( nullptr ),
     fname( filename ),
     ta_dims( 0 ),
     bc_dims( 0 ),
-    bc( 0 ),
-    bc_set(BunchCurrent),
     bp_dims( {{ 0, ps->nMeshCells(0) }} ),
     bl_dims( 0 ),
     qb_dims( 0 ),
@@ -91,8 +88,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                   ,H5::PredType::IEEE_F64LE,
                                   H5::DataSpace()).write(
           H5::PredType::IEEE_F64LE,&ax1scale);
-    ax0ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
-    ax1ps_dataset.write(ps->getRuler(0)->data(),axps_datatype);
+    ax0ps_dataset.write(ps->getAxis(0)->data(),axps_datatype);
+    ax1ps_dataset.write(ps->getAxis(0)->data(),axps_datatype);
 
 
     // create group for parameters
@@ -147,8 +144,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
 
     // get ready to save BunchCharge
-    _file->createGroup("BunchCurrent");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t","/BunchCurrent/axis0");
+    _file->createGroup("BunchPopulation");
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t","/BunchPopulation/axis0");
     bc_datatype = H5::PredType::IEEE_F64LE;
 
     hsize_t bc_maxdims = H5S_UNLIMITED;
@@ -160,8 +157,12 @@ vfps::HDF5File::HDF5File(const std::string filename,
     bc_prop.setShuffle();
     bc_prop.setDeflate(compression);
 
-    bc_dataset = _file->createDataSet("/BunchCurrent/data",bc_datatype,
+    bc_dataset = _file->createDataSet("/BunchPopulation/data",bc_datatype,
                                       bc_dataspace,bc_prop);
+    bc_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->current));
+    bc_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->charge));
 
     // get ready to save BunchProfiles
     _file->createGroup("BunchProfile");
@@ -212,6 +213,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     bl_dataset = _file->createDataSet("/BunchLength/data",bl_datatype,
                                       bl_dataspace,bl_prop);
+    bl_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
+    bl_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
 
     // get ready to save BunchPosition
     _file->createGroup("BunchPosition");
@@ -235,6 +240,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     qb_dataset = _file->createDataSet("/BunchPosition/data",qb_datatype,
                                       qb_dataspace,qb_prop);
+    qb_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
+    qb_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
 
 
 
@@ -287,6 +296,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     es_dataset = _file->createDataSet("/EnergySpread/data",es_datatype,
                                       es_dataspace,es_prop);
+    es_dataset.createAttribute("Factor4ElectronVolts",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax1scale);
 
     // get ready to save WakePotential
     _file->createGroup("WakePotential");
@@ -419,8 +430,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file->createGroup("Impedance/data");
     imp_dataset_real = _file->createDataSet("/Impedance/data/real",imp_datatype,
                                             imp_dataspace,imp_prop);
+    imp_dataset_real.createAttribute("Factor4Ohms",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(imp->factor4Ohms));
     imp_dataset_imag = _file->createDataSet("/Impedance/data/imag",imp_datatype,
                                             imp_dataspace,imp_prop);
+    imp_dataset_imag.createAttribute("Factor4Ohms",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(imp->factor4Ohms));
+
 
     std::vector<csrpower_t> imp_real;
     std::vector<csrpower_t> imp_imag;
@@ -609,7 +625,7 @@ void vfps::HDF5File::append(const PhaseSpace* ps, const AppendType at)
         delete memspace;
         delete filespace;
 
-        // append BunchCurrent
+        // append BunchPopulation
         hsize_t bc_offset = bc_dims;
         const hsize_t bc_ext = 1;
         bc_dims++;
@@ -617,7 +633,7 @@ void vfps::HDF5File::append(const PhaseSpace* ps, const AppendType at)
         filespace = new H5::DataSpace(bc_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
         memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
-        bc = ps->getIntegral()*bc_set;
+        double bc = ps->getIntegral();
         bc_dataset.write(&bc, bc_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -661,6 +677,7 @@ void vfps::HDF5File::appendTime(const double t)
 vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
                                                 meshaxis_t qmin,meshaxis_t qmax,
                                                 meshaxis_t pmin,meshaxis_t pmax,
+                                                double Qb, double Ib_unscaled,
                                                 double bl, double dE)
 {
     H5::DataType datatype;
@@ -704,7 +721,7 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    PhaseSpace ps(ps_size,qmin,qmax,pmin,pmax,bl,dE);
+    PhaseSpace ps(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl,dE);
     ps_dataset.read(ps.getData(), datatype, memspace, ps_space);
 
     return ps;

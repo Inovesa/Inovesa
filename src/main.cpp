@@ -202,7 +202,8 @@ int main(int argc, char** argv)
     const double fs = fs_unscaled/isoscale;
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib_unscaled = opts.getBunchCurrent();
-    const double Ib = Ib_unscaled/isoscale;
+    const double Qb = Ib_unscaled/f_rev;
+    const double Ib_scaled = Ib_unscaled/isoscale;
     const double Fk = opts.getStartDistParam();
     const double Iz = opts.getStartDistZoom();
 
@@ -233,7 +234,7 @@ int main(int argc, char** argv)
 
         Ith = Inorm * (0.5+0.34*shield);
 
-        S_csr = Ib/Inorm;
+        S_csr = Ib_scaled/Inorm;
 
         if (verbose) {
             sstream.str("");
@@ -249,7 +250,7 @@ int main(int argc, char** argv)
                                +sstream.str());
             sstream.str("");
             sstream << std::fixed << S_csr;
-            if (Ib > Ith) {
+            if (Ib_scaled > Ith) {
                 sstream << " (> " << 0.5+0.12*shield << ')';
             } else {
                 sstream << " (< " << 0.5+0.12*shield << ')';
@@ -289,7 +290,8 @@ int main(int argc, char** argv)
         sstream << std::fixed << Fk << ", zoom=" << Iz;
         Display::printText("Generating initial distribution with F(k)="
                            +sstream.str()+".");
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Fk,Iz);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE,Fk,Iz);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -313,7 +315,8 @@ int main(int argc, char** argv)
         if (image.get_width() == image.get_height()) {
             ps_size = image.get_width();
 
-            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                                   Qb,Ib_unscaled,bl);
 
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
@@ -338,13 +341,17 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmin,qmax,pmin,pmax,bl,dE));
+        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
+                                                        qmin,qmax,
+                                                        pmin,pmax,
+                                                        Qb,Ib_unscaled,
+                                                        bl,dE));
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl);
 
         std::ifstream ifs;
         ifs.open(startdistfile);
@@ -415,12 +422,12 @@ int main(int argc, char** argv)
 
     if (verbose) {
     sstream.str("");
-    sstream << std::scientific << maxval*Ib/f0/physcons::e;
+    sstream << std::scientific << maxval*Ib_scaled/f0/physcons::e;
     Display::printText("Maximum particles per grid cell is "
                        +sstream.str()+".");
     }
 
-    const unsigned int padding =std::max(opts.getPadding(),1u);
+    const double padding =std::max(opts.getPadding(),1.0);
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
@@ -503,12 +510,12 @@ int main(int argc, char** argv)
         field = new ElectricField(mesh1,impedance);
         Display::printText("Reading WakeFunction from "+wakefile+".");
         wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
-                                  wakefile,E0,sE,Ib,dt,
+                                  wakefile,E0,sE,Ib_scaled,dt,
                                   interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh1,impedance,Ib,E0,sE,dt);
+        field = new ElectricField(mesh1,impedance,Ib_scaled,E0,sE,dt);
         if (gap != 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
@@ -569,7 +576,7 @@ int main(int argc, char** argv)
         opts.save(cfgname);
         Display::printText("Saved configuiration to \""+cfgname+"\".");
         hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
-                                Ib_unscaled,t_sync_unscaled);
+                                t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",

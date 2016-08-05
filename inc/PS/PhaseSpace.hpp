@@ -64,15 +64,18 @@ public:
      *        Fk > 0: Haissinski distribution
      */
     PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
+               const double bunch_charge, const double bunch_current,
                const double Fk=0, const double zoom=1,
                meshindex_t xoffset = 0);
 
     PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+               const double bunch_charge, const double bunch_current,
                const double Fk=0, const double zoom=1);
 
     PhaseSpace(meshindex_t ps_size,
                meshaxis_t xmin, meshaxis_t xmax,
                meshaxis_t ymin, meshaxis_t ymax,
+               const double bunch_charge, const double bunch_current,
                double xscale=0, double yscale=0,
                const double Fk=0, const double zoom=1);
 
@@ -80,42 +83,42 @@ public:
 
     ~PhaseSpace();
 
-	 /**
-	  * @brief getData gives direct access to held data
-	  *
-	  * @return pointer to array holding size<0>()*size<1>() data points
-	  */
-	inline meshdata_t* getData() const
-	{ return _data1D; }
+     /**
+      * @brief getData gives direct access to held data
+      *
+      * @return pointer to array holding size<0>()*size<1>() data points
+      */
+    inline meshdata_t* getData() const
+    { return _data1D; }
 
-	inline meshaxis_t getDelta(const uint_fast8_t x) const
-	{ return _axis[x].delta(); }
+    inline meshaxis_t getDelta(const uint_fast8_t x) const
+    { return _axis[x].delta(); }
 
-	inline meshaxis_t getMax(const uint_fast8_t x) const
-	{ return _axis[x].max(); }
+    inline meshaxis_t getMax(const uint_fast8_t x) const
+    { return _axis[x].max(); }
 
-	inline meshaxis_t getMin(const uint_fast8_t x) const
-	{ return _axis[x].min(); }
+    inline meshaxis_t getMin(const uint_fast8_t x) const
+    { return _axis[x].min(); }
 
-	inline double getScale(const uint_fast8_t x) const
-	{ return _axis[x].scale(); }
+    inline double getScale(const uint_fast8_t x) const
+    { return _axis[x].scale(); }
 
-	/**
-	 * @brief getRuler
-	 * @param x
-	 * @return reference to the Ruler describing mesh in x direction
-	 */
-	inline const Ruler<meshaxis_t>* getRuler(const uint_fast8_t x) const
-	{ return &(_axis[x]); }
+    /**
+     * @brief getAxis
+     * @param x
+     * @return reference to the Axis describing mesh in x direction
+     */
+    inline const Ruler<meshaxis_t>* getAxis(const uint_fast8_t x) const
+    { return &(_axis[x]); }
 
-	meshdata_t average(const uint_fast8_t axis);
+    meshdata_t average(const uint_fast8_t axis);
 
-	integral_t integral();
+    integral_t integral();
 
-	integral_t getIntegral() const
-	{ return _integral; }
+    const integral_t& getIntegral() const
+    { return _integral; }
 
-	meshdata_t variance(const uint_fast8_t axis);
+    meshdata_t variance(const uint_fast8_t axis);
 
     meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
@@ -143,62 +146,77 @@ public:
      */
     integral_t normalize();
 
-	inline meshdata_t* operator[](const meshindex_t i) const
-	{ return _data[i]; }
+    inline meshdata_t* operator[](const meshindex_t i) const
+    { return _data[i]; }
 
-	PhaseSpace& operator=(PhaseSpace other);
+    PhaseSpace& operator=(PhaseSpace other);
 
-	inline size_t nMeshCells() const
-	{ return _axis[0].steps()*_axis[1].steps(); }
+    inline size_t nMeshCells() const
+    { return _axis[0].steps()*_axis[1].steps(); }
 
-	inline size_t nMeshCells(const uint_fast8_t x) const
-	{ return _axis[x].steps(); }
+    inline size_t nMeshCells(const uint_fast8_t x) const
+    { return _axis[x].steps(); }
 
-	inline meshaxis_t size(const uint_fast8_t x) const
-	{ return _axis[x].size(); }
+    inline meshaxis_t size(const uint_fast8_t x) const
+    { return _axis[x].size(); }
 
     inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
         { return _axis[axis][n]; }
 
-	/**
-	 * @brief swap
-	 * @param other
-	 */
-	friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
+    /**
+     * @brief swap
+     * @param other
+     */
+    friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-	#ifdef INOVESA_USE_CL
-	void syncCLMem(clCopyDirection dir);
-	#endif
+    #ifdef INOVESA_USE_CL
+    void syncCLMem(clCopyDirection dir);
+    #endif
 
 protected:
-	const std::array<Ruler<meshaxis_t>,2> _axis;
+    const std::array<Ruler<meshaxis_t>,2> _axis;
 
-	integral_t _integral;
+public:
+    /**
+     * @brief _charge conversion factor _integral -> bunch charge in C
+     */
+    const double charge;
 
-	const std::array<projection_t*,2> _projection;
+    /**
+     * @brief _charge conversion factor _integral -> bunch current in A
+     */
+    const double current;
 
-	const uint32_t _nmeshcellsX;
+protected:
+    /**
+     * @brief _integral as we work in normalitzed units, this should be 1
+     */
+    integral_t _integral;
 
-	const uint32_t _nmeshcellsY;
+    const std::array<projection_t*,2> _projection;
 
-	const size_t _nmeshcells;
+    const uint32_t _nmeshcellsX;
 
-	const IntegralType _integraltype;
+    const uint32_t _nmeshcellsY;
 
-	meshdata_t** _data;
+    const size_t _nmeshcells;
 
-	meshdata_t* _data1D;
+    const IntegralType _integraltype;
 
-	/**
-	 * @brief _moment: holds the moments for distributions
-	 *			in both axis in mesh coordinates
-	 *
-	 * 0: average
-	 * 1: variance
-	 * 2: skewness
-	 * 3: kurtosis
-	 */
-	std::array<std::array<meshdata_t,4>,2> _moment;
+    meshdata_t** _data;
+
+    meshdata_t* _data1D;
+
+    /**
+     * @brief _moment: holds the moments for distributions
+     *            in both axis in mesh coordinates
+     *
+     * 0: average
+     * 1: variance
+     * 2: skewness
+     * 3: kurtosis
+     */
+    std::array<std::array<meshdata_t,4>,2> _moment;
 
     meshdata_t* _ws;
 

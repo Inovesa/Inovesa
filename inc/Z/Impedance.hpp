@@ -68,6 +68,8 @@ public:
 
     cl::Buffer data_buf;
 
+    static constexpr double factor4Ohms = 1;
+
 private:
     size_t _nfreqs;
 

@@ -29,7 +29,7 @@ vfps::RFKickMap::RFKickMap(PhaseSpace *in, PhaseSpace *out,
     :
       KickMap(in,out,xsize,ysize,it,interpol_clamp,DirectionOfKick::y)
 {
-    const meshaxis_t xcenter = in->getRuler(0)->zerobin();
+    const meshaxis_t xcenter = in->getAxis(0)->zerobin();
     for(meshindex_t x=0; x<_xsize; x++) {
         _offset[x] = std::tan(angle)*(xcenter-x);
     }
