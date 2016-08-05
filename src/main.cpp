@@ -213,6 +213,7 @@ int main(int argc, char** argv)
     const float rotations = opts.getNRotations();
     const double t_d = isoscale*opts.getDampingTime();
     const double dt = 1.0/(fs*steps);
+    const double revolutionpart = f0*dt;
     const double t_sync_unscaled = 1.0/fs_unscaled;
 
     /* angle of one rotation step (in rad)
@@ -270,7 +271,7 @@ int main(int argc, char** argv)
 
     if (verbose) {
         sstream.str("");
-        sstream << std::fixed << 1/dt/f0;
+        sstream << std::fixed << 1/revolutionpart;
         Display::printText("Doing " +sstream.str()+
                            " simulation steps per revolution period.");
 
@@ -520,7 +521,7 @@ int main(int argc, char** argv)
     WakeFunctionMap* wfm = nullptr;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
-        field = new ElectricField(mesh1,impedance);
+        field = new ElectricField(mesh1,impedance,revolutionpart);
         Display::printText("Reading WakeFunction from "+wakefile+".");
         wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
                                   wakefile,E0,sE,Ib_scaled,dt,
@@ -528,7 +529,8 @@ int main(int argc, char** argv)
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh1,impedance,Ib_scaled,E0,sE,dt);
+        field = new ElectricField(mesh1,impedance,revolutionpart,
+                                  Ib_scaled,E0,sE,dt);
         if (gap != 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,

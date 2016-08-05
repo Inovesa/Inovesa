@@ -40,10 +40,13 @@ typedef fftwf_complex fft_complex;
 class ElectricField
 {
 public:
+    ElectricField()=delete;
+
     /**
      * @brief ElectricField minimal constructor, will not offer wake function
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation
+     * @param revolutionpart
      * @param wakescaling scaling of wakepotential
      *        (As being part of fourier transform,
      *         delta t and delta f will be automatically taken into account.
@@ -53,6 +56,7 @@ public:
      */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance,
+                  const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
 
     /**
@@ -75,6 +79,7 @@ public:
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
     ElectricField(PhaseSpace* ps, const Impedance* impedance,
+                  const double revolutionpart,
                   const double Ib, const double E0,
                   const double sigmaE, const double dt);
 
@@ -93,7 +98,7 @@ public:
      */
     ElectricField(PhaseSpace* ps,
                   const Impedance* impedance, const double Ib, const double E0,
-                  const double sigmaE, const double dt, const double f0,
+                  const double sigmaE, const double dt, const double rbend,
                   const double fs, const size_t nmax);
 
     ~ElectricField();
@@ -141,6 +146,8 @@ public:
     void syncCLMem(clCopyDirection dir);
     #endif
 
+public:
+    const double volts;
 
 private: // wrappers for FFTW
     enum class fft_direction : uint_fast8_t {

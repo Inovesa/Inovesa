@@ -188,8 +188,15 @@ vfps::HDF5File::HDF5File(const std::string filename,
     bp_prop.setShuffle();
     bp_prop.setDeflate(compression);
 
+    const double bp_factor4ampere = ps->getAxis(0)->delta()*ps->current;
+    const double bp_factor4coulomb = ps->getAxis(0)->delta()*ps->charge;
+
     bp_dataset = _file->createDataSet("/BunchProfile/data",bp_datatype,
                                       bp_dataspace,bp_prop);
+    bp_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&bp_factor4ampere);
+    bp_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&bp_factor4coulomb);
 
     // get ready to save BunchLength
     _file->createGroup("BunchLength");
@@ -271,8 +278,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
     ep_prop.setShuffle();
     ep_prop.setDeflate(compression);
 
+
+    const double ep_factor4ampere = ps->getAxis(1)->delta()*ps->current;
+    const double ep_factor4coulomb = ps->getAxis(1)->delta()*ps->charge;
+
     ep_dataset = _file->createDataSet("/EnergyProfile/data",ep_datatype,
                                       ep_dataspace,ep_prop);
+
+    ep_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ep_factor4ampere);
+    ep_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ep_factor4coulomb);
 
     // get ready to save Energy Spread
     _file->createGroup("EnergySpread");
@@ -324,6 +340,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     wp_dataset = _file->createDataSet("/WakePotential/data",wp_datatype,
                                       wp_dataspace,wp_prop);
+    wp_dataset.createAttribute("Factor4Volts",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &(ef->volts));
 
     // get ready to save CSR Data
     _file->createGroup("CSR/");
