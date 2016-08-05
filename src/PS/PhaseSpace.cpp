@@ -22,8 +22,7 @@
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                              const double bunch_charge,
                              const double bunch_current,
-                             const double Fk,const double zoom,
-                             meshindex_t xoffset) :
+                             const double Fk,const double zoom) :
     _axis(axis),
     charge(bunch_charge),
     current(bunch_current),

@@ -65,8 +65,7 @@ public:
      */
     PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                const double bunch_charge, const double bunch_current,
-               const double Fk=0, const double zoom=1,
-               meshindex_t xoffset = 0);
+               const double Fk=0, const double zoom=1);
 
     PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
                const double bunch_charge, const double bunch_current,
