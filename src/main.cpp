@@ -313,7 +313,12 @@ int main(int argc, char** argv)
         }
 
         if (image.get_width() == image.get_height()) {
-            ps_size = image.get_width();
+            if (ps_size != image.get_width()) {
+                std::cerr << startdistfile
+                          << " does not match set GridSize." << std::endl;
+
+                return EXIT_SUCCESS;
+            }
 
             mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
                                    Qb,Ib_unscaled,bl);
@@ -346,6 +351,12 @@ int main(int argc, char** argv)
                                                         pmin,pmax,
                                                         Qb,Ib_unscaled,
                                                         bl,dE));
+        if (ps_size != mesh1->nMeshCells(0)) {
+            std::cerr << startdistfile
+                      << " does not match set GridSize." << std::endl;
+
+            return EXIT_SUCCESS;
+        }
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
