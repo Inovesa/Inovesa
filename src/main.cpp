@@ -304,9 +304,15 @@ int main(int argc, char** argv)
         }
 
         if (image.get_width() == image.get_height()) {
-            ps_size = image.get_width();
+            if (ps_size != image.get_width()) {
+                std::cerr << startdistfile
+                          << " does not match set GridSize." << std::endl;
 
-            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+                return EXIT_SUCCESS;
+            }
+
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                                   Qb,Ib_unscaled,bl);
 
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
@@ -331,7 +337,18 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmin,qmax,pmin,pmax,bl,dE));
+        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
+                                                        qmin,qmax,
+                                                        pmin,pmax,
+                                                        Qb,Ib_unscaled,
+                                                        bl,dE));
+        if (ps_size != mesh1->nMeshCells(0)) {
+            std::cerr << startdistfile
+                      << " does not match set GridSize." << std::endl;
+
+            delete mesh1;
+            return EXIT_SUCCESS;
+        }
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
