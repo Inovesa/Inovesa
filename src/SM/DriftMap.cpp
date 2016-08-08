@@ -30,9 +30,10 @@ vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
     :
       KickMap(in,out,xsize,ysize,it,interpol_clamp,DirectionOfKick::x)
 {
-    const meshaxis_t ycenter = in->getAxis(1)->zerobin();
+    const Ruler<meshaxis_t>* energy = in->getAxis(1);
+    const meshaxis_t slip = std::tan(angle);
     for(meshindex_t y=0; y<_ysize; y++) {
-        _offset[y] = std::tan(angle)*(y-ycenter);
+        _offset[y] = slip*(*energy)[y]/energy->delta();
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
