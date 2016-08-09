@@ -70,6 +70,9 @@ public:
         delete [] _data;
     }
 
+    inline const meshaxis_t& at(meshindex_t d) const
+        { return _data[d]; }
+
     inline const meshaxis_t* data() const
         { return _data; }
 
@@ -77,16 +80,16 @@ public:
         {return _max;}
 
     inline const meshaxis_t min() const
-        {return _min;}
+        { return _min; }
 
     inline double scale() const
         { return _scale; }
 
     inline meshindex_t steps() const
-        {return _steps;}
+        { return _steps; }
 
     inline const meshaxis_t delta() const
-        {return _delta;}
+        { return _delta; }
 
     inline const meshaxis_t size() const
         { return _max - _min; }
@@ -95,7 +98,7 @@ public:
         { return _zerobin; }
 
     inline const meshaxis_t& operator[](meshindex_t d) const
-        {return _data[d];}
+        { return at(d); }
 
     /**
      * @brief operator == compares grids

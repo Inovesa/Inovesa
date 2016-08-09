@@ -119,6 +119,12 @@ public:
         { return interpol_clamp; }
 
 public:
+    inline double getAlpha0() const
+        { return alpha0; }
+
+    inline double getAlpha1() const
+        { return alpha1; }
+
     inline double getBeamEnergy() const
         { return E_0; }
 
@@ -148,9 +154,6 @@ public:
 
     inline double getStartDistZoom() const
         { return zoom; }
-
-    inline double getSyncFreq() const
-        { return f_s; }
 
     inline double getDampingTime() const
         { return t_d; }
@@ -195,6 +198,9 @@ private: // simulation parameters
     bool interpol_clamp;
 
 private: // phsical parameters
+    double alpha0;
+    double alpha1;
+
     double E_0;
     double Fk;
 
@@ -203,7 +209,6 @@ private: // phsical parameters
      */
     double zoom;
     double f_c;
-    double f_s;
     double f0;
     double g;
     double H;

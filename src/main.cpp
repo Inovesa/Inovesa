@@ -182,9 +182,9 @@ int main(int argc, char** argv)
     const double pmax = pcenter + pqhalf;
     const double pmin = pcenter - pqhalf;
 
-    const double sE = opts.getEnergySpread();
-    const double E0 = opts.getBeamEnergy();
-    const double dE = sE*E0;
+    const double sE = opts.getEnergySpread(); // relative energy spread
+    const double E0 = opts.getBeamEnergy(); // relative energy spread
+    const double dE = sE*E0; // absolute energy spread
     const double f_rev = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
     const double R_bend = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f_rev);
@@ -199,8 +199,14 @@ int main(int argc, char** argv)
     const double H = isoscale*opts.getHarmonicNumber();
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
-    const double fs_unscaled = opts.getSyncFreq();
-    const double fs = fs_unscaled/isoscale;
+    const double alpha0 = opts.getAlpha0();
+    const double alpha1 = opts.getAlpha1()/alpha0; // relative alpha1
+
+    // synchrotron frequency (isomagnetic ring)
+    const double fs = f0*std::sqrt(alpha0*H*V/(2*M_PI*E0));
+    const double fs_unscaled = fs*isoscale; // real synchrotron frequency
+
+    // natural RMS bunch length
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;

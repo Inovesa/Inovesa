@@ -24,16 +24,15 @@
 vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
                          const meshindex_t xsize,
                          const meshindex_t ysize,
-                         const meshaxis_t angle,
+                         const meshaxis_t slip0,
                          const InterpolationType it,
                          const bool interpol_clamp)
     :
       KickMap(in,out,xsize,ysize,it,interpol_clamp,DirectionOfKick::x)
 {
     const Ruler<meshaxis_t>* energy = in->getAxis(1);
-    const meshaxis_t slip = std::tan(angle);
     for(meshindex_t y=0; y<_ysize; y++) {
-        _offset[y] = slip*(*energy)[y]/energy->delta();
+        _offset[y] = (slip0*energy->at(y))/energy->delta();
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
