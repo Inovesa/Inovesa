@@ -125,6 +125,9 @@ public:
     inline double getAlpha1() const
         { return alpha1; }
 
+    inline double getAlpha2() const
+        { return alpha2; }
+
     inline double getBeamEnergy() const
         { return E_0; }
 
@@ -200,6 +203,7 @@ private: // simulation parameters
 private: // phsical parameters
     double alpha0;
     double alpha1;
+    double alpha2;
 
     double E_0;
     double Fk;

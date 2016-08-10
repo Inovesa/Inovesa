@@ -24,7 +24,8 @@
 vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
                          const meshindex_t xsize,
                          const meshindex_t ysize,
-                         const meshaxis_t slip0,
+                         const std::vector<meshaxis_t> slip,
+                         const double E0,
                          const InterpolationType it,
                          const bool interpol_clamp)
     :
@@ -32,7 +33,12 @@ vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
 {
     const Ruler<meshaxis_t>* energy = in->getAxis(1);
     for(meshindex_t y=0; y<_ysize; y++) {
-        _offset[y] = (slip0*energy->at(y))/energy->delta();
+        _offset[y] = 0;
+        for (size_t i=0; i<slip.size(); i++) {
+            _offset[y] += slip[i]*energy->at(y)
+                       *  std::pow(energy->at(y)*energy->scale()/E0,i);
+        }
+        _offset[y] /= energy->delta();
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

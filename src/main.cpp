@@ -199,8 +199,9 @@ int main(int argc, char** argv)
     const double H = isoscale*opts.getHarmonicNumber();
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
-    const double alpha0 = opts.getAlpha0();
-    const double alpha1 = opts.getAlpha1()/alpha0; // relative alpha1
+    const meshaxis_t alpha0 = opts.getAlpha0();
+    const meshaxis_t alpha1 = opts.getAlpha1();
+    const meshaxis_t alpha2 = opts.getAlpha2();
 
     // synchrotron frequency (isomagnetic ring)
     const double fs = f0*std::sqrt(alpha0*H*V/(2*M_PI*E0));
@@ -225,7 +226,7 @@ int main(int argc, char** argv)
     /* angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
-    const double angle = 2*M_PI/steps;
+    const meshaxis_t angle = 2*M_PI/steps;
 
     std::string startdistfile = opts.getStartDistFile();
     double shield = 0;
@@ -499,8 +500,9 @@ int main(int argc, char** argv)
                             interpolationtype,interpol_clamp);
 
         Display::printText("Building DriftMap.");
-        rm2 = new DriftMap(mesh1,mesh3,ps_size,ps_size,angle,
-                           interpolationtype,interpol_clamp);
+        rm2 = new DriftMap(mesh1,mesh3,ps_size,ps_size,
+                           {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}},
+                           E0,interpolationtype,interpol_clamp);
         break;
     }
 
