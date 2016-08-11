@@ -32,7 +32,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("version", "print version string")
     ;
     _physopts.add_options()
-        ("alpha0", po::value<double>(&alpha0)->default_value(4e-3),
+        ("alpha0", po::value<double>(&alpha0)->default_value(4e-3,"4e-3"),
             "Linear Momentum compaction factor (1)")
         ("alpha1", po::value<double>(&alpha1)->default_value(0),
             "Quadratic Momentum compaction factor (1)")

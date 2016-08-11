@@ -196,16 +196,19 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
-    const double H = isoscale*opts.getHarmonicNumber();
+    const double H_unscaled = opts.getHarmonicNumber();
+    const double H = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
     const meshaxis_t alpha0 = opts.getAlpha0();
     const meshaxis_t alpha1 = opts.getAlpha1();
     const meshaxis_t alpha2 = opts.getAlpha2();
 
+    // real synchrotron frequency
+    const double fs_unscaled = f_rev*std::sqrt(alpha0*H_unscaled*V/(2*M_PI*E0));
+
     // synchrotron frequency (isomagnetic ring)
-    const double fs = f0*std::sqrt(alpha0*H*V/(2*M_PI*E0));
-    const double fs_unscaled = fs*isoscale; // real synchrotron frequency
+    const double fs = fs_unscaled/isoscale;
 
     // natural RMS bunch length
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
