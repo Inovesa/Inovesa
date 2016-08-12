@@ -178,7 +178,13 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
                 << INOVESA_VERSION_MINOR;
         std::string version(sstream.str());
-        sstream << '.' << INOVESA_VERSION_FIX;
+        if ( INOVESA_VERSION_FIX >= 0 ) {
+            sstream << '.' << INOVESA_VERSION_FIX;
+        } else if ( INOVESA_VERSION_FIX == -1 ) {
+            sstream << " beta";
+        } else if ( INOVESA_VERSION_FIX == -2 ) {
+            sstream << " alpha";
+        }
         if (std::string(GIT_BRANCH) != version) {
             sstream << ", Branch: "<< GIT_BRANCH;
         }
@@ -218,14 +224,21 @@ void vfps::ProgramOptions::save(std::string fname)
 {
     std::ofstream ofs(fname.c_str());
 
-    ofs << "#Inovesa v"
-        << INOVESA_VERSION_RELEASE << '.'
-        << INOVESA_VERSION_MINOR << '.'
-        << INOVESA_VERSION_FIX;
-    if (std::string(GIT_BRANCH) != "stable") {
-        ofs << " (Branch: " GIT_BRANCH ")";
+    std::stringstream sstream;
+    sstream << "#Inovesa v" << INOVESA_VERSION_RELEASE << '.'
+            << INOVESA_VERSION_MINOR;
+    std::string version(sstream.str());
+    if ( INOVESA_VERSION_FIX >= 0 ) {
+        sstream << '.' << INOVESA_VERSION_FIX;
+    } else if ( INOVESA_VERSION_FIX == -1 ) {
+        sstream << " beta";
+    } else if ( INOVESA_VERSION_FIX == -2 ) {
+        sstream << " alpha";
     }
-    ofs << std::endl;
+    if (std::string(GIT_BRANCH) != version) {
+        sstream << ", Branch: "<< GIT_BRANCH;
+    }
+    ofs << sstream.str() << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         if (!it->second.value().empty()) {

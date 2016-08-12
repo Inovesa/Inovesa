@@ -84,7 +84,13 @@ int main(int argc, char** argv)
     sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
             << INOVESA_VERSION_MINOR;
     std::string version(sstream.str());
-    sstream << '.' << INOVESA_VERSION_FIX;
+    if ( INOVESA_VERSION_FIX >= 0 ) {
+        sstream << '.' << INOVESA_VERSION_FIX;
+    } else if ( INOVESA_VERSION_FIX == -1 ) {
+        sstream << " beta";
+    } else if ( INOVESA_VERSION_FIX == -2 ) {
+        sstream << " alpha";
+    }
     if (std::string(GIT_BRANCH) != version) {
         sstream << ", Branch: "<< GIT_BRANCH;
     }
