@@ -369,8 +369,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csr_prop.setShuffle();
     csr_prop.setDeflate(compression);
 
+    const double csr_factor4watts = std::pow(bp_factor4ampere,2)
+                                  * imp->factor4Ohms;
+
     csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
                                        csr_dataspace,csr_prop);
+    csr_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
 
     // get ready to save CSR Intensity
     _file->createGroup("CSR/Intensity");
@@ -394,6 +399,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     csri_dataset = _file->createDataSet("/CSR/Intensity/data",csri_datatype,
                                         csrp_dataspace,csri_prop);
+
+    csri_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
 
     // get ready to save PhaseSpace
     _file->createGroup("PhaseSpace");
@@ -427,6 +435,18 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _ps_dataset = _file->createDataSet("/PhaseSpace/data",ps_datatype,
                                        ps_dataspace,ps_prop);
 
+    const double ps_factor4ampere = ps->getAxis(0)->delta()
+                                  * ps->getAxis(1)->delta()
+                                  * ps->current;
+    const double ps_factor4coulomb = ps->getAxis(0)->delta()
+                                   * ps->getAxis(1)->delta()
+                                   * ps->charge;
+
+    _ps_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ps_factor4ampere);
+    _ps_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ps_factor4coulomb);
+
     // save Impedance
     _file->createGroup("Impedance");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/Impedance/axis0" );
@@ -446,15 +466,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
     imp_prop.setShuffle();
     imp_prop.setDeflate(compression);
 
-    _file->createGroup("Impedance/data");
+    _file->createGroup("Impedance/data").createAttribute
+        ("Factor4Ohms",H5::PredType::IEEE_F64LE,
+         H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(imp->factor4Ohms));
     imp_dataset_real = _file->createDataSet("/Impedance/data/real",imp_datatype,
                                             imp_dataspace,imp_prop);
-    imp_dataset_real.createAttribute("Factor4Ohms",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(imp->factor4Ohms));
     imp_dataset_imag = _file->createDataSet("/Impedance/data/imag",imp_datatype,
                                             imp_dataspace,imp_prop);
-    imp_dataset_imag.createAttribute("Factor4Ohms",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(imp->factor4Ohms));
 
 
     std::vector<csrpower_t> imp_real;
@@ -469,39 +487,39 @@ vfps::HDF5File::HDF5File(const std::string filename,
     imp_dataset_imag.write(imp_imag.data(),imp_datatype);
 
     if (wfm != nullptr ) {
-    // save Wake Function
-    _file->createGroup("WakeFunction");
+        // save Wake Function
+        _file->createGroup("WakeFunction");
 
-    if (std::is_same<vfps::meshaxis_t,float>::value) {
-        wf_datatype = H5::PredType::IEEE_F32LE;
-    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
-        wf_datatype = H5::PredType::STD_I64LE;
-    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
-        wf_datatype = H5::PredType::IEEE_F64LE;
-    }
+        if (std::is_same<vfps::meshaxis_t,float>::value) {
+            wf_datatype = H5::PredType::IEEE_F32LE;
+        } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            wf_datatype = H5::PredType::STD_I64LE;
+        } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            wf_datatype = H5::PredType::IEEE_F64LE;
+        }
 
-    H5::DataSpace wf_dataspace(wf_rank,&wf_size,&wf_size);
+        H5::DataSpace wf_dataspace(wf_rank,&wf_size,&wf_size);
 
-    const hsize_t wf_chunkdims = std::min(hsize_t(4096),wf_size);
-    wf_prop.setChunk(wf_rank,&wf_chunkdims);
-    wf_prop.setShuffle();
-    wf_prop.setDeflate(compression);
+        const hsize_t wf_chunkdims = std::min(hsize_t(4096),wf_size);
+        wf_prop.setChunk(wf_rank,&wf_chunkdims);
+        wf_prop.setShuffle();
+        wf_prop.setDeflate(compression);
 
-    wf_dataset = _file->createDataSet("/WakeFunction/data",wf_datatype,
-                                      wf_dataspace,wf_prop);
+        wf_dataset = _file->createDataSet("/WakeFunction/data",wf_datatype,
+                                          wf_dataspace,wf_prop);
 
-    wf_dataset.write(wfm->getWakeFunction(),wf_datatype);
+        wf_dataset.write(wfm->getWakeFunction(),wf_datatype);
     }
 
     // save Inovesa version
-        std::array<hsize_t,1> version_dims {{3}};
-        H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
-        H5::DataSet version_dset = _file->createDataSet
-                        ("/Info/INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
-        std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
-                                        INOVESA_VERSION_MINOR,
-                                        INOVESA_VERSION_FIX}};
-        version_dset.write(version.data(),H5::PredType::NATIVE_INT);
+    std::array<hsize_t,1> version_dims {{3}};
+    H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
+    H5::DataSet version_dset = _file->createDataSet
+                    ("/Info/INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
+    std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
+                                    INOVESA_VERSION_MINOR,
+                                    INOVESA_VERSION_FIX}};
+    version_dset.write(version.data(),H5::PredType::NATIVE_INT);
 }
 
 vfps::HDF5File::~HDF5File()
