@@ -278,6 +278,9 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
     _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
+        OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
+                                          cl::NDRange(_bpmeshcells));
+        OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
                           &_bp_padded_buf(),&_formfactor_buf(),nullptr);
