@@ -105,7 +105,7 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         {
             const int x = get_global_id(0);
             const int meshoffs = x*meshsize;
-            const int dyi = floor(dy[x]);
+            const int dyi = clamp(floor(dy[x]),-meshsize,meshsize);
             const data_t dyf = dy[x] - dyi;
             data_t value;
             int y=0;
