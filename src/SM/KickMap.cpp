@@ -54,7 +54,7 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                                   __global data_t* dst)
         {
             const int y = get_global_id(0);
-            const int dxi = floor(dx[y]);
+            const int dxi = clamp((int)(floor(dx[y])),-meshsize,meshsize);
             const data_t dxf = dx[y] - dxi;
             data_t value;
             int x=0;
@@ -105,7 +105,7 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         {
             const int x = get_global_id(0);
             const int meshoffs = x*meshsize;
-            const int dyi = clamp(floor(dy[x]),-meshsize,meshsize);
+            const int dyi = clamp((int)(floor(dy[x])),-meshsize,meshsize);
             const data_t dyf = dy[x] - dyi;
             data_t value;
             int y=0;
