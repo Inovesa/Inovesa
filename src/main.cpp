@@ -323,11 +323,14 @@ int main(int argc, char** argv)
         } catch ( const png::std_error &e ) {
             std::cerr << e.what() << std::endl;
             return EXIT_SUCCESS;
-        }
-        catch ( const png::error &e ) {
+        } catch ( const png::error &e ) {
             std::cerr << "Problem loading " << startdistfile
                       << ": " << e.what() << std::endl;
             return EXIT_SUCCESS;
+        } catch (...) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\".";
+            return EXIT_FAILURE;
         }
 
         if (image.get_width() == image.get_height()) {
@@ -364,11 +367,26 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
-                                                        qmin,qmax,
-                                                        pmin,pmax,
-                                                        Qb,Ib_unscaled,
-                                                        bl,dE));
+        try {
+            mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
+                                                            qmin,qmax,
+                                                            pmin,pmax,
+                                                            Qb,Ib_unscaled,
+                                                            bl,dE));
+        } catch (const std::exception& ex) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\":"
+                      << ex.what() << std::endl;
+            return EXIT_SUCCESS;
+        } catch (const H5::Exception& ex) {
+            ex.printErrorStack();
+            return EXIT_SUCCESS;
+        } catch (...) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\".";
+            return EXIT_FAILURE;
+        }
+
         if (ps_size != mesh1->nMeshCells(0)) {
             std::cerr << startdistfile
                       << " does not match set GridSize." << std::endl;
@@ -384,7 +402,18 @@ int main(int argc, char** argv)
         mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl);
 
         std::ifstream ifs;
-        ifs.open(startdistfile);
+        try {
+            ifs.open(startdistfile);
+        } catch (const std::exception& ex) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\":"
+                      << ex.what() << std::endl;
+            return EXIT_SUCCESS;
+        } catch (...) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\".";
+            return EXIT_FAILURE;
+        }
 
         ifs.unsetf(std::ios_base::skipws);
 
