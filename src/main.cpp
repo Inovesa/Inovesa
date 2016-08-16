@@ -598,15 +598,8 @@ int main(int argc, char** argv)
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
       || isOfFileType(".hdf5",ofname) ) {
-        std::string cfgname;
-        if (isOfFileType(".h5",ofname)) {
-            cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
-        }
-        if (isOfFileType(".hdf5",ofname)) {
-            cfgname = ofname.substr(0,ofname.find(".hdf5"))+".cfg";
-        }
-        opts.save(cfgname);
-        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        opts.save(ofname+".cfg");
+        Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
                                 t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
@@ -619,9 +612,8 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
     if ( isOfFileType(".png",ofname)) {
-        std::string cfgname = ofname.substr(0,ofname.find(".png"))+".cfg";
-        opts.save(cfgname);
-        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        opts.save(ofname+".cfg");
+        Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_PNG
