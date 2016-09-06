@@ -59,6 +59,10 @@ typedef data_t timeaxis_t;
 
 typedef integral_t projection_t;
 
+const std::string copyright_notice();
+
+const std::string inovesa_version();
+
 namespace physcons
 {
 /// speed of light (in m/s)

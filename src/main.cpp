@@ -80,21 +80,6 @@ int main(int argc, char** argv)
     std::string timestring = sstream.str();
     timestring.resize(timestring.size()-1);
 
-    sstream.str("");
-    sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
-            << INOVESA_VERSION_MINOR;
-    std::string version(sstream.str());
-    if ( INOVESA_VERSION_FIX >= 0 ) {
-        sstream << '.' << INOVESA_VERSION_FIX;
-    } else if ( INOVESA_VERSION_FIX == -1 ) {
-        sstream << " beta";
-    } else if ( INOVESA_VERSION_FIX == -2 ) {
-        sstream << " alpha";
-    }
-    if (std::string(GIT_BRANCH) != version) {
-        sstream << ", Branch: "<< GIT_BRANCH;
-    }
-
     std::string ofname = opts.getOutFile();
     #ifdef INOVESA_USE_CL
     if (opts.getCLDevice() >= 0)
@@ -104,7 +89,7 @@ int main(int argc, char** argv)
         Display::logfile.open(ofname+".log");
     }
     Display::printText("Started Inovesa ("
-                       +sstream.str()+") at "+timestring);
+                       +vfps::inovesa_version()+") at "+timestring);
     if (ofname != "/dev/null") {
         Display::printText("Will create log at \""+ofname+".log\".");
     }
