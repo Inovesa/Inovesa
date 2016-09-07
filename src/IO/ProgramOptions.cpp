@@ -75,8 +75,9 @@ vfps::ProgramOptions::ProgramOptions() :
             ">0: parallel plates CSR")
         ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
             "Beamline cutoff frequency (Hz)")
-        ("RFVoltage,V", po::value<double>(&V_RF)->default_value(1e6,"1e6"),
-            "Accelerating Voltage (V)")
+        ("AcceleratingVoltage,V",
+            po::value<double>(&V_RF)->default_value(1e6,"1e6"),
+            "Accelerating Voltage (V) for one revolution")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing wake function.")
     ;
