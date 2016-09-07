@@ -29,6 +29,7 @@ vfps::ProgramOptions::ProgramOptions() :
 {
     _proginfoopts.add_options()
         ("help,h", "print help message")
+        ("copyright", "print copyright information")
         ("version", "print version string")
     ;
     _physopts.add_options()
@@ -174,22 +175,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << _visibleopts << std::endl;
         return false;
     }
+    if (_vm.count("copyright")) {
+        std::cout << vfps::copyright_notice() << std::endl;
+        return false;
+    }
     if (_vm.count("version")) {
-        std::stringstream sstream;
-        sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
-                << INOVESA_VERSION_MINOR;
-        std::string version(sstream.str());
-        if ( INOVESA_VERSION_FIX >= 0 ) {
-            sstream << '.' << INOVESA_VERSION_FIX;
-        } else if ( INOVESA_VERSION_FIX == -1 ) {
-            sstream << " beta";
-        } else if ( INOVESA_VERSION_FIX == -2 ) {
-            sstream << " alpha";
-        }
-        if (std::string(GIT_BRANCH) != version) {
-            sstream << ", Branch: "<< GIT_BRANCH;
-        }
-        std::cout << sstream.str() << std::endl;
+        std::cout << vfps::inovesa_version() << std::endl;
         return false;
     }
     if (boost::filesystem::exists(_configfile) &&
@@ -225,21 +216,7 @@ void vfps::ProgramOptions::save(std::string fname)
 {
     std::ofstream ofs(fname.c_str());
 
-    std::stringstream sstream;
-    sstream << "#Inovesa v" << INOVESA_VERSION_RELEASE << '.'
-            << INOVESA_VERSION_MINOR;
-    std::string version(sstream.str());
-    if ( INOVESA_VERSION_FIX >= 0 ) {
-        sstream << '.' << INOVESA_VERSION_FIX;
-    } else if ( INOVESA_VERSION_FIX == -1 ) {
-        sstream << " beta";
-    } else if ( INOVESA_VERSION_FIX == -2 ) {
-        sstream << " alpha";
-    }
-    if (std::string(GIT_BRANCH) != version) {
-        sstream << ", Branch: "<< GIT_BRANCH;
-    }
-    ofs << sstream.str() << std::endl;
+    ofs << vfps::inovesa_version() << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         if (!it->second.value().empty()) {

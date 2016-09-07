@@ -1,6 +1,6 @@
 /******************************************************************************/
 /* Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   */
-/* Copyright (c) 2014-2016: Patrik Schönfeldt                                 */
+/* Copyright (c) 2012-2016: Patrik Schönfeldt                                 */
 /*                                                                            */
 /* This file is part of Inovesa.                                              */
 /* Inovesa is free software: you can redistribute it and/or modify            */

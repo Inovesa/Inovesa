@@ -24,6 +24,7 @@ set(SRC_LIST
   ./src/Z/Impedance.cpp
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
+  ./src/defines.cpp
   ./src/main.cpp
 )
 
