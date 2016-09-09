@@ -85,6 +85,8 @@ public:
      */
     virtual void apply();
 
+    virtual void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const {}
+
 protected:
     /**
      * @brief _ip holds the total number of points used for interpolation
