@@ -189,6 +189,17 @@ void vfps::RotationMap::apply()
     }
 }
 
+void vfps::RotationMap::applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const
+{
+    meshaxis_t x_tmp = _cos_dt*meshaxis_t(x-(_xsize-1)/2.0)
+                     + _sin_dt*meshaxis_t(y-(_ysize-1)/2.0)
+                     + meshaxis_t((_xsize-1)/2.0);
+    y                = _cos_dt*meshaxis_t(y-(_ysize-1)/2.0)
+                     - _sin_dt*meshaxis_t(x-(_xsize-1)/2.0)
+                     + meshaxis_t((_ysize-1)/2.0);
+    x = x_tmp;
+}
+
 void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
                                  vfps::meshindex_t p_i,
                                  vfps::SourceMap::hi* myhinfo)

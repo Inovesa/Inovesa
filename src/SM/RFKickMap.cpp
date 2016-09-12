@@ -27,7 +27,7 @@ vfps::RFKickMap::RFKickMap(PhaseSpace *in, PhaseSpace *out,
                            const InterpolationType it,
                            const bool interpol_clamp)
     :
-      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::x,Axis::y)
+      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y)
 {
     const meshaxis_t xcenter = in->getAxis(0)->zerobin();
     for(meshindex_t x=0; x<_xsize; x++) {

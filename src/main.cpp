@@ -655,12 +655,16 @@ int main(int argc, char** argv)
         csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
     }
 
+    std::ofstream ofile("track.txt");
+    meshaxis_t x = 64;
+    meshaxis_t y = 64;
     Display::printText("Starting the simulation.");
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
             wkm->update();
         }
         if (outstep > 0 && i%outstep == 0) {
+            ofile << x << '\t' << y << std::endl;
             outstepnr++;
             integral_t meshintegral; // normalized charge (should be 1)
             if (renormalize) {
@@ -727,12 +731,17 @@ int main(int argc, char** argv)
             Display::printText(status.str(),2.0f);
         }
         wm->apply();
+        //wm->applyTo(x,y);
         rm1->apply();
+        rm1->applyTo(x,y);
         if (rm2 != nullptr) {
             rm2->apply();
+            rm2->applyTo(x,y);
         }
         fpm->apply();
+        fpm->applyTo(x,y);
     }
+    ofile.close();
 
     #ifdef INOVESA_USE_HDF5
     // save final result

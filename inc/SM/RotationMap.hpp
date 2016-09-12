@@ -61,6 +61,13 @@ public:
      */
     void apply();
 
+    /**
+     * @brief applyTo
+     * @param x
+     * @param y
+     */
+    void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const;
+
 private:
     const uint32_t _rotmapsize;
 

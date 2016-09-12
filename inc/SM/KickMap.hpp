@@ -27,6 +27,11 @@ namespace vfps
 
 /**
  * @brief The KickMap class allows to apply position dependent forces
+ * and energy dependent displacements.
+ *
+ * For the KickMap the displacement is perpendicular to the gradient
+ * on how large the displacement shall be.
+ *
  */
 class KickMap : public SourceMap
 {
@@ -39,7 +44,7 @@ public:
     KickMap(PhaseSpace* in, PhaseSpace* out,
             const meshindex_t xsize, const meshindex_t ysize,
             const InterpolationType it, const bool interpol_clamp,
-            const Axis dd, const Axis kd);
+            const Axis kd);
 
     ~KickMap();
 
@@ -65,11 +70,6 @@ protected:
     #ifdef INOVESA_USE_CL
     cl::Buffer _offset_buf;
     #endif
-
-    /**
-     * @brief _kickdirection direction of the offset du to the kick
-     */
-    const Axis _datadirection;
 
     /**
      * @brief _kickdirection direction of the offset du to the kick

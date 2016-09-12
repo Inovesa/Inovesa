@@ -60,6 +60,14 @@ public:
             std::copy_n(data_in,_size,data_out);
         }
     }
+
+    /**
+     * @brief applyTo does nothing
+     * @param x
+     * @param y
+     */
+    void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const
+      { return; }
 };
 
 }

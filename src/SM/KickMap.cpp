@@ -22,10 +22,9 @@
 vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                         const meshindex_t xsize, const meshindex_t ysize,
                         const InterpolationType it, const bool interpol_clamp,
-                        const Axis dd, const Axis kd) :
+                        const Axis kd) :
     SourceMap(in,out,kd==Axis::x?1:xsize,
                      kd==Axis::x?ysize:1,it,it),
-    _datadirection(dd),
     _kickdirection(kd),
     _meshsize_kd(kd==Axis::x?xsize:ysize),
     _meshsize_pd(kd==Axis::x?ysize:xsize)
@@ -236,20 +235,20 @@ void vfps::KickMap::apply()
 
 void vfps::KickMap::applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const
 {
-    meshaxis_t kick;
-
-    if (_datadirection == Axis::x) {
-        uint32_t xi = std::floor(x);
-        kick = _offset[xi];
-    } else {
-        uint32_t yi = std::floor(y);
-        kick = _offset[yi];
-    }
-
     if (_kickdirection == Axis::x) {
-        x -= kick;
+        meshindex_t yi = std::floor(y);
+        if (yi < static_cast<meshindex_t>(_meshsize_pd)) {
+            x -= _offset[yi];
+        }
+        x = std::max(static_cast<meshaxis_t>(1),
+                     std::min(x,static_cast<meshaxis_t>(_meshsize_kd-1)));
     } else {
-        y -= kick;
+        meshindex_t xi = std::floor(x);
+        if (xi < static_cast<meshindex_t>(_meshsize_pd)) {
+            y -= _offset[xi];
+        }
+        y = std::max(static_cast<meshaxis_t>(1),
+                     std::min(y,static_cast<meshaxis_t>(_meshsize_kd-1)));
     }
 }
 

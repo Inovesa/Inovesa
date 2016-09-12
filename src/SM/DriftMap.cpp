@@ -29,7 +29,7 @@ vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
                          const InterpolationType it,
                          const bool interpol_clamp)
     :
-      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y,Axis::x)
+      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::x)
 {
     const Ruler<meshaxis_t>* energy = in->getAxis(1);
     for(meshindex_t y=0; y<_ysize; y++) {

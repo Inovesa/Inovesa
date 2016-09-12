@@ -69,6 +69,8 @@ public:
 	 */
 	void apply();
 
+    void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const;
+
 private:
 	/**
 	 * @brief _meshxsize horizontal size of the meshaxis_t
