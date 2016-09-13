@@ -69,7 +69,7 @@ public:
 	 */
 	void apply();
 
-    void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const;
+    PhaseSpace::position apply(PhaseSpace::position pos) const;
 
 private:
 	/**

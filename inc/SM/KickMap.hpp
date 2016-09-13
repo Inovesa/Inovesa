@@ -55,7 +55,7 @@ public:
 public:
     void apply();
 
-    void applyTo(meshaxis_t &x, meshaxis_t &y) const;
+    PhaseSpace::position apply(PhaseSpace::position pos) const;
 
     #ifdef INOVESA_USE_CL
     void syncCLMem(clCopyDirection dir);

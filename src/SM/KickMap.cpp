@@ -233,23 +233,25 @@ void vfps::KickMap::apply()
     }
 }
 
-void vfps::KickMap::applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const
+vfps::PhaseSpace::position
+vfps::KickMap::apply(PhaseSpace::position pos) const
 {
     if (_kickdirection == Axis::x) {
-        meshindex_t yi = std::floor(y);
+        meshindex_t yi = std::floor(pos.y);
         if (yi < static_cast<meshindex_t>(_meshsize_pd)) {
-            x -= _offset[yi];
+            pos.x -= _offset[yi];
         }
-        x = std::max(static_cast<meshaxis_t>(1),
-                     std::min(x,static_cast<meshaxis_t>(_meshsize_kd-1)));
+        pos.x = std::max(static_cast<meshaxis_t>(1),
+                     std::min(pos.x,static_cast<meshaxis_t>(_meshsize_kd-1)));
     } else {
-        meshindex_t xi = std::floor(x);
+        meshindex_t xi = std::floor(pos.x);
         if (xi < static_cast<meshindex_t>(_meshsize_pd)) {
-            y -= _offset[xi];
+            pos.y -= _offset[xi];
         }
-        y = std::max(static_cast<meshaxis_t>(1),
-                     std::min(y,static_cast<meshaxis_t>(_meshsize_kd-1)));
+        pos.y = std::max(static_cast<meshaxis_t>(1),
+                     std::min(pos.y,static_cast<meshaxis_t>(_meshsize_kd-1)));
     }
+    return pos;
 }
 
 #ifdef INOVESA_USE_CL

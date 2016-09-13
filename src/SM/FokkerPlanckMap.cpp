@@ -198,18 +198,20 @@ void vfps::FokkerPlanckMap::apply()
     }
 }
 
-void vfps::FokkerPlanckMap::applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const
+vfps::PhaseSpace::position
+vfps::FokkerPlanckMap::apply(PhaseSpace::position pos) const
 {
-    meshindex_t yi = std::min(static_cast<meshindex_t>(std::floor(y)),_ysize);
+    meshindex_t yi = std::min(static_cast<meshindex_t>(std::floor(pos.y)),_ysize);
     interpol_t offset = 0;
 
     for (uint_fast8_t j=0; j<_ip; j++) {
         hi h = _hinfo[yi*_ip+j];
-        interpol_t dy = static_cast<interpol_t>(y)
+        interpol_t dy = static_cast<interpol_t>(yi)
                       - static_cast<interpol_t>(h.index);
         offset += dy*h.weight;
     }
-    y = std::max(static_cast<meshaxis_t>(1),
-                 std::min(y+offset,static_cast<meshaxis_t>(_ysize-1)));
+    pos.y = std::max(static_cast<meshaxis_t>(1),
+                     std::min(pos.y+offset,static_cast<meshaxis_t>(_ysize-1)));
+    return pos;
 }
 

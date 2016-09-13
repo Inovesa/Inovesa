@@ -66,7 +66,7 @@ public:
      * @param x
      * @param y
      */
-    void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const;
+    PhaseSpace::position apply(const PhaseSpace::position pos) const;
 
 private:
     const uint32_t _rotmapsize;

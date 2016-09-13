@@ -85,7 +85,7 @@ public:
      */
     virtual void apply();
 
-    virtual void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const =0;
+    virtual PhaseSpace::position apply(PhaseSpace::position pos) const =0;
 
 protected:
     /**

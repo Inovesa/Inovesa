@@ -66,8 +66,8 @@ public:
      * @param x
      * @param y
      */
-    void applyTo(vfps::meshaxis_t &x, vfps::meshaxis_t &y) const
-      { return; }
+    PhaseSpace::position apply(const PhaseSpace::position pos) const
+        { return pos; }
 };
 
 }
