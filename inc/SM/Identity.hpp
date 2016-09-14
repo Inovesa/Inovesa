@@ -66,7 +66,7 @@ public:
      * @param x
      * @param y
      */
-    PhaseSpace::position apply(const PhaseSpace::position pos) const
+    PhaseSpace::Position apply(const PhaseSpace::Position pos) const
         { return pos; }
 };
 

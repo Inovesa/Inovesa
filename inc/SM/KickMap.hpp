@@ -55,7 +55,7 @@ public:
 public:
     void apply();
 
-    PhaseSpace::position apply(PhaseSpace::position pos) const;
+    PhaseSpace::Position apply(PhaseSpace::Position pos) const;
 
     #ifdef INOVESA_USE_CL
     void syncCLMem(clCopyDirection dir);

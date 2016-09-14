@@ -47,6 +47,7 @@ public:
              const ElectricField* ef,
              const Impedance* imp,
              const WakeFunctionMap *wfm,
+             const size_t nparticles,
              const double t_sync);
 
     ~HDF5File();
@@ -61,6 +62,8 @@ public:
     enum class AppendType : uint_fast16_t {
         All, Defaults, PhaseSpace
     };
+
+    void append(const PhaseSpace::Position *particles);
 
     void append(const PhaseSpace* ps, const AppendType at=AppendType::Defaults);
 
@@ -182,6 +185,19 @@ private: // energy spread
     hsize_t es_dims;
 
     H5::DSetCreatPropList es_prop;
+
+private: // particles (tracking)
+    static constexpr uint_fast8_t pt_rank = 3;
+
+    H5::DataSet pt_dataset;
+
+    H5::DataType pt_datatype;
+
+    std::array<hsize_t,pt_rank> pt_dims;
+
+    const size_t pt_particles;
+
+    H5::DSetCreatPropList pt_prop;
 
 private: // wake potential
     static constexpr uint_fast8_t wp_rank = 2;

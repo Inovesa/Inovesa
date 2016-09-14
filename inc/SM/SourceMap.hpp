@@ -85,7 +85,9 @@ public:
      */
     virtual void apply();
 
-    virtual PhaseSpace::position apply(PhaseSpace::position pos) const =0;
+    virtual PhaseSpace::Position apply(PhaseSpace::Position pos) const =0;
+
+    void applyTo(std::vector<PhaseSpace::Position> &particles);
 
 protected:
     /**

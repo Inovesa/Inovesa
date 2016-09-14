@@ -189,10 +189,10 @@ void vfps::RotationMap::apply()
     }
 }
 
-vfps::PhaseSpace::position
-vfps::RotationMap::apply(const PhaseSpace::position pos) const
+vfps::PhaseSpace::Position
+vfps::RotationMap::apply(const PhaseSpace::Position pos) const
 {
-    PhaseSpace::position rv;
+    PhaseSpace::Position rv;
     rv.x = _cos_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
          + _sin_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
          + meshaxis_t((_xsize-1)/2.0);

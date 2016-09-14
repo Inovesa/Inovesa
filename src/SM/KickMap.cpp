@@ -233,8 +233,8 @@ void vfps::KickMap::apply()
     }
 }
 
-vfps::PhaseSpace::position
-vfps::KickMap::apply(PhaseSpace::position pos) const
+vfps::PhaseSpace::Position
+vfps::KickMap::apply(PhaseSpace::Position pos) const
 {
     if (_kickdirection == Axis::x) {
         meshindex_t yi = std::floor(pos.y);

@@ -574,6 +574,14 @@ int main(int argc, char** argv)
         wm = new Identity(mesh1,mesh2,ps_size,ps_size);
     }
 
+    std::vector<PhaseSpace::Position> trackme;
+    trackme.push_back({static_cast<meshaxis_t>(ps_size/4),
+                       static_cast<meshaxis_t>(ps_size/4)});
+    trackme.push_back({static_cast<meshaxis_t>(ps_size/2),
+                       static_cast<meshaxis_t>(ps_size/4)});
+    trackme.push_back({static_cast<meshaxis_t>(ps_size/2),
+                       static_cast<meshaxis_t>(ps_size/2)});
+
     #ifdef INOVESA_USE_GUI
     if (gui) {
         try {
@@ -614,7 +622,7 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,trackme.size(),
                                 t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
@@ -691,6 +699,7 @@ int main(int argc, char** argv)
                 if (wkm != nullptr) {
                     hdf_file->append(wkm);
                 }
+                hdf_file->append(trackme.data());
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
@@ -727,11 +736,15 @@ int main(int argc, char** argv)
             Display::printText(status.str(),2.0f);
         }
         wm->apply();
+        wm->applyTo(trackme);
         rm1->apply();
+        rm1->applyTo(trackme);
         if (rm2 != nullptr) {
             rm2->apply();
+            rm2->applyTo(trackme);
         }
         fpm->apply();
+        fpm->applyTo(trackme);
     }
 
     #ifdef INOVESA_USE_HDF5
@@ -759,6 +772,7 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             hdf_file->append(wkm);
         }
+        hdf_file->append(trackme.data());
     }
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG

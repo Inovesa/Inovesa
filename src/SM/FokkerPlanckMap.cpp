@@ -198,8 +198,8 @@ void vfps::FokkerPlanckMap::apply()
     }
 }
 
-vfps::PhaseSpace::position
-vfps::FokkerPlanckMap::apply(PhaseSpace::position pos) const
+vfps::PhaseSpace::Position
+vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
 {
     meshindex_t yi = std::min(static_cast<meshindex_t>(std::floor(pos.y)),_ysize);
     interpol_t offset = 0;

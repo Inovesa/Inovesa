@@ -50,7 +50,7 @@ namespace vfps
 class PhaseSpace
 {
 public:
-    struct position {
+    struct Position {
         meshaxis_t x;
         meshaxis_t y;
     };
