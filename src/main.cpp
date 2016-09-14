@@ -574,13 +574,27 @@ int main(int argc, char** argv)
         wm = new Identity(mesh1,mesh2,ps_size,ps_size);
     }
 
+    // load coordinates for particle tracking
     std::vector<PhaseSpace::Position> trackme;
-    trackme.push_back({static_cast<meshaxis_t>(ps_size/4),
-                       static_cast<meshaxis_t>(ps_size/4)});
-    trackme.push_back({static_cast<meshaxis_t>(ps_size/2),
-                       static_cast<meshaxis_t>(ps_size/4)});
-    trackme.push_back({static_cast<meshaxis_t>(ps_size/2),
-                       static_cast<meshaxis_t>(ps_size/2)});
+    if (  opts.getParticleTracking() != ""
+       && opts.getParticleTracking() != "/dev/null" ) {
+        try {
+            std::ifstream trackingfile(opts.getParticleTracking());
+            meshaxis_t x,y;
+            while (trackingfile >> x >> y) {
+                trackme.push_back({x,y});
+            }
+        } catch (std::exception& e) {
+            std::cerr << e.what();
+            Display::printText("Will not do particle tracking.");
+            trackme.clear();
+        }
+        std::stringstream npart;
+        npart << trackme.size();
+        Display::printText( "Will do particle tracking with "
+                          + npart.str()
+                          + " particles.");
+    }
 
     #ifdef INOVESA_USE_GUI
     if (gui) {

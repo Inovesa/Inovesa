@@ -115,6 +115,10 @@ vfps::ProgramOptions::ProgramOptions() :
         ("SavePhaseSpace",
             po::value<bool>(&_savephasespace)->default_value(false),
             "save every outstep's phase space to HDF5 file")
+        ("tracking",
+            po::value<std::string>(&_trackingfile)->default_value(""),
+            "file containing starting positions (grid points)"
+            "of particles to be (pseudo-) tracked")
         ("verbose,v", "print information more detailed")
     ;
     _simulopts.add_options()

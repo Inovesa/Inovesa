@@ -72,6 +72,9 @@ public:
     inline std::string getStartDistFile() const
         { return _startdistfile; }
 
+    inline std::string getParticleTracking() const
+        { return _trackingfile; }
+
     inline bool getVerbosity() const
         { return _verbose; }
 
@@ -176,6 +179,8 @@ private: // program parameters
     bool _showphasespace;
 
     std::string _startdistfile;
+
+    std::string _trackingfile;
 
     std::string _configfile;
 
