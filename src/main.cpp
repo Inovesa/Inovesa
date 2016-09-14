@@ -574,6 +574,28 @@ int main(int argc, char** argv)
         wm = new Identity(mesh1,mesh2,ps_size,ps_size);
     }
 
+    // load coordinates for particle tracking
+    std::vector<PhaseSpace::Position> trackme;
+    if (  opts.getParticleTracking() != ""
+       && opts.getParticleTracking() != "/dev/null" ) {
+        try {
+            std::ifstream trackingfile(opts.getParticleTracking());
+            meshaxis_t x,y;
+            while (trackingfile >> x >> y) {
+                trackme.push_back({x,y});
+            }
+        } catch (std::exception& e) {
+            std::cerr << e.what();
+            Display::printText("Will not do particle tracking.");
+            trackme.clear();
+        }
+        std::stringstream npart;
+        npart << trackme.size();
+        Display::printText( "Will do particle tracking with "
+                          + npart.str()
+                          + " particles.");
+    }
+
     #ifdef INOVESA_USE_GUI
     if (gui) {
         try {
@@ -614,7 +636,7 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,trackme.size(),
                                 t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
@@ -654,6 +676,7 @@ int main(int argc, char** argv)
     if (gui) {
         csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
     }
+
     Display::printText("Starting the simulation.");
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
@@ -690,6 +713,7 @@ int main(int argc, char** argv)
                 if (wkm != nullptr) {
                     hdf_file->append(wkm);
                 }
+                hdf_file->append(trackme.data());
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
@@ -726,11 +750,15 @@ int main(int argc, char** argv)
             Display::printText(status.str(),2.0f);
         }
         wm->apply();
+        wm->applyTo(trackme);
         rm1->apply();
+        rm1->applyTo(trackme);
         if (rm2 != nullptr) {
-          rm2->apply();
+            rm2->apply();
+            rm2->applyTo(trackme);
         }
         fpm->apply();
+        fpm->applyTo(trackme);
     }
 
     #ifdef INOVESA_USE_HDF5
@@ -758,6 +786,7 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             hdf_file->append(wkm);
         }
+        hdf_file->append(trackme.data());
     }
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG

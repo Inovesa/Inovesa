@@ -189,6 +189,19 @@ void vfps::RotationMap::apply()
     }
 }
 
+vfps::PhaseSpace::Position
+vfps::RotationMap::apply(const PhaseSpace::Position pos) const
+{
+    PhaseSpace::Position rv;
+    rv.x = _cos_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
+         + _sin_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
+         + meshaxis_t((_xsize-1)/2.0);
+    rv.y = _cos_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
+         - _sin_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
+         + meshaxis_t((_ysize-1)/2.0);
+    return rv;
+}
+
 void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
                                  vfps::meshindex_t p_i,
                                  vfps::SourceMap::hi* myhinfo)

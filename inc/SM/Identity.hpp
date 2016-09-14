@@ -60,6 +60,14 @@ public:
             std::copy_n(data_in,_size,data_out);
         }
     }
+
+    /**
+     * @brief applyTo does nothing
+     * @param x
+     * @param y
+     */
+    PhaseSpace::Position apply(const PhaseSpace::Position pos) const
+        { return pos; }
 };
 
 }

@@ -69,6 +69,8 @@ public:
 	 */
 	void apply();
 
+    PhaseSpace::Position apply(PhaseSpace::Position pos) const;
+
 private:
 	/**
 	 * @brief _meshxsize horizontal size of the meshaxis_t

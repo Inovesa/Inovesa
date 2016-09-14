@@ -87,6 +87,13 @@ void vfps::SourceMap::apply()
     }
 }
 
+void vfps::SourceMap::applyTo(std::vector<vfps::PhaseSpace::Position> &particles)
+{
+    for (PhaseSpace::Position& particle : particles) {
+        particle = apply(particle);
+    }
+}
+
 
 #ifdef INOVESA_USE_CL
 void vfps::SourceMap::genCode4HM1D()

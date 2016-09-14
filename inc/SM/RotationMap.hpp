@@ -61,6 +61,13 @@ public:
      */
     void apply();
 
+    /**
+     * @brief applyTo
+     * @param x
+     * @param y
+     */
+    PhaseSpace::Position apply(const PhaseSpace::Position pos) const;
+
 private:
     const uint32_t _rotmapsize;
 

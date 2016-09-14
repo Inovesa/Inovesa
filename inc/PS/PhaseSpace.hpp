@@ -50,6 +50,12 @@ namespace vfps
 class PhaseSpace
 {
 public:
+    struct Position {
+        meshaxis_t x;
+        meshaxis_t y;
+    };
+
+public:
     enum class IntegralType : uint_fast8_t {
         sum,simpson
     };

@@ -25,6 +25,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const ElectricField* ef,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
+                         const size_t nparticles,
                          const double t_sync) :
     _file( nullptr ),
     fname( filename ),
@@ -35,6 +36,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     qb_dims( 0 ),
     ep_dims( {{ 0, ps->nMeshCells(0) }} ),
     es_dims( 0 ),
+    pt_dims( {{ 0, nparticles, 2 }} ),
+    pt_particles( nparticles ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
     csr_dims( {{ 0, ef->getNMax()/static_cast<size_t>(2) }} ),
     maxn( ef->getNMax()/static_cast<size_t>(2) ),
@@ -315,6 +318,33 @@ vfps::HDF5File::HDF5File(const std::string filename,
     es_dataset.createAttribute("Factor4ElectronVolts",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax1scale);
 
+    // get ready to save particles from (pseudo-) tracking
+    _file->createGroup("Particles");
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/Particles/axis0" );
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            pt_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            pt_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            pt_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    const std::array<hsize_t,pt_rank> pt_maxdims
+                    = {{H5S_UNLIMITED,nparticles,2U}};
+
+    H5::DataSpace pt_dataspace(pt_rank,pt_dims.data(),pt_maxdims.data());
+
+    const std::array<hsize_t,pt_rank> pt_chunkdims
+            = {{64U,
+                std::min(static_cast<decltype(nparticles)>(1024U),nparticles),
+                2U}};
+    pt_prop.setChunk(pt_rank,pt_chunkdims.data());
+    pt_prop.setShuffle();
+    pt_prop.setDeflate(compression);
+
+    pt_dataset = _file->createDataSet("/Particles/data",pt_datatype,
+                                      pt_dataspace,pt_prop);
+
     // get ready to save WakePotential
     _file->createGroup("WakePotential");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/WakePotential/axis0" );
@@ -568,6 +598,23 @@ void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
     memspace = new H5::DataSpace(csri_rank,&csrp_ext,nullptr);
     csrpower_t csrpower = ef->getCSRPower();
     csri_dataset.write(&csrpower, csri_datatype,*memspace, *filespace);
+    delete memspace;
+    delete filespace;
+}
+
+void vfps::HDF5File::append(const PhaseSpace::Position *particles)
+{
+    // append WakePotential
+    std::array<hsize_t,pt_rank> pt_offset
+            = {{pt_dims[0],0,0}};
+    const std::array<hsize_t,pt_rank> pt_ext
+            = {{1,pt_particles,2}};
+    pt_dims[0]++;
+    pt_dataset.extend(pt_dims.data());
+    H5::DataSpace* filespace = new H5::DataSpace(pt_dataset.getSpace());
+    filespace->selectHyperslab(H5S_SELECT_SET, pt_ext.data(), pt_offset.data());
+    H5::DataSpace* memspace = new H5::DataSpace(pt_rank,pt_ext.data(),nullptr);
+    pt_dataset.write(particles, pt_datatype,*memspace, *filespace);
     delete memspace;
     delete filespace;
 }

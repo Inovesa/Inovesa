@@ -22,12 +22,12 @@
 vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                         const meshindex_t xsize, const meshindex_t ysize,
                         const InterpolationType it, const bool interpol_clamp,
-                        const DirectionOfKick kd) :
-    SourceMap(in,out,kd==DirectionOfKick::x?1:xsize,
-                       kd==DirectionOfKick::x?ysize:1,it,it),
+                        const Axis kd) :
+    SourceMap(in,out,kd==Axis::x?1:xsize,
+                     kd==Axis::x?ysize:1,it,it),
     _kickdirection(kd),
-    _meshsize_kd(kd==DirectionOfKick::x?xsize:ysize),
-    _meshsize_pd(kd==DirectionOfKick::x?ysize:xsize)
+    _meshsize_kd(kd==Axis::x?xsize:ysize),
+    _meshsize_pd(kd==Axis::x?ysize:xsize)
 {
     if (interpol_clamp && !OCLH::active) {
         notClampedMessage();
@@ -151,7 +151,7 @@ vfps::KickMap::KickMap( vfps::PhaseSpace* in, vfps::PhaseSpace* out,
         )";
         _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-        if (_kickdirection == DirectionOfKick::x) {
+        if (_kickdirection == Axis::x) {
             applyHM = cl::Kernel(_cl_prog, "apply_xKick");
         } else {
             applyHM = cl::Kernel(_cl_prog, "apply_yKick");
@@ -193,7 +193,7 @@ void vfps::KickMap::apply()
     meshdata_t* data_in = _in->getData();
     meshdata_t* data_out = _out->getData();
 
-    if (_kickdirection == DirectionOfKick::x) {
+    if (_kickdirection == Axis::x) {
         for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
             for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
                 meshdata_t value = 0;
@@ -231,6 +231,27 @@ void vfps::KickMap::apply()
         }
     }
     }
+}
+
+vfps::PhaseSpace::Position
+vfps::KickMap::apply(PhaseSpace::Position pos) const
+{
+    if (_kickdirection == Axis::x) {
+        meshindex_t yi = std::floor(pos.y);
+        if (yi < static_cast<meshindex_t>(_meshsize_pd)) {
+            pos.x -= _offset[yi];
+        }
+        pos.x = std::max(static_cast<meshaxis_t>(1),
+                     std::min(pos.x,static_cast<meshaxis_t>(_meshsize_kd-1)));
+    } else {
+        meshindex_t xi = std::floor(pos.x);
+        if (xi < static_cast<meshindex_t>(_meshsize_pd)) {
+            pos.y -= _offset[xi];
+        }
+        pos.y = std::max(static_cast<meshaxis_t>(1),
+                     std::min(pos.y,static_cast<meshaxis_t>(_meshsize_kd-1)));
+    }
+    return pos;
 }
 
 #ifdef INOVESA_USE_CL
