@@ -216,7 +216,7 @@ void vfps::ProgramOptions::save(std::string fname)
 {
     std::ofstream ofs(fname.c_str());
 
-    ofs << vfps::inovesa_version() << std::endl;
+    ofs << "# " << vfps::inovesa_version() << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         if (!it->second.value().empty()) {
