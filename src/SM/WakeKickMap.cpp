@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -23,7 +24,7 @@ vfps::WakeKickMap::WakeKickMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
                                const meshindex_t xsize, const meshindex_t ysize,
                                const InterpolationType it,
                                const bool interpol_clamp)  :
-    KickMap(in,out,xsize,ysize,it,interpol_clamp)
+    KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y)
 {
 }
 

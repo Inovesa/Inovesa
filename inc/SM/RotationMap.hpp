@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -60,6 +61,13 @@ public:
      * @brief apply
      */
     void apply();
+
+    /**
+     * @brief applyTo
+     * @param x
+     * @param y
+     */
+    PhaseSpace::Position apply(const PhaseSpace::Position pos) const;
 
 private:
     const uint32_t _rotmapsize;

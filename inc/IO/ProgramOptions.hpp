@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -72,6 +73,9 @@ public:
     inline std::string getStartDistFile() const
         { return _startdistfile; }
 
+    inline std::string getParticleTracking() const
+        { return _trackingfile; }
+
     inline bool getVerbosity() const
         { return _verbose; }
 
@@ -85,7 +89,7 @@ public:
     inline uint32_t getOutSteps() const
         { return outsteps; }
 
-    inline uint32_t getPadding() const
+    inline double getPadding() const
         { return padding; }
 
     inline uint32_t getSteps() const
@@ -119,6 +123,15 @@ public:
         { return interpol_clamp; }
 
 public:
+    inline double getAlpha0() const
+        { return alpha0; }
+
+    inline double getAlpha1() const
+        { return alpha1; }
+
+    inline double getAlpha2() const
+        { return alpha2; }
+
     inline double getBeamEnergy() const
         { return E_0; }
 
@@ -146,9 +159,6 @@ public:
     inline double getStartDistZoom() const
         { return zoom; }
 
-    inline double getSyncFreq() const
-        { return f_s; }
-
     inline double getDampingTime() const
         { return t_d; }
 
@@ -168,6 +178,8 @@ private: // program parameters
 
     std::string _startdistfile;
 
+    std::string _trackingfile;
+
     std::string _configfile;
 
     int _glversion;
@@ -179,7 +191,7 @@ private: // program parameters
 private: // simulation parameters
     uint32_t meshsize;
     uint32_t outsteps;
-    uint32_t padding;
+    double padding;
     double pq_size;
     double meshshiftx;
     double meshshifty;
@@ -192,6 +204,10 @@ private: // simulation parameters
     bool interpol_clamp;
 
 private: // phsical parameters
+    double alpha0;
+    double alpha1;
+    double alpha2;
+
     double E_0;
 
     /**
@@ -199,7 +215,6 @@ private: // phsical parameters
      */
     double zoom;
     double f_c;
-    double f_s;
     double f0;
     double g;
     double H;

@@ -1,3 +1,23 @@
+/******************************************************************************
+ * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
+ * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ *                                                                            *
+ * This file is part of Inovesa.                                              *
+ * Inovesa is free software: you can redistribute it and/or modify            *
+ * it under the terms of the GNU General Public License as published by       *
+ * the Free Software Foundation, either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * Inovesa is distributed in the hope that it will be useful,                 *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
+ * GNU General Public License for more details.                               *
+ *                                                                            *
+ * You should have received a copy of the GNU General Public License          *
+ * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
+ ******************************************************************************/
+
 #ifndef WAKEFUNCTIONMAP_HPP
 #define WAKEFUNCTIONMAP_HPP
 
@@ -15,14 +35,13 @@ public:
      * @param out
      * @param xsize
      * @param ysize
-     * @param wake wakefunction from -xsize to xsize-1, normalized in a way
-     *             that plain multiplication with density gives an offset
-     *
-     * @todo interpolation when wake does not match PhaseSpace
+     * @param fname
      */
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    const std::vector<std::pair<meshaxis_t,double>> wake,
+                    const std::string fname,
+                    const double sigmaE, const double E0,
+                    const double Ib, const double dt,
                     const InterpolationType it, const bool interpol_clamp);
 
     /**
@@ -53,6 +72,14 @@ public:
     void update();
 
 private:
+    /**
+     * @brief wakeFromFile
+     * @param fname file name to read wake from
+     * @return
+     *
+     * reads in a file and scales wake to internal units
+     */
+    void _wakeFromFile(const std::string fname, const double scaling);
 
 
 private:
@@ -67,6 +94,9 @@ private:
     WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it, bool interpol_clamp);
+
+
+    const Ruler<meshaxis_t> _xaxis;
 
     /**
      * @brief _wakefunktion (normalized single particle) wake,

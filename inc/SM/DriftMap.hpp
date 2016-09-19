@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -30,8 +31,8 @@ class DriftMap : public KickMap
 public:
     DriftMap(PhaseSpace* in, PhaseSpace* out,
              const meshindex_t xsize, const meshindex_t ysize,
-             const meshaxis_t angle, const InterpolationType it,
-             const bool interpol_clamp);
+             const std::vector<meshaxis_t> slip, const double E0,
+             const InterpolationType it, const bool interpol_clamp);
 };
 
 } // namespace fvps

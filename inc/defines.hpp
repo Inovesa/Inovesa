@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -27,8 +28,8 @@
 #include "fixed_point.h"
 
 #define INOVESA_VERSION_RELEASE 0
-#define INOVESA_VERSION_MINOR   11
-#define INOVESA_VERSION_FIX     1
+#define INOVESA_VERSION_MINOR   13
+#define INOVESA_VERSION_FIX     -2
 
 //#define INOVESA_SYNC_CL
 
@@ -58,6 +59,10 @@ typedef data_t integral_t;
 typedef data_t timeaxis_t;
 
 typedef integral_t projection_t;
+
+const std::string copyright_notice();
+
+const std::string inovesa_version();
 
 namespace physcons
 {

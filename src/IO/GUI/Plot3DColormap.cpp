@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -157,9 +158,9 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-	size_t npixels = mesh->nMeshCells();
+        size_t npixels = mesh->nMeshCells();
     float* data = new float[3*npixels];
-	vfps::meshdata_t* meshdata = mesh->getData();
+        vfps::meshdata_t* meshdata = mesh->getData();
     float newmax=std::numeric_limits<vfps::meshdata_t>::min();
     for (vfps::meshindex_t i=0; i<npixels; i++) {
         // type uint8_t will make shure the indexing (256) works correctly
@@ -167,8 +168,8 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
                             static_cast<float>(meshdata[i]/maxValue)),1.0f)*255;
         std::copy_n(&(inferno[3*index]),3,&(data[3*i]));
         newmax= std::max(newmax,static_cast<float>(meshdata[i]));
-	}
-	maxValue = newmax;
+        }
+        maxValue = newmax;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
                  mesh->nMeshCells(0), mesh->nMeshCells(1),
                  0, GL_RGB, GL_FLOAT, data);

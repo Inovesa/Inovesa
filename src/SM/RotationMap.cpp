@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -187,6 +188,19 @@ void vfps::RotationMap::apply()
             }
         }
     }
+}
+
+vfps::PhaseSpace::Position
+vfps::RotationMap::apply(const PhaseSpace::Position pos) const
+{
+    PhaseSpace::Position rv;
+    rv.x = _cos_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
+         + _sin_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
+         + meshaxis_t((_xsize-1)/2.0);
+    rv.y = _cos_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
+         - _sin_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
+         + meshaxis_t((_ysize-1)/2.0);
+    return rv;
 }
 
 void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,

@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -80,15 +81,6 @@ int main(int argc, char** argv)
     std::string timestring = sstream.str();
     timestring.resize(timestring.size()-1);
 
-    sstream.str("");
-    sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
-            << INOVESA_VERSION_MINOR;
-    std::string version(sstream.str());
-    sstream << '.' << INOVESA_VERSION_FIX;
-    if (std::string(GIT_BRANCH) != version) {
-        sstream << ", Branch: "<< GIT_BRANCH;
-    }
-
     std::string ofname = opts.getOutFile();
     #ifdef INOVESA_USE_CL
     if (opts.getCLDevice() >= 0)
@@ -98,7 +90,7 @@ int main(int argc, char** argv)
         Display::logfile.open(ofname+".log");
     }
     Display::printText("Started Inovesa ("
-                       +sstream.str()+") at "+timestring);
+                       +vfps::inovesa_version()+") at "+timestring);
     if (ofname != "/dev/null") {
         Display::printText("Will create log at \""+ofname+".log\".");
     }
@@ -130,6 +122,7 @@ int main(int argc, char** argv)
     if (OCLH::active) {
         try {
             OCLH::prepareCLEnvironment(gui,opts.getCLDevice()-1);
+            std::atexit(OCLH::teardownCLEnvironment);
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
@@ -181,9 +174,9 @@ int main(int argc, char** argv)
     const double pmax = pcenter + pqhalf;
     const double pmin = pcenter - pqhalf;
 
-    const double sE = opts.getEnergySpread();
-    const double E0 = opts.getBeamEnergy();
-    const double dE = sE*E0;
+    const double sE = opts.getEnergySpread(); // relative energy spread
+    const double E0 = opts.getBeamEnergy(); // relative energy spread
+    const double dE = sE*E0; // absolute energy spread
     const double f_rev = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
     const double R_bend = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f_rev);
@@ -195,14 +188,25 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
     #endif // INOVESA_USE_HDF5
-    const double H = isoscale*opts.getHarmonicNumber();
+    const double H_unscaled = opts.getHarmonicNumber();
+    const double H = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
-    const double fs_unscaled = opts.getSyncFreq();
+    const meshaxis_t alpha0 = opts.getAlpha0();
+    const meshaxis_t alpha1 = opts.getAlpha1();
+    const meshaxis_t alpha2 = opts.getAlpha2();
+
+    // real synchrotron frequency
+    const double fs_unscaled = f_rev*std::sqrt(alpha0*H_unscaled*V/(2*M_PI*E0));
+
+    // synchrotron frequency (isomagnetic ring)
     const double fs = fs_unscaled/isoscale;
+
+    // natural RMS bunch length
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
     const double Ib_unscaled = opts.getBunchCurrent();
-    const double Ib = Ib_unscaled/isoscale;
+    const double Qb = Ib_unscaled/f_rev;
+    const double Ib_scaled = Ib_unscaled/isoscale;
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -210,12 +214,13 @@ int main(int argc, char** argv)
     const float rotations = opts.getNRotations();
     const double t_d = isoscale*opts.getDampingTime();
     const double dt = 1.0/(fs*steps);
+    const double revolutionpart = f0*dt;
     const double t_sync_unscaled = 1.0/fs_unscaled;
 
     /* angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
-    const double angle = 2*M_PI/steps;
+    const meshaxis_t angle = 2*M_PI/steps;
 
     std::string startdistfile = opts.getStartDistFile();
     double shield = 0;
@@ -232,7 +237,7 @@ int main(int argc, char** argv)
 
         Ith = Inorm * (0.5+0.34*shield);
 
-        S_csr = Ib/Inorm;
+        S_csr = Ib_scaled/Inorm;
 
         if (verbose) {
             sstream.str("");
@@ -248,7 +253,7 @@ int main(int argc, char** argv)
                                +sstream.str());
             sstream.str("");
             sstream << std::fixed << S_csr;
-            if (Ib > Ith) {
+            if (Ib_scaled > Ith) {
                 sstream << " (> " << 0.5+0.12*shield << ')';
             } else {
                 sstream << " (< " << 0.5+0.12*shield << ')';
@@ -256,15 +261,18 @@ int main(int argc, char** argv)
             Display::printText("CSR strength: "
                                +sstream.str());
             sstream.str("");
-            sstream << std::scientific << Ith;
-            Display::printText("BBT-Threshold-Current expected at "
+            sstream << std::scientific << Ith*isoscale;
+            Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
+            sstream.str("");
+            sstream << std::scientific << 1/t_d/fs/(2*M_PI);
+            Display::printText("Damping beta: " +sstream.str());
         }
     }
 
     if (verbose) {
         sstream.str("");
-        sstream << std::fixed << 1/dt/f0;
+        sstream << std::fixed << 1/revolutionpart;
         Display::printText("Doing " +sstream.str()+
                            " simulation steps per revolution period.");
 
@@ -294,17 +302,26 @@ int main(int argc, char** argv)
         } catch ( const png::std_error &e ) {
             std::cerr << e.what() << std::endl;
             return EXIT_SUCCESS;
-        }
-        catch ( const png::error &e ) {
+        } catch ( const png::error &e ) {
             std::cerr << "Problem loading " << startdistfile
                       << ": " << e.what() << std::endl;
             return EXIT_SUCCESS;
+        } catch (...) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\".";
+            return EXIT_FAILURE;
         }
 
         if (image.get_width() == image.get_height()) {
-            ps_size = image.get_width();
+            if (ps_size != image.get_width()) {
+                std::cerr << startdistfile
+                          << " does not match set GridSize." << std::endl;
 
-            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+                return EXIT_SUCCESS;
+            }
+
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                                   Qb,Ib_unscaled,bl);
 
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
@@ -329,16 +346,53 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,qmin,qmax,pmin,pmax,bl,dE));
+        try {
+            mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
+                                                            qmin,qmax,
+                                                            pmin,pmax,
+                                                            Qb,Ib_unscaled,
+                                                            bl,dE));
+        } catch (const std::exception& ex) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\":"
+                      << ex.what() << std::endl;
+            return EXIT_SUCCESS;
+        } catch (const H5::Exception& ex) {
+            ex.printErrorStack();
+            return EXIT_SUCCESS;
+        } catch (...) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\".";
+            return EXIT_FAILURE;
+        }
+
+        if (ps_size != mesh1->nMeshCells(0)) {
+            std::cerr << startdistfile
+                      << " does not match set GridSize." << std::endl;
+
+            delete mesh1;
+            return EXIT_SUCCESS;
+        }
         mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
         ps_size = opts.getMeshSize();
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl);
 
         std::ifstream ifs;
-        ifs.open(startdistfile);
+        try {
+            ifs.open(startdistfile);
+        } catch (const std::exception& ex) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\":"
+                      << ex.what() << std::endl;
+            return EXIT_SUCCESS;
+        } catch (...) {
+            std::cerr << "Error loading initial distribution from \""
+                      << startdistfile << "\".";
+            return EXIT_FAILURE;
+        }
 
         ifs.unsetf(std::ios_base::skipws);
 
@@ -406,12 +460,12 @@ int main(int argc, char** argv)
 
     if (verbose) {
     sstream.str("");
-    sstream << std::scientific << maxval*Ib/f0/physcons::e;
+    sstream << std::scientific << maxval*Ib_scaled/f0/physcons::e;
     Display::printText("Maximum particles per grid cell is "
                        +sstream.str()+".");
     }
 
-    const unsigned int padding =std::max(opts.getPadding(),1u);
+    const double padding =std::max(opts.getPadding(),1.0);
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
@@ -463,8 +517,9 @@ int main(int argc, char** argv)
                             interpolationtype,interpol_clamp);
 
         Display::printText("Building DriftMap.");
-        rm2 = new DriftMap(mesh1,mesh3,ps_size,ps_size,angle,
-                           interpolationtype,interpol_clamp);
+        rm2 = new DriftMap(mesh1,mesh3,ps_size,ps_size,
+                           {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}},
+                           E0,interpolationtype,interpol_clamp);
         break;
     }
 
@@ -489,27 +544,18 @@ int main(int argc, char** argv)
     SourceMap* wm = nullptr;
     WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
-    std::vector<std::pair<meshaxis_t,double>> wake;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
-        field = new ElectricField(mesh1,impedance);
+        field = new ElectricField(mesh1,impedance,revolutionpart);
         Display::printText("Reading WakeFunction from "+wakefile+".");
-        std::ifstream ifs;
-        ifs.open(wakefile);
-
-        while (ifs.good()) {
-            double q,f;
-            ifs >> q >> f;
-            wake.push_back(std::pair<meshaxis_t,double>(q,f));
-        }
-        ifs.close();
-        Display::printText("Building WakeFunctionMap.");
         wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
-                                  wake,interpolationtype,interpol_clamp);
+                                  wakefile,E0,sE,Ib_scaled,dt,
+                                  interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
         Display::printText("Calculating WakePotential.");
-        field = new ElectricField(mesh1,impedance,Ib,E0,sE,dt);
+        field = new ElectricField(mesh1,impedance,revolutionpart,
+                                  Ib_scaled,E0,sE,dt);
         if (gap != 0) {
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
@@ -520,6 +566,28 @@ int main(int argc, char** argv)
         wm = wkm;
     } else {
         wm = new Identity(mesh1,mesh2,ps_size,ps_size);
+    }
+
+    // load coordinates for particle tracking
+    std::vector<PhaseSpace::Position> trackme;
+    if (  opts.getParticleTracking() != ""
+       && opts.getParticleTracking() != "/dev/null" ) {
+        try {
+            std::ifstream trackingfile(opts.getParticleTracking());
+            meshaxis_t x,y;
+            while (trackingfile >> x >> y) {
+                trackme.push_back({x,y});
+            }
+        } catch (std::exception& e) {
+            std::cerr << e.what();
+            Display::printText("Will not do particle tracking.");
+            trackme.clear();
+        }
+        std::stringstream npart;
+        npart << trackme.size();
+        Display::printText( "Will do particle tracking with "
+                          + npart.str()
+                          + " particles.");
     }
 
     #ifdef INOVESA_USE_GUI
@@ -589,17 +657,10 @@ int main(int argc, char** argv)
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
       || isOfFileType(".hdf5",ofname) ) {
-        std::string cfgname;
-        if (isOfFileType(".h5",ofname)) {
-            cfgname = ofname.substr(0,ofname.find(".h5"))+".cfg";
-        }
-        if (isOfFileType(".hdf5",ofname)) {
-            cfgname = ofname.substr(0,ofname.find(".hdf5"))+".cfg";
-        }
-        opts.save(cfgname);
-        Display::printText("Saved configuiration to \""+cfgname+"\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
-                                Ib_unscaled,t_sync_unscaled);
+        opts.save(ofname+".cfg");
+        Display::printText("Saved configuiration to \""+ofname+".cfg\".");
+        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,trackme.size(),
+                                t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -610,9 +671,8 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
     if ( isOfFileType(".png",ofname)) {
-        std::string cfgname = ofname.substr(0,ofname.find(".png"))+".cfg";
-        opts.save(cfgname);
-        Display::printText("Saved configuiration to \""+cfgname+"\".");
+        opts.save(ofname+".cfg");
+        Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_PNG
@@ -639,6 +699,7 @@ int main(int argc, char** argv)
     if (gui) {
         csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
     }
+
     Display::printText("Starting the simulation.");
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
@@ -675,6 +736,7 @@ int main(int argc, char** argv)
                 if (wkm != nullptr) {
                     hdf_file->append(wkm);
                 }
+                hdf_file->append(trackme.data());
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
@@ -711,11 +773,15 @@ int main(int argc, char** argv)
             Display::printText(status.str(),2.0f);
         }
         wm->apply();
+        wm->applyTo(trackme);
         rm1->apply();
+        rm1->applyTo(trackme);
         if (rm2 != nullptr) {
-          rm2->apply();
+            rm2->apply();
+            rm2->applyTo(trackme);
         }
         fpm->apply();
+        fpm->applyTo(trackme);
     }
 
     #ifdef INOVESA_USE_HDF5
@@ -743,6 +809,7 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             hdf_file->append(wkm);
         }
+        hdf_file->append(trackme.data());
     }
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
@@ -790,12 +857,6 @@ int main(int argc, char** argv)
     delete rm2;
     delete wm;
     delete fpm;
-
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        OCLH::teardownCLEnvironment();
-    }
-    #endif // INOVESA_USE_CL
 
     Display::printText("Finished.");
 

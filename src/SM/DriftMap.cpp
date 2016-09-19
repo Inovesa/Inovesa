@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -24,15 +25,21 @@
 vfps::DriftMap::DriftMap(PhaseSpace *in, PhaseSpace *out,
                          const meshindex_t xsize,
                          const meshindex_t ysize,
-                         const meshaxis_t angle,
+                         const std::vector<meshaxis_t> slip,
+                         const double E0,
                          const InterpolationType it,
                          const bool interpol_clamp)
     :
-      KickMap(in,out,xsize,ysize,it,interpol_clamp,DirectionOfKick::x)
+      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::x)
 {
-    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
+    const Ruler<meshaxis_t>* energy = in->getAxis(1);
     for(meshindex_t y=0; y<_ysize; y++) {
-        _offset[y] = std::tan(angle)*(y-ycenter);
+        _offset[y] = 0;
+        for (size_t i=0; i<slip.size(); i++) {
+            _offset[y] += slip[i]*energy->at(y)
+                       *  std::pow(energy->at(y)*energy->scale()/E0,i);
+        }
+        _offset[y] /= energy->delta();
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

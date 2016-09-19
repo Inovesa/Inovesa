@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -29,13 +30,18 @@ vfps::ProgramOptions::ProgramOptions() :
 {
     _proginfoopts.add_options()
         ("help,h", "print help message")
+        ("copyright", "print copyright information")
         ("version", "print version string")
     ;
     _physopts.add_options()
+        ("alpha0", po::value<double>(&alpha0)->default_value(4e-3,"4e-3"),
+            "Linear Momentum compaction factor (1)")
+        ("alpha1", po::value<double>(&alpha1)->default_value(0),
+            "Quadratic Momentum compaction factor (1)")
+        ("alpha2", po::value<double>(&alpha2)->default_value(0),
+            "Cubic Momentum compaction factor (1)")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")
-        ("SyncFreq,f", po::value<double>(&f_s)->default_value(45e3),
-            "Synchrotron frequency (Hz)")
         ("DampingTime,d", po::value<double>(&t_d)->default_value(0.001),
             "Damping time (s)")
         ("HarmonicNumber,H", po::value<double>(&H)->default_value(50),
@@ -69,8 +75,9 @@ vfps::ProgramOptions::ProgramOptions() :
             ">0: parallel plates CSR")
         ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
             "Beamline cutoff frequency (Hz)")
-        ("RFVoltage,V", po::value<double>(&V_RF)->default_value(1e6,"1e6"),
-            "Accelerating Voltage (V)")
+        ("AcceleratingVoltage,V",
+            po::value<double>(&V_RF)->default_value(1e6,"1e6"),
+            "Accelerating Voltage (V) for one revolution")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing wake function.")
     ;
@@ -107,6 +114,10 @@ vfps::ProgramOptions::ProgramOptions() :
         ("SavePhaseSpace",
             po::value<bool>(&_savephasespace)->default_value(false),
             "save every outstep's phase space to HDF5 file")
+        ("tracking",
+            po::value<std::string>(&_trackingfile)->default_value(""),
+            "file containing starting positions (grid points)"
+            "of particles to be (pseudo-) tracked")
         ("verbose,v", "print information more detailed")
     ;
     _simulopts.add_options()
@@ -114,7 +125,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Steps for one synchrotron period")
         ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
             "Save results every n steps.")
-        ("padding,p", po::value<uint32_t>(&padding)->default_value(8),
+        ("padding,p", po::value<double>(&padding)->default_value(8.0),
             "Factor for zero padding of bunch profile")
         ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),
             "Size of phase space")
@@ -167,16 +178,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << _visibleopts << std::endl;
         return false;
     }
+    if (_vm.count("copyright")) {
+        std::cout << vfps::copyright_notice() << std::endl;
+        return false;
+    }
     if (_vm.count("version")) {
-        std::stringstream sstream;
-        sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
-                << INOVESA_VERSION_MINOR;
-        std::string version(sstream.str());
-        sstream << '.' << INOVESA_VERSION_FIX;
-        if (std::string(GIT_BRANCH) != version) {
-            sstream << ", Branch: "<< GIT_BRANCH;
-        }
-        std::cout << sstream.str() << std::endl;
+        std::cout << vfps::inovesa_version() << std::endl;
         return false;
     }
     if (boost::filesystem::exists(_configfile) &&
@@ -212,14 +219,7 @@ void vfps::ProgramOptions::save(std::string fname)
 {
     std::ofstream ofs(fname.c_str());
 
-    ofs << "#Inovesa v"
-        << INOVESA_VERSION_RELEASE << '.'
-        << INOVESA_VERSION_MINOR << '.'
-        << INOVESA_VERSION_FIX;
-    if (std::string(GIT_BRANCH) != "stable") {
-        ofs << " (Branch: " GIT_BRANCH ")";
-    }
-    ofs << std::endl;
+    ofs << "# " << vfps::inovesa_version() << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         if (!it->second.value().empty()) {

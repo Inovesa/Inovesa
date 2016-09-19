@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -33,7 +34,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
     const interpol_t e1_6d = e1/(interpol_t(6)*in->getDelta(1));
     const interpol_t e1_d2 = e1/(in->getDelta(1)*in->getDelta(1));
 
-    const meshaxis_t ycenter = in->getRuler(1)->zerobin();
+    const meshaxis_t ycenter = in->getAxis(1)->zerobin();
 
     switch (dt) {
     case DerivationType::two_sided:
@@ -134,7 +135,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(PhaseSpace* in, PhaseSpace* out,
         const uint meshoffs = x*ysize;
         for (uint j=0; j<hm_len; j++)
         {
-            value += mult(    src[meshoffs+hm[hmoffset+j].src],
+            value += mult(  src[meshoffs+hm[hmoffset+j].src],
                             hm[hmoffset+j].weight);
         }
         dst[meshoffs+y] = value;
@@ -191,10 +192,27 @@ void vfps::FokkerPlanckMap::apply()
                 for (uint_fast8_t j=0; j<_ip; j++) {
                     hi h = _hinfo[y*_ip+j];
                     data_out[offs+y] += data_in[offs+h.index]
-                                *static_cast<meshdata_t>(h.weight);
+                                     *  static_cast<meshdata_t>(h.weight);
                 }
             }
         }
     }
+}
+
+vfps::PhaseSpace::Position
+vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
+{
+    meshindex_t yi = std::min(static_cast<meshindex_t>(std::floor(pos.y)),_ysize);
+    interpol_t offset = 0;
+
+    for (uint_fast8_t j=0; j<_ip; j++) {
+        hi h = _hinfo[yi*_ip+j];
+        interpol_t dy = static_cast<interpol_t>(yi)
+                      - static_cast<interpol_t>(h.index);
+        offset += dy*h.weight;
+    }
+    pos.y = std::max(static_cast<meshaxis_t>(1),
+                     std::min(pos.y+offset,static_cast<meshaxis_t>(_ysize-1)));
+    return pos;
 }
 

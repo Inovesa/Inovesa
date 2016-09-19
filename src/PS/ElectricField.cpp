@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -21,7 +22,9 @@
 
 vfps::ElectricField::ElectricField(PhaseSpace* ps,
                                    const Impedance* impedance,
+                                   const double revolutionpart,
                                    const meshaxis_t wakescalining) :
+    volts(ps->getAxis(1)->delta()*ps->getScale(1)*revolutionpart),
     _nmax(impedance->nFreqs()),
     _bpmeshcells(ps->nMeshCells(0)),
     _axis_freq(Ruler<frequency_t>(_nmax,0,
@@ -103,9 +106,10 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps,
 
 vfps::ElectricField::ElectricField(vfps::PhaseSpace *ps,
                                    const vfps::Impedance *impedance,
+                                   const double revolutionpart,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt) :
-    ElectricField(ps,impedance,
+    ElectricField(ps,impedance,revolutionpart,
                   Ib*dt*physcons::c/ps->getScale(0)/(ps->getDelta(1)*sigmaE*E0))
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
@@ -189,7 +193,7 @@ vfps::ElectricField::ElectricField(PhaseSpace* ps, const Impedance* impedance,
                                    const double sigmaE, const double dt,
                                    const double rbend, const double fs,
                                    const size_t nmax) :
-        ElectricField(ps,impedance)
+        ElectricField(ps,impedance,dt*physcons::c/(2*M_PI*rbend))
 {
     _wakefunction = new meshaxis_t[2*_bpmeshcells];
     fftw_complex* z_fftw = fftw_alloc_complex(nmax);
@@ -275,6 +279,9 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
     _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
+        OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
+                                          cl::NDRange(_bpmeshcells));
+        OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
                           &_bp_padded_buf(),&_formfactor_buf(),nullptr);

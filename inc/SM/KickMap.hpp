@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -27,11 +28,16 @@ namespace vfps
 
 /**
  * @brief The KickMap class allows to apply position dependent forces
+ * and energy dependent displacements.
+ *
+ * For the KickMap the displacement is perpendicular to the gradient
+ * on how large the displacement shall be.
+ *
  */
 class KickMap : public SourceMap
 {
 public:
-    enum class DirectionOfKick : bool {
+    enum class Axis : bool {
         x=0, y=1
     };
 
@@ -39,7 +45,7 @@ public:
     KickMap(PhaseSpace* in, PhaseSpace* out,
             const meshindex_t xsize, const meshindex_t ysize,
             const InterpolationType it, const bool interpol_clamp,
-            const DirectionOfKick kd=DirectionOfKick::y);
+            const Axis kd);
 
     ~KickMap();
 
@@ -49,6 +55,8 @@ public:
 
 public:
     void apply();
+
+    PhaseSpace::Position apply(PhaseSpace::Position pos) const;
 
     #ifdef INOVESA_USE_CL
     void syncCLMem(clCopyDirection dir);
@@ -67,7 +75,7 @@ protected:
     /**
      * @brief _kickdirection direction of the offset du to the kick
      */
-    const DirectionOfKick _kickdirection;
+    const Axis _kickdirection;
 
     /**
      * @brief _meshsize_kd size of the mesh in direction of the kick

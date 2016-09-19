@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -28,9 +29,9 @@ class ShaderException : public std::exception
 public:
     ShaderException(const std::string msg) :
         _msg(msg)
-		{}
+                {}
 
-	const char* what() const noexcept
+        const char* what() const noexcept
         { return _msg.c_str(); }
 
 private:
@@ -55,53 +56,53 @@ void vfps::GUIElement::compileShaders()
 	GLint Result = GL_FALSE;
 	GLint InfoLogLength;
 
-	// Compile Vertex Shader
+        // Compile Vertex Shader
     char const * VertexSourcePointer = _vertexshadercode.c_str();
     glShaderSource(VertexShaderID, 1, &VertexSourcePointer , nullptr);
-	glCompileShader(VertexShaderID);
+        glCompileShader(VertexShaderID);
 
 	// Check Vertex Shader
 	glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 	if ( InfoLogLength > 1 ){
-        char* VertexShaderErrorMessage = new char[InfoLogLength+1];
-        VertexShaderErrorMessage[InfoLogLength] = '\0';
-        glGetShaderInfoLog(VertexShaderID, InfoLogLength, nullptr, VertexShaderErrorMessage);
-        throw ShaderException(VertexShaderErrorMessage);
+	char* VertexShaderErrorMessage = new char[InfoLogLength+1];
+	VertexShaderErrorMessage[InfoLogLength] = '\0';
+	glGetShaderInfoLog(VertexShaderID, InfoLogLength, nullptr, VertexShaderErrorMessage);
+	throw ShaderException(VertexShaderErrorMessage);
 	}
 
-	// Compile Fragment Shader
+        // Compile Fragment Shader
     char const * FragmentSourcePointer = _fragmentshadercode.c_str();
     glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer , nullptr);
-	glCompileShader(FragmentShaderID);
+        glCompileShader(FragmentShaderID);
 
 	// Check Fragment Shader
 	glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
 	glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 	if ( InfoLogLength > 1 ){
-        char* FragmentShaderErrorMessage = new char[InfoLogLength+1];
-        FragmentShaderErrorMessage[InfoLogLength] = '\0';
-        glGetShaderInfoLog(FragmentShaderID, InfoLogLength, nullptr, FragmentShaderErrorMessage);
-        throw ShaderException(FragmentShaderErrorMessage);
+	char* FragmentShaderErrorMessage = new char[InfoLogLength+1];
+	FragmentShaderErrorMessage[InfoLogLength] = '\0';
+	glGetShaderInfoLog(FragmentShaderID, InfoLogLength, nullptr, FragmentShaderErrorMessage);
+	throw ShaderException(FragmentShaderErrorMessage);
 	}
 
-	// Link the program
+        // Link the program
     programID = glCreateProgram();
     glAttachShader(programID, VertexShaderID);
     glAttachShader(programID, FragmentShaderID);
     glLinkProgram(programID);
 
-	// Check the program
+        // Check the program
     glGetProgramiv(programID, GL_LINK_STATUS, &Result);
     glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if ( InfoLogLength > 1 ){
+        if ( InfoLogLength > 1 ){
         char* ProgramErrorMessage = new char[InfoLogLength+1];
         ProgramErrorMessage[InfoLogLength] = '\0';
         glGetProgramInfoLog(programID, InfoLogLength, nullptr, &ProgramErrorMessage[0]);
         throw ShaderException(ProgramErrorMessage);
-	}
+        }
 
-	glDeleteShader(VertexShaderID);
+        glDeleteShader(VertexShaderID);
     glDeleteShader(FragmentShaderID);
 }
 

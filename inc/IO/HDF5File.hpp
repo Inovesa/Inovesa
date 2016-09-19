@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -47,7 +48,7 @@ public:
              const ElectricField* ef,
              const Impedance* imp,
              const WakeFunctionMap *wfm,
-             const double BunchCurrent,
+             const size_t nparticles,
              const double t_sync);
 
     ~HDF5File();
@@ -63,6 +64,8 @@ public:
         All, Defaults, PhaseSpace
     };
 
+    void append(const PhaseSpace::Position *particles);
+
     void append(const PhaseSpace* ps, const AppendType at=AppendType::Defaults);
 
     void append(const WakeKickMap* wkm);
@@ -73,6 +76,7 @@ public:
     static PhaseSpace readPhaseSpace(std::string fname,
                                      meshaxis_t qmin, meshaxis_t qmax,
                                      meshaxis_t pmin, meshaxis_t pmax,
+                                     double Qb, double Ib_unscaled,
                                      double bl, double dE);
 
 private:
@@ -128,10 +132,6 @@ private: // bunch current
 
     H5::DSetCreatPropList bc_prop;
 
-    double bc;
-
-    double bc_set;
-
 private: // bunch profile
     static constexpr uint_fast8_t bp_rank = 2;
 
@@ -186,6 +186,19 @@ private: // energy spread
     hsize_t es_dims;
 
     H5::DSetCreatPropList es_prop;
+
+private: // particles (tracking)
+    static constexpr uint_fast8_t pt_rank = 3;
+
+    H5::DataSet pt_dataset;
+
+    H5::DataType pt_datatype;
+
+    std::array<hsize_t,pt_rank> pt_dims;
+
+    const size_t pt_particles;
+
+    H5::DSetCreatPropList pt_prop;
 
 private: // wake potential
     static constexpr uint_fast8_t wp_rank = 2;
