@@ -625,7 +625,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_GUI
 
     projection_t* xproj = mesh1->getProjection(0);
-    const Ruler<meshaxis_t>* q_axis = mesh1->getRuler(0);
+    const Ruler<meshaxis_t>* q_axis = mesh1->getAxis(0);
     for (uint32_t i=0;i<200;i++) {
         wkm->update();
         const meshaxis_t* wake = wkm->getForce();
