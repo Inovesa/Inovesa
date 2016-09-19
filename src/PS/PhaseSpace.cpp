@@ -366,7 +366,7 @@ void vfps::PhaseSpace::createFromProjections()
 {
     for (meshindex_t x = 0; x < nMeshCells(0); x++) {
         for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-            _data[x][y] = _projection[0][(x)%nMeshCells(0)]*_projection[1][y];
+            _data[x][y] = _projection[0][x]*_projection[1][y];
         }
     }
 }
