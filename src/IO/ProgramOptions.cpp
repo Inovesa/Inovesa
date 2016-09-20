@@ -55,6 +55,8 @@ vfps::ProgramOptions::ProgramOptions() :
              "\tgrayscale png (.png) file\n"
              #endif // INOVESA_USE_PNG
              "\ttext file (.txt) w/ particle coordinates")
+        ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
+            "Iterations to find (initial) Haissinsky distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),

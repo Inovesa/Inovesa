@@ -149,6 +149,9 @@ public:
     inline double getEnergySpread() const
         { return s_E; }
 
+    inline unsigned int getHaissinskiIterations() const
+        { return _hi; }
+
     inline double getHarmonicNumber() const
         { return H; }
 
@@ -211,6 +214,8 @@ private: // phsical parameters
     double alpha2;
 
     double E_0;
+
+    unsigned int _hi;
 
     /**
      * @brief zoom initial distribution

@@ -205,6 +205,7 @@ int main(int argc, char** argv)
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
+    const unsigned int hi = opts.getHaissinskiIterations();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -286,7 +287,8 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,bl,dE,Iz);
+        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE,Iz);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -624,7 +626,7 @@ int main(int argc, char** argv)
 
     projection_t* xproj = mesh1->getProjection(0);
     const Ruler<meshaxis_t>* q_axis = mesh1->getAxis(0);
-    for (uint32_t i=0;i<200;i++) {
+    for (uint32_t i=0;i<hi;i++) {
         wkm->update();
         const meshaxis_t* wake = wkm->getForce();
         integral_t charge = 0;
