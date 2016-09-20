@@ -185,9 +185,7 @@ int main(int argc, char** argv)
     // scaling for isomagnetic approximation, defined to be <= 1
     const double isoscale = f_rev/f0;
 
-    #ifdef INOVESA_USE_HDF5
     const double fc = opts.getCutoffFrequency();
-    #endif // INOVESA_USE_HDF5
     const double H_unscaled = opts.getHarmonicNumber();
     const double H = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
@@ -753,7 +751,10 @@ int main(int argc, char** argv)
                                     wkm->getForce());
                 }
                 if (history != nullptr) {
-                    if (hdf_file == nullptr) {
+                    #ifdef INOVESA_USE_HDF5
+                    if (hdf_file == nullptr)
+                    #endif // INOVESA_USE_HDF5
+                    {
                         field->updateCSR(fc);
                     }
                     csrlog[outstepnr] = field->getCSRPower();

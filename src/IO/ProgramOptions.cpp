@@ -255,6 +255,7 @@ void vfps::ProgramOptions::save(std::string fname)
     }
 }
 
+#ifdef INOVESA_USE_HDF5
 void vfps::ProgramOptions::save(vfps::HDF5File* file)
 {
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
@@ -275,3 +276,4 @@ void vfps::ProgramOptions::save(vfps::HDF5File* file)
         }
     }
 }
+#endif // INOVESA_USE_HDF5
