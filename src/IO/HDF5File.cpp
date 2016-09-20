@@ -446,7 +446,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     #endif
     } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
         ps_datatype = H5::PredType::STD_I64LE;
-    }else if (std::is_same<vfps::meshdata_t,double>::value) {
+    } else if (std::is_same<vfps::meshdata_t,double>::value) {
         ps_datatype = H5::PredType::IEEE_F64LE;
     }
 

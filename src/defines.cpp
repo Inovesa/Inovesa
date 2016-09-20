@@ -21,12 +21,18 @@
 #include "defines.hpp"
 
 const std::string vfps::copyright_notice() {
-    return std::string(
+    std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
-        "\n"
-        "Copyright (c) 2007-2009 Peter Schregle\n"
-        "Copyright (c) 2008-2015 The Khronos Group Inc.\n"
-        "Copyright (c) 2012-2016 Patrik Schönfeldt\n"
+        "\n");
+    if (
+            #if FXP_FRACPART < 31
+            std::is_same<vfps::meshdata_t,fixp32>::value ||
+            #endif
+            std::is_same<vfps::meshdata_t,fixp64>::value)
+    {
+        rv += "Copyright (c) 2007-2009 Peter Schregle (FPML)\n";
+    }
+    rv+="Copyright (c) 2012-2016 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2016 Karlsruhe Institute of Technology\n"
         "\n"
         "Inovesa is free software: you can redistribute it and/or modify\n"
@@ -40,8 +46,7 @@ const std::string vfps::copyright_notice() {
         "GNU General Public License for more details.\n"
         "\n"
         "You should have received a copy of the GNU General Public License"
-        "along with Inovesa.  If not, see <http://www.gnu.org/licenses/>."
-    );
+        "along with Inovesa. If not, see <http://www.gnu.org/licenses/>.";
 }
 
 const std::string vfps::inovesa_version() {
