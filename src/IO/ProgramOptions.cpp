@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -54,8 +55,8 @@ vfps::ProgramOptions::ProgramOptions() :
              "\tgrayscale png (.png) file\n"
              #endif // INOVESA_USE_PNG
              "\ttext file (.txt) w/ particle coordinates")
-        ("InitialDistParam",po::value<double>(&Fk)->default_value(0),
-            "Parameter F(k) for generation of initial distribution")
+        ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
+            "Iterations to find (initial) Haissinsky distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),
@@ -95,6 +96,10 @@ vfps::ProgramOptions::ProgramOptions() :
         ("SavePhaseSpace",
             po::value<bool>(&_savephasespace)->default_value(false),
             "save every outstep's phase space to HDF5 file")
+        ("tracking",
+            po::value<std::string>(&_trackingfile)->default_value(""),
+            "file containing starting positions (grid points)"
+            "of particles to be (pseudo-) tracked")
         ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
             "print information more detailed")
     ;
