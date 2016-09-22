@@ -637,6 +637,10 @@ int main(int argc, char** argv)
     for (uint32_t i=0;i<hi;i++) {
         wkm->update();
         const meshaxis_t* wake = wkm->getForce();
+        std::copy_n(xproj,ps_size,currprofile.data());
+        profile.push_back(currprofile);
+        std::copy_n(wake,ps_size,currwake.data());
+        wakeout.push_back(currwake);
         integral_t charge = 0;
         for (meshindex_t x=0; x<ps_size; x++) {
             xproj[x] = std::exp(-0.5f*std::pow((*q_axis)[x],2)-wake[x]);
@@ -659,10 +663,6 @@ int main(int argc, char** argv)
         if (psv != nullptr) {
             psv->delTexture();
         }
-        std::copy_n(xproj,ps_size,currprofile.data());
-        profile.push_back(currprofile);
-        std::copy_n(wake,ps_size,currwake.data());
-        wakeout.push_back(currwake);
     }
 
     std::ofstream proftxt("heisprofiles.txt");
