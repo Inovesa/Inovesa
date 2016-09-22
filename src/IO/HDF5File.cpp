@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -330,13 +331,16 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     const std::array<hsize_t,pt_rank> pt_maxdims
-                    = {{H5S_UNLIMITED,nparticles,2U}};
+            = {{H5S_UNLIMITED,
+                std::max(nparticles,static_cast<decltype(nparticles)>(1U)),
+                2U}};
 
     H5::DataSpace pt_dataspace(pt_rank,pt_dims.data(),pt_maxdims.data());
 
     const std::array<hsize_t,pt_rank> pt_chunkdims
             = {{64U,
-                std::min(static_cast<decltype(nparticles)>(1024U),nparticles),
+                std::max(static_cast<decltype(nparticles)>(1U),
+                std::min(static_cast<decltype(nparticles)>(1024U),nparticles)),
                 2U}};
     pt_prop.setChunk(pt_rank,pt_chunkdims.data());
     pt_prop.setShuffle();
