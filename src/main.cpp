@@ -665,21 +665,6 @@ int main(int argc, char** argv)
         }
     }
 
-    std::ofstream proftxt("heisprofiles.txt");
-    for (meshindex_t x=0; x<ps_size; x++) {
-        for (std::vector<vfps::projection_t> p : profile) {
-            proftxt << p[x] << '\t';
-        }
-        proftxt << std::endl;
-    }
-    std::ofstream waketxt("heiswakes.txt");
-    for (meshindex_t x=0; x<ps_size; x++) {
-        for (std::vector<vfps::projection_t> w : wakeout) {
-            waketxt << w[x] << '\t';
-        }
-        waketxt << std::endl;
-    }
-
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
