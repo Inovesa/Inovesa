@@ -65,25 +65,21 @@ public:
     /**
      * @brief PhaseSpace
      * @param axis
-     * @param Fk integral of initial Haissinski distribution:
-     *        Fk < 0: do not initialize
-     *        Fk == 0: gaussian
-     *        Fk > 0: Haissinski distribution
      */
     PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                const double bunch_charge, const double bunch_current,
-               const double Fk=0, const double zoom=1);
+               const double zoom=1);
 
     PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
                const double bunch_charge, const double bunch_current,
-               const double Fk=0, const double zoom=1);
+               const double zoom=1);
 
     PhaseSpace(meshindex_t ps_size,
                meshaxis_t xmin, meshaxis_t xmax,
                meshaxis_t ymin, meshaxis_t ymax,
                const double bunch_charge, const double bunch_current,
                double xscale=0, double yscale=0,
-               const double Fk=0, const double zoom=1);
+               const double zoom=1);
 
     PhaseSpace(const PhaseSpace& other);
 
@@ -129,7 +125,7 @@ public:
     meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
 
-    const inline projection_t* getProjection(const uint_fast8_t x) const
+    inline projection_t* getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
     /**
@@ -250,16 +246,15 @@ private:
     static std::string cl_code_projection_x;
 #endif
 
-private:
+public:
+    void createFromProjections();
+
     /**
-     * @brief haissinski calculates haissinski distribution
-     * @param target
-     * @param kappa
-     * @param loops (maximum) number of loops (choose 0 for gaussian)
+     * @brief gaus calculates gaussian distribution
+     * @param axis
+     * @param zoom
      */
-    void haissinski(const uint_fast8_t x,
-                    const projection_t Fk,
-                    const double zoom);
+    void gaus(const uint_fast8_t axis, const double zoom);
 };
 
 /**

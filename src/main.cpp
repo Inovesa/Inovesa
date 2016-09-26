@@ -205,7 +205,7 @@ int main(int argc, char** argv)
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
-    const double Fk = opts.getStartDistParam();
+    const unsigned int hi = opts.getHaissinskiIterations();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -287,13 +287,8 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        sstream.str("");
-        sstream.precision(2);
-        sstream << std::fixed << Fk << ", zoom=" << Iz;
-        Display::printText("Generating initial distribution with F(k)="
-                           +sstream.str()+".");
         mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                               Qb,Ib_unscaled,bl,dE,Fk,Iz);
+                               Qb,Ib_unscaled,bl,dE,Iz);
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -628,6 +623,62 @@ int main(int argc, char** argv)
         }
     }
     #endif // INOVESA_USE_GUI
+
+    std::vector<std::vector<vfps::projection_t>> profile;
+    std::vector<vfps::projection_t> currprofile;
+    currprofile.resize(ps_size);
+
+    std::vector<std::vector<vfps::projection_t>> wakeout;
+    std::vector<vfps::projection_t> currwake;
+    currwake.resize(ps_size);
+
+    projection_t* xproj = mesh1->getProjection(0);
+    const Ruler<meshaxis_t>* q_axis = mesh1->getAxis(0);
+    for (uint32_t i=0;i<hi;i++) {
+        wkm->update();
+        const meshaxis_t* wake = wkm->getForce();
+        std::copy_n(xproj,ps_size,currprofile.data());
+        profile.push_back(currprofile);
+        std::copy_n(wake,ps_size,currwake.data());
+        wakeout.push_back(currwake);
+        integral_t charge = 0;
+        for (meshindex_t x=0; x<ps_size; x++) {
+            xproj[x] = std::exp(-0.5f*std::pow((*q_axis)[x],2)-wake[x]);
+            charge += xproj[x]*q_axis->delta();
+        }
+        for (meshindex_t x=0; x<ps_size; x++) {
+            xproj[x] /=charge;
+        }
+        mesh1->createFromProjections();
+        if (psv != nullptr) {
+            psv->createTexture(mesh1);
+        }
+        if (bpv != nullptr) {
+            bpv->updateLine(mesh1->nMeshCells(0),xproj);
+        }
+        if (wpv != nullptr) {
+            wpv->updateLine(mesh1->nMeshCells(0),wake);
+        }
+        display->draw();
+        if (psv != nullptr) {
+            psv->delTexture();
+        }
+    }
+
+    std::ofstream proftxt("heisprofiles.txt");
+    for (meshindex_t x=0; x<ps_size; x++) {
+        for (std::vector<vfps::projection_t> p : profile) {
+            proftxt << p[x] << '\t';
+        }
+        proftxt << std::endl;
+    }
+    std::ofstream waketxt("heiswakes.txt");
+    for (meshindex_t x=0; x<ps_size; x++) {
+        for (std::vector<vfps::projection_t> w : wakeout) {
+            waketxt << w[x] << '\t';
+        }
+        waketxt << std::endl;
+    }
 
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
