@@ -21,7 +21,7 @@ csr_power = hdf_f['/CSR/Intensity/data'][...]
 csr_factor = 1e-6
 csr_label = r"CSR Intensity / a.u."
 
-if inovesa_version >= 12:
+if inovesa_version[1] >= 12:
     csr_factor = (hdf_f['/CSR/Intensity/data']).attrs['Factor4Watts']
     csr_label = r"CSR Intensity / W"
 
@@ -42,7 +42,7 @@ ax1.legend(h1+h2, l1+l2,bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=3, mode="expand", borderaxespad=0.)
 
 
-if inovesa_version >= 13:
+if inovesa_version[1] >= 13:
     tracks = hdf_f['/Particles/data'][...]
     if tracks[1] > 0:
         plt.figure()
