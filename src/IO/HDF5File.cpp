@@ -411,9 +411,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csr_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
 
-    // get ready to save CSR Power
-    _file->createGroup("CSR/Power");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR/Power/axis0" );
+    // get ready to save CSR Intensity
+    _file->createGroup("CSR/Intensity");
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR/Intensity/axis0" );
 
     if (std::is_same<vfps::csrpower_t,float>::value) {
         csri_datatype = H5::PredType::IEEE_F32LE;
@@ -431,7 +431,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csri_prop.setShuffle();
     csri_prop.setDeflate(compression);
 
-    csri_dataset = _file->createDataSet("/CSR/Power/data",csri_datatype,
+    csri_dataset = _file->createDataSet("/CSR/Intensity/data",csri_datatype,
                                         csrp_dataspace,csri_prop);
 
     csri_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
