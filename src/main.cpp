@@ -263,13 +263,18 @@ int main(int argc, char** argv)
             sstream << std::scientific << Ith*isoscale;
             Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
-            sstream.str("");
-            sstream << std::scientific << 1/t_d/fs/(2*M_PI);
-            Display::printText("Damping beta: " +sstream.str());
         }
     }
 
     if (verbose) {
+        sstream.str("");
+        sstream << std::scientific << fs_unscaled;
+        Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
+
+        sstream.str("");
+        sstream << std::scientific << 1/t_d/fs/(2*M_PI);
+        Display::printText("Damping beta: " +sstream.str());
+
         sstream.str("");
         sstream << std::fixed << 1/revolutionpart;
         Display::printText("Doing " +sstream.str()+
