@@ -48,7 +48,9 @@ public:
 
     void save(std::string fname);
 
+#ifdef INOVESA_USE_HDF5
     void save(HDF5File* file);
+#endif // INOVESA_USE_HDF5
 
 public:
     inline int getCLDevice() const
