@@ -741,7 +741,17 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             wkm->update();
         }
-        mesh1->integral(); // works on XProjection (and recalculates it)
+        /* Without renormalization at this point
+         * the last time step might behave slightly different
+         * from the ones before.
+         */
+        if (renormalize) {
+            // works on XProjection (and recalculates it)
+            mesh1->normalize();
+        } else {
+            // works on XProjection (and recalculates it)
+            mesh1->integral();
+        }
         mesh1->variance(0);
         mesh1->updateYProjection();
         mesh1->variance(1);
