@@ -18,6 +18,12 @@ time = hdf_f['/Info/AxisValues_t'][...]
 bunchlength = hdf_f['/BunchLength/data'][...]
 energyspread = hdf_f['/EnergySpread/data'][...]
 csr_power = hdf_f['/CSR/Intensity/data'][...]
+csr_factor = 1e-6
+csr_label = r"CSR Intensity / a.u."
+
+if inovesa_version >= 12:
+    csr_factor = (hdf_f['/CSR/Intensity/data']).attrs['Factor4Watts']
+    csr_label = r"CSR Intensity / W"
 
 plt.figure()
 ax1 = plt.subplot(111)
@@ -28,8 +34,8 @@ ax1.plot(time,energyspread,label=r"$\sigma_p$")
 
 ax2 = ax1.twinx()
 
-ax2.plot(time,csr_power,"r-",label="CSR")
-ax2.set_ylabel(r"CSR Intensity / a.u.")
+ax2.plot(time,csr_power*csr_factor,"r-",label="CSR")
+ax2.set_ylabel(csr_label)
 h1, l1 = ax1.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax1.legend(h1+h2, l1+l2,bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
@@ -38,10 +44,11 @@ ax1.legend(h1+h2, l1+l2,bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
 
 if inovesa_version >= 13:
     tracks = hdf_f['/Particles/data'][...]
-    plt.figure()
-    plt.axes().set_aspect('equal')
-    for i in range(tracks.shape[1]):
-        plt.plot(tracks[:,i,0]/grid_size,tracks[:,i,1]/grid_size)
+    if tracks[1] > 0:
+        plt.figure()
+        plt.axes().set_aspect('equal')
+        for i in range(tracks.shape[1]):
+       	    plt.plot(tracks[:,i,0]/grid_size,tracks[:,i,1]/grid_size)
 
 
 plt.show()
