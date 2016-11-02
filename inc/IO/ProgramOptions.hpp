@@ -75,6 +75,9 @@ public:
     inline std::string getStartDistFile() const
         { return _startdistfile; }
 
+    inline int64_t getStartDistStep() const
+        { return _startdiststep; }
+
     inline std::string getParticleTracking() const
         { return _trackingfile; }
 
@@ -184,6 +187,8 @@ private: // program parameters
     std::string _startdistfile;
 
     std::string _trackingfile;
+
+    int64_t _startdiststep;
 
     std::string _configfile;
 
