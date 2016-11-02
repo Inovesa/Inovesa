@@ -54,6 +54,8 @@ vfps::ProgramOptions::ProgramOptions() :
              "\tgrayscale png (.png) file\n"
              #endif // INOVESA_USE_PNG
              "\ttext file (.txt) w/ particle coordinates")
+        ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
+            "Select step of HDF5 file for initial distribution")
         ("InitialDistParam",po::value<double>(&Fk)->default_value(0),
             "Parameter F(k) for generation of initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),

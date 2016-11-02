@@ -74,6 +74,9 @@ public:
     inline std::string getStartDistFile() const
         { return _startdistfile; }
 
+    inline int64_t getStartDistStep() const
+        { return _startdiststep; }
+
     inline bool getVerbosity() const
         { return _verbose; }
 
@@ -178,6 +181,8 @@ private: // program parameters
     bool _showphasespace;
 
     std::string _startdistfile;
+
+    int64_t _startdiststep;
 
     std::string _configfile;
 

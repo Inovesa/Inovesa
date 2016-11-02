@@ -73,7 +73,8 @@ public:
                                      meshaxis_t qmin, meshaxis_t qmax,
                                      meshaxis_t pmin, meshaxis_t pmax,
                                      double Qb, double Ib_unscaled,
-                                     double bl, double dE);
+                                     double bl, double dE,
+                                     int64_t use_step=-1l);
 
 private:
     H5::H5File* _file;

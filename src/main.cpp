@@ -355,12 +355,14 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
+        int64_t startdiststep = opts.getStartDistStep();
         try {
             mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
                                                             qmin,qmax,
                                                             pmin,pmax,
                                                             Qb,Ib_unscaled,
-                                                            bl,dE));
+                                                            bl,dE,
+                                                            startdiststep));
         } catch (const std::exception& ex) {
             std::cerr << "Error loading initial distribution from \""
                       << startdistfile << "\":"
