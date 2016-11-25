@@ -1,7 +1,19 @@
-INOVESA
+Inovesa
 =======
 
-Inovesa Numerical OpenCL Vlasov Equation Solver Application
+Inovesa (Inovesa Numerical OpenCL Vlasov Equation Solver Application) is
+a tool developed to simulate the dynamics of an electron bunch in a storage
+ring, including the self-interaction with its own wake field.
+To do so, it  uses the well established method to numerically solve the
+Vlasov-Fokker-Planck equation.
+
+Inovesa is modularly extensible and uses OpenCL to massively parallelize the
+computation. It was designed with standard desktop PCs and usability in mind.
+The working principle and example numerical studies can be found in the
+[paper describing Inovesa][1].
+
+
+[1]: https://arxiv.org/abs/1611.05293 "A Parallelized Vlasov-Fokker-Planck-Solver for Desktop PCs"
 
 
 Build Requirenments
