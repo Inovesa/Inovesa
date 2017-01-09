@@ -189,15 +189,27 @@ int main(int argc, char** argv)
     const double H = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
     const double V = opts.getRFVoltage();
-    const meshaxis_t alpha0 = opts.getAlpha0();
-    const meshaxis_t alpha1 = opts.getAlpha1();
-    const meshaxis_t alpha2 = opts.getAlpha2();
+
+    double fs_tmp = opts.getSyncFreq();
+    meshaxis_t alpha0_tmp = opts.getAlpha0();
+
+    // positive f_s will
+    if (fs_tmp < 0) {
+        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*M_PI*E0));
+    } else {
+        alpha0_tmp = 2*M_PI*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
+    }
 
     // real synchrotron frequency
-    const double fs_unscaled = f_rev*std::sqrt(alpha0*H_unscaled*V/(2*M_PI*E0));
+    const double fs_unscaled = fs_tmp;
 
     // synchrotron frequency (isomagnetic ring)
     const double fs = fs_unscaled/isoscale;
+
+    const meshaxis_t alpha0 = alpha0_tmp;
+    const meshaxis_t alpha1 = opts.getAlpha1();
+    const meshaxis_t alpha2 = opts.getAlpha2();
+
 
     // natural RMS bunch length
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
