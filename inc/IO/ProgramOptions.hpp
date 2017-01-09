@@ -167,6 +167,9 @@ public:
     inline double getStartDistZoom() const
         { return zoom; }
 
+    inline double getSyncFreq() const
+        { return f_s; }
+
     inline double getDampingTime() const
         { return t_d; }
 
@@ -227,6 +230,7 @@ private: // phsical parameters
      */
     double zoom;
     double f_c;
+    double f_s;
     double f0;
     double g;
     double H;
