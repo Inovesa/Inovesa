@@ -28,25 +28,25 @@
 namespace vfps
 {
 
-template <class meshaxis_t>
+template <typename ruler_t>
 class Ruler
 {
 public:
-    Ruler(meshindex_t steps, meshaxis_t min, meshaxis_t max, double scale=0) :
+    Ruler(meshindex_t steps, ruler_t min, ruler_t max, double scale=0) :
         _steps(steps),
         _max(max),
         _min(min),
-        _delta((max-min)/meshaxis_t(steps-1)),
+        _delta((max-min)/static_cast<ruler_t>(steps-1)),
         _scale(scale),
         _zerobin(((min+max)/(min-max)+1)*(steps-1)/2)
     {
         if (min >= max) {
             throw std::invalid_argument("Tried to set up Ruler with min >= max.");
         }
-        meshaxis_t* meshaxis_tmp = new meshaxis_t[_steps];
+        ruler_t* meshaxis_tmp = new ruler_t[_steps];
 
         for (meshindex_t i=0; i<_steps; i++){
-            meshaxis_tmp[i] = _min+(meshaxis_t(i)*_delta);
+            meshaxis_tmp[i] = _min+(ruler_t(i)*_delta);
         }
 
         _data = meshaxis_tmp;
@@ -60,7 +60,7 @@ public:
         _scale(other._scale),
         _zerobin(other._zerobin)
     {
-        meshaxis_t* meshaxis_tmp = new meshaxis_t[_steps];
+        ruler_t* meshaxis_tmp = new ruler_t[_steps];
         std::copy_n(other._data,_steps,meshaxis_tmp);
         _data = meshaxis_tmp;
     }
@@ -70,16 +70,16 @@ public:
         delete [] _data;
     }
 
-    inline const meshaxis_t& at(meshindex_t d) const
+    inline const ruler_t& at(meshindex_t d) const
         { return _data[d]; }
 
-    inline const meshaxis_t* data() const
+    inline const ruler_t* data() const
         { return _data; }
 
-    inline const meshaxis_t max() const
+    inline const ruler_t max() const
         {return _max;}
 
-    inline const meshaxis_t min() const
+    inline const ruler_t min() const
         { return _min; }
 
     inline double scale() const
@@ -88,16 +88,16 @@ public:
     inline meshindex_t steps() const
         { return _steps; }
 
-    inline const meshaxis_t delta() const
+    inline const ruler_t delta() const
         { return _delta; }
 
-    inline const meshaxis_t size() const
+    inline const ruler_t size() const
         { return _max - _min; }
 
-    inline const meshaxis_t zerobin() const
+    inline const ruler_t zerobin() const
         { return _zerobin; }
 
-    inline const meshaxis_t& operator[](meshindex_t d) const
+    inline const ruler_t& operator[](meshindex_t d) const
         { return at(d); }
 
     /**
@@ -115,19 +115,19 @@ public:
     }
 
 protected:
-    const meshaxis_t* _data;
+    const ruler_t* _data;
 
     const meshindex_t _steps;
 
-    const meshaxis_t _max;
+    const ruler_t _max;
 
-    const meshaxis_t _min;
+    const ruler_t _min;
 
-    const meshaxis_t _delta;
+    const ruler_t _delta;
 
     const double _scale;
 
-    const meshaxis_t _zerobin;
+    const ruler_t _zerobin;
 };
 
 }
