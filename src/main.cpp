@@ -163,7 +163,7 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const bool renormalize = opts.getRenormalizeCharge();
 
-    PhaseSpace* mesh1;
+    PhaseSpace* mesh1 = nullptr;
     meshindex_t ps_size = opts.getMeshSize();
     const double pqsize = opts.getPhaseSpaceSize();
     const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);

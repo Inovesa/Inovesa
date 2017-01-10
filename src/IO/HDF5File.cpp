@@ -763,8 +763,8 @@ void vfps::HDF5File::appendTime(const double t)
 }
 
 vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
-                                                meshaxis_t qmin,meshaxis_t qmax,
-                                                meshaxis_t pmin,meshaxis_t pmax,
+                                                meshaxis_t qmin, meshaxis_t qmax,
+                                                meshaxis_t pmin, meshaxis_t pmax,
                                                 double Qb, double Ib_unscaled,
                                                 double bl, double dE,
                                                 int64_t use_step)
@@ -792,7 +792,8 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
 
     meshindex_t ps_size = ps_dims[1];
     use_step = (ps_dims[0]+use_step)%ps_dims[0];
-    const std::array<hsize_t,ps_rank> ps_offset = {{use_step,0,0}};
+    const std::array<hsize_t,ps_rank> ps_offset =
+        {{static_cast<hsize_t>(use_step),0,0}};
     const std::array<hsize_t,ps_rank> ps_ext = {{1,ps_size,ps_size}};
     H5::DataSpace memspace(ps_rank,ps_ext.data(),nullptr);
     ps_space.selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());
