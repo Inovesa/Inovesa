@@ -36,7 +36,7 @@ public:
     /**
      * @brief apply copys data from in to out
      */
-    void apply() const override
+    void apply() override
     {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
