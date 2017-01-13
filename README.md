@@ -1,7 +1,7 @@
 Inovesa
 =======
 
-Inovesa (Inovesa Numerical OpenCL Vlasov Equation Solver Application) is
+Inovesa (Inovesa Numerical Optimized Vlasov Equation Solver Application) is
 a tool developed to simulate the dynamics of an electron bunch in a storage
 ring, including the self-interaction with its own wake field.
 To do so, it  uses the well established method to numerically solve the
