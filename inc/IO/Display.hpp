@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -54,7 +54,7 @@ class DisplayException : public std::exception {
 public:
     DisplayException(std::string msg) : _msg(msg){}
 
-    const char* what() const noexcept { return _msg.c_str(); }
+    const char* what() const noexcept override { return _msg.c_str(); }
 
 private:
     std::string _msg;
@@ -87,9 +87,9 @@ public:
 private:
     void openWindow(uint_fast8_t glversion);
 
-	#ifdef INOVESA_USE_GUI
-	#if GLFW_VERSION_MAJOR == 3
-	GLFWwindow* window;
+    #ifdef INOVESA_USE_GUI
+    #if GLFW_VERSION_MAJOR == 3
+    GLFWwindow* window;
     #endif
 
         std::vector<GUIElement*> _item;

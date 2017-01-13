@@ -36,7 +36,10 @@ vfps::FreeSpaceCSR::__calcImpedance(const size_t n,
     std::vector<vfps::impedance_t> rv;
     rv.reserve(n);
 
-    // according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
+    /* Zeros contribution to the impedance
+     * according to Eq. 6.18 in Part. Acc. Vol 57, p 35 (Murpy et al.)
+     * (Note that this is not the free space impedance.)
+     */
     constexpr impedance_t Z0 = impedance_t(306.3,176.9);
 
     // frequency resolution: impedance will be sampled at multiples of delta

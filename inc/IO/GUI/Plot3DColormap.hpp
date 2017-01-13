@@ -1,8 +1,8 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2015: Nathaniel J. Smith, Stefan van der Walt           *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -33,15 +33,15 @@ namespace vfps
 class Plot3DColormap : public GUIElement
 {
 public:
-	Plot3DColormap(vfps::meshdata_t maxvalue=1);
+    Plot3DColormap(vfps::meshdata_t maxvalue=1);
 
-	~Plot3DColormap();
+    ~Plot3DColormap();
 
-	void createTexture(PhaseSpace* mesh);
+    void createTexture(PhaseSpace* mesh);
 
-	void delTexture();
+    void delTexture();
 
-	void draw();
+    void draw() override;
 
 private:
     GLuint vertexbuffer;

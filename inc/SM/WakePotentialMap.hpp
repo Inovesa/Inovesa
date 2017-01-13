@@ -42,7 +42,7 @@ public:
     /**
      * @brief update implements WakeKickMap
      */
-    void update();
+    void update() override;
 
 private:
     ElectricField* _field;
