@@ -331,8 +331,11 @@ int main(int argc, char** argv)
 
         if (image.get_width() == image.get_height()) {
             if (ps_size != image.get_width()) {
-                std::cerr << startdistfile
-                          << " does not match set GridSize." << std::endl;
+                std::cerr << startdistfile << " (a="
+                          << image.get_width()
+                          << " px) does not match set GridSize (a="
+                          << ps_size << " px)"
+                          << std::endl;
 
                 return EXIT_SUCCESS;
             }
