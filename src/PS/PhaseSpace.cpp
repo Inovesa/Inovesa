@@ -23,7 +23,7 @@
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                              const double bunch_charge,
                              const double bunch_current,
-                             const double zoom) :
+                             const double zoom, meshdata_t *data) :
     _axis(axis),
     charge(bunch_charge),
     current(bunch_current),
@@ -43,10 +43,14 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
     }
     _ws = new meshdata_t[nMeshCells(0)];
 
-    gaus(0,zoom); // creates gaussian for x axis
-    gaus(1,zoom); // creates gaussian for y axis
+    if (data == nullptr) {
+        gaus(0,zoom); // creates gaussian for x axis
+        gaus(1,zoom); // creates gaussian for y axis
 
-    createFromProjections();
+        createFromProjections();
+    } else {
+        std::copy_n(data,nMeshCells(0)*nMeshCells(1),_data1D);
+    }
         #ifdef INOVESA_CHG_BUNCH
             std::random_device seed;
             std::default_random_engine engine(seed());
@@ -145,9 +149,9 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
                              const double bunch_charge,
                              const double bunch_current,
-                             const double zoom) :
+                             const double zoom, meshdata_t *data) :
     PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},
-               bunch_charge,bunch_current,zoom)
+               bunch_charge,bunch_current,zoom,data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
@@ -156,10 +160,10 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              const double bunch_charge,
                              const double bunch_current,
                              double xscale, double yscale,
-                             const double zoom) :
+                             const double zoom, meshdata_t *data) :
     PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
                Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale),
-               bunch_charge,bunch_current,zoom)
+               bunch_charge,bunch_current,zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :

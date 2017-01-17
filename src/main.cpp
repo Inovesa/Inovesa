@@ -340,14 +340,15 @@ int main(int argc, char** argv)
                 return EXIT_SUCCESS;
             }
 
-            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                                   Qb,Ib_unscaled,bl);
-
+            meshdata_t* data = new meshdata_t[ps_size*ps_size];
             for (unsigned int x=0; x<ps_size; x++) {
                 for (unsigned int y=0; y<ps_size; y++) {
-                    (*mesh1)[x][y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+                    data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
                 }
             }
+            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                                   Qb,Ib_unscaled,bl,dE,1,data);
+            delete [] data;
             // normalize integral to 1
             mesh1->normalize();
 
