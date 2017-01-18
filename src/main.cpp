@@ -37,6 +37,7 @@
 #include "PS/PhaseSpace.hpp"
 #include "Z/FreeSpaceCSR.hpp"
 #include "Z/ParallelPlatesCSR.hpp"
+#include "Z/CollimatorImpedance.hpp"
 #include "Z/ResistiveWall.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "SM/FokkerPlanckMap.hpp"
@@ -508,7 +509,12 @@ int main(int argc, char** argv)
                 (*impedance)+=rw;
                 Display::printText("... with added resistive wall impedance.");
             }
-
+            if (opts.getCollimatorRadius() > 0) {
+                CollimatorImpedance Z_col(ps_size*padding,fmax,
+                                          gap/2,opts.getCollimatorRadius());
+                (*impedance)+=Z_col;
+                Display::printText("... with added collimator.");
+            }
         } else {
             Display::printText("Will use free space CSR impedance.");
             impedance = new FreeSpaceCSR(ps_size*padding,f0,fmax);

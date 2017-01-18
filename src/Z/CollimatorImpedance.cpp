@@ -18,45 +18,32 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "Z/ResistiveWall.hpp"
+#include "Z/CollimatorImpedance.hpp"
 
-vfps::ResistiveWall::ResistiveWall(const size_t n,
-                                   const frequency_t f_rev,
+vfps::CollimatorImpedance::CollimatorImpedance(const size_t n,
                                    const frequency_t f_max,
-                                   const double s,
-                                   const double xi,
-                                   const double b)
+                                   const double outer,
+                                   const double inner)
     :
-      Impedance(__calcImpedance(n,f_rev,f_max,s,xi,b),f_max)
+      Impedance(__calcImpedance(n,outer,inner),f_max)
 {
 }
 
 std::vector<vfps::impedance_t>
-vfps::ResistiveWall::__calcImpedance(const size_t n,
-                                     const frequency_t f_rev,
-                                     const frequency_t f_max,
-                                     const double s,
-                                     const double xi,
-                                     const double b)
+vfps::CollimatorImpedance::__calcImpedance(const size_t n,
+                                     const double outer,
+                                     const double inner)
 {
     std::vector<vfps::impedance_t> rv;
     rv.reserve(n);
 
-    const double mu = (1+xi)*physcons::mu0;
+    // vacuum impedance
+    constexpr double Z0 = 376.730313461;
 
-    /* First contribution to the impedance (at n=1).
-     * Note that we do not care for n<0, so we can drop the sgn(n).
-     */
-    const impedance_t Z1 =
-            static_cast<frequency_t>(
-                std::sqrt(mu/s/M_PI/f_rev)*physcons::c/2/b
-            ) * impedance_t(1,1);
-
-    // frequency resolution: impedance will be sampled at multiples of delta
-    const frequency_t delta = f_max/f_rev/(n-1.0);
+    const impedance_t Z(Z0/M_PI*std::log(outer/inner),0);
 
     for (size_t i=0; i<=n/2; i++) {
-        rv.push_back(Z1*std::sqrt(i*delta));
+        rv.push_back(Z);
     }
     for (size_t i=n/2+1; i<n; i++) {
         rv.push_back(impedance_t(0,0));

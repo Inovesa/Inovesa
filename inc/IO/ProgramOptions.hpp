@@ -176,6 +176,9 @@ public:
     inline double getVacuumChamberGap() const
         { return g; }
 
+    inline double getCollimatorRadius() const
+        { return collimator; }
+
     inline double getWallConductivity() const
         { return s_c; }
 
@@ -239,6 +242,7 @@ private: // phsical parameters
     double f_s;
     double f0;
     double g;
+    double collimator;
     double s_c;
     double xi_wall;
     double H;

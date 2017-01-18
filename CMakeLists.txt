@@ -21,6 +21,7 @@ set(SRC_LIST
   ./src/SM/WakeKickMap.cpp
   ./src/SM/WakePotentialMap.cpp
   ./src/SM/WakeFunctionMap.cpp
+  ./src/Z/CollimatorImpedance.cpp
   ./src/Z/Impedance.cpp
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
@@ -51,6 +52,7 @@ set(INC_LIST
   ./inc/SM/WakePotentialMap.hpp
   ./inc/SM/WakeKickMap.hpp
   ./inc/SM/WakeFunctionMap.hpp
+  ./inc/Z/CollimatorImpedance.hpp
   ./inc/Z/Impedance.hpp
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp

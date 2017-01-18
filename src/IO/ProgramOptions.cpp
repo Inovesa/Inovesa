@@ -79,6 +79,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "<0: free space CSR\n"
             " 0: no CSR\n"
             ">0: parallel plates CSR")
+        ("CollimatorRadius", po::value<double>(&collimator)->default_value(0),
+            "Radius of collimator opening (m)\n"
+            "<=0: no collimator")
         ("WallConductivity", po::value<double>(&s_c)->default_value(0),
             "Conductivity of the vacuum pipe (S/m)\n"
             "<=0: perfect conductor")
