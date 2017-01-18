@@ -39,6 +39,9 @@ public:
      * @brief Impedance basic constructor that initializes everything
      * @param z
      * @param f_max
+     *
+     * Note that we will use this for DFT,
+     * so n>z.size()/2 is defined to be equivalent to n<0.
      */
     Impedance(const std::vector<impedance_t>& z, const frequency_t f_max);
 

@@ -24,6 +24,7 @@ set(SRC_LIST
   ./src/Z/Impedance.cpp
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
+  ./src/Z/ResistiveWall.cpp
   ./src/defines.cpp
   ./src/main.cpp
 )
@@ -53,6 +54,7 @@ set(INC_LIST
   ./inc/Z/Impedance.hpp
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
+  ./inc/Z/ResistiveWall.hpp
   ./inc/defines.hpp
   ./inc/fixed_point.h
 )
