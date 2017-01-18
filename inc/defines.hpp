@@ -80,6 +80,9 @@ constexpr double IAlfven = 17045;
 
 /// electron rest energy (in eV)
 constexpr double me = 510998.9;
+
+/// magnetic constant (in H/m)
+constexpr double mu0 = 1/(epsilon0*c*c);
 } // namespace physcons
 
 } // namespace vfps

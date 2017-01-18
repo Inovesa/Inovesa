@@ -25,9 +25,9 @@
 vfps::ParallelPlatesCSR::ParallelPlatesCSR(const size_t n,
                                            const frequency_t f_rev,
                                            const frequency_t f_max,
-                                           const double h)
+                                           const double g)
     :
-      Impedance(__calcImpedance(n,f_rev,f_max,h),f_max)
+      Impedance(__calcImpedance(n,f_rev,f_max,g),f_max)
 {
 }
 
@@ -35,7 +35,7 @@ std::vector<vfps::impedance_t>
 vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
                                          const vfps::frequency_t f_rev,
                                          const vfps::frequency_t f_max,
-                                         const double h)
+                                         const double g)
 {
     std::vector<vfps::impedance_t> rv;
     rv.reserve(n);
@@ -49,8 +49,8 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
     for (size_t i=1; i<=n/2; i++) {
         std::complex<double> Z=0;
         const double n = i*delta;
-        const double m = n*std::pow(h/r_bend,3./2.);
-        const uint32_t maxp = 2*m*std::pow(r_bend/h,3./2.)*f_rev*h/physcons::c;
+        const double m = n*std::pow(g/r_bend,3./2.);
+        const uint32_t maxp = 2*m*std::pow(r_bend/g,3./2.)*f_rev*g/physcons::c;
         const double b = std::pow(m,-4./3.);
         std::complex<double> zinc=1;
         for (uint32_t p=1; p<=maxp;p+=2) {
@@ -68,7 +68,7 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
             }
             Z += zinc;
         }
-        Z *= 4.0*b*n*h/r_bend*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
+        Z *= 4.0*b*n*g/r_bend*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
         rv.push_back(impedance_t(Z));
     }
     for (size_t i=n/2+1; i<n; i++) {

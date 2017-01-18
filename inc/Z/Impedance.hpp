@@ -35,6 +35,8 @@ namespace vfps
 class Impedance
 {
 public:
+    Impedance() = delete;
+
     /**
      * @brief Impedance basic constructor that initializes everything
      * @param z

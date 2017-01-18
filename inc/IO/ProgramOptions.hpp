@@ -176,6 +176,12 @@ public:
     inline double getVacuumChamberGap() const
         { return g; }
 
+    inline double getWallConductivity() const
+        { return s_c; }
+
+    inline double getWallSusceptibility() const
+        { return xi_wall; }
+
 private: // program parameters
     int _cldevice;
 
@@ -233,6 +239,8 @@ private: // phsical parameters
     double f_s;
     double f0;
     double g;
+    double s_c;
+    double xi_wall;
     double H;
     double I_b;
     double t_d;

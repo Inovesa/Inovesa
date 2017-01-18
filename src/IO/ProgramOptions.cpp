@@ -79,6 +79,12 @@ vfps::ProgramOptions::ProgramOptions() :
             "<0: free space CSR\n"
             " 0: no CSR\n"
             ">0: parallel plates CSR")
+        ("WallConductivity", po::value<double>(&s_c)->default_value(0),
+            "Conductivity of the vacuum pipe (S/m)\n"
+            "<=0: perfect conductor")
+        ("WallSusceptibility", po::value<double>(&xi_wall)->default_value(0),
+            "Magnetic susceptibility of the vacuum pipe (1)\n"
+            "<-1: -1")
         ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
             "Beamline cutoff frequency (Hz)")
         ("AcceleratingVoltage,V",

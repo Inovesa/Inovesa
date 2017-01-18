@@ -18,8 +18,8 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef FREESPACECSR_HPP
-#define FREESPACECSR_HPP
+#ifndef RESISTIVEWALL_HPP
+#define RESISTIVEWALL_HPP
 
 #include "Z/Impedance.hpp"
 
@@ -48,8 +48,8 @@ public:
     ResistiveWall(const size_t n,
                   const frequency_t f_rev,
                   const frequency_t f_max,
-                  const double mu,
                   const double s,
+                  const double xi,
                   const double b);
 
 private:
@@ -57,11 +57,11 @@ private:
     __calcImpedance(const size_t n,
                     const frequency_t f_rev,
                     const frequency_t f_max,
-                    const double mu,
                     const double s,
+                    const double xi,
                     const double b);
 };
 
 } // namespace vfps
 
-#endif // FREESPACECSR_HPP
+#endif // RESISTIVEWALL_HPP

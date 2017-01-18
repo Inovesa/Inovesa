@@ -32,14 +32,14 @@ public:
     ParallelPlatesCSR(const size_t n,
                       const frequency_t f_rev,
                       const frequency_t f_max,
-                      const double h);
+                      const double g);
 
 private:
     static std::vector<vfps::impedance_t>
     __calcImpedance(const size_t n,
                     const frequency_t f_rev,
                     const frequency_t f_max,
-                    const double h);
+                    const double g);
 };
 
 } // namespace VFPS

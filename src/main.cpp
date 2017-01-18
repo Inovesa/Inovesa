@@ -37,6 +37,7 @@
 #include "PS/PhaseSpace.hpp"
 #include "Z/FreeSpaceCSR.hpp"
 #include "Z/ParallelPlatesCSR.hpp"
+#include "Z/ResistiveWall.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "SM/FokkerPlanckMap.hpp"
 #include "SM/Identity.hpp"
@@ -492,14 +493,25 @@ int main(int argc, char** argv)
 
     Impedance* impedance = nullptr;
     if (opts.getImpedanceFile() == "") {
+        double fmax = ps_size*vfps::physcons::c/(2*qmax*bl);
         if (gap>0) {
             Display::printText("Will use parallel plates CSR impedance.");
-            impedance = new ParallelPlatesCSR(ps_size*padding,f0,
-                                     ps_size*vfps::physcons::c/(2*qmax*bl),gap);
+            impedance = new ParallelPlatesCSR(ps_size*padding,f0,fmax,gap);
+            if ( opts.getWallConductivity() > 0 &&
+                 opts.getWallSusceptibility() >= -1 )
+            {
+                Display::printText("Resistive wall impedance "
+                                   "is currently ignored.");
+            }
         } else {
             Display::printText("Will use free space CSR impedance.");
-            impedance = new FreeSpaceCSR(ps_size*padding,f0,
-                                         ps_size*vfps::physcons::c/(2*qmax*bl));
+            impedance = new FreeSpaceCSR(ps_size*padding,f0,fmax);
+            if ( opts.getWallConductivity() > 0 &&
+                 opts.getWallSusceptibility() >= -1 )
+            {
+                Display::printText("Resistive wall impedance "
+                                   "is ignored in free space.");
+            }
         }
     } else {
         Display::printText("Reading impedance from: \""
