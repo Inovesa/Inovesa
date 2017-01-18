@@ -497,12 +497,18 @@ int main(int argc, char** argv)
         if (gap>0) {
             Display::printText("Will use parallel plates CSR impedance.");
             impedance = new ParallelPlatesCSR(ps_size*padding,f0,fmax,gap);
+
             if ( opts.getWallConductivity() > 0 &&
                  opts.getWallSusceptibility() >= -1 )
             {
-                Display::printText("Resistive wall impedance "
-                                   "is currently ignored.");
+                ResistiveWall rw(ps_size*padding,f0,fmax,
+                                 opts.getWallConductivity(),
+                                 opts.getWallSusceptibility(),
+                                 gap/2);
+                (*impedance)+=rw;
+                Display::printText("... with added resistive wall impedance.");
             }
+
         } else {
             Display::printText("Will use free space CSR impedance.");
             impedance = new FreeSpaceCSR(ps_size*padding,f0,fmax);
