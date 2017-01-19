@@ -737,6 +737,7 @@ int main(int argc, char** argv)
 
     Display::printText("Starting the simulation.");
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
+        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
