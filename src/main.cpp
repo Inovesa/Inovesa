@@ -686,10 +686,10 @@ int main(int argc, char** argv)
         }
 
         if (renormalize > 0 && i%renormalize == 0) {
-            // works on XProjection (and recalculates it)
+            // works on XProjection
             meshintegral = mesh1->normalize();
         } else {
-            // works on XProjection (and recalculates it)
+            // works on XProjection
             meshintegral = mesh1->integral();
         }
 
@@ -769,6 +769,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (hdf_file != nullptr) {
+        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
@@ -777,10 +778,10 @@ int main(int argc, char** argv)
          * from the ones before.
          */
         if (renormalize) {
-            // works on XProjection (and recalculates it)
+            // works on XProjection
             mesh1->normalize();
         } else {
-            // works on XProjection (and recalculates it)
+            // works on XProjection
             mesh1->integral();
         }
         mesh1->variance(0);
