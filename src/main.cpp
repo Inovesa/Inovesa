@@ -160,7 +160,7 @@ int main(int argc, char** argv)
 
     const bool interpol_clamp = opts.getInterpolationBound();
     const bool verbose = opts.getVerbosity();
-    const bool renormalize = opts.getRenormalizeCharge();
+    const auto renormalize = opts.getRenormalizeCharge();
 
     PhaseSpace* mesh1 = nullptr;
     meshindex_t ps_size = opts.getMeshSize();
@@ -671,22 +671,31 @@ int main(int argc, char** argv)
     if (gui) {
         csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
     }
+
+    // normalized charge (should be 1)
+    integral_t meshintegral = 1;
+
+    // normalized charge (should be 1)
+    integral_t oldmeshintegral = 1;
+
     Display::printText("Starting the simulation.");
-    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
+    for (uint32_t i=0, outstepnr=0;i<steps*rotations;i++) {
         mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
+
+        if (renormalize > 0 && i%renormalize == 0) {
+            // works on XProjection (and recalculates it)
+            meshintegral = mesh1->normalize();
+        } else {
+            // works on XProjection (and recalculates it)
+            meshintegral = mesh1->integral();
+        }
+
         if (outstep > 0 && i%outstep == 0) {
             outstepnr++;
-            integral_t meshintegral; // normalized charge (should be 1)
-            if (renormalize) {
-                // works on XProjection (and recalculates it)
-                meshintegral = mesh1->normalize();
-            } else {
-                // works on XProjection (and recalculates it)
-                meshintegral = mesh1->integral();
-            }
+
             mesh1->variance(0);
             mesh1->updateYProjection();
             mesh1->variance(1);
@@ -744,7 +753,9 @@ int main(int argc, char** argv)
             status.precision(5);
             status << std::setw(6) << static_cast<float>(i)/steps
                    << '/' << rotations;
-            status << "\t1-Q/Q_0=" << 1.0 - meshintegral;
+            status.precision(3);
+            status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
+            oldmeshintegral = meshintegral;
             Display::printText(status.str(),2.0f);
         }
         wm->apply();
@@ -812,7 +823,8 @@ int main(int argc, char** argv)
     std::stringstream status;
     status.precision(5);
     status << std::setw(6) << rotations << '/' << rotations;
-    status << "\t1-Q/Q_0=" << 1.0 - mesh1->integral();
+    status.precision(3);
+    status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
     Display::printText(status.str());
 
     #ifdef INOVESA_USE_CL
