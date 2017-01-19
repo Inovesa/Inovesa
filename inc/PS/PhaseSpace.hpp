@@ -110,8 +110,21 @@ public:
     inline const Ruler<meshaxis_t>* getAxis(const uint_fast8_t x) const
     { return &(_axis[x]); }
 
+    /**
+     * @brief average
+     * @param axis
+     * @return
+     *
+     * relies on an up-t date _projection[axis]
+     */
     meshdata_t average(const uint_fast8_t axis);
 
+    /**
+     * @brief integral
+     * @return
+     *
+     * relies on an up-t date _projection[0]
+     */
     integral_t integral();
 
     const integral_t& getIntegral() const

@@ -275,7 +275,6 @@ vfps::ElectricField::~ElectricField()
 
 vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
 {
-    _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
         OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
@@ -319,7 +318,6 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
 
 vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
-    _phasespace->updateXProjection();
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active){
         OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
