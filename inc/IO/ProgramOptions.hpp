@@ -30,6 +30,7 @@
 #include <sstream>
 
 #include "defines.hpp"
+#include "MessageStrings.hpp"
 #include "SM/FokkerPlanckMap.hpp"
 #ifdef INOVESA_USE_HDF5
 #include "IO/HDF5File.hpp"

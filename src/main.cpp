@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -31,6 +31,7 @@
 #include <sstream>
 
 #include "defines.hpp"
+#include "MessageStrings.hpp"
 #include "IO/Display.hpp"
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
@@ -760,6 +761,9 @@ int main(int argc, char** argv)
     }
 
     Display::printText("Starting the simulation.");
+    mesh1->integral();
+    mesh1->variance(1);
+    Display::printText(status_string(mesh1,0,rotations));
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
             wkm->update();
@@ -827,12 +831,8 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESSA_USE_GUI
-            std::stringstream status;
-            status.precision(5);
-            status << std::setw(6) << static_cast<float>(i)/steps
-                   << '/' << rotations;
-            status << "\t1-Q/Q_0=" << 1.0 - meshintegral;
-            Display::printText(status.str(),2.0f);
+            Display::printText(status_string(mesh1,static_cast<float>(i)/steps,
+                               rotations),2.0f);
         }
         wm->apply();
         wm->applyTo(trackme);
@@ -901,11 +901,7 @@ int main(int argc, char** argv)
     }
     #endif
 
-    std::stringstream status;
-    status.precision(5);
-    status << std::setw(6) << rotations << '/' << rotations;
-    status << "\t1-Q/Q_0=" << 1.0 - mesh1->integral();
-    Display::printText(status.str());
+    Display::printText(status_string(mesh1,rotations,rotations));
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
