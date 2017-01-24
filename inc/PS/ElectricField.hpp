@@ -128,6 +128,8 @@ public:
      * @return CSR spectrum (getNMax() points)
      *
      * @todo: Use OpenCL for power calculation
+     *
+     * relies on an up-t date PhaseSpace::_projection[0]
      */
     csrpower_t* updateCSR(frequency_t cutoff);
 
@@ -140,6 +142,8 @@ public:
      *
      * @todo: Handling of negative frequencies in the formfactor
      * @todo: Correct scaling
+     *
+     * relies on an up-t date PhaseSpace::_projection[axis]
      */
     meshaxis_t* wakePotential();
 
