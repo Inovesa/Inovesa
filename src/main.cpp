@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -31,6 +31,7 @@
 #include <sstream>
 
 #include "defines.hpp"
+#include "MessageStrings.hpp"
 #include "IO/Display.hpp"
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
@@ -759,30 +760,27 @@ int main(int argc, char** argv)
         csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
     }
 
-    // normalized charge (should be 1)
-    integral_t meshintegral = 1;
-
-    // normalized charge (should be 1)
-    integral_t oldmeshintegral = 1;
-
     Display::printText("Starting the simulation.");
+    mesh1->integral();
+    mesh1->variance(1);
+    Display::printText(status_string(mesh1,0,rotations));
     for (uint32_t i=0, outstepnr=0;i<steps*rotations;i++) {
+        // update projection to horizontal axis for use in this time step
         mesh1->updateXProjection();
+
         if (wkm != nullptr) {
+            // works on XProjection
             wkm->update();
         }
-
         if (renormalize > 0 && i%renormalize == 0) {
             // works on XProjection
-            meshintegral = mesh1->normalize();
-        } else {
-            // works on XProjection
-            meshintegral = mesh1->integral();
+            mesh1->normalize();
         }
 
         if (outstep > 0 && i%outstep == 0) {
             outstepnr++;
 
+            // works on XProjection
             mesh1->variance(0);
             mesh1->updateYProjection();
             mesh1->variance(1);
@@ -836,14 +834,8 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESSA_USE_GUI
-            std::stringstream status;
-            status.precision(5);
-            status << std::setw(6) << static_cast<float>(i)/steps
-                   << '/' << rotations;
-            status.precision(3);
-            status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
-            oldmeshintegral = meshintegral;
-            Display::printText(status.str(),2.0f);
+            Display::printText(status_string(mesh1,static_cast<float>(i)/steps,
+                               rotations),2.0f);
         }
         wm->apply();
         wm->applyTo(trackme);
@@ -913,12 +905,7 @@ int main(int argc, char** argv)
     }
     #endif
 
-    std::stringstream status;
-    status.precision(5);
-    status << std::setw(6) << rotations << '/' << rotations;
-    status.precision(3);
-    status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
-    Display::printText(status.str());
+    Display::printText(status_string(mesh1,rotations,rotations));
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {

@@ -135,7 +135,13 @@ public:
 
     meshdata_t variance(const uint_fast8_t axis);
 
-    meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
+    inline meshdata_t getBunchLength() const
+        { return getMoment(0,1); }
+
+    inline meshdata_t getEnergySpread() const
+        { return getMoment(1,1); }
+
+    inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
 
     inline projection_t* getProjection(const uint_fast8_t x) const
