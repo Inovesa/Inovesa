@@ -37,7 +37,8 @@ public:
      * @param ysize
      * @param fname
      */
-    WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
+    WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
+                    std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const std::string fname,
                     const double sigmaE, const double E0,
@@ -53,9 +54,10 @@ public:
      * @param csrimpedance
      * @param it
      */
-    WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
+    WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
+                    std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    const vfps::ElectricField* csr,
+                    const ElectricField* csr,
                     const InterpolationType it, const bool interpol_clamp);
 
     ~WakeFunctionMap();
@@ -91,7 +93,8 @@ private:
      * @param ysize
      * @param it
      */
-    WakeFunctionMap(PhaseSpace* in, PhaseSpace* out,
+    WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
+                    std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const InterpolationType it, bool interpol_clamp);
 

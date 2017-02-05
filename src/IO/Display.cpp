@@ -89,7 +89,7 @@ vfps::Display::~Display()
 }
 
 #ifdef INOVESA_USE_GUI
-void vfps::Display::addElement(GUIElement* newitem)
+void vfps::Display::addElement(std::shared_ptr<GUIElement> newitem)
 {
     _item.push_back(newitem);
 }
@@ -101,7 +101,7 @@ void vfps::Display::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // draw GUIElements
-    for (GUIElement* i : _item) {
+    for (auto i : _item) {
         i->draw();
     }
 
@@ -138,7 +138,7 @@ void vfps::Display::printText(std::string txt, float silentTime)
 }
 
 #ifdef INOVESA_USE_GUI
-void vfps::Display::takeElement(vfps::GUIElement* item)
+void vfps::Display::takeElement(std::shared_ptr<GUIElement> item)
 {
     for (size_t i=0; i< _item.size(); i++) {
         if (_item[i] == item) {

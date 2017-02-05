@@ -29,6 +29,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <type_traits>
 
 #ifdef INOVESA_USE_GUI
@@ -71,7 +72,7 @@ public:
         ~Display();
 
     #ifdef INOVESA_USE_GUI
-        void addElement(GUIElement* newitem);
+        void addElement(std::shared_ptr<GUIElement> newitem);
     #endif // INOVESA_USE_GUI
 
         void draw();
@@ -79,7 +80,7 @@ public:
         static void printText(std::string txt, float silentTime=0.0f);
 
     #ifdef INOVESA_USE_GUI
-        void takeElement(GUIElement* item);
+        void takeElement(std::shared_ptr<GUIElement> item);
     #endif // INOVESA_USE_GUI
 
     static std::ofstream logfile;
@@ -92,7 +93,7 @@ private:
     GLFWwindow* window;
     #endif
 
-        std::vector<GUIElement*> _item;
+        std::vector<std::shared_ptr<GUIElement>> _item;
     #endif // INOVESA_USE_GUI
 
     static std::chrono::system_clock::time_point _lastmessage;

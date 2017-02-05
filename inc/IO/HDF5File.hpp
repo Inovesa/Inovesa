@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -24,6 +24,7 @@
 
 #include <array>
 #include <H5Cpp.h>
+#include <memory>
 #include <string>
 
 #include "defines.hpp"
@@ -44,7 +45,7 @@ public:
      * @param maxn maximum index (==wavenumber?) of CSR spectrum
      */
     HDF5File(const std::string filename,
-             const PhaseSpace* ps,
+             const std::shared_ptr<PhaseSpace> ps,
              const ElectricField* ef,
              const Impedance* imp,
              const WakeFunctionMap *wfm,
@@ -66,19 +67,21 @@ public:
 
     void append(const PhaseSpace::Position *particles);
 
-    void append(const PhaseSpace* ps, const AppendType at=AppendType::Defaults);
+    void append(const std::shared_ptr<PhaseSpace> ps,
+                const AppendType at=AppendType::Defaults);
 
     void append(const WakeKickMap* wkm);
 
     void appendTime(const double t);
 
 public:
-    static PhaseSpace readPhaseSpace(std::string fname,
-                                     meshaxis_t qmin, meshaxis_t qmax,
-                                     meshaxis_t pmin, meshaxis_t pmax,
-                                     double Qb, double Ib_unscaled,
-                                     double bl, double dE,
-                                     int64_t use_step=-1l);
+    static std::unique_ptr<PhaseSpace>
+        readPhaseSpace(std::string fname,
+                       meshaxis_t qmin, meshaxis_t qmax,
+                       meshaxis_t pmin, meshaxis_t pmax,
+                       double Qb, double Ib_unscaled,
+                       double bl, double dE,
+                       int64_t use_step=-1l);
 
 private:
     H5::H5File* _file;

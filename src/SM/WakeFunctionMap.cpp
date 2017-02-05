@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -20,9 +20,11 @@
 
 #include "SM/WakeFunctionMap.hpp"
 
-vfps::WakeFunctionMap::WakeFunctionMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-                const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
-                const vfps::SourceMap::InterpolationType it,
+vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
+                                       std::shared_ptr<PhaseSpace> out,
+                                       const meshindex_t xsize,
+                                       const meshindex_t ysize,
+                                       const InterpolationType it,
                                        bool interpol_clamp) :
     WakeKickMap(in,out,xsize,ysize,it,interpol_clamp),
     _xaxis(Ruler<meshaxis_t>(2*xsize,
@@ -34,12 +36,17 @@ vfps::WakeFunctionMap::WakeFunctionMap(vfps::PhaseSpace* in, vfps::PhaseSpace* o
 {
 }
 
-vfps::WakeFunctionMap::WakeFunctionMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-                const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
-                const std::string fname,
-                const double sigmaE, const double E0,
-                const double Ib, const double dt,
-                const InterpolationType it, const bool interpol_clamp) :
+vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
+                                       std::shared_ptr<PhaseSpace> out,
+                                       const meshindex_t xsize,
+                                       const meshindex_t ysize,
+                                       const std::string fname,
+                                       const double sigmaE,
+                                       const double E0,
+                                       const double Ib,
+                                       const double dt,
+                                       const InterpolationType it,
+                                       const bool interpol_clamp) :
     WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp)
 {
     /*  1e12*Ib*dt: wake file has charge in pC and for one revolution
@@ -48,10 +55,12 @@ vfps::WakeFunctionMap::WakeFunctionMap(vfps::PhaseSpace* in, vfps::PhaseSpace* o
     _wakeFromFile(fname,1e12*Ib*dt/(in->getDelta(1)*E0*sigmaE));
 }
 
-vfps::WakeFunctionMap::WakeFunctionMap(vfps::PhaseSpace* in, vfps::PhaseSpace* out,
-                const vfps::meshindex_t xsize, const vfps::meshindex_t ysize,
-                               const vfps::ElectricField* csr,
-                               const vfps::SourceMap::InterpolationType it,
+vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
+                                       std::shared_ptr<PhaseSpace> out,
+                                       const meshindex_t xsize,
+                                       const meshindex_t ysize,
+                                       const ElectricField* csr,
+                                       const InterpolationType it,
                                        const bool interpol_clamp) :
     WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp)
 {

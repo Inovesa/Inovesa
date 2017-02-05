@@ -51,7 +51,8 @@ public:
      * Enabling it with linear (or without)
      * interpolation currently crashes the program.
      */
-    RotationMap(PhaseSpace* in, PhaseSpace* out,
+    RotationMap(std::shared_ptr<PhaseSpace> in,
+                std::shared_ptr<PhaseSpace> out,
                 const meshindex_t xsize, const meshindex_t ysize,
                 const meshaxis_t angle, const InterpolationType it,
                 const bool interpol_clamped,

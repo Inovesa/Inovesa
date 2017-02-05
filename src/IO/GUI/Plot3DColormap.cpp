@@ -150,7 +150,7 @@ vfps::Plot3DColormap::~Plot3DColormap()
 }
 
 
-void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
+void vfps::Plot3DColormap::createTexture(std::shared_ptr<vfps::PhaseSpace> mesh)
 {
     glGenTextures (1, &textureID);
         glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
@@ -158,9 +158,9 @@ void vfps::Plot3DColormap::createTexture(vfps::PhaseSpace* mesh)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-        size_t npixels = mesh->nMeshCells();
+    size_t npixels = mesh->nMeshCells();
     float* data = new float[3*npixels];
-        vfps::meshdata_t* meshdata = mesh->getData();
+    vfps::meshdata_t* meshdata = mesh->getData();
     float newmax=std::numeric_limits<vfps::meshdata_t>::min();
     for (vfps::meshindex_t i=0; i<npixels; i++) {
         // type uint8_t will make shure the indexing (256) works correctly

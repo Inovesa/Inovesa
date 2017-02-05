@@ -42,7 +42,7 @@ public:
     };
 
 public:
-    KickMap(PhaseSpace* in, PhaseSpace* out,
+    KickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
             const meshindex_t xsize, const meshindex_t ysize,
             const InterpolationType it, const bool interpol_clamp,
             const Axis kd);

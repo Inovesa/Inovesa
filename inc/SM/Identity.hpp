@@ -29,7 +29,8 @@ namespace vfps
 class Identity : public SourceMap
 {
 public:
-    Identity(PhaseSpace* in, PhaseSpace* out,
+    Identity(std::shared_ptr<PhaseSpace> in,
+             std::shared_ptr<PhaseSpace> out,
              const meshindex_t xsize, const meshindex_t ysize) :
         SourceMap(in, out, xsize, ysize, 0, 0) {}
 
