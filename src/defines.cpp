@@ -47,6 +47,7 @@ const std::string vfps::copyright_notice() {
         "\n"
         "You should have received a copy of the GNU General Public License"
         "along with Inovesa. If not, see <http://www.gnu.org/licenses/>.";
+    return rv;
 }
 
 const std::string vfps::inovesa_version() {
