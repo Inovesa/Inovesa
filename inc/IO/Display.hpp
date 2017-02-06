@@ -51,6 +51,8 @@
 
 namespace vfps {
 
+class Display;
+
 class DisplayException : public std::exception {
 public:
     DisplayException(std::string msg) : _msg(msg){}
@@ -60,6 +62,13 @@ public:
 private:
     std::string _msg;
 };
+
+/**
+ * @brief make_display factory function for Display
+ * @param glversion
+ * @return
+ */
+std::unique_ptr<Display> make_display(bool gui, uint_fast8_t glversion=0);
 
 class Display
 {

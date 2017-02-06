@@ -36,6 +36,7 @@
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
+#include "PS/PhaseSpaceFactory.hpp"
 #include "Z/FreeSpaceCSR.hpp"
 #include "Z/ParallelPlatesCSR.hpp"
 #include "CL/OpenCLHandler.hpp"
@@ -51,12 +52,6 @@
 #include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
-
-inline bool isOfFileType(std::string ending, std::string fname)
-{
-    return ( fname.size() > ending.size() &&
-        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
-}
 
 int main(int argc, char** argv)
 {
@@ -98,18 +93,8 @@ int main(int argc, char** argv)
     }
 
     #ifdef INOVESA_USE_GUI
-    bool gui = opts.showPhaseSpace();
-    std::unique_ptr<Display> display;
-    if (gui && opts.getCLDevice() >= 0) {
-        try {
-            display.reset(new Display(opts.getOpenGLVersion()));
-        } catch (std::exception& e) {
-            std::string msg("ERROR: ");
-            Display::printText(msg+e.what());
-            display.reset();
-            gui = false;
-        }
-    }
+    auto display = make_display(opts.showPhaseSpace(),
+                                opts.getOpenGLVersion());
     #endif
 
     #ifdef INOVESA_USE_CL
@@ -121,7 +106,8 @@ int main(int argc, char** argv)
     OCLH::active = (opts.getCLDevice() > 0);
     if (OCLH::active) {
         try {
-            OCLH::prepareCLEnvironment(gui,opts.getCLDevice()-1);
+            OCLH::prepareCLEnvironment(opts.showPhaseSpace(),
+                                       opts.getCLDevice()-1);
             std::atexit(OCLH::teardownCLEnvironment);
         } catch (cl::Error& e) {
             Display::printText(e.what());
@@ -159,12 +145,11 @@ int main(int argc, char** argv)
         break;
     }
 
-    const bool interpol_clamp = opts.getInterpolationBound();
+    const bool interpol_clamp = opts.getInterpolationClamped();
     const bool verbose = opts.getVerbosity();
     const bool renormalize = opts.getRenormalizeCharge();
 
-    std::shared_ptr<PhaseSpace> mesh1;
-    meshindex_t ps_size = opts.getMeshSize();
+    meshindex_t ps_size = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
     const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
     const double pcenter = -opts.getPSShiftY()*pqsize/(ps_size-1);
@@ -299,6 +284,8 @@ int main(int argc, char** argv)
                            +sstream.str()+" (should be < 1).");
     }
 
+    std::shared_ptr<PhaseSpace> mesh1;
+
     if (startdistfile.length() <= 4) {
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
@@ -312,82 +299,15 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_PNG
     // check for file ending .png
     if (isOfFileType(".png",startdistfile)) {
-        // load pattern to start with
-        png::image<png::gray_pixel_16> image;
-        try {
-            image.read(opts.getStartDistFile());
-        } catch ( const png::std_error &e ) {
-            std::cerr << e.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch ( const png::error &e ) {
-            std::cerr << "Problem loading " << startdistfile
-                      << ": " << e.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch (...) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\".";
-            return EXIT_FAILURE;
-        }
-
-        if (image.get_width() == image.get_height()) {
-            if (ps_size != image.get_width()) {
-                std::cerr << startdistfile << " (a="
-                          << image.get_width()
-                          << " px) does not match set GridSize (a="
-                          << ps_size << " px)"
-                          << std::endl;
-
-                return EXIT_SUCCESS;
-            }
-
-            meshdata_t* data = new meshdata_t[ps_size*ps_size];
-            for (unsigned int x=0; x<ps_size; x++) {
-                for (unsigned int y=0; y<ps_size; y++) {
-                    data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
-                }
-            }
-            mesh1.reset(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                                   Qb,Ib_unscaled,bl,dE,1,data));
-            delete [] data;
-            // normalize integral to 1
-            mesh1->normalize();
-
-            mesh1->syncCLMem(clCopyDirection::cpu2dev);
-            std::stringstream imgsize;
-            imgsize << ps_size;
-            Display::printText("Read phase space (a="+imgsize.str()+" px).");
-        } else {
-            std::cerr << "Phase space has to be quadratic. Please adjust "
-                      << startdistfile << std::endl;
-
-            return EXIT_SUCCESS;
-        }
+        mesh1 = makePSFromPNG(startdistfile,qmin,qmax,pmin,pmax,
+                            Qb,Ib_unscaled,bl,dE);
     } else
     #endif // INOVESA_USE_PNG
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        int64_t startdiststep = opts.getStartDistStep();
-        try {
-            mesh1 = HDF5File::readPhaseSpace(startdistfile,
-                                                            qmin,qmax,
-                                                            pmin,pmax,
-                                                            Qb,Ib_unscaled,
-                                                            bl,dE,
-                                                            startdiststep);
-        } catch (const std::exception& ex) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\":"
-                      << ex.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch (const H5::Exception& ex) {
-            ex.printErrorStack();
-            return EXIT_SUCCESS;
-        } catch (...) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\".";
-            return EXIT_FAILURE;
-        }
+        mesh1 = makePSFromHDF5(startdistfile,qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE,opts.getStartDistStep());
 
         if (ps_size != mesh1->nMeshCells(0)) {
             std::cerr << startdistfile
@@ -399,49 +319,9 @@ int main(int argc, char** argv)
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
-        ps_size = opts.getMeshSize();
-        mesh1.reset(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl));
-
-        std::ifstream ifs;
-        try {
-            ifs.open(startdistfile);
-        } catch (const std::exception& ex) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\":"
-                      << ex.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch (...) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\".";
-            return EXIT_FAILURE;
-        }
-
-        ifs.unsetf(std::ios_base::skipws);
-
-        // count the newlines with an algorithm specialized for counting:
-        size_t line_count = std::count(
-            std::istream_iterator<char>(ifs),
-            std::istream_iterator<char>(),
-            '\n');
-
-        ifs.setf(std::ios_base::skipws);
-        ifs.clear();
-        ifs.seekg(0,ifs.beg);
-
-        while (ifs.good()) {
-            float xf,yf;
-            ifs >> xf >> yf;
-            meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
-            meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
-            if (x < ps_size && y < ps_size) {
-                (*mesh1)[x][y] += 1.0/line_count;
-            }
-        }
-        ifs.close();
-
-        // normalize integral to 1
-        mesh1->normalize();
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+        mesh1 = makePSFromTXT(startdistfile,opts.getGridSize(),
+                              qmin,qmax,pmin,pmax,
+                              Qb,Ib_unscaled,bl,dE);
     } else {
         Display::printText("Unknown format of input file. Will now quit.");
         return EXIT_SUCCESS;
@@ -464,7 +344,7 @@ int main(int argc, char** argv)
 
     std::vector<float> csrlog;
     std::shared_ptr<Plot2DLine> history;
-    if (gui) {
+    if (display != nullptr) {
         try {
             psv.reset(new Plot3DColormap(maxval));
             display->addElement(psv);
@@ -474,7 +354,6 @@ int main(int argc, char** argv)
             std::cerr << e.what() << std::endl;
             display->takeElement(psv);
             psv.reset();
-            gui = false;
         }
     }
     #endif // INOVESSA_USE_GUI
@@ -511,11 +390,11 @@ int main(int argc, char** argv)
         }
     }
 
-    std::shared_ptr<PhaseSpace> mesh2(new PhaseSpace(*mesh1));
-    std::shared_ptr<PhaseSpace> mesh3(new PhaseSpace(*mesh1));
+    auto mesh2 = std::make_shared<PhaseSpace>(*mesh1);
+    auto mesh3 = std::make_shared<PhaseSpace>(*mesh1);
 
-    std::shared_ptr<SourceMap> rm1;
-    std::shared_ptr<SourceMap> rm2;
+    std::unique_ptr<SourceMap> rm1;
+    std::unique_ptr<SourceMap> rm2;
     const uint_fast8_t rotationtype = opts.getRotationType();
     switch (rotationtype) {
     case 0:
@@ -612,7 +491,7 @@ int main(int argc, char** argv)
     }
 
     #ifdef INOVESA_USE_GUI
-    if (gui) {
+    if (display != nullptr) {
         try {
             bpv.reset(new Plot2DLine(std::array<float,3>{{1,0,0}}));
             display->addElement(bpv);
@@ -726,7 +605,7 @@ int main(int argc, char** argv)
     }
     #endif
 
-    if (gui) {
+    if (display != nullptr) {
         csrlog.resize(std::ceil(steps*rotations/outstep)+1,0);
     }
 
@@ -770,7 +649,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
-            if (gui) {
+            if (display != nullptr) {
                 if (psv != nullptr) {
                     psv->createTexture(mesh1);
                 }

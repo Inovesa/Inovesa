@@ -177,3 +177,13 @@ std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 
 std::ofstream vfps::Display::logfile;
 
+
+std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
+                                                  uint_fast8_t glversion)
+{
+    if (gui) {
+        return std::make_unique<Display>(glversion);
+    } else {
+        return nullptr;
+    }
+}

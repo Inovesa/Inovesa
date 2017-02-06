@@ -64,6 +64,13 @@ const std::string copyright_notice();
 
 const std::string inovesa_version();
 
+
+inline bool isOfFileType(std::string ending, std::string fname)
+{
+    return ( fname.size() > ending.size() &&
+        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+}
+
 namespace physcons
 {
 /// speed of light (in m/s)

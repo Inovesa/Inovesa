@@ -12,6 +12,7 @@ set(SRC_LIST
   ./src/IO/ProgramOptions.cpp
   ./src/PS/ElectricField.cpp
   ./src/PS/PhaseSpace.cpp
+  ./src/PS/PhaseSpaceFactory.cpp
   ./src/SM/DriftMap.cpp
   ./src/SM/FokkerPlanckMap.cpp
   ./src/SM/KickMap.cpp
@@ -34,6 +35,7 @@ set(INC_LIST
   ./inc/SM/DriftMap.hpp
   ./inc/PS/ElectricField.hpp
   ./inc/PS/PhaseSpace.hpp
+  ./inc/PS/PhaseSpaceFactory.hpp
   ./inc/PS/Ruler.hpp
   ./inc/IO/Display.hpp
   ./inc/IO/GUI/GUIElement.hpp
@@ -69,7 +71,7 @@ execute_process(
 )
 add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
 
-add_definitions(-std=c++11)
+add_definitions(-std=c++14)
 if(DEFINED CMAKE_BUILD_TYPE)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_definitions(-g -Wall -Wextra -DDEBUG)
