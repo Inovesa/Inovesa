@@ -181,7 +181,6 @@ vfps::PhaseSpace::~PhaseSpace()
 
 vfps::integral_t vfps::PhaseSpace::integral()
 {
-    updateXProjection();
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         OCLH::queue.enqueueNDRangeKernel (

@@ -147,7 +147,7 @@ int main(int argc, char** argv)
 
     const bool interpol_clamp = opts.getInterpolationClamped();
     const bool verbose = opts.getVerbosity();
-    const bool renormalize = opts.getRenormalizeCharge();
+    const auto renormalize = opts.getRenormalizeCharge();
 
     meshindex_t ps_size = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
@@ -609,21 +609,30 @@ int main(int argc, char** argv)
         csrlog.resize(std::ceil(steps*rotations/outstep)+1,0);
     }
 
+    // normalized charge (should be 1)
+    integral_t meshintegral = 1;
+
+    // normalized charge (should be 1)
+    integral_t oldmeshintegral = 1;
+
     Display::printText("Starting the simulation.");
-    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
+    for (uint32_t i=0, outstepnr=0;i<steps*rotations;i++) {
+        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
+
+        if (renormalize > 0 && i%renormalize == 0) {
+            // works on XProjection
+            meshintegral = mesh1->normalize();
+        } else {
+            // works on XProjection
+            meshintegral = mesh1->integral();
+        }
+
         if (outstep > 0 && i%outstep == 0) {
             outstepnr++;
-            integral_t meshintegral; // normalized charge (should be 1)
-            if (renormalize) {
-                // works on XProjection (and recalculates it)
-                meshintegral = mesh1->normalize();
-            } else {
-                // works on XProjection (and recalculates it)
-                meshintegral = mesh1->integral();
-            }
+
             mesh1->variance(0);
             mesh1->updateYProjection();
             mesh1->variance(1);
@@ -681,7 +690,9 @@ int main(int argc, char** argv)
             status.precision(5);
             status << std::setw(6) << static_cast<float>(i)/steps
                    << '/' << rotations;
-            status << "\t1-Q/Q_0=" << 1.0 - meshintegral;
+            status.precision(3);
+            status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
+            oldmeshintegral = meshintegral;
             Display::printText(status.str(),2.0f);
         }
         wm->apply();
@@ -699,6 +710,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (hdf_file != nullptr) {
+        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
@@ -706,11 +718,11 @@ int main(int argc, char** argv)
          * the last time step might behave slightly different
          * from the ones before.
          */
-        if (renormalize) {
-            // works on XProjection (and recalculates it)
+        if (renormalize > 0) {
+            // works on XProjection
             mesh1->normalize();
         } else {
-            // works on XProjection (and recalculates it)
+            // works on XProjection
             mesh1->integral();
         }
         mesh1->variance(0);
@@ -754,7 +766,8 @@ int main(int argc, char** argv)
     std::stringstream status;
     status.precision(5);
     status << std::setw(6) << rotations << '/' << rotations;
-    status << "\t1-Q/Q_0=" << 1.0 - mesh1->integral();
+    status.precision(3);
+    status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
     Display::printText(status.str());
 
     #ifdef INOVESA_USE_CL
