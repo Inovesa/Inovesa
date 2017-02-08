@@ -1,7 +1,6 @@
 /******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2016: Patrik Schönfeldt                                      *
- * Copyright (c) 2016: Karlsruhe Institute of Technology                      *
+ * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -18,9 +17,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "defines.hpp"
+#include "MessageStrings.hpp"
 
-const std::string vfps::copyright_notice() {
+const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
@@ -32,8 +31,8 @@ const std::string vfps::copyright_notice() {
     {
         rv += "Copyright (c) 2007-2009 Peter Schregle (FPML)\n";
     }
-    rv+="Copyright (c) 2012-2016 Patrik Schönfeldt\n"
-        "Copyright (c) 2014-2016 Karlsruhe Institute of Technology\n"
+    rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
+        "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
         "\n"
         "Inovesa is free software: you can redistribute it and/or modify\n"
         "it under the terms of the GNU General Public License as published by\n"
@@ -68,3 +67,17 @@ const std::string vfps::inovesa_version() {
     return sstream.str();
 }
 
+
+
+const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
+                                      float roatation,
+                                      float total_rotations)
+{
+    std::stringstream status;
+    status.precision(5);
+    status << std::setw(6) << roatation << '/' << total_rotations;
+    status << "\t1-Q/Q_0=" << 1.0 - ps->getIntegral()
+           << "\ts_p=" << ps->getEnergySpread();
+
+    return status.str();
+}

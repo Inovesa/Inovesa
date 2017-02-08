@@ -32,6 +32,7 @@
 #include <sstream>
 
 #include "defines.hpp"
+#include "MessageStrings.hpp"
 #include "IO/Display.hpp"
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
@@ -608,15 +609,11 @@ int main(int argc, char** argv)
     if (display != nullptr) {
         csrlog.resize(std::ceil(steps*rotations/outstep)+1,0);
     }
-
-    // normalized charge (should be 1)
-    integral_t meshintegral = 1;
-
-    // normalized charge (should be 1)
-    integral_t oldmeshintegral = 1;
-
     Display::printText("Starting the simulation.");
-    for (uint32_t i=0, outstepnr=0;i<steps*rotations;i++) {
+    mesh1->integral();
+    mesh1->variance(1);
+    Display::printText(status_string(mesh1,0,rotations));
+    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
@@ -624,10 +621,10 @@ int main(int argc, char** argv)
 
         if (renormalize > 0 && i%renormalize == 0) {
             // works on XProjection
-            meshintegral = mesh1->normalize();
+            mesh1->normalize();
         } else {
             // works on XProjection
-            meshintegral = mesh1->integral();
+            mesh1->integral();
         }
 
         if (outstep > 0 && i%outstep == 0) {
@@ -686,14 +683,8 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESSA_USE_GUI
-            std::stringstream status;
-            status.precision(5);
-            status << std::setw(6) << static_cast<float>(i)/steps
-                   << '/' << rotations;
-            status.precision(3);
-            status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
-            oldmeshintegral = meshintegral;
-            Display::printText(status.str(),2.0f);
+            Display::printText(status_string(mesh1,static_cast<float>(i)/steps,
+                               rotations),2.0f);
         }
         wm->apply();
         wm->applyTo(trackme);
@@ -763,12 +754,7 @@ int main(int argc, char** argv)
     }
     #endif
 
-    std::stringstream status;
-    status.precision(5);
-    status << std::setw(6) << rotations << '/' << rotations;
-    status.precision(3);
-    status << "\tdQ/Q_0=" << oldmeshintegral - meshintegral;
-    Display::printText(status.str());
+    Display::printText(status_string(mesh1,rotations,rotations));
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
