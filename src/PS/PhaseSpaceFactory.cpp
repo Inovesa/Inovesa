@@ -89,6 +89,7 @@ vfps::makePSFromPNG(std::string fname,
                                                bunch_charge,bunch_current,
                                                xscale,yscale,1,data.data());
         // normalize integral to 1
+        ps->updateXProjection();
         ps->normalize();
 
         ps->syncCLMem(clCopyDirection::cpu2dev);
