@@ -38,7 +38,7 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
         auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax,
                                            bunch_charge,bunch_current,
                                            xscale,yscale,startdiststep);
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+        ps->syncCLMem(clCopyDirection::cpu2dev);
         return ps;
     } catch (const std::exception& ex) {
         std::cerr << "Error loading initial distribution from \""
