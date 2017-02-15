@@ -287,7 +287,8 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = makePSFromHDF5(startdistfile,qmin,qmax,pmin,pmax,
+        mesh1 = makePSFromHDF5(startdistfile,opts.getStartDistStep(),
+                               qmin,qmax,pmin,pmax,
                                Qb,Ib_unscaled,bl,dE,opts.getStartDistStep());
 
         if (ps_size != mesh1->nMeshCells(0)) {
