@@ -289,7 +289,7 @@ int main(int argc, char** argv)
        || isOfFileType(".hdf5",startdistfile) ) {
         mesh1 = makePSFromHDF5(startdistfile,opts.getStartDistStep(),
                                qmin,qmax,pmin,pmax,
-                               Qb,Ib_unscaled,bl,dE,opts.getStartDistStep());
+                               Qb,Ib_unscaled,bl,dE);
 
         if (ps_size != mesh1->nMeshCells(0)) {
             std::cerr << startdistfile
@@ -297,7 +297,6 @@ int main(int argc, char** argv)
 
             return EXIT_SUCCESS;
         }
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
