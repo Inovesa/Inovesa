@@ -295,7 +295,6 @@ int main(int argc, char** argv)
 
             return EXIT_SUCCESS;
         }
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
