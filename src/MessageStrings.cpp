@@ -46,6 +46,7 @@ const std::string vfps::copyright_notice() noexcept {
         "\n"
         "You should have received a copy of the GNU General Public License"
         "along with Inovesa. If not, see <http://www.gnu.org/licenses/>.";
+    return rv;
 }
 
 const std::string vfps::inovesa_version() {
@@ -68,7 +69,7 @@ const std::string vfps::inovesa_version() {
 
 
 
-const std::string vfps::status_string(const vfps::PhaseSpace *ps,
+const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
                                       float roatation,
                                       float total_rotations)
 {

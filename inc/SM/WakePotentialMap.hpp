@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -31,7 +31,8 @@ namespace vfps
 class WakePotentialMap : public WakeKickMap
 {
 public:
-    WakePotentialMap(PhaseSpace* in, PhaseSpace* out,
+    WakePotentialMap(std::shared_ptr<PhaseSpace> in,
+                     std::shared_ptr<PhaseSpace> out,
                      const meshindex_t xsize,
                      const meshindex_t ysize,
                      ElectricField* field,

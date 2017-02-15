@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -22,7 +22,7 @@
 #include "IO/HDF5File.hpp"
 
 vfps::HDF5File::HDF5File(const std::string filename,
-                         const PhaseSpace* ps,
+                         const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
@@ -623,7 +623,8 @@ void vfps::HDF5File::append(const PhaseSpace::Position *particles)
     delete filespace;
 }
 
-void vfps::HDF5File::append(const PhaseSpace* ps, const AppendType at)
+void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
+                            const AppendType at)
 {
     H5::DataSpace* filespace;
     H5::DataSpace* memspace;
@@ -762,7 +763,7 @@ void vfps::HDF5File::appendTime(const double t)
     delete filespace;
 }
 
-vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
+std::unique_ptr<vfps::PhaseSpace> vfps::HDF5File::readPhaseSpace(std::string fname,
                                                 meshaxis_t qmin, meshaxis_t qmax,
                                                 meshaxis_t pmin, meshaxis_t pmax,
                                                 double Qb, double Ib_unscaled,
@@ -811,8 +812,8 @@ vfps::PhaseSpace vfps::HDF5File::readPhaseSpace(std::string fname,
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    PhaseSpace ps(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl,dE);
-    ps_dataset.read(ps.getData(), datatype, memspace, ps_space);
+    std::unique_ptr<PhaseSpace> ps(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl,dE));
+    ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
 
     return ps;
 }

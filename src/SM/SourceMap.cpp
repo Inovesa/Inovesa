@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -20,11 +20,12 @@
 
 #include "SM/SourceMap.hpp"
 
-vfps::SourceMap::SourceMap(PhaseSpace* in, PhaseSpace* out,
-                               meshindex_t xsize, meshindex_t ysize,
-                               size_t memsize,
-                               uint_fast8_t interpoints,
-                               uint_fast8_t intertype) :
+vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
+                           std::shared_ptr<PhaseSpace> out,
+                           meshindex_t xsize, meshindex_t ysize,
+                           size_t memsize,
+                           uint_fast8_t interpoints,
+                           uint_fast8_t intertype) :
     _ip(interpoints),
     _it(intertype),
     _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))]),
@@ -39,7 +40,8 @@ vfps::SourceMap::SourceMap(PhaseSpace* in, PhaseSpace* out,
     #endif // INOVESA_USE_CL
 }
 
-vfps::SourceMap::SourceMap(PhaseSpace* in, PhaseSpace* out,
+vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
+                           std::shared_ptr<PhaseSpace> out,
                                size_t xsize, size_t ysize,
                                uint_fast8_t interpoints,
                                uint_fast8_t intertype) :

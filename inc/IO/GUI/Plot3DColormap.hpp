@@ -24,6 +24,8 @@
 
 #ifdef INOVESA_USE_GUI
 
+#include <memory>
+
 #include "IO/GUI/GUIElement.hpp"
 #include "IO/Display.hpp"
 
@@ -37,7 +39,7 @@ public:
 
     ~Plot3DColormap();
 
-    void createTexture(PhaseSpace* mesh);
+    void createTexture(std::shared_ptr<PhaseSpace> mesh);
 
     void delTexture();
 

@@ -21,6 +21,7 @@
 #ifndef SOURCEMAP_HPP
 #define SOURCEMAP_HPP
 
+#include <memory>
 #include <sstream>
 
 #include "defines.hpp"
@@ -63,7 +64,7 @@ public:
      * @param interpoints
      * @param intertype number of points used for interpolation
      */
-    SourceMap(PhaseSpace* in, PhaseSpace* out,
+    SourceMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
                 meshindex_t xsize, meshindex_t ysize, size_t memsize,
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
@@ -75,7 +76,8 @@ public:
      * @param ysize
      * @param interpoints number of points used for interpolation
      */
-    SourceMap(PhaseSpace* in, PhaseSpace* out,
+    SourceMap(std::shared_ptr<PhaseSpace> in,
+              std::shared_ptr<PhaseSpace> out,
                 size_t xsize, size_t ysize,
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
@@ -143,8 +145,8 @@ protected:
 
     #endif // INOVESA_USE_CL
 
-    PhaseSpace* _in;
-    PhaseSpace* _out;
+    std::shared_ptr<PhaseSpace> _in;
+    std::shared_ptr<PhaseSpace> _out;
 
 protected:
     #ifdef INOVESA_USE_CL

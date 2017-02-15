@@ -21,7 +21,8 @@
 #include "SM/RFKickMap.hpp"
 
 
-vfps::RFKickMap::RFKickMap(PhaseSpace *in, PhaseSpace *out,
+vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in,
+                           std::shared_ptr<PhaseSpace> out,
                            const meshindex_t xsize,
                            const meshindex_t ysize,
                            const meshaxis_t angle,
