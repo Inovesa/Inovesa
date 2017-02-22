@@ -38,6 +38,7 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
         auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax,
                                            bunch_charge,bunch_current,
                                            xscale,yscale,startdiststep);
+        ps->syncCLMem(clCopyDirection::cpu2dev);
         return ps;
     } catch (const std::exception& ex) {
         std::cerr << "Error loading initial distribution from \""
@@ -89,6 +90,7 @@ vfps::makePSFromPNG(std::string fname,
                                                bunch_charge,bunch_current,
                                                xscale,yscale,1,data.data());
         // normalize integral to 1
+        ps->updateXProjection();
         ps->normalize();
 
         ps->syncCLMem(clCopyDirection::cpu2dev);

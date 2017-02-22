@@ -118,39 +118,17 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
-    vfps::FokkerPlanckMap::DerivationType derivationtype;
-    switch (opts.getDerivationType()) {
-    case 3:
-        derivationtype = vfps::FokkerPlanckMap::DerivationType::two_sided;
-        break;
-    case 4:
-    default:
-        derivationtype = vfps::FokkerPlanckMap::DerivationType::cubic;
-        break;
-    }
+    const auto derivationtype = static_cast<FokkerPlanckMap::DerivationType>
+            (opts.getDerivationType());
 
-    vfps::SourceMap::InterpolationType interpolationtype;
-    switch (opts.getInterpolationPoints()) {
-    case 1:
-        interpolationtype = vfps::SourceMap::InterpolationType::none;
-        break;
-    case 2:
-        interpolationtype = vfps::SourceMap::InterpolationType::linear;
-        break;
-    case 3:
-        interpolationtype = vfps::SourceMap::InterpolationType::quadratic;
-        break;
-    default:
-    case 4:
-        interpolationtype = vfps::SourceMap::InterpolationType::cubic;
-        break;
-    }
+    const auto interpolationtype = static_cast<SourceMap::InterpolationType>
+            (opts.getInterpolationPoints());
 
     const bool interpol_clamp = opts.getInterpolationClamped();
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    meshindex_t ps_size = opts.getGridSize();
+    const meshindex_t ps_size = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
     const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
     const double pcenter = -opts.getPSShiftY()*pqsize/(ps_size-1);
@@ -161,7 +139,7 @@ int main(int argc, char** argv)
     const double pmin = pcenter - pqhalf;
 
     const double sE = opts.getEnergySpread(); // relative energy spread
-    const double E0 = opts.getBeamEnergy(); // relative energy spread
+    const double E0 = opts.getBeamEnergy(); // energy of reference particle
     const double dE = sE*E0; // absolute energy spread
     const double f_rev = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
@@ -180,14 +158,14 @@ int main(int argc, char** argv)
     double fs_tmp = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
-    // positive f_s will
+    // positive f_s will be used, negative imply usage of alpha0
     if (fs_tmp < 0) {
         fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*M_PI*E0));
     } else {
         alpha0_tmp = 2*M_PI*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
     }
 
-    // real synchrotron frequency
+    // synchrotron frequency (comparable to real storage ring)
     const double fs_unscaled = fs_tmp;
 
     // synchrotron frequency (isomagnetic ring)
@@ -203,7 +181,7 @@ int main(int argc, char** argv)
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
-    const unsigned int hi = opts.getHaissinskiIterations();
+    const unsigned int haisi = opts.getHaissinskiIterations();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -307,8 +285,9 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        mesh1 = makePSFromHDF5(startdistfile,qmin,qmax,pmin,pmax,
-                               Qb,Ib_unscaled,bl,dE,opts.getStartDistStep());
+        mesh1 = makePSFromHDF5(startdistfile,opts.getStartDistStep(),
+                               qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE);
 
         if (ps_size != mesh1->nMeshCells(0)) {
             std::cerr << startdistfile
@@ -316,7 +295,6 @@ int main(int argc, char** argv)
 
             return EXIT_SUCCESS;
         }
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
@@ -343,7 +321,7 @@ int main(int argc, char** argv)
     std::shared_ptr<Plot3DColormap> psv;
     std::shared_ptr<Plot2DLine> wpv;
 
-    std::vector<float> csrlog;
+    std::vector<float> csrlog(std::ceil(steps*rotations/outstep)+1,0);
     std::shared_ptr<Plot2DLine> history;
     if (display != nullptr) {
         try {
@@ -520,6 +498,9 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_GUI
 
+    /*
+     * Draft for a Haissinski solver
+     */
     std::vector<std::vector<vfps::projection_t>> profile;
     std::vector<vfps::projection_t> currprofile;
     currprofile.resize(ps_size);
@@ -530,7 +511,7 @@ int main(int argc, char** argv)
 
     projection_t* xproj = mesh1->getProjection(0);
     const Ruler<meshaxis_t>* q_axis = mesh1->getAxis(0);
-    for (uint32_t i=0;i<hi;i++) {
+    for (uint32_t i=0;i<haisi;i++) {
         wkm->update();
         const meshaxis_t* wake = wkm->getForce();
         std::copy_n(xproj,ps_size,currprofile.data());
@@ -560,7 +541,17 @@ int main(int argc, char** argv)
             psv->delTexture();
         }
     }
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+    }
+    #endif // INOVESA_USE_CL
 
+    // end of Haissinski solver draft
+
+    /*
+     * preparation to save results
+     */
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
@@ -588,31 +579,43 @@ int main(int argc, char** argv)
         Display::printText("Will not save results.");
     }
 
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
-
     #ifdef INOVESA_USE_HDF5
     const HDF5File::AppendType h5save =
         opts.getSavePhaseSpace()? HDF5File::AppendType::All:
                                   HDF5File::AppendType::Defaults;
+    // end of preparation to save results
+
+
     if (hdf_file != nullptr && h5save == HDF5File::AppendType::Defaults) {
         // save initial phase space
         hdf_file->append(mesh1,HDF5File::AppendType::PhaseSpace);
     }
     #endif
 
-    if (display != nullptr) {
-        csrlog.resize(std::ceil(steps*rotations/outstep)+1,0);
-    }
+
+    // time between two status updates (in seconds)
+    const auto updatetime = 2.0f;
+
+    /* We claim that simulation starts now.
+     * To have the first step always displayed, we do it outside the loop
+     * there are two pieces of information needed for this (see below). */
+
     Display::printText("Starting the simulation.");
+
+    // 1) the integral
+    mesh1->updateXProjection();
     mesh1->integral();
+
+    // 2) the energy spread (variance in Y direction)
+    mesh1->updateYProjection();
     mesh1->variance(1);
     Display::printText(status_string(mesh1,0,rotations));
+
+    /*
+     * main simulation loop
+     * (everything inside this loop will be run a multitude of times)
+     */
     for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
-        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
@@ -682,7 +685,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESSA_USE_GUI
             Display::printText(status_string(mesh1,static_cast<float>(i)/steps,
-                               rotations),2.0f);
+                               rotations),updatetime);
         }
         wm->apply();
         wm->applyTo(trackme);
@@ -694,12 +697,15 @@ int main(int argc, char** argv)
         }
         fpm->apply();
         fpm->applyTo(trackme);
-    }
+
+        // udate for next time step
+        mesh1->updateXProjection();
+
+    } // end of main simulation loop
 
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (hdf_file != nullptr) {
-        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }

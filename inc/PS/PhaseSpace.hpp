@@ -126,13 +126,20 @@ public:
      * @brief integral
      * @return
      *
-     * relies on an up-t date _projection[0]
+     * relies on an up-to-date _projection[0]
      */
     integral_t integral();
 
     const integral_t& getIntegral() const
     { return _integral; }
 
+    /**
+     * @brief variance
+     * @param axis
+     * @return
+     *
+     * relies on an up-to-date _projection[axis]
+     */
     meshdata_t variance(const uint_fast8_t axis);
 
     inline meshdata_t getBunchLength() const
