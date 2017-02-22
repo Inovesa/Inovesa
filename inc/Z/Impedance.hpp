@@ -63,6 +63,9 @@ public:
     Impedance(const std::vector<impedance_t>& z, const frequency_t f_max);
 
 
+    Impedance(const size_t nfreqs, const frequency_t f_max);
+
+
     /**
      * @brief Impedance
      * @param name of datafile in the format "n Re(Z) Im(Z)",

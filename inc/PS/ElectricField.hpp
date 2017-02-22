@@ -57,7 +57,7 @@ public:
      * Use other constructors when you want to use wake function or potential.
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  const Impedance* impedance,
+                  const std::shared_ptr<Impedance> impedance,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
 
@@ -81,7 +81,7 @@ public:
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  const Impedance* impedance,
+                  std::shared_ptr<Impedance> impedance,
                   const double revolutionpart,
                   const double Ib, const double E0,
                   const double sigmaE, const double dt);
@@ -100,7 +100,8 @@ public:
      * @param nmax
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  const Impedance* impedance, const double Ib, const double E0,
+                  std::shared_ptr<Impedance> impedance,
+                  const double Ib, const double E0,
                   const double sigmaE, const double dt, const double rbend,
                   const double fs, const size_t nmax);
 
@@ -112,7 +113,7 @@ public:
     inline csrpower_t* getCSRSpectrum() const
         { return _csrspectrum; }
 
-    inline const Impedance* getImpedance() const
+    inline const std::shared_ptr<Impedance> getImpedance() const
         { return _impedance; }
 
     inline size_t getNMax() const
@@ -229,7 +230,7 @@ private:
 
     csrpower_t* _csrspectrum;
 
-    const Impedance* _impedance;
+    const std::shared_ptr<Impedance> _impedance;
 
     integral_t* _bp_padded;
 

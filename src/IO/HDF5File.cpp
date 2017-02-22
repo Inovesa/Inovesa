@@ -24,7 +24,7 @@
 vfps::HDF5File::HDF5File(const std::string filename,
                          const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
-                         const Impedance* imp,
+                         const std::shared_ptr<Impedance> imp,
                          const WakeFunctionMap* wfm,
                          const size_t nparticles,
                          const double t_sync) :

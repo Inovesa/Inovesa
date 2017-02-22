@@ -177,6 +177,9 @@ public:
     inline double getVacuumChamberGap() const
         { return g; }
 
+    inline bool getUseCSR() const
+        { return use_csr; }
+
     inline double getCollimatorRadius() const
         { return collimator; }
 
@@ -252,6 +255,8 @@ private: // phsical parameters
     double r_bend;
     double s_E;
     double V_RF;
+
+    bool use_csr;
 
 private:
     po::options_description _cfgfileopts;

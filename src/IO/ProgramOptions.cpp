@@ -78,7 +78,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Full height of vacuum chamber (m)\n"
             "<0: free space CSR\n"
             " 0: no CSR\n"
-            ">0: parallel plates CSR")
+            ">0: parallel plates CSR\n"
+            "(|G| used as size of the beam pipe for other impedances)")
+        ("UseCSR", po::value<bool>(&use_csr)->default_value(true),
+            "Switch to turn off CSR for VacuumGap != 0")
         ("CollimatorRadius", po::value<double>(&collimator)->default_value(0),
             "Radius of collimator opening (m)\n"
             "<=0: no collimator")

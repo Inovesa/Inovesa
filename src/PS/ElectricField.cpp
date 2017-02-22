@@ -21,7 +21,7 @@
 #include "PS/ElectricField.hpp"
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
-                                   const Impedance* impedance,
+                                   const std::shared_ptr<Impedance> impedance,
                                    const double revolutionpart,
                                    const meshaxis_t wakescalining) :
     volts(ps->getAxis(1)->delta()*ps->getScale(1)*revolutionpart),
@@ -105,7 +105,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 }
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
-                                   const vfps::Impedance *impedance,
+                                   const std::shared_ptr<Impedance> impedance,
                                    const double revolutionpart,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt) :
@@ -189,7 +189,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
-                                   const Impedance* impedance,
+                                   const std::shared_ptr<Impedance> impedance,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt,
                                    const double rbend, const double fs,

@@ -38,10 +38,7 @@
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
-#include "Z/FreeSpaceCSR.hpp"
-#include "Z/ParallelPlatesCSR.hpp"
-#include "Z/CollimatorImpedance.hpp"
-#include "Z/ResistiveWall.hpp"
+#include "Z/ImpedanceFactory.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "SM/FokkerPlanckMap.hpp"
 #include "SM/Identity.hpp"
@@ -347,50 +344,17 @@ int main(int argc, char** argv)
     }
 
     const double padding =std::max(opts.getPadding(),1.0);
-
-    Impedance* impedance = nullptr;
     const double fmax = ps_size*vfps::physcons::c/(pqsize*bl);
-    if (opts.getImpedanceFile() == "") {
-        if (gap>0) {
-            Display::printText("Will use parallel plates CSR impedance.");
-            impedance = new ParallelPlatesCSR(ps_size*padding,f0,fmax,gap);
+    const size_t nfreqs = ps_size*padding;
+    const auto s = opts.getWallConductivity();
+    const auto xi = opts.getWallSusceptibility();
+    const auto collimator_radius = opts.getCollimatorRadius();
+    const auto impedance_file = opts.getImpedanceFile();
+    const auto use_csr = opts.getUseCSR();
 
-            if ( opts.getWallConductivity() > 0 &&
-                 opts.getWallSusceptibility() >= -1 )
-            {
-                ResistiveWall rw(ps_size*padding,f0,fmax,
-                                 opts.getWallConductivity(),
-                                 opts.getWallSusceptibility(),
-                                 gap/2);
-                (*impedance)+=rw;
-                Display::printText("... with added resistive wall impedance.");
-            }
-            if (opts.getCollimatorRadius() > 0) {
-                CollimatorImpedance Z_col(ps_size*padding,fmax,
-                                          gap/2,opts.getCollimatorRadius());
-                (*impedance)+=Z_col;
-                Display::printText("... with added collimator.");
-            }
-        } else {
-            Display::printText("Will use free space CSR impedance.");
-            impedance = new FreeSpaceCSR(ps_size*padding,f0,fmax);
-            if ( opts.getWallConductivity() > 0 &&
-                 opts.getWallSusceptibility() >= -1 )
-            {
-                Display::printText("Resistive wall impedance "
-                                   "is ignored in free space.");
-            }
-        }
-    } else {
-        Display::printText("Reading impedance from: \""
-                           +opts.getImpedanceFile()+"\"");
-        impedance = new Impedance(opts.getImpedanceFile(),fmax);
-        if (impedance->nFreqs() < ps_size) {
-            Display::printText("No valid impedance file. "
-                               "Will now quit.");
-            return EXIT_SUCCESS;
-        }
-    }
+    std::shared_ptr<Impedance> impedance
+            = vfps::makeImpedance(nfreqs,fmax,impedance_file,f0,use_csr,
+                                  gap,s,xi,collimator_radius);
 
     auto mesh2 = std::make_shared<PhaseSpace>(*mesh1);
     auto mesh3 = std::make_shared<PhaseSpace>(*mesh1);
@@ -794,7 +758,6 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_CL
 
     delete field;
-    delete impedance;
 
     delete wm;
     delete fpm;

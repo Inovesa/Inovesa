@@ -24,6 +24,7 @@ set(SRC_LIST
   ./src/SM/WakeFunctionMap.cpp
   ./src/Z/CollimatorImpedance.cpp
   ./src/Z/Impedance.cpp
+  ./src/Z/ImpedanceFactory.cpp
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
@@ -56,6 +57,7 @@ set(INC_LIST
   ./inc/SM/WakeFunctionMap.hpp
   ./inc/Z/CollimatorImpedance.hpp
   ./inc/Z/Impedance.hpp
+  ./inc/Z/ImpedanceFactory.hpp
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
   ./inc/Z/ResistiveWall.hpp

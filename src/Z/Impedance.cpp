@@ -42,6 +42,13 @@ vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
 {
 }
 
+vfps::Impedance::Impedance(const size_t nfreqs,
+                           const vfps::frequency_t f_max) :
+    Impedance(Ruler<frequency_t>(nfreqs,0,f_max),
+              std::vector<impedance_t>(nfreqs,0))
+{
+}
+
 vfps::Impedance::Impedance(std::string datafile, double f_max) :
     Impedance(readData(datafile),f_max)
 {
