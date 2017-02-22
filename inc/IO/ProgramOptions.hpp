@@ -89,7 +89,7 @@ public:
         { return _wakefile; }
 
 public:
-    inline uint32_t getMeshSize() const
+    inline uint32_t getGridSize() const
         { return meshsize; }
 
     inline uint32_t getOutSteps() const
@@ -125,7 +125,7 @@ public:
     inline uint32_t getInterpolationPoints() const
         { return interpol_type; }
 
-    inline bool getInterpolationBound() const
+    inline bool getInterpolationClamped() const
         { return interpol_clamp; }
 
 public:

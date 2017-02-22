@@ -28,6 +28,7 @@
 #ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
 #endif
+#include <memory>
 #include <sstream>
 
 #include "defines.hpp"
@@ -36,6 +37,7 @@
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
+#include "PS/PhaseSpaceFactory.hpp"
 #include "Z/FreeSpaceCSR.hpp"
 #include "Z/ParallelPlatesCSR.hpp"
 #include "Z/CollimatorImpedance.hpp"
@@ -53,12 +55,6 @@
 #include "IO/ProgramOptions.hpp"
 
 using namespace vfps;
-
-inline bool isOfFileType(std::string ending, std::string fname)
-{
-    return ( fname.size() > ending.size() &&
-        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
-}
 
 int main(int argc, char** argv)
 {
@@ -100,19 +96,8 @@ int main(int argc, char** argv)
     }
 
     #ifdef INOVESA_USE_GUI
-    bool gui = opts.showPhaseSpace();
-    Display* display = nullptr;
-    if (gui && opts.getCLDevice() >= 0) {
-        try {
-            display = new Display(opts.getOpenGLVersion());
-        } catch (std::exception& e) {
-            std::string msg("ERROR: ");
-            Display::printText(msg+e.what());
-            delete display;
-            display = nullptr;
-            gui = false;
-        }
-    }
+    auto display = make_display(opts.showPhaseSpace(),
+                                opts.getOpenGLVersion());
     #endif
 
     #ifdef INOVESA_USE_CL
@@ -124,7 +109,8 @@ int main(int argc, char** argv)
     OCLH::active = (opts.getCLDevice() > 0);
     if (OCLH::active) {
         try {
-            OCLH::prepareCLEnvironment(gui,opts.getCLDevice()-1);
+            OCLH::prepareCLEnvironment(opts.showPhaseSpace(),
+                                       opts.getCLDevice()-1);
             std::atexit(OCLH::teardownCLEnvironment);
         } catch (cl::Error& e) {
             Display::printText(e.what());
@@ -134,40 +120,17 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
-    vfps::FokkerPlanckMap::DerivationType derivationtype;
-    switch (opts.getDerivationType()) {
-    case 3:
-        derivationtype = vfps::FokkerPlanckMap::DerivationType::two_sided;
-        break;
-    case 4:
-    default:
-        derivationtype = vfps::FokkerPlanckMap::DerivationType::cubic;
-        break;
-    }
+    const auto derivationtype = static_cast<FokkerPlanckMap::DerivationType>
+            (opts.getDerivationType());
 
-    vfps::SourceMap::InterpolationType interpolationtype;
-    switch (opts.getInterpolationPoints()) {
-    case 1:
-        interpolationtype = vfps::SourceMap::InterpolationType::none;
-        break;
-    case 2:
-        interpolationtype = vfps::SourceMap::InterpolationType::linear;
-        break;
-    case 3:
-        interpolationtype = vfps::SourceMap::InterpolationType::quadratic;
-        break;
-    default:
-    case 4:
-        interpolationtype = vfps::SourceMap::InterpolationType::cubic;
-        break;
-    }
+    const auto interpolationtype = static_cast<SourceMap::InterpolationType>
+            (opts.getInterpolationPoints());
 
-    const bool interpol_clamp = opts.getInterpolationBound();
+    const bool interpol_clamp = opts.getInterpolationClamped();
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    PhaseSpace* mesh1 = nullptr;
-    meshindex_t ps_size = opts.getMeshSize();
+    const meshindex_t ps_size = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
     const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
     const double pcenter = -opts.getPSShiftY()*pqsize/(ps_size-1);
@@ -178,7 +141,7 @@ int main(int argc, char** argv)
     const double pmin = pcenter - pqhalf;
 
     const double sE = opts.getEnergySpread(); // relative energy spread
-    const double E0 = opts.getBeamEnergy(); // relative energy spread
+    const double E0 = opts.getBeamEnergy(); // energy of reference particle
     const double dE = sE*E0; // absolute energy spread
     const double f_rev = opts.getRevolutionFrequency();
     const double R_tmp = opts.getBendingRadius();
@@ -197,14 +160,14 @@ int main(int argc, char** argv)
     double fs_tmp = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
-    // positive f_s will
+    // positive f_s will be used, negative imply usage of alpha0
     if (fs_tmp < 0) {
         fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*M_PI*E0));
     } else {
         alpha0_tmp = 2*M_PI*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
     }
 
-    // real synchrotron frequency
+    // synchrotron frequency (comparable to real storage ring)
     const double fs_unscaled = fs_tmp;
 
     // synchrotron frequency (isomagnetic ring)
@@ -220,7 +183,7 @@ int main(int argc, char** argv)
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
-    const unsigned int hi = opts.getHaissinskiIterations();
+    const unsigned int haisi = opts.getHaissinskiIterations();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -302,150 +265,44 @@ int main(int argc, char** argv)
                            +sstream.str()+" (should be < 1).");
     }
 
+    std::shared_ptr<PhaseSpace> mesh1;
+
     if (startdistfile.length() <= 4) {
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                               Qb,Ib_unscaled,bl,dE,Iz);
+        mesh1.reset(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE,Iz));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
     #ifdef INOVESA_USE_PNG
     // check for file ending .png
     if (isOfFileType(".png",startdistfile)) {
-        // load pattern to start with
-        png::image<png::gray_pixel_16> image;
-        try {
-            image.read(opts.getStartDistFile());
-        } catch ( const png::std_error &e ) {
-            std::cerr << e.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch ( const png::error &e ) {
-            std::cerr << "Problem loading " << startdistfile
-                      << ": " << e.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch (...) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\".";
-            return EXIT_FAILURE;
-        }
-
-        if (image.get_width() == image.get_height()) {
-            if (ps_size != image.get_width()) {
-                std::cerr << startdistfile << " (a="
-                          << image.get_width()
-                          << " px) does not match set GridSize (a="
-                          << ps_size << " px)"
-                          << std::endl;
-
-                return EXIT_SUCCESS;
-            }
-
-            meshdata_t* data = new meshdata_t[ps_size*ps_size];
-            for (unsigned int x=0; x<ps_size; x++) {
-                for (unsigned int y=0; y<ps_size; y++) {
-                    data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
-                }
-            }
-            mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
-                                   Qb,Ib_unscaled,bl,dE,1,data);
-            delete [] data;
-            // normalize integral to 1
-            mesh1->normalize();
-
-            mesh1->syncCLMem(clCopyDirection::cpu2dev);
-            std::stringstream imgsize;
-            imgsize << ps_size;
-            Display::printText("Read phase space (a="+imgsize.str()+" px).");
-        } else {
-            std::cerr << "Phase space has to be quadratic. Please adjust "
-                      << startdistfile << std::endl;
-
-            return EXIT_SUCCESS;
-        }
+        mesh1 = makePSFromPNG(startdistfile,qmin,qmax,pmin,pmax,
+                            Qb,Ib_unscaled,bl,dE);
     } else
     #endif // INOVESA_USE_PNG
     #ifdef INOVESA_USE_HDF5
     if (  isOfFileType(".h5",startdistfile)
        || isOfFileType(".hdf5",startdistfile) ) {
-        int64_t startdiststep = opts.getStartDistStep();
-        try {
-            mesh1 = new PhaseSpace(HDF5File::readPhaseSpace(startdistfile,
-                                                            qmin,qmax,
-                                                            pmin,pmax,
-                                                            Qb,Ib_unscaled,
-                                                            bl,dE,
-                                                            startdiststep));
-        } catch (const std::exception& ex) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\":"
-                      << ex.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch (const H5::Exception& ex) {
-            ex.printErrorStack();
-            return EXIT_SUCCESS;
-        } catch (...) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\".";
-            return EXIT_FAILURE;
-        }
+        mesh1 = makePSFromHDF5(startdistfile,opts.getStartDistStep(),
+                               qmin,qmax,pmin,pmax,
+                               Qb,Ib_unscaled,bl,dE);
 
         if (ps_size != mesh1->nMeshCells(0)) {
             std::cerr << startdistfile
                       << " does not match set GridSize." << std::endl;
 
-            delete mesh1;
             return EXIT_SUCCESS;
         }
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif
     if (isOfFileType(".txt",startdistfile)) {
-        ps_size = opts.getMeshSize();
-        mesh1 = new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl);
-
-        std::ifstream ifs;
-        try {
-            ifs.open(startdistfile);
-        } catch (const std::exception& ex) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\":"
-                      << ex.what() << std::endl;
-            return EXIT_SUCCESS;
-        } catch (...) {
-            std::cerr << "Error loading initial distribution from \""
-                      << startdistfile << "\".";
-            return EXIT_FAILURE;
-        }
-
-        ifs.unsetf(std::ios_base::skipws);
-
-        // count the newlines with an algorithm specialized for counting:
-        size_t line_count = std::count(
-            std::istream_iterator<char>(ifs),
-            std::istream_iterator<char>(),
-            '\n');
-
-        ifs.setf(std::ios_base::skipws);
-        ifs.clear();
-        ifs.seekg(0,ifs.beg);
-
-        while (ifs.good()) {
-            float xf,yf;
-            ifs >> xf >> yf;
-            meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
-            meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
-            if (x < ps_size && y < ps_size) {
-                (*mesh1)[x][y] += 1.0/line_count;
-            }
-        }
-        ifs.close();
-
-        // normalize integral to 1
-        mesh1->normalize();
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+        mesh1 = makePSFromTXT(startdistfile,opts.getGridSize(),
+                              qmin,qmax,pmin,pmax,
+                              Qb,Ib_unscaled,bl,dE);
     } else {
         Display::printText("Unknown format of input file. Will now quit.");
         return EXIT_SUCCESS;
@@ -462,24 +319,22 @@ int main(int argc, char** argv)
 
 
     #ifdef INOVESA_USE_GUI
-    Plot2DLine* bpv = nullptr;
-    Plot3DColormap* psv = nullptr;
-    Plot2DLine* wpv = nullptr;
+    std::shared_ptr<Plot2DLine> bpv;
+    std::shared_ptr<Plot3DColormap> psv;
+    std::shared_ptr<Plot2DLine> wpv;
 
-    std::vector<float> csrlog;
-    Plot2DLine* history = nullptr;
-    if (gui) {
+    std::vector<float> csrlog(std::ceil(steps*rotations/outstep)+1,0);
+    std::shared_ptr<Plot2DLine> history;
+    if (display != nullptr) {
         try {
-            psv = new Plot3DColormap(maxval);
+            psv.reset(new Plot3DColormap(maxval));
             display->addElement(psv);
             psv->createTexture(mesh1);
             display->draw();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             display->takeElement(psv);
-            delete psv;
-            psv = nullptr;
-            gui = false;
+            psv.reset();
         }
     }
     #endif // INOVESSA_USE_GUI
@@ -494,8 +349,8 @@ int main(int argc, char** argv)
     const double padding =std::max(opts.getPadding(),1.0);
 
     Impedance* impedance = nullptr;
+    const double fmax = ps_size*vfps::physcons::c/(pqsize*bl);
     if (opts.getImpedanceFile() == "") {
-        double fmax = ps_size*vfps::physcons::c/(2*qmax*bl);
         if (gap>0) {
             Display::printText("Will use parallel plates CSR impedance.");
             impedance = new ParallelPlatesCSR(ps_size*padding,f0,fmax,gap);
@@ -529,8 +384,7 @@ int main(int argc, char** argv)
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
-        impedance = new Impedance(opts.getImpedanceFile(),
-                                  ps_size*vfps::physcons::c/(2*qmax*bl));
+        impedance = new Impedance(opts.getImpedanceFile(),fmax);
         if (impedance->nFreqs() < ps_size) {
             Display::printText("No valid impedance file. "
                                "Will now quit.");
@@ -538,36 +392,36 @@ int main(int argc, char** argv)
         }
     }
 
-    PhaseSpace* mesh2 = new PhaseSpace(*mesh1);
-    PhaseSpace* mesh3 = new PhaseSpace(*mesh1);
+    auto mesh2 = std::make_shared<PhaseSpace>(*mesh1);
+    auto mesh3 = std::make_shared<PhaseSpace>(*mesh1);
 
-    SourceMap* rm1;
-    SourceMap* rm2 = nullptr;
+    std::unique_ptr<SourceMap> rm1;
+    std::unique_ptr<SourceMap> rm2;
     const uint_fast8_t rotationtype = opts.getRotationType();
     switch (rotationtype) {
     case 0:
         Display::printText("Initializing RotationMap.");
-        rm1 = new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
+        rm1.reset(new RotationMap(mesh1,mesh3,ps_size,ps_size,angle,
                              interpolationtype,interpol_clamp,
-                             RotationMap::RotationCoordinates::norm_pm1,0);
+                             RotationMap::RotationCoordinates::norm_pm1,0));
         break;
     case 1:
         Display::printText("Building RotationMap.");
-        rm1 = new RotationMap(mesh2,mesh3,ps_size,ps_size,angle,
+        rm1.reset(new RotationMap(mesh2,mesh3,ps_size,ps_size,angle,
                              interpolationtype,interpol_clamp,
                              RotationMap::RotationCoordinates::norm_pm1,
-                             ps_size*ps_size);
+                             ps_size*ps_size));
         break;
     case 2:
     default:
         Display::printText("Building RFKickMap.");
-        rm1 = new RFKickMap(mesh2,mesh1,ps_size,ps_size,angle,
-                            interpolationtype,interpol_clamp);
+        rm1.reset(new RFKickMap(mesh2,mesh1,ps_size,ps_size,angle,
+                            interpolationtype,interpol_clamp));
 
         Display::printText("Building DriftMap.");
-        rm2 = new DriftMap(mesh1,mesh3,ps_size,ps_size,
+        rm2.reset(new DriftMap(mesh1,mesh3,ps_size,ps_size,
                            {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}},
-                           E0,interpolationtype,interpol_clamp);
+                           E0,interpolationtype,interpol_clamp));
         break;
     }
 
@@ -639,39 +493,39 @@ int main(int argc, char** argv)
     }
 
     #ifdef INOVESA_USE_GUI
-    if (gui) {
+    if (display != nullptr) {
         try {
-            bpv = new Plot2DLine(std::array<float,3>{{1,0,0}});
+            bpv.reset(new Plot2DLine(std::array<float,3>{{1,0,0}}));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             display->takeElement(bpv);
-            delete bpv;
-            bpv = nullptr;
+            bpv.reset();
         }
         if (wkm != nullptr) {
             try {
-                wpv = new Plot2DLine(std::array<float,3>{{0,0,1}});
+                wpv.reset(new Plot2DLine(std::array<float,3>{{0,0,1}}));
                 display->addElement(wpv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
                 display->takeElement(wpv);
-                delete wpv;
-                wpv = nullptr;
+                wpv.reset();
             }
         }
         try {
-            history = new Plot2DLine(std::array<float,3>{{0,0,0}});
+            history.reset(new Plot2DLine(std::array<float,3>{{0,0,0}}));
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             display->takeElement(wpv);
-            delete wpv;
-            wpv = nullptr;
+            wpv.reset();
         }
     }
     #endif // INOVESA_USE_GUI
 
+    /*
+     * Draft for a Haissinski solver
+     */
     std::vector<std::vector<vfps::projection_t>> profile;
     std::vector<vfps::projection_t> currprofile;
     currprofile.resize(ps_size);
@@ -682,7 +536,7 @@ int main(int argc, char** argv)
 
     projection_t* xproj = mesh1->getProjection(0);
     const Ruler<meshaxis_t>* q_axis = mesh1->getAxis(0);
-    for (uint32_t i=0;i<hi;i++) {
+    for (uint32_t i=0;i<haisi;i++) {
         wkm->update();
         const meshaxis_t* wake = wkm->getForce();
         std::copy_n(xproj,ps_size,currprofile.data());
@@ -712,7 +566,17 @@ int main(int argc, char** argv)
             psv->delTexture();
         }
     }
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        mesh1->syncCLMem(clCopyDirection::cpu2dev);
+    }
+    #endif // INOVESA_USE_CL
 
+    // end of Haissinski solver draft
+
+    /*
+     * preparation to save results
+     */
     #ifdef INOVESA_USE_HDF5
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
@@ -740,34 +604,44 @@ int main(int argc, char** argv)
         Display::printText("Will not save results.");
     }
 
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        mesh1->syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
-
     #ifdef INOVESA_USE_HDF5
     const HDF5File::AppendType h5save =
         opts.getSavePhaseSpace()? HDF5File::AppendType::All:
                                   HDF5File::AppendType::Defaults;
+    // end of preparation to save results
+
+
     if (hdf_file != nullptr && h5save == HDF5File::AppendType::Defaults) {
         // save initial phase space
         hdf_file->append(mesh1,HDF5File::AppendType::PhaseSpace);
     }
     #endif
 
-    if (gui) {
-        csrlog.resize(std::floor(steps*rotations/outstep)+1,0);
-    }
+
 
     Display::printText("Starting the simulation.");
+
+    // time between two status updates (in seconds)
+    const auto updatetime = 2.0f;
+
+    /* We claim that simulation starts now.
+     * To have the first step always displayed, we do it outside the loop
+     * there are two pieces of information needed for this (see below). */
+
+    // 1) the integral
+    mesh1->updateXProjection();
     mesh1->integral();
+
+    // 2) the energy spread (variance in Y direction)
+    mesh1->updateYProjection();
     mesh1->variance(1);
     Display::printText(status_string(mesh1,0,rotations));
-    for (uint32_t i=0, outstepnr=0;i<steps*rotations;i++) {
-        // update projection to horizontal axis for use in this time step
-        mesh1->updateXProjection();
 
+    /*
+     * main simulation loop
+     * (everything inside this loop will be run a multitude of times)
+     */
+    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
         if (wkm != nullptr) {
             // works on XProjection
             wkm->update();
@@ -775,6 +649,9 @@ int main(int argc, char** argv)
         if (renormalize > 0 && i%renormalize == 0) {
             // works on XProjection
             mesh1->normalize();
+        } else {
+            // works on XProjection
+            mesh1->integral();
         }
 
         if (outstep > 0 && i%outstep == 0) {
@@ -806,7 +683,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_GUI
-            if (gui) {
+            if (display != nullptr) {
                 if (psv != nullptr) {
                     psv->createTexture(mesh1);
                 }
@@ -835,7 +712,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESSA_USE_GUI
             Display::printText(status_string(mesh1,static_cast<float>(i)/steps,
-                               rotations),2.0f);
+                               rotations),updatetime);
         }
         wm->apply();
         wm->applyTo(trackme);
@@ -847,12 +724,15 @@ int main(int argc, char** argv)
         }
         fpm->apply();
         fpm->applyTo(trackme);
-    }
+
+        // udate for next time step
+        mesh1->updateXProjection();
+
+    } // end of main simulation loop
 
     #ifdef INOVESA_USE_HDF5
     // save final result
     if (hdf_file != nullptr) {
-        mesh1->updateXProjection();
         if (wkm != nullptr) {
             wkm->update();
         }
@@ -913,20 +793,9 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
-    #ifdef INOVESA_USE_GUI
-    delete display;
-    delete psv;
-    #endif
-
-    delete mesh1;
-    delete mesh2;
-    delete mesh3;
-
     delete field;
     delete impedance;
 
-    delete rm1;
-    delete rm2;
     delete wm;
     delete fpm;
 

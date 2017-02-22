@@ -21,8 +21,10 @@
 #ifndef MESSAGESTRINGS_HPP
 #define MESSAGESTRINGS_HPP
 
-#include <sstream>
 #include <iomanip>
+#include <memory>
+#include <sstream>
+
 
 #include "PS/PhaseSpace.hpp"
 
@@ -33,7 +35,7 @@ const std::string copyright_notice() noexcept;
 
 const std::string inovesa_version();
 
-const std::string status_string(const PhaseSpace *ps,
+const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,
                                 float total_rotations);
 

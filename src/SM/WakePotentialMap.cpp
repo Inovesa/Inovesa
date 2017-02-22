@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -20,8 +20,8 @@
 
 #include "SM/WakePotentialMap.hpp"
 
-vfps::WakePotentialMap::WakePotentialMap(vfps::PhaseSpace *in,
-                                         vfps::PhaseSpace *out,
+vfps::WakePotentialMap::WakePotentialMap(std::shared_ptr<PhaseSpace> in,
+                                         std::shared_ptr<PhaseSpace> out,
                                          const vfps::meshindex_t xsize,
                                          const vfps::meshindex_t ysize,
                                          ElectricField *field,

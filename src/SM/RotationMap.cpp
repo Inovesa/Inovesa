@@ -20,7 +20,8 @@
 
 #include "SM/RotationMap.hpp"
 
-vfps::RotationMap::RotationMap(PhaseSpace* in, PhaseSpace* out,
+vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
+                               std::shared_ptr<PhaseSpace> out,
                                const meshindex_t xsize,
                                const meshindex_t ysize,
                                const meshaxis_t angle,

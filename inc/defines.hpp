@@ -60,6 +60,12 @@ typedef data_t timeaxis_t;
 
 typedef integral_t projection_t;
 
+inline bool isOfFileType(std::string ending, std::string fname)
+{
+    return ( fname.size() > ending.size() &&
+        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+}
+
 namespace physcons
 {
 /// speed of light (in m/s)

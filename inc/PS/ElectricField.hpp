@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <fftw3.h>
+#include <memory>
 #include <sstream>
 
 #include "defines.hpp"
@@ -55,7 +56,7 @@ public:
      *
      * Use other constructors when you want to use wake function or potential.
      */
-    ElectricField(PhaseSpace* ps,
+    ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const Impedance* impedance,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
@@ -79,7 +80,8 @@ public:
      *   c/ps->getScale(0) (charge/sigma_z -> current)
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
-    ElectricField(PhaseSpace* ps, const Impedance* impedance,
+    ElectricField(std::shared_ptr<PhaseSpace> ps,
+                  const Impedance* impedance,
                   const double revolutionpart,
                   const double Ib, const double E0,
                   const double sigmaE, const double dt);
@@ -97,7 +99,7 @@ public:
      * @param fs synchrotron frequency [Hz]
      * @param nmax
      */
-    ElectricField(PhaseSpace* ps,
+    ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const Impedance* impedance, const double Ib, const double E0,
                   const double sigmaE, const double dt, const double rbend,
                   const double fs, const size_t nmax);
@@ -221,7 +223,7 @@ private:
 
     const Ruler<meshaxis_t> _axis_wake;
 
-    PhaseSpace* _phasespace;
+    std::shared_ptr<PhaseSpace> _phasespace;
 
     csrpower_t _csrintensity;
 
