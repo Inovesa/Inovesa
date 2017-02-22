@@ -369,21 +369,19 @@ int main(int argc, char** argv)
     const double padding =std::max(opts.getPadding(),1.0);
 
     Impedance* impedance = nullptr;
+    const double fmax = ps_size*vfps::physcons::c/(pqsize*bl);
     if (opts.getImpedanceFile() == "") {
         if (gap>0) {
             Display::printText("Will use parallel plates CSR impedance.");
-            impedance = new ParallelPlatesCSR(ps_size*padding,f0,
-                                     ps_size*vfps::physcons::c/(2*qmax*bl),gap);
+            impedance = new ParallelPlatesCSR(ps_size*padding,f0,fmax,gap);
         } else {
             Display::printText("Will use free space CSR impedance.");
-            impedance = new FreeSpaceCSR(ps_size*padding,f0,
-                                         ps_size*vfps::physcons::c/(2*qmax*bl));
+            impedance = new FreeSpaceCSR(ps_size*padding,f0,fmax);
         }
     } else {
         Display::printText("Reading impedance from: \""
                            +opts.getImpedanceFile()+"\"");
-        impedance = new Impedance(opts.getImpedanceFile(),
-                                  ps_size*vfps::physcons::c/(2*qmax*bl));
+        impedance = new Impedance(opts.getImpedanceFile(),fmax);
         if (impedance->nFreqs() < ps_size) {
             Display::printText("No valid impedance file. "
                                "Will now quit.");
