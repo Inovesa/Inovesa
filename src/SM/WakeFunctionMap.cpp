@@ -70,6 +70,9 @@ vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
 vfps::WakeFunctionMap::~WakeFunctionMap()
 {
     delete [] _wakefunction;
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    std::cout << "~WakeFunctionMap() -> ";
+    #endif // INOVESA_ENABLE_CLPROFILING
 }
 
 void vfps::WakeFunctionMap::update()

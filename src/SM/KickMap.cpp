@@ -166,10 +166,6 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
     #endif // INOVESA_USE_CL
 }
 
-vfps::KickMap::~KickMap()
-{
-}
-
 void vfps::KickMap::apply()
 {
     #ifdef INOVESA_USE_CL
@@ -177,10 +173,22 @@ void vfps::KickMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        cl::Event evt;
+        OCLH::enqueueNDRangeKernel (
+                    applyHM,
+                    cl::NullRange,
+                    cl::NDRange(_meshsize_pd),
+                    cl::NullRange,
+                    nullptr,
+                    &evt);
+        applySMEvents.push_back(evt);
+        #else
         OCLH::enqueueNDRangeKernel (
                     applyHM,
                     cl::NullRange,
                     cl::NDRange(_meshsize_pd));
+        #endif // INOVESA_ENABLE_CLPROFILING
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2

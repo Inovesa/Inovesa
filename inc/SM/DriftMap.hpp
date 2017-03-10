@@ -33,6 +33,13 @@ public:
              const meshindex_t xsize, const meshindex_t ysize,
              const std::vector<meshaxis_t> slip, const double E0,
              const InterpolationType it, const bool interpol_clamp);
+
+    ~DriftMap()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~DriftMap() -> "; }
+    #else
+    = defaut;
+    #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 } // namespace fvps

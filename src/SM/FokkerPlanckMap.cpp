@@ -158,7 +158,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
         applyHM.setArg(4, _out->data_buf);
     }
     }
-    #endif
+#endif
 }
 
 void vfps::FokkerPlanckMap::apply()
@@ -168,10 +168,22 @@ void vfps::FokkerPlanckMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        cl::Event evt;
+        OCLH::enqueueNDRangeKernel (
+                    applyHM,
+                    cl::NullRange,
+                    cl::NDRange(_meshxsize,_ysize),
+                    cl::NullRange,
+                    nullptr,
+                    &evt);
+        applySMEvents.push_back(evt);
+        #else
         OCLH::enqueueNDRangeKernel (
                     applyHM,
                     cl::NullRange,
                     cl::NDRange(_meshxsize,_ysize));
+        #endif // INOVESA_ENABLE_CLPROFILING
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2

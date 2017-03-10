@@ -28,8 +28,3 @@ vfps::WakeKickMap::WakeKickMap(std::shared_ptr<PhaseSpace> in,
     KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y)
 {
 }
-
-vfps::WakeKickMap::~WakeKickMap()
-{
-}
-

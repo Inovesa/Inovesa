@@ -34,6 +34,13 @@ public:
              const meshindex_t xsize, const meshindex_t ysize) :
         SourceMap(in, out, xsize, ysize, 0, 0) {}
 
+    ~Identity()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~Identity() -> "; }
+    #else
+    = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
+
     /**
      * @brief apply copys data from in to out
      */

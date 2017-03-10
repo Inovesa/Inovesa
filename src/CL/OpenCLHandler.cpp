@@ -87,8 +87,12 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
 
     OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 
-    OCLH::queue = cl::CommandQueue(OCLH::context, OCLH::devices[selecteddevice],
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    OCLH::queue = cl::CommandQueue(OCLH::context,OCLH::devices[selecteddevice],
                                    CL_QUEUE_PROFILING_ENABLE);
+    #else
+    OCLH::queue = cl::CommandQueue(OCLH::context,OCLH::devices[selecteddevice]);
+    #endif // INOVESA_ENABLE_CLPROFILING
 
     devicetype = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_TYPE>();
     // cl_VENDOR_gl_sharing is present, when string contains the substring
@@ -201,8 +205,6 @@ cl::vector<cl::Device> OCLH::devices;
 cl_device_type OCLH::devicetype;
 
 cl::CommandQueue OCLH::queue;
-
-std::vector<cl::Event> OCLH::events;
 
 bool OCLH::ogl_sharing;
 

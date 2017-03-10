@@ -139,6 +139,8 @@ protected:
      */
     cl::Kernel applyHM;
 
+    cl::vector<cl::Event> applySMEvents;
+
     std::string _cl_code;
 
     cl::Program _cl_prog;
