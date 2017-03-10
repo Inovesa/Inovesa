@@ -82,7 +82,45 @@ public:
      */
     static cl::CommandQueue queue;
 
+    static std::vector<cl::Event> events;
+
     static bool ogl_sharing;
+
+public:
+    /**
+     * This wrapper function allows to centrally controll queuing kernels.
+     */
+    static inline cl_int
+    enqueueNDRangeKernel(const cl::Kernel& kernel,
+                         const cl::NDRange& offset,
+                         const cl::NDRange& global,
+                         const cl::NDRange& local = cl::NullRange)
+    {
+        #ifdef INOVESA_ENABLE_PROFILING
+        cl::Event event;
+        queue.enqueueNDRangeKernel(kernel,offset,global,local,nullptr,&event);
+        OCLH::events.push_back(event);
+        #else
+        queue.enqueueNDRangeKernel(kernel,offset,global,local);
+        #endif
+    }
+
+    static inline cl_int
+    enqueueCopyBuffer(const cl::Buffer& src,
+                      const cl::Buffer& dst,
+                      cl::size_type src_offset,
+                      cl::size_type dst_offset,
+                      cl::size_type size)
+    {
+        #ifdef INOVESA_ENABLE_PROFILING
+        cl::Event event;
+        queue.enqueueCopyBuffer(src, dst, src_offset,dst_offset,size,
+                                nullptr,);
+        OCLH::events.push_back(event);
+        #else
+        queue.enqueueCopyBuffer(src, dst, src_offset,dst_offset,size);
+        #endif
+    }
 
 private:
 #ifdef INOVESA_USE_CLFFT

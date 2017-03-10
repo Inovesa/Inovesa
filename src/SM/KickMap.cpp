@@ -177,7 +177,7 @@ void vfps::KickMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::queue.enqueueNDRangeKernel (
+        OCLH::enqueueNDRangeKernel (
                     applyHM,
                     cl::NullRange,
                     cl::NDRange(_meshsize_pd));

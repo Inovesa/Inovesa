@@ -44,8 +44,8 @@ public:
             #ifdef INOVESA_SYNC_CL
             _in->syncCLMem(clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
-            OCLH::queue.enqueueCopyBuffer(_in->data_buf, _out->data_buf,
-                                          0,0,sizeof(meshdata_t)*_size);
+            OCLH::enqueueCopyBuffer(_in->data_buf, _out->data_buf,
+                                    0,0,sizeof(meshdata_t)*_size);
             #ifdef CL_VERSION_1_2
             OCLH::queue.enqueueBarrierWithWaitList();
             #else // CL_VERSION_1_2

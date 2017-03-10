@@ -73,10 +73,10 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         clfftBakePlan(_clfft_bunchprofile,1,&OCLH::queue(), nullptr, nullptr);
 
         std::string cl_code_padbp = R"(
-            __kernel void pad_bp(__global float* bp_padded,
+            __kernel void pad_bp(__global data_t* bp_padded,
                                  const ulong paddedsize,
                                  const uint bpmeshcells,
-                                 const __global float* bp)
+                                 const __global data_t* bp)
             {
                 const uint g = get_global_id(0);
                 const uint b = (g+bpmeshcells/2)%bpmeshcells;
@@ -279,8 +279,8 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
-        OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
-                                          cl::NDRange(_bpmeshcells));
+        OCLH::enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
+                                    cl::NDRange(_bpmeshcells));
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
@@ -322,7 +322,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active){
-        OCLH::queue.enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
+        OCLH::enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
                                           cl::NDRange(_bpmeshcells));
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
@@ -330,14 +330,14 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                           &_bp_padded_buf(),&_formfactor_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
 
-        OCLH::queue.enqueueNDRangeKernel( _clKernWakelosses,cl::NullRange,
+        OCLH::enqueueNDRangeKernel( _clKernWakelosses,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_wakelosses,CLFFT_BACKWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
                           &_wakelosses_buf(),&_wakepotential_complex_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
-        OCLH::queue.enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
+        OCLH::enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::queue.enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL

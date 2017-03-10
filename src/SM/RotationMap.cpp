@@ -111,12 +111,12 @@ void vfps::RotationMap::apply()
         #endif // INOVESA_SYNC_CL
         if (_rotmapsize == 0) {
              // stay away from mesh borders
-            OCLH::queue.enqueueNDRangeKernel (
+            OCLH::enqueueNDRangeKernel (
                         applyHM,
                         cl::NDRange(1,1),
                         cl::NDRange(_xsize-_it+1,_ysize-_it+1));
         } else {
-            OCLH::queue.enqueueNDRangeKernel (
+            OCLH::enqueueNDRangeKernel (
                         applyHM,
                         cl::NullRange,
                         cl::NDRange(_rotmapsize));
