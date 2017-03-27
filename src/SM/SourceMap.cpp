@@ -53,8 +53,8 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
-    std::cout << "~SourceMap()" <<std::endl;
     #ifdef INOVESA_ENABLE_CLPROFILING
+    std::cout << "~SourceMap()" <<std::endl;
     if (OCLH::active) {
     OCLH::queue.flush();
     double predevicewait = 0;

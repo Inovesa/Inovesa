@@ -757,6 +757,22 @@ int main(int argc, char** argv)
             hdf_file->append(wkm);
         }
         hdf_file->appendTracks(trackme.data());
+
+        if (save_sourcemap) {
+            std::vector<PhaseSpace::Position> allpos;
+            for (float x=0; x<ps_size; x++) {
+                for (float y=0; y<ps_size; y++) {
+                    allpos.push_back({x,y});
+                }
+            }
+            wm->applyTo(allpos);
+            rm1->applyTo(allpos);
+            if (rm2 != nullptr) {
+                rm2->applyTo(allpos);
+            }
+            fpm->applyTo(allpos);
+            hdf_file->appendSourceMap(allpos.data());
+        }
     }
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
