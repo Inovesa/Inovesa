@@ -65,7 +65,9 @@ public:
         All, Defaults, PhaseSpace
     };
 
-    void append(const PhaseSpace::Position *particles);
+    void appendTracks(const PhaseSpace::Position *particles);
+
+    void appendSourceMap(const PhaseSpace::Position *allpos);
 
     void append(const std::shared_ptr<PhaseSpace> ps,
                 const AppendType at=AppendType::Defaults);
@@ -233,6 +235,17 @@ private: // impedance
     H5::DataType imp_datatype;
 
     hsize_t imp_size;
+
+private: // source map
+    static constexpr uint_fast8_t _sm_rank = _ps_rank;
+
+    H5::DataSet _sm_dataset;
+
+    H5::DataType _sm_datatype;
+
+    std::array<hsize_t,_sm_rank> _sm_dims;
+
+    meshindex_t _sm_size;
 
 private: // wake function
     static constexpr uint_fast8_t wf_rank = 1;
