@@ -573,9 +573,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
     sm_prop.setShuffle();
     sm_prop.setDeflate(compression);
 
-    _sm_dataset_x = _file->createDataSet("/SourceMap/X",_sm_datatype,
+    _file->createGroup("/SourceMap/data/");
+    _sm_dataset_x = _file->createDataSet("/SourceMap/data/x",_sm_datatype,
                                        sm_dataspace,sm_prop);
-    _sm_dataset_y = _file->createDataSet("/SourceMap/Y",_sm_datatype,
+    _sm_dataset_y = _file->createDataSet("/SourceMap/data/y",_sm_datatype,
                                        sm_dataspace,sm_prop);
 
     if (wfm != nullptr ) {
