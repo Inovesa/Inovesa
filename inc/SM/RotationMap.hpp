@@ -62,7 +62,7 @@ public:
     #ifdef INOVESA_ENABLE_CLPROFILING
         { std::cout << "~RotationMap() -> "; }
     #else
-    = defaut;
+    = default;
     #endif // INOVESA_ENABLE_CLPROFILING
 
     /**

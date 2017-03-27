@@ -43,10 +43,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csr_dims( {{ 0, ef->getNMax()/static_cast<size_t>(2) }} ),
     maxn( ef->getNMax()/static_cast<size_t>(2) ),
     csri_dims( 0 ),
-    ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
-    ps_size( ps->nMeshCells(0) ),
+    _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
+    _ps_size( ps->nMeshCells(0) ),
     imp_size( imp->nFreqs()/2 ),
-    wf_size( 2*ps_size )
+    wf_size( 2*_ps_size )
 {
     _file = new H5::H5File(filename,H5F_ACC_TRUNC);
 
@@ -61,9 +61,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     const std::array<hsize_t,axps_rank> psa_dims
-                    = {{ ps_size }};
+                    = {{ _ps_size }};
     const std::array<hsize_t,axps_rank> psa_maxdims
-                    = {{ ps_size }};
+                    = {{ _ps_size }};
 
     H5::DataSpace ax0ps_dataspace(axps_rank,psa_dims.data(),
                                         psa_maxdims.data());
@@ -71,7 +71,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                         psa_maxdims.data());
 
 
-    const hsize_t psa_chunkdims = std::min(2048U,ps_size);
+    const hsize_t psa_chunkdims = std::min(2048U,_ps_size);
+
+    H5::DSetCreatPropList axps_prop;
     axps_prop.setChunk(axps_rank,&psa_chunkdims);
     axps_prop.setShuffle();
     axps_prop.setDeflate(compression);
@@ -116,6 +118,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     const hsize_t axfreq_chunkdims = std::min(static_cast<size_t>(2048),
                                               maxn);
+
+    H5::DSetCreatPropList axfreq_prop;
     axfreq_prop.setChunk(axps_rank,&axfreq_chunkdims);
     axfreq_prop.setShuffle();
     axfreq_prop.setDeflate(compression);
@@ -137,6 +141,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
 
     const hsize_t ta_chunkdims = 256;
+
+    H5::DSetCreatPropList ta_prop;
     ta_prop.setChunk(ta_rank,&ta_chunkdims);
     ta_prop.setShuffle();
     ta_prop.setDeflate(compression);
@@ -157,6 +163,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
      H5::DataSpace bc_dataspace(bc_rank,&bc_dims,&bc_maxdims);
 
     const hsize_t bc_chunkdims = 256;
+
+    H5::DSetCreatPropList bc_prop;
     bc_prop.setChunk(bc_rank,&bc_chunkdims);
     bc_prop.setShuffle();
     bc_prop.setDeflate(compression);
@@ -182,12 +190,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     const std::array<hsize_t,bp_rank> bp_maxdims
-                    = {{H5S_UNLIMITED,ps_size}};
+                    = {{H5S_UNLIMITED,_ps_size}};
 
     H5::DataSpace bp_dataspace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
     const std::array<hsize_t,bp_rank> bp_chunkdims
-        = {{64U,std::min(2048U,ps_size)}};
+        = {{64U,std::min(2048U,_ps_size)}};
+
+    H5::DSetCreatPropList bp_prop;
     bp_prop.setChunk(bp_rank,bp_chunkdims.data());
     bp_prop.setShuffle();
     bp_prop.setDeflate(compression);
@@ -218,6 +228,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace bl_dataspace(bl_rank,&bl_dims,&bl_maxdims);
 
     const hsize_t bl_chunkdims = 256;
+
+    H5::DSetCreatPropList bl_prop;
     bl_prop.setChunk(bl_rank,&bl_chunkdims);
     bl_prop.setShuffle();
     bl_prop.setDeflate(compression);
@@ -245,6 +257,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace qb_dataspace(qb_rank,&qb_dims,&qb_maxdims);
 
     const hsize_t qb_chunkdims = 256;
+
+    H5::DSetCreatPropList qb_prop;
     qb_prop.setChunk(qb_rank,&qb_chunkdims);
     qb_prop.setShuffle();
     qb_prop.setDeflate(compression);
@@ -272,12 +286,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     const std::array<hsize_t,ep_rank> ep_maxdims
-                    = {{H5S_UNLIMITED,ps_size}};
+                    = {{H5S_UNLIMITED,_ps_size}};
 
     H5::DataSpace ep_dataspace(ep_rank,ep_dims.data(),ep_maxdims.data());
 
     const std::array<hsize_t,ep_rank> ep_chunkdims
-        = {{64U,std::min(2048U,ps_size)}};
+        = {{64U,std::min(2048U,_ps_size)}};
+
+    H5::DSetCreatPropList ep_prop;
     ep_prop.setChunk(ep_rank,ep_chunkdims.data());
     ep_prop.setShuffle();
     ep_prop.setDeflate(compression);
@@ -310,6 +326,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace es_dataspace(es_rank,&es_dims,&es_maxdims);
 
     const hsize_t es_chunkdims = 256;
+
+    H5::DSetCreatPropList es_prop;
     es_prop.setChunk(es_rank,&es_chunkdims);
     es_prop.setShuffle();
     es_prop.setDeflate(compression);
@@ -342,6 +360,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
                 std::max(static_cast<decltype(nparticles)>(1U),
                 std::min(static_cast<decltype(nparticles)>(1024U),nparticles)),
                 2U}};
+
+    H5::DSetCreatPropList pt_prop;
     pt_prop.setChunk(pt_rank,pt_chunkdims.data());
     pt_prop.setShuffle();
     pt_prop.setDeflate(compression);
@@ -362,12 +382,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     const std::array<hsize_t,wp_rank> wp_maxdims
-            = {{H5S_UNLIMITED,ps_size}};
+            = {{H5S_UNLIMITED,_ps_size}};
 
     H5::DataSpace wp_dataspace(wp_rank,wp_dims.data(),wp_maxdims.data());
 
     const std::array<hsize_t,wp_rank> wp_chunkdims
-            = {{64U,std::min(2048U,ps_size)}};
+            = {{64U,std::min(2048U,_ps_size)}};
+
+    H5::DSetCreatPropList wp_prop;
     wp_prop.setChunk(wp_rank,wp_chunkdims.data());
     wp_prop.setShuffle();
     wp_prop.setDeflate(compression);
@@ -399,6 +421,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     const std::array<hsize_t,csr_rank> csr_chunkdims
         = {{64U,std::min(static_cast<size_t>(2048),maxn)}};
+
+    H5::DSetCreatPropList csr_prop;
     csr_prop.setChunk(csr_rank,csr_chunkdims.data());
     csr_prop.setShuffle();
     csr_prop.setDeflate(compression);
@@ -426,7 +450,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace csrp_dataspace(csri_rank,&csri_dims,&csrp_maxdims);
 
 
-    const hsize_t csrp_chunkdims = std::min(2048U,ps_size);
+    const hsize_t csrp_chunkdims = std::min(2048U,_ps_size);
+
+    H5::DSetCreatPropList csri_prop;
     csri_prop.setChunk(csri_rank,&csrp_chunkdims);
     csri_prop.setShuffle();
     csri_prop.setDeflate(compression);
@@ -443,30 +469,32 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis1" );
 
     if (std::is_same<vfps::meshdata_t,float>::value) {
-        ps_datatype = H5::PredType::IEEE_F32LE;
+        _ps_datatype = H5::PredType::IEEE_F32LE;
     #if FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
-        ps_datatype = H5::PredType::STD_I32LE;
+        _ps_datatype = H5::PredType::STD_I32LE;
     #endif
     } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
-        ps_datatype = H5::PredType::STD_I64LE;
+        _ps_datatype = H5::PredType::STD_I64LE;
     } else if (std::is_same<vfps::meshdata_t,double>::value) {
-        ps_datatype = H5::PredType::IEEE_F64LE;
+        _ps_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    const std::array<hsize_t,ps_rank> ps_maxdims
-            = {{H5S_UNLIMITED,ps_size,ps_size}};
+    const std::array<hsize_t,_ps_rank> ps_maxdims
+            = {{H5S_UNLIMITED,_ps_size,_ps_size}};
 
-    H5::DataSpace ps_dataspace(ps_rank,ps_dims.data(),ps_maxdims.data());
+    H5::DataSpace ps_dataspace(_ps_rank,_ps_dims.data(),ps_maxdims.data());
 
 
-    const std::array<hsize_t,ps_rank> ps_chunkdims
-        = {{64U,std::min(64U,ps_size),std::min(64U,ps_size)}};
-    ps_prop.setChunk(ps_rank,ps_chunkdims.data());
+    const std::array<hsize_t,_ps_rank> ps_chunkdims
+        = {{64U,std::min(64U,_ps_size),std::min(64U,_ps_size)}};
+
+    H5::DSetCreatPropList ps_prop;
+    ps_prop.setChunk(_ps_rank,ps_chunkdims.data());
     ps_prop.setShuffle();
     ps_prop.setDeflate(compression);
 
-    _ps_dataset = _file->createDataSet("/PhaseSpace/data",ps_datatype,
+    _ps_dataset = _file->createDataSet("/PhaseSpace/data",_ps_datatype,
                                        ps_dataspace,ps_prop);
 
     const double ps_factor4ampere = ps->getAxis(0)->delta()
@@ -496,6 +524,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace imp_dataspace(imp_rank,&imp_size,&imp_size);
 
     const hsize_t imp_chunkdims = std::min(hsize_t(4096),imp_size);
+
+    H5::DSetCreatPropList imp_prop;
     imp_prop.setChunk(imp_rank,&imp_chunkdims);
     imp_prop.setShuffle();
     imp_prop.setDeflate(compression);
@@ -535,6 +565,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
         H5::DataSpace wf_dataspace(wf_rank,&wf_size,&wf_size);
 
         const hsize_t wf_chunkdims = std::min(hsize_t(4096),wf_size);
+
+        H5::DSetCreatPropList wf_prop;
         wf_prop.setChunk(wf_rank,&wf_chunkdims);
         wf_prop.setShuffle();
         wf_prop.setDeflate(compression);
@@ -632,16 +664,16 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
     if ( at == AppendType::All ||
          at == AppendType::PhaseSpace) {
         // append PhaseSpace
-        std::array<hsize_t,ps_rank> ps_offset
-                = {{ps_dims[0],0,0}};
-        const std::array<hsize_t,ps_rank> ps_ext
-                = {{1,ps_size,ps_size}};
-        ps_dims[0]++;
-        _ps_dataset.extend(ps_dims.data());
+        std::array<hsize_t,_ps_rank> ps_offset
+                = {{_ps_dims[0],0,0}};
+        const std::array<hsize_t,_ps_rank> ps_ext
+                = {{1,_ps_size,_ps_size}};
+        _ps_dims[0]++;
+        _ps_dataset.extend(_ps_dims.data());
         filespace = new H5::DataSpace(_ps_dataset.getSpace());
-        memspace = new H5::DataSpace(ps_rank,ps_ext.data(),nullptr);
+        memspace = new H5::DataSpace(_ps_rank,ps_ext.data(),nullptr);
         filespace->selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());
-        _ps_dataset.write(ps->getData(), ps_datatype, *memspace, *filespace);
+        _ps_dataset.write(ps->getData(), _ps_datatype, *memspace, *filespace);
         delete memspace;
         delete filespace;
     }
@@ -651,7 +683,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         std::array<hsize_t,bp_rank> bp_offset
                         = {{bp_dims[0],0}};
         const std::array<hsize_t,bp_rank> bp_ext
-                        = {{1,ps_size}};
+                        = {{1,_ps_size}};
         bp_dims[0]++;
         bp_dataset.extend(bp_dims.data());
         filespace = new H5::DataSpace(bp_dataset.getSpace());
@@ -691,7 +723,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         std::array<hsize_t,ep_rank> ep_offset
                         = {{ep_dims[0],0}};
         const std::array<hsize_t,ep_rank> ep_ext
-                        = {{1,ps_size}};
+                        = {{1,_ps_size}};
         ep_dims[0]++;
         ep_dataset.extend(ep_dims.data());
         filespace = new H5::DataSpace(ep_dataset.getSpace());
@@ -735,7 +767,7 @@ void vfps::HDF5File::append(const WakeKickMap* wkm)
     std::array<hsize_t,wp_rank> wp_offset
             = {{wp_dims[0],0}};
     const std::array<hsize_t,wp_rank> wp_ext
-            = {{1,ps_size}};
+            = {{1,_ps_size}};
     wp_dims[0]++;
     wp_dataset.extend(wp_dims.data());
     H5::DataSpace* filespace = new H5::DataSpace(wp_dataset.getSpace());
@@ -793,10 +825,10 @@ std::unique_ptr<vfps::PhaseSpace> vfps::HDF5File::readPhaseSpace(std::string fna
 
     meshindex_t ps_size = ps_dims[1];
     use_step = (ps_dims[0]+use_step)%ps_dims[0];
-    const std::array<hsize_t,ps_rank> ps_offset =
+    const std::array<hsize_t,_ps_rank> ps_offset =
         {{static_cast<hsize_t>(use_step),0,0}};
-    const std::array<hsize_t,ps_rank> ps_ext = {{1,ps_size,ps_size}};
-    H5::DataSpace memspace(ps_rank,ps_ext.data(),nullptr);
+    const std::array<hsize_t,_ps_rank> ps_ext = {{1,ps_size,ps_size}};
+    H5::DataSpace memspace(_ps_rank,ps_ext.data(),nullptr);
     ps_space.selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());
 
     H5::DataType axistype;

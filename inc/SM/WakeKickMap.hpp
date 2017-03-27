@@ -47,7 +47,7 @@ public:
     #ifdef INOVESA_ENABLE_CLPROFILING
         { std::cout << "~WakeKickMap() -> "; }
     #else
-    = defaut;
+    = default;
     #endif // INOVESA_ENABLE_CLPROFILING
 
 public:

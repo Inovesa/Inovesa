@@ -38,7 +38,7 @@ public:
     #ifdef INOVESA_ENABLE_CLPROFILING
         { std::cout << "~RFKickMap() -> "; }
     #else
-    = defaut;
+    = default;
     #endif // INOVESA_ENABLE_CLPROFILING
 };
 
