@@ -239,7 +239,8 @@ private: // impedance
 private: // source map
     static constexpr uint_fast8_t _sm_rank = _ps_rank;
 
-    H5::DataSet _sm_dataset;
+    H5::DataSet _sm_dataset_x;
+    H5::DataSet _sm_dataset_y;
 
     H5::DataType _sm_datatype;
 

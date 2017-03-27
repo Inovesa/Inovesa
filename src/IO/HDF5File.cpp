@@ -46,6 +46,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     _ps_size( ps->nMeshCells(0) ),
     imp_size( imp->nFreqs()/2 ),
+    _sm_dims (_ps_dims ) ,
+    _sm_size( _ps_size ),
     wf_size( 2*_ps_size )
 {
     _file = new H5::H5File(filename,H5F_ACC_TRUNC);
@@ -550,7 +552,6 @@ vfps::HDF5File::HDF5File(const std::string filename,
     imp_dataset_real.write(imp_real.data(),imp_datatype);
     imp_dataset_imag.write(imp_imag.data(),imp_datatype);
 
-
     // get ready to save SourceMap
     _file->createGroup("SourceMap");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/SourceMap/axis0" );
@@ -572,7 +573,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
     sm_prop.setShuffle();
     sm_prop.setDeflate(compression);
 
-    _sm_dataset = _file->createDataSet("/SourceMap/data",_sm_datatype,
+    _sm_dataset_x = _file->createDataSet("/SourceMap/X",_sm_datatype,
+                                       sm_dataspace,sm_prop);
+    _sm_dataset_y = _file->createDataSet("/SourceMap/Y",_sm_datatype,
                                        sm_dataspace,sm_prop);
 
     if (wfm != nullptr ) {
@@ -681,16 +684,16 @@ void vfps::HDF5File::appendTracks(const PhaseSpace::Position *particles)
 
 void vfps::HDF5File::appendSourceMap(const PhaseSpace::Position *allpos)
 {
-    H5::DataSpace* filespace;
-    H5::DataSpace* memspace;
+    H5::DataSpace* filespace = nullptr;
+    H5::DataSpace* memspace = nullptr;
 
-    float* data = new float(_ps_size*_ps_size);
+    float* data_x = new float[_ps_size*_ps_size];
+    float* data_y = new float[_ps_size*_ps_size];
     // get deltas from positions
     for (meshindex_t x=0; x<_ps_size; x++) {
         for (meshindex_t y=0; y<_ps_size; y++) {
-            data[x*_ps_size+y]
-                    = std::sqrt( std::pow(allpos[x*_ps_size+y].x-x,2)
-                               + std::pow(allpos[x*_ps_size+y].y-y,2));
+            data_x[x*_ps_size+y] = allpos[x*_ps_size+y].x-x;
+            data_y[x*_ps_size+y] = allpos[x*_ps_size+y].y-y;
         }
     }
 
@@ -700,21 +703,29 @@ void vfps::HDF5File::appendSourceMap(const PhaseSpace::Position *allpos)
    const std::array<hsize_t,_sm_rank> sm_ext
            = {{1,_sm_size,_sm_size}};
    _sm_dims[0]++;
-   _sm_dataset.extend(_sm_dims.data());
-   filespace = new H5::DataSpace(_sm_dataset.getSpace());
    memspace = new H5::DataSpace(_sm_rank,sm_ext.data(),nullptr);
+
+   _sm_dataset_x.extend(_sm_dims.data());
+   filespace = new H5::DataSpace(_sm_dataset_x.getSpace());
    filespace->selectHyperslab(H5S_SELECT_SET, sm_ext.data(), sm_offset.data());
-   _sm_dataset.write(data, _sm_datatype, *memspace, *filespace);
+   _sm_dataset_x.write(data_x, _sm_datatype, *memspace, *filespace);
+
+   _sm_dataset_y.extend(_sm_dims.data());
+   filespace = new H5::DataSpace(_sm_dataset_y.getSpace());
+   filespace->selectHyperslab(H5S_SELECT_SET, sm_ext.data(), sm_offset.data());
+   _sm_dataset_y.write(data_y, _sm_datatype, *memspace, *filespace);
+
    delete memspace;
    delete filespace;
-   delete [] data;
+   delete [] data_x;
+   delete [] data_y;
 }
 
 void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
                             const AppendType at)
 {
-    H5::DataSpace* filespace;
-    H5::DataSpace* memspace;
+    H5::DataSpace* filespace = nullptr;
+    H5::DataSpace* memspace = nullptr;
 
     if ( at == AppendType::All ||
          at == AppendType::PhaseSpace) {
