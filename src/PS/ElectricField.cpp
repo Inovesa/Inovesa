@@ -38,6 +38,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _phasespace(ps),
     _csrintensity(0),
     _csrspectrum(new csrpower_t[_nmax]),
+    _isrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
     _wakefunction(nullptr),
     _wakelosses(nullptr),
@@ -246,6 +247,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 vfps::ElectricField::~ElectricField()
 {
     delete [] _csrspectrum;
+    delete [] _isrspectrum;
     delete [] _wakefunction;
     delete [] _wakepotential;
 

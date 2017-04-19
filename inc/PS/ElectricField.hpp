@@ -112,6 +112,9 @@ public:
     inline csrpower_t* getCSRSpectrum() const
         { return _csrspectrum; }
 
+    inline csrpower_t* getISRSpectrum() const
+        { return _isrspectrum; }
+
     inline const Impedance* getImpedance() const
         { return _impedance; }
 
@@ -228,6 +231,8 @@ private:
     csrpower_t _csrintensity;
 
     csrpower_t* _csrspectrum;
+
+    csrpower_t* _isrspectrum;
 
     const Impedance* _impedance;
 
