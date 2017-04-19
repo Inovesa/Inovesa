@@ -49,7 +49,7 @@ vfps::ResistiveWall::__calcImpedance(const size_t n,
      */
     const impedance_t Z1 =
             static_cast<frequency_t>(
-                std::sqrt(mu/s/M_PI/f_rev)*physcons::c/2/b
+                std::sqrt(Z0*mu/s/M_PI/f_rev*physcons::c)/2/b
             ) * impedance_t(1,1);
 
     // frequency resolution: impedance will be sampled at multiples of delta

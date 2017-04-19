@@ -37,9 +37,6 @@ vfps::CollimatorImpedance::__calcImpedance(const size_t n,
     std::vector<vfps::impedance_t> rv;
     rv.reserve(n);
 
-    // vacuum impedance
-    constexpr double Z0 = 376.730313461;
-
     const impedance_t Z(Z0/M_PI*std::log(outer/inner),0);
 
     for (size_t i=0; i<=n/2; i++) {

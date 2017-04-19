@@ -29,13 +29,6 @@ namespace vfps
 /**
  * @brief The ResistiveWall class models the resistive wall impedance
  *
- * First line according to Eq. 13.6 in
- * "Coupling Impedances and Beam Instabilities in Accelerator Rings"
- * by K.Y. Ng
- *
- * Z(w) = [1+j*sign(w)] sqrt(abs(w)*mu/2/s)*R/b
- *      = [1+j*sign(w)] sqrt(pi*mu*f_rev/s)*R/b*sqrt(abs(n))
- *
  * w: frequency ( = 2*pi*n*f_rev)
  * mu: magnetic permeability
  * s: conductivity

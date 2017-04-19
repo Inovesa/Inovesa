@@ -95,6 +95,9 @@ public:
 
     static constexpr double factor4Ohms = 1;
 
+    /// vacuum impedance (in Ohms)
+    static constexpr double Z0 = 376.730313461;
+
 public:
     /**
      * @brief operator +=
