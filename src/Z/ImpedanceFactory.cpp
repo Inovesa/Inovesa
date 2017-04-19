@@ -34,7 +34,7 @@ std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
         auto radius = std::abs(gap/2);
         if ( s > 0 && xi >= -1 ) {
             Display::printText("... using resistive wall impedance.");
-            *rv += ResistiveWall(nfreqs,frev,fmax, s,xi,radius);
+            *rv += ResistiveWall(nfreqs,frev,fmax,physcons::c/frev,s,xi,radius);
         }
         if (0 < inner_coll_radius && inner_coll_radius < radius) {
             Display::printText("... using collimator impedance.");

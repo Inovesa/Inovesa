@@ -28,19 +28,24 @@ namespace vfps
 
 /**
  * @brief The ResistiveWall class models the resistive wall impedance
- *
- * w: frequency ( = 2*pi*n*f_rev)
- * mu: magnetic permeability
- * s: conductivity
- * R: mean radius of the accelerator ring
- * b: inside radius of the beam pipe
  */
 class ResistiveWall : public Impedance
 {
 public:
+    /**
+     * @brief ResistiveWall
+     * @param n
+     * @param f0
+     * @param f_max
+     * @param L: Length of the beam pipe
+     * @param s: conductivity [S/m]
+     * @param xi
+     * @param b
+     */
     ResistiveWall(const size_t n,
-                  const frequency_t f_rev,
+                  const frequency_t f0,
                   const frequency_t f_max,
+                  const double L,
                   const double s,
                   const double xi,
                   const double b);
@@ -48,8 +53,9 @@ public:
 private:
     static std::vector<vfps::impedance_t>
     __calcImpedance(const size_t n,
-                    const frequency_t f_rev,
+                    const frequency_t f0,
                     const frequency_t f_max,
+                    const double L,
                     const double s,
                     const double xi,
                     const double b);
