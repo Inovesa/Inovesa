@@ -422,11 +422,10 @@ int main(int argc, char** argv)
         Display::printText("Calculating WakePotential.");
         field = new ElectricField(mesh1,impedance,revolutionpart,
                                   Ib_scaled,E0,sE,dt);
-        if (gap != 0) {
-            Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
-                                       interpolationtype,interpol_clamp);
-        }
+
+        Display::printText("Building WakeKickMap.");
+        wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
+                                   interpolationtype,interpol_clamp);
     }
     if (wkm != nullptr) {
         wm = wkm;
