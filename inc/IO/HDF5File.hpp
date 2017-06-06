@@ -222,11 +222,11 @@ private: // csr spectrum
 
     H5::DataType csr_datatype;
 
+    size_t maxn;
+
     std::array<hsize_t,csr_rank> csr_dims;
 
     H5::DSetCreatPropList csr_prop;
-
-    size_t maxn;
 
 private: // csr intensity
     static constexpr uint_fast8_t csri_rank = 1;

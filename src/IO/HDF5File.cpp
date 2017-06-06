@@ -40,12 +40,12 @@ vfps::HDF5File::HDF5File(const std::string filename,
     pt_dims( {{ 0, nparticles, 2 }} ),
     pt_particles( nparticles ),
     wp_dims( {{ 0, ps->nMeshCells(0) }} ),
-    csr_dims( {{ 0, ef->getNMax()/static_cast<size_t>(2) }} ),
-    maxn( ef->getNMax()/static_cast<size_t>(2) ),
+    maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 ),
+    csr_dims( {{ 0, maxn }} ),
     csri_dims( 0 ),
     ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     ps_size( ps->nMeshCells(0) ),
-    imp_size( imp->nFreqs()/2 ),
+    imp_size( (imp != nullptr) ? imp->nFreqs()/2 : 0 ),
     wf_size( 2*ps_size )
 {
     _file = new H5::H5File(filename,H5F_ACC_TRUNC);

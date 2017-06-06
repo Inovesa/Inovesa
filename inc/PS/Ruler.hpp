@@ -33,6 +33,8 @@ template <typename ruler_t>
 class Ruler
 {
 public:
+    Ruler() = delete;
+
     Ruler(meshindex_t steps, ruler_t min, ruler_t max, double scale=0) :
         _steps(steps),
         _max(max),
