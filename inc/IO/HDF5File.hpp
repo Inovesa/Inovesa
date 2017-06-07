@@ -40,9 +40,13 @@ class HDF5File
 public:
     /**
      * @brief HDF5File
-     * @param fname file name to save HDF5 file to
-     * @param ps_size size of one mesh dimension
-     * @param maxn maximum index (==wavenumber?) of CSR spectrum
+     * @param filename file name to save HDF5 file to
+     * @param ps
+     * @param ef electric field used for CSR computation
+     * @param imp
+     * @param wfm
+     * @param nparticles
+     * @param t_sync
      */
     HDF5File(const std::string filename,
              const std::shared_ptr<PhaseSpace> ps,
@@ -59,7 +63,12 @@ public:
                              H5::PredType type,
                              void* data);
 
-    void append(const ElectricField* ef, bool fullspectrum = true);
+    /**
+     * @brief append synchrotron radiation data
+     * @param ef electric fild used for CSR computation
+     * @param fullspectrum safe full CSR spectrum or only integrated power
+     */
+    void append(const ElectricField* ef, const bool fullspectrum = true);
 
     enum class AppendType : uint_fast16_t {
         All, Defaults, PhaseSpace

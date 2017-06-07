@@ -575,7 +575,7 @@ void vfps::HDF5File::addParameterToGroup(std::string groupname,
     group.createAttribute(paramname,type, H5::DataSpace()).write(type,data);
 }
 
-void vfps::HDF5File::append(const ElectricField* ef, bool fullspectrum)
+void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
 {
     H5::DataSpace* filespace;
     H5::DataSpace* memspace;

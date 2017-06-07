@@ -10,13 +10,14 @@ namespace vfps
 
 std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs,
                                          const frequency_t fmax,
-                                         const std::string impedance_file,
                                          const double frev,
-                                         const bool use_csr,
                                          const double gap,
-                                         const double s,
-                                         const double xi,
-                                         const double inner_coll_radius);
+                                         const bool use_csr = true,
+                                         const double s = 0,
+                                         const double xi = 0,
+                                         const double inner_coll_radius = 0,
+                                         const std::string impedance_file = ""
+                                         );
 
 } // namespace vfps
 

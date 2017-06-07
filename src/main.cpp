@@ -352,9 +352,15 @@ int main(int argc, char** argv)
     const auto impedance_file = opts.getImpedanceFile();
     const auto use_csr = opts.getUseCSR();
 
-    std::shared_ptr<Impedance> impedance
-            = vfps::makeImpedance(nfreqs,fmax,impedance_file,f0,use_csr,
-                                  gap,s,xi,collimator_radius);
+    Display::printText("For beam dynamics computation:");
+    std::shared_ptr<Impedance> wake_impedance
+            = vfps::makeImpedance(nfreqs,fmax,f0,gap,use_csr,
+                                  s,xi,collimator_radius,impedance_file);
+
+
+    Display::printText("For CSR computation:");
+    std::shared_ptr<Impedance> rdtn_impedance
+            = vfps::makeImpedance(nfreqs,fmax,f0,gap);
 
     auto mesh2 = std::make_shared<PhaseSpace>(*mesh1);
     auto mesh3 = std::make_shared<PhaseSpace>(*mesh1);
@@ -406,28 +412,27 @@ int main(int argc, char** argv)
         fpm = new Identity(mesh3,mesh1,ps_size,ps_size);
     }
 
-    ElectricField* field = nullptr;
+    ElectricField rdtn_field(mesh1,rdtn_impedance,revolutionpart);
+
+    ElectricField* wake_field = nullptr;
     SourceMap* wm = nullptr;
     WakeKickMap* wkm = nullptr;
     WakeFunctionMap* wfm = nullptr;
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
-        if (impedance != nullptr) {
-            field = new ElectricField(mesh1,impedance,revolutionpart);
-        }
         Display::printText("Reading WakeFunction from "+wakefile+".");
         wfm = new WakeFunctionMap(mesh1,mesh2,ps_size,ps_size,
                                   wakefile,E0,sE,Ib_scaled,dt,
                                   interpolationtype,interpol_clamp);
         wkm = wfm;
     } else {
-        if (impedance != nullptr) {
+        if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
-            field = new ElectricField(mesh1,impedance,revolutionpart,
+            wake_field = new ElectricField(mesh1,wake_impedance,revolutionpart,
                                       Ib_scaled,E0,sE,dt);
 
             Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,field,
+            wkm = new WakePotentialMap(mesh1,mesh2,ps_size,ps_size,wake_field,
                                      interpolationtype,interpol_clamp);
         }
     }
@@ -550,8 +555,8 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,trackme.size(),
-                                t_sync_unscaled);
+        hdf_file = new HDF5File(ofname,mesh1, &rdtn_field, rdtn_impedance,
+                                wfm,trackme.size(), t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -641,10 +646,8 @@ int main(int argc, char** argv)
                 hdf_file->appendTime(static_cast<double>(i)
                                 /static_cast<double>(steps));
                 hdf_file->append(mesh1,h5save);
-                if (field != nullptr) {
-                    field->updateCSR(fc);
-                    hdf_file->append(field);
-                }
+                rdtn_field.updateCSR(fc);
+                hdf_file->append(&rdtn_field);
                 if (wkm != nullptr) {
                     hdf_file->append(wkm);
                 }
@@ -665,16 +668,14 @@ int main(int argc, char** argv)
                                     wkm->getForce());
                 }
                 if (history != nullptr) {
-                    if (field != nullptr) {
-                        #ifdef INOVESA_USE_HDF5
-                        if (hdf_file == nullptr)
-                        #endif // INOVESA_USE_HDF5
-                        {
-                            field->updateCSR(fc);
-                        }
-                        csrlog[outstepnr] = field->getCSRPower();
-                        history->updateLine(csrlog.size(),csrlog.data(),true);
+                    #ifdef INOVESA_USE_HDF5
+                    if (hdf_file == nullptr)
+                    #endif // INOVESA_USE_HDF5
+                    {
+                        rdtn_field.updateCSR(fc);
                     }
+                    csrlog[outstepnr] = rdtn_field.getCSRPower();
+                    history->updateLine(csrlog.size(),csrlog.data(),true);
                 }
                 display->draw();
                 if (psv != nullptr) {
@@ -731,10 +732,8 @@ int main(int argc, char** argv)
         #endif // INOVESA_USE_CL
         hdf_file->appendTime(rotations);
         hdf_file->append(mesh1,HDF5File::AppendType::All);
-        if (field != nullptr) {
-            field->updateCSR(fc);
-            hdf_file->append(field);
-        }
+        rdtn_field.updateCSR(fc);
+        hdf_file->append(&rdtn_field);
         if (wkm != nullptr) {
             hdf_file->append(wkm);
         }
@@ -766,7 +765,7 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_CL
 
-    delete field;
+    delete wake_field;
 
     delete wm;
     delete fpm;

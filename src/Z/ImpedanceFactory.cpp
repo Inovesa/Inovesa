@@ -10,13 +10,13 @@
 
 std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
                                                const frequency_t fmax,
-                                               const std::string impedance_file,
                                                const double frev,
-                                               const bool use_csr,
                                                const double gap,
+                                               const bool use_csr,
                                                const double s,
                                                const double xi,
-                                               const double inner_coll_radius)
+                                               const double inner_coll_radius,
+                                               const std::string impedance_file)
 {
     /*
      * Will create a default (zero) impedance and add different contributions.
