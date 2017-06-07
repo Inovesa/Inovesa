@@ -34,6 +34,13 @@ public:
              const meshindex_t xsize, const meshindex_t ysize) :
         SourceMap(in, out, xsize, ysize, 0, 0) {}
 
+    ~Identity()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~Identity() -> "; }
+    #else
+    = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
+
     /**
      * @brief apply copys data from in to out
      */
@@ -44,8 +51,8 @@ public:
             #ifdef INOVESA_SYNC_CL
             _in->syncCLMem(clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
-            OCLH::queue.enqueueCopyBuffer(_in->data_buf, _out->data_buf,
-                                          0,0,sizeof(meshdata_t)*_size);
+            OCLH::enqueueCopyBuffer(_in->data_buf, _out->data_buf,
+                                    0,0,sizeof(meshdata_t)*_size);
             #ifdef CL_VERSION_1_2
             OCLH::queue.enqueueBarrierWithWaitList();
             #else // CL_VERSION_1_2

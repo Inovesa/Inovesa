@@ -53,6 +53,36 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    std::cout << "~SourceMap()" <<std::endl;
+    if (OCLH::active) {
+    OCLH::queue.flush();
+    double predevicewait = 0;
+    double atdevicewait = 0;
+    double exectime = 0;
+    for (auto ev : applySMEvents) {
+        predevicewait += ev.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>()
+                       - ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+        atdevicewait += ev.getProfilingInfo<CL_PROFILING_COMMAND_START>()
+                      - ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+        exectime += ev.getProfilingInfo<CL_PROFILING_COMMAND_END>()
+                  - ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+    }
+    double nEvents = applySMEvents.size();
+    predevicewait /= nEvents;
+    atdevicewait /= nEvents;
+    exectime /= nEvents;
+
+    std::cout << std::setiosflags(std::ios::fixed)
+              << std::setprecision(6)
+              << std::setw(12)
+              << predevicewait/1e6
+              << std::setw(12)
+              << atdevicewait/1e6
+              << std::setw(12)
+              << exectime/1e6 << std::endl;
+    }
+    #endif // INOVESA_ENABLE_CLPROFILING
 }
 
 void vfps::SourceMap::apply()
@@ -62,7 +92,7 @@ void vfps::SourceMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::queue.enqueueNDRangeKernel (
+        OCLH::enqueueNDRangeKernel (
                     applyHM,
                     cl::NullRange,
                     cl::NDRange(_size));

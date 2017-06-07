@@ -22,6 +22,10 @@
 #define OPENCLHANDLER_HPP
 #ifdef INOVESA_USE_CL
 
+#ifdef DEBUG
+#define INOVESA_ENABLE_CLPROFILING
+#endif
+
 enum class clCopyDirection {
     cpu2dev,
     dev2cpu
@@ -83,6 +87,38 @@ public:
     static cl::CommandQueue queue;
 
     static bool ogl_sharing;
+
+public:
+    /**
+     * This wrapper function allows to centrally controll queuing kernels.
+     * At the moment, it just forwards the arguments.
+     */
+    static inline void
+    enqueueNDRangeKernel(const cl::Kernel& kernel,
+                         const cl::NDRange& offset,
+                         const cl::NDRange& global,
+                         const cl::NDRange& local = cl::NullRange,
+                         const cl::vector<cl::Event>* events = nullptr,
+                         cl::Event* event = nullptr)
+    {
+        queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
+    }
+
+    /**
+     * This wrapper function allows to centrally controll queuing copyBuffer
+     */
+    static inline void
+    enqueueCopyBuffer(const cl::Buffer& src,
+                      const cl::Buffer& dst,
+                      cl::size_type src_offset,
+                      cl::size_type dst_offset,
+                      cl::size_type size,
+                      const cl::vector<cl::Event>* events = nullptr,
+                      cl::Event* event = nullptr)
+    {
+        queue.enqueueCopyBuffer(src, dst, src_offset,dst_offset,size,
+                                events, event);
+    }
 
 private:
 #ifdef INOVESA_USE_CLFFT

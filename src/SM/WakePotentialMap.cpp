@@ -37,8 +37,8 @@ void vfps::WakePotentialMap::update()
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         _field->wakePotential();
-        OCLH::queue.enqueueCopyBuffer(_field->_wakepotential_buf,_offset_buf,
-                                      0,0,sizeof(meshaxis_t)*_xsize);
+        OCLH::enqueueCopyBuffer(_field->_wakepotential_buf,_offset_buf,
+                                0,0,sizeof(meshaxis_t)*_xsize);
         #ifdef INOVESA_SYNC_CL
         syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL

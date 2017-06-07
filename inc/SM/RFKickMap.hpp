@@ -33,6 +33,13 @@ public:
               const meshindex_t xsize, const meshindex_t ysize,
               const meshaxis_t angle, const InterpolationType it,
               const bool interpol_clamp);
+
+    ~RFKickMap()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~RFKickMap() -> "; }
+    #else
+    = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 } // namespace vfps

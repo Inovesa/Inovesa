@@ -183,7 +183,7 @@ vfps::integral_t vfps::PhaseSpace::integral()
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::queue.enqueueNDRangeKernel (
+        OCLH::enqueueNDRangeKernel (
                     _clKernIntegral,
                     cl::NullRange,
                     cl::NDRange(1));
@@ -252,7 +252,7 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 void vfps::PhaseSpace::updateXProjection() {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::queue.enqueueNDRangeKernel (
+        OCLH::enqueueNDRangeKernel (
                     _clKernProjX,
                     cl::NullRange,
                     cl::NDRange(nMeshCells(0)));

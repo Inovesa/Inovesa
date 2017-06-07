@@ -112,6 +112,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("SavePhaseSpace",
             po::value<bool>(&_savephasespace)->default_value(false),
             "save every outstep's phase space to HDF5 file")
+        ("SaveSourceMap",
+            po::value<bool>(&_savesourcemap)->default_value(false),
+            "save every outstep's source map to HDF5 file")
         ("tracking",
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
@@ -136,6 +139,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("SavePhaseSpace",
             po::value<bool>(&_savephasespace)->default_value(false),
             "save every outstep's phase space to HDF5 file")
+        ("SaveSourceMap",
+            po::value<bool>(&_savesourcemap)->default_value(false),
+            "save every outstep's source map to HDF5 file")
         ("tracking",
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"

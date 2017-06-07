@@ -66,6 +66,14 @@ public:
                     const meshindex_t xsize, const meshindex_t ysize,
                     FPType fpt, timeaxis_t e1, DerivationType dt);
 
+    ~FokkerPlanckMap()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~FokkerPlanckMap() -> "; }
+    #else
+        = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
+
+
     /**
      * @brief apply custom apply method needed to handle one dimensional HM
      */

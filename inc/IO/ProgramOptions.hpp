@@ -67,6 +67,9 @@ public:
     inline bool getSavePhaseSpace() const
         { return _savephasespace; }
 
+    inline bool getSaveSourceMap() const
+        { return _savesourcemap; }
+
     inline int getOpenGLVersion() const
         { return _glversion; }
 
@@ -197,6 +200,8 @@ private: // program parameters
     std::string _outfile;
 
     bool _savephasespace;
+
+    bool _savesourcemap;
 
     bool _showphasespace;
 

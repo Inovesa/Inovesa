@@ -47,7 +47,12 @@ public:
             const InterpolationType it, const bool interpol_clamp,
             const Axis kd);
 
-    ~KickMap();
+    ~KickMap()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~KickMap() -> "; }
+    #else
+        = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
     const inline meshaxis_t* getForce() const

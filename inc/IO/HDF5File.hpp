@@ -74,7 +74,9 @@ public:
         All, Defaults, PhaseSpace
     };
 
-    void append(const PhaseSpace::Position *particles);
+    void appendTracks(const PhaseSpace::Position *particles);
+
+    void appendSourceMap(const PhaseSpace::Position *allpos);
 
     void append(const std::shared_ptr<PhaseSpace> ps,
                 const AppendType at=AppendType::Defaults);
@@ -112,16 +114,12 @@ private: // values for phase space axis
 
     H5::DataType axps_datatype;
 
-    H5::DSetCreatPropList axps_prop;
-
 private: // values for frequency axis
     static constexpr uint_fast8_t axfreq_rank = 1;
 
     H5::DataSet axfreq_dataset;
 
     H5::DataType axfreq_datatype;
-
-    H5::DSetCreatPropList axfreq_prop;
 
 private: // time axis
     static constexpr uint_fast8_t ta_rank = 1;
@@ -132,8 +130,6 @@ private: // time axis
 
     hsize_t ta_dims;
 
-    H5::DSetCreatPropList ta_prop;
-
 private: // bunch current
     static constexpr uint_fast8_t bc_rank = 1;
 
@@ -142,8 +138,6 @@ private: // bunch current
     H5::DataType bc_datatype;
 
     hsize_t bc_dims;
-
-    H5::DSetCreatPropList bc_prop;
 
 private: // bunch profile
     static constexpr uint_fast8_t bp_rank = 2;
@@ -154,8 +148,6 @@ private: // bunch profile
 
     std::array<hsize_t,bp_rank> bp_dims;
 
-    H5::DSetCreatPropList bp_prop;
-
 private: // bunch length
     static constexpr uint_fast8_t bl_rank = 1;
 
@@ -164,8 +156,6 @@ private: // bunch length
     H5::DataType bl_datatype;
 
     hsize_t bl_dims;
-
-    H5::DSetCreatPropList bl_prop;
 
 private: // bunch position
     static constexpr uint_fast8_t qb_rank = 1;
@@ -176,8 +166,6 @@ private: // bunch position
 
     hsize_t qb_dims;
 
-    H5::DSetCreatPropList qb_prop;
-
 private: // energy profile
     static constexpr uint_fast8_t ep_rank = 2;
 
@@ -187,8 +175,6 @@ private: // energy profile
 
     std::array<hsize_t,ep_rank> ep_dims;
 
-    H5::DSetCreatPropList ep_prop;
-
 private: // energy spread
     static constexpr uint_fast8_t es_rank = 1;
 
@@ -197,8 +183,6 @@ private: // energy spread
     H5::DataType es_datatype;
 
     hsize_t es_dims;
-
-    H5::DSetCreatPropList es_prop;
 
 private: // particles (tracking)
     static constexpr uint_fast8_t pt_rank = 3;
@@ -211,8 +195,6 @@ private: // particles (tracking)
 
     const size_t pt_particles;
 
-    H5::DSetCreatPropList pt_prop;
-
 private: // wake potential
     static constexpr uint_fast8_t wp_rank = 2;
 
@@ -221,8 +203,6 @@ private: // wake potential
     H5::DataType wp_datatype;
 
     std::array<hsize_t,wp_rank> wp_dims;
-
-    H5::DSetCreatPropList wp_prop;
 
 private: // csr spectrum
     static constexpr uint_fast8_t csr_rank = 2;
@@ -235,8 +215,6 @@ private: // csr spectrum
 
     std::array<hsize_t,csr_rank> csr_dims;
 
-    H5::DSetCreatPropList csr_prop;
-
 private: // csr intensity
     static constexpr uint_fast8_t csri_rank = 1;
 
@@ -246,20 +224,16 @@ private: // csr intensity
 
     hsize_t csri_dims;
 
-    H5::DSetCreatPropList csri_prop;
-
 private: // phase space
-    static constexpr uint_fast8_t ps_rank = 3;
+    static constexpr uint_fast8_t _ps_rank = 3;
 
     H5::DataSet _ps_dataset;
 
-    H5::DataType ps_datatype;
+    H5::DataType _ps_datatype;
 
-    std::array<hsize_t,ps_rank> ps_dims;
+    std::array<hsize_t,_ps_rank> _ps_dims;
 
-    H5::DSetCreatPropList ps_prop;
-
-    meshindex_t ps_size;
+    meshindex_t _ps_size;
 
 private: // impedance
     static constexpr uint_fast8_t imp_rank = 1;
@@ -271,7 +245,17 @@ private: // impedance
 
     hsize_t imp_size;
 
-    H5::DSetCreatPropList imp_prop;
+private: // source map
+    static constexpr uint_fast8_t _sm_rank = _ps_rank;
+
+    H5::DataSet _sm_dataset_x;
+    H5::DataSet _sm_dataset_y;
+
+    H5::DataType _sm_datatype;
+
+    std::array<hsize_t,_sm_rank> _sm_dims;
+
+    meshindex_t _sm_size;
 
 private: // wake function
     static constexpr uint_fast8_t wf_rank = 1;
@@ -281,8 +265,6 @@ private: // wake function
     H5::DataType wf_datatype;
 
     hsize_t wf_size;
-
-    H5::DSetCreatPropList wf_prop;
 };
 
 } // namespace vfps

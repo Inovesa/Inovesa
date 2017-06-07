@@ -44,11 +44,12 @@ ax1.legend(h1+h2, l1+l2,bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
 
 if inovesa_version[1] >= 13:
     tracks = hdf_f['/Particles/data'][...]
-    if tracks[1] > 0:
+    if (tracks[1] > 0).all():
         plt.figure()
         plt.axes().set_aspect('equal')
         for i in range(tracks.shape[1]):
-       	    plt.plot(tracks[:,i,0]/grid_size,tracks[:,i,1]/grid_size)
+            if i < 16:
+       	        plt.plot(tracks[:,i,0]/grid_size,tracks[:,i,1]/grid_size)
 
 
 plt.show()

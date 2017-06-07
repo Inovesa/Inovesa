@@ -58,6 +58,13 @@ public:
                 const bool interpol_clamped,
                 const RotationCoordinates rt, const size_t rotmapsize=0);
 
+    ~RotationMap()
+    #ifdef INOVESA_ENABLE_CLPROFILING
+        { std::cout << "~RotationMap() -> "; }
+    #else
+    = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
+
     /**
      * @brief apply
      */
