@@ -43,7 +43,6 @@ vfps::HDF5File::HDF5File(const std::string filename,
     maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 ),
     csr_dims( {{ 0, maxn }} ),
     csri_dims( 0 ),
-    wf_size( 2*ps_size ),
     _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     _ps_size( ps->nMeshCells(0) ),
     imp_size( imp->nFreqs()/2 ),
@@ -386,12 +385,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
         }
 
         const std::array<hsize_t,wp_rank> wp_maxdims
-                = {{H5S_UNLIMITED,ps_size}};
+                = {{H5S_UNLIMITED,_ps_size}};
 
         H5::DataSpace wp_dataspace(wp_rank,wp_dims.data(),wp_maxdims.data());
 
         const std::array<hsize_t,wp_rank> wp_chunkdims
-                = {{64U,std::min(2048U,ps_size)}};
+                = {{64U,std::min(2048U,_ps_size)}};
+
+        H5::DSetCreatPropList wp_prop;
         wp_prop.setChunk(wp_rank,wp_chunkdims.data());
         wp_prop.setShuffle();
         wp_prop.setDeflate(compression);
@@ -529,6 +530,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
         H5::DataSpace imp_dataspace(imp_rank,&imp_size,&imp_size);
 
         const hsize_t imp_chunkdims = std::min(hsize_t(4096),imp_size);
+
+        H5::DSetCreatPropList imp_prop;
         imp_prop.setChunk(imp_rank,&imp_chunkdims);
         imp_prop.setShuffle();
         imp_prop.setDeflate(compression);
