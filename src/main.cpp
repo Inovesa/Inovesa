@@ -55,15 +55,20 @@ using namespace vfps;
 
 int main(int argc, char** argv)
 {
+    /*
+     * Starting time is initialize at the very first moment
+     * to have correct timing information, e.g. in the log files.
+     * This is a design decision: The program would run as well
+     * with a sligtly shifted starting time value.
+     */
     Display::start_time = std::chrono::system_clock::now();
 
-    std::time_t start_ctime
-            = std::chrono::system_clock::to_time_t(Display::start_time);
-    std::stringstream sstream;
-    sstream << std::ctime(&start_ctime);
-
+    /*
+     * Program options might be such that the program does not have
+     * to be run at all. As config files (read in based on the command line
+     * options) might be errorous, propper error handling is important here.
+     */
     ProgramOptions opts;
-
     try {
         if (!opts.parse(argc,argv)) {
             return EXIT_SUCCESS;
@@ -73,37 +78,21 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-
-    std::string timestring = sstream.str();
-    timestring.resize(timestring.size()-1);
-
+    // see documentation of make_display(...)
+    auto cldev = opts.getCLDevice();
     std::string ofname = opts.getOutFile();
-    #ifdef INOVESA_USE_CL
-    if (opts.getCLDevice() >= 0)
-    #endif // INOVESA_USE_CL
-    {
-    if (ofname != "/dev/null") {
-        Display::logfile.open(ofname+".log");
-    }
-    Display::printText("Started Inovesa ("
-                       +vfps::inovesa_version()+") at "+timestring);
-    if (ofname != "/dev/null") {
-        Display::printText("Will create log at \""+ofname+".log\".");
-    }
-    }
-
-    #ifdef INOVESA_USE_GUI
     auto display = make_display(opts.showPhaseSpace(),
+                                ofname,
+                                cldev,
                                 opts.getOpenGLVersion());
-    #endif
 
     #ifdef INOVESA_USE_CL
-    if (opts.getCLDevice() < 0) {
+    if (cldev < 0) {
         OCLH::listCLDevices();
         return EXIT_SUCCESS;
     }
 
-    OCLH::active = (opts.getCLDevice() > 0);
+    OCLH::active = (cldev > 0);
     if (OCLH::active) {
         try {
             OCLH::prepareCLEnvironment(opts.showPhaseSpace(),
@@ -116,6 +105,8 @@ int main(int argc, char** argv)
         }
     }
     #endif // INOVESA_USE_CL
+
+    // here follow a lot of settings and options
 
     const auto derivationtype = static_cast<FokkerPlanckMap::DerivationType>
             (opts.getDerivationType());
@@ -139,13 +130,36 @@ int main(int argc, char** argv)
     const double pmax = pcenter + pqhalf;
     const double pmin = pcenter - pqhalf;
 
-    const double sE = opts.getEnergySpread(); // relative energy spread
-    const double E0 = opts.getBeamEnergy(); // energy of reference particle
-    const double dE = sE*E0; // absolute energy spread
-    const double f_rev = opts.getRevolutionFrequency();
-    const double R_tmp = opts.getBendingRadius();
-    const double R_bend = (R_tmp>0) ? R_tmp : physcons::c/(2*M_PI*f_rev);
-    const double f0 = (R_tmp<=0) ? f_rev : physcons::c/(2*M_PI*R_bend);
+    // relative energy spread
+    const auto sE = opts.getEnergySpread();
+
+    // energy of reference particle
+    const auto E0 = opts.getBeamEnergy();
+
+    // absolute energy spread
+    const auto dE = sE*E0;
+
+    // revolution frequency
+    const auto f_rev = opts.getRevolutionFrequency();
+
+    /*
+     * Only positive benging radii will be used.
+     * Otherwise radius will be deduced from revolution frequency
+     * (based on iso-magnetic ring model).
+     */
+    const auto use_set_bend = (opts.getBendingRadius()>0);
+    const auto R_bend = use_set_bend
+            ? opts.getBendingRadius()
+            : physcons::c/(2*M_PI*f_rev);
+
+    /*
+     * Revolution frequency an iso-magnetic ring
+     * with same bending radius would have.
+     * It is used as fundamental frequency for impedances.
+     */
+    const auto f0 = !use_set_bend
+            ? f_rev
+            : physcons::c/(2*M_PI*R_bend);
 
     // scaling for isomagnetic approximation, defined to be <= 1
     const double isoscale = f_rev/f0;
@@ -179,6 +193,7 @@ int main(int argc, char** argv)
 
     // natural RMS bunch length
     const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
+
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
@@ -193,23 +208,39 @@ int main(int argc, char** argv)
     const double revolutionpart = f0*dt;
     const double t_sync_unscaled = 1.0/fs_unscaled;
 
-    /* angle of one rotation step (in rad)
+    /*
+     * angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
     const meshaxis_t angle = 2*M_PI/steps;
 
     std::string startdistfile = opts.getStartDistFile();
+
+
+    /*
+     * needed for output text in the main function
+     * (move functionality to Display at some point)
+     */
+    std::stringstream sstream;
+
+    /**************************************************************************
+     * Up next: Printing information (dynamics estimation) for upcoming run.  *
+     * Only some part has its own context because information will go to      *
+     * the results file.                                                      *
+     **************************************************************************/
     double shield = 0;
     double Ith = 0;
     double S_csr = 0;
 
+    { // context of information printing, not needed in the program
     if (gap!=0) {
         if (gap>0) {
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }
 
         const double Inorm = physcons::IAlfven/physcons::me*2*M_PI
-                           * std::pow(dE*fs/f0,2)/V/H* std::pow(bl/R_bend,1./3.);
+                           * std::pow(dE*fs/f0,2)/V/H
+                           * std::pow(bl/R_bend,1./3.);
 
         Ith = Inorm * (0.5+0.34*shield);
 
@@ -262,7 +293,9 @@ int main(int argc, char** argv)
         sstream << std::fixed << rotationoffset;
         Display::printText("Maximum rotation offset is "
                            +sstream.str()+" (should be < 1).");
+
     }
+    } // end of context of information printing
 
     std::shared_ptr<PhaseSpace> mesh1;
 
