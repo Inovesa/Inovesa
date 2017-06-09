@@ -70,6 +70,13 @@ public:
      */
     void append(const ElectricField* ef, const bool fullspectrum = true);
 
+    /**
+     * @brief The AppendType enum
+     *
+     * All: save everything
+     * Defaults: (no phase space)
+     * PhaseSpace: phase space only
+     */
     enum class AppendType : uint_fast16_t {
         All, Defaults, PhaseSpace
     };
