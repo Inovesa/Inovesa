@@ -485,7 +485,7 @@ int main(int argc, char** argv)
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
-            = vfps::makeImpedance(nfreqs,fmax,f0,gap);
+            = vfps::makeImpedance(nfreqs,fmax,f0,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)
