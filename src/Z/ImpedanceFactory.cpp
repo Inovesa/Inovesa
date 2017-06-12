@@ -29,7 +29,7 @@ std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
     if (gap != 0) {
         impedance_changed = true;
         if (use_csr) {
-            Display::printText("Using CSR impedance");
+            Display::printText("... using CSR impedance");
             if (gap>0) {
                 Display::printText("... shielded by parallel plates.");
                 *rv += ParallelPlatesCSR(nfreqs,frev,fmax,gap);
@@ -58,6 +58,7 @@ std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
 
     // if impedance is still zero, a nullprt will be returned instead
     if (!impedance_changed) {
+        Display::printText("... no impedance is used.");
         rv = nullptr;
     }
 
