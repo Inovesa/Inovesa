@@ -328,7 +328,7 @@ int main(int argc, char** argv)
      * so initialization might be moved to a factory function
      * at some point.
      */
-    if (startdistfile.length() <= 4) {
+    if (startdistfile.length() <= 4 || startdistfile == "/dev/null") {
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");

@@ -50,13 +50,14 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
-             #ifdef INOVESA_USE_HDF5
-             "\tInovesa result file (HDF5, .h5)\n"
-             #endif // INOVESA_USE_HDF5
-             #ifdef INOVESA_USE_PNG
-             "\tgrayscale png (.png) file\n"
-             #endif // INOVESA_USE_PNG
-             "\ttext file (.txt) w/ particle coordinates")
+            #ifdef INOVESA_USE_HDF5
+            "\tInovesa result file (HDF5, .h5)\n"
+            #endif // INOVESA_USE_HDF5
+            #ifdef INOVESA_USE_PNG
+            "\tgrayscale png (.png) file\n"
+            #endif // INOVESA_USE_PNG
+            "\ttext file (.txt) w/ particle coordinates\n"
+            "\t'\dev/null' to explicitly state no read-in")
         ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
             "Select step of HDF5 file for initial distribution")
         ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
