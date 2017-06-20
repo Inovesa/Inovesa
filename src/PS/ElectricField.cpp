@@ -122,6 +122,11 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     }
         #else
         _wakelosses = new impedance_t[_nmax];
+
+        // second half is initialized because it is not touched elsewhere
+        std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
+
+
         _wakelosses_buf = cl::Buffer(OCLH::context, CL_MEM_READ_WRITE,
                                      sizeof(impedance_t)*_nmax);
         _wakepotential_complex = new impedance_t[_nmax];
@@ -355,18 +360,20 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
         std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
 
-        // Fourier transorm charge density
-        // FFTW R2C only computes elements 0...n/2, and
-        // sets second half of output array to 0.
-        // This is because Y[n-i] = Y[i].
-        // We will use this, and choose the wake losses
-        // for negetive frequencies to be 0, equivalent to Z(-|f|)=0.
+        /* Fourier transorm bunch profile (_bp_padded),
+         * result will be saved to _formfactor.
+         *
+         * FFTW R2C only computes elements 0...n/2, and
+         * sets second half of output array to 0.
+         * This is because
+         *   Re(Y[n-i]) = Re(Y[i]), and
+         *   Im(Y[n-i]) = -Im(Y[i]).
+         */
         fft_execute(_fft_bunchprofile);
 
         for (unsigned int i=0; i<_nmax/2; i++) {
             _wakelosses[i]= (*_impedance)[i] *_formfactor[i];
         }
-        std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
 
         //Fourier transorm wakelosses
         fft_execute(_fft_wakelosses);

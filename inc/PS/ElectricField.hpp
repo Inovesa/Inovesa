@@ -270,6 +270,12 @@ private:
     cl::Buffer _wakelosses_buf;
     #endif // INOVESA_USE_CLFFT
 
+    /**
+     * @brief _wakepotential_complex wake potential of size _nmax
+     *
+     * Actually, this is a real value.
+     * Implement usage of C2R FFT to use that fact.
+     */
     impedance_t* _wakepotential_complex;
 
     fft_complex* _wakepotential_fft;
