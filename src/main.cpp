@@ -370,6 +370,13 @@ int main(int argc, char** argv)
         }
     }
 
+    // an initial renormalization might be applied
+    if (renormalize >= 0) {
+        grid_t1->updateXProjection();
+
+        grid_t1->normalize(); // works on XProjection
+    }
+
     auto grid_t2 = std::make_shared<PhaseSpace>(*grid_t1);
     auto grid_t3 = std::make_shared<PhaseSpace>(*grid_t1);
 

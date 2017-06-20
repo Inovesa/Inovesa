@@ -163,7 +163,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
         ("RenormalizeCharge",po::value<uint32_t>(&renormalize)->default_value(0),
-            "Reset charge every n-th simulation step.")
+            ">0: renormalize charge every n-th simulation step\n"
+            " 0: do just one initial renormalization\n"
+            "<0: no renormalization")
         ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
             "Used implementation for rotation\n"
             " 0: Standard rotation without source map\n"
