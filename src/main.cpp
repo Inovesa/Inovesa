@@ -654,7 +654,7 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, rdtn_impedance,
+        hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
                                 wfm,trackme.size(), t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
