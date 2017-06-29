@@ -197,7 +197,6 @@ int main(int argc, char** argv)
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
-    const unsigned int haisi = opts.getHaissinskiIterations();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -591,59 +590,6 @@ int main(int argc, char** argv)
         }
     }
     #endif // INOVESA_USE_GUI
-
-    /*
-     * Draft for a Haissinski solver
-     *
-     * @TODO: Implement properly and move out of main().
-     */
-    std::vector<std::vector<vfps::projection_t>> profile;
-    std::vector<vfps::projection_t> currprofile;
-    currprofile.resize(ps_size);
-
-    std::vector<std::vector<vfps::projection_t>> wakeout;
-    std::vector<vfps::projection_t> currwake;
-    currwake.resize(ps_size);
-
-    projection_t* xproj = grid_t1->getProjection(0);
-    const Ruler<meshaxis_t>* q_axis = grid_t1->getAxis(0);
-    for (uint32_t i=0;i<haisi;i++) {
-        wkm->update();
-        const meshaxis_t* wake = wkm->getForce();
-        std::copy_n(xproj,ps_size,currprofile.data());
-        profile.push_back(currprofile);
-        std::copy_n(wake,ps_size,currwake.data());
-        wakeout.push_back(currwake);
-        integral_t charge = 0;
-        for (meshindex_t x=0; x<ps_size; x++) {
-            xproj[x] = std::exp(-0.5f*std::pow((*q_axis)[x],2)-wake[x]);
-            charge += xproj[x]*q_axis->delta();
-        }
-        for (meshindex_t x=0; x<ps_size; x++) {
-            xproj[x] /=charge;
-        }
-        grid_t1->createFromProjections();
-        if (psv != nullptr) {
-            psv->createTexture(grid_t1);
-        }
-        if (bpv != nullptr) {
-            bpv->updateLine(grid_t1->nMeshCells(0),xproj);
-        }
-        if (wpv != nullptr) {
-            wpv->updateLine(grid_t1->nMeshCells(0),wake);
-        }
-        display->draw();
-        if (psv != nullptr) {
-            psv->delTexture();
-        }
-    }
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        grid_t1->syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
-
-    // end of Haissinski solver draft
 
     /*
      * preparation to save results

@@ -60,8 +60,6 @@ vfps::ProgramOptions::ProgramOptions() :
             "\t'\dev/null' to explicitly state no read-in")
         ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
             "Select step of HDF5 file for initial distribution")
-        ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
-            "Iterations to find (initial) Haissinsky distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),
