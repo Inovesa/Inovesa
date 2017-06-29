@@ -78,6 +78,14 @@ execute_process(
 )
 add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
 
+execute_process(
+  COMMAND git rev-parse --verify HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
+
 add_definitions(-std=c++14)
 if(DEFINED CMAKE_BUILD_TYPE)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")

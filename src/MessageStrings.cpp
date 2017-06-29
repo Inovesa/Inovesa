@@ -64,6 +64,9 @@ const std::string vfps::inovesa_version() {
     if (std::string(GIT_BRANCH) != version) {
         sstream << ", Branch: "<< GIT_BRANCH;
     }
+    if (std::string(GIT_BRANCH) != version || INOVESA_VERSION_FIX < 0) {
+        sstream << ", Commit: "<< GIT_COMMIT;
+    }
     return sstream.str();
 }
 
