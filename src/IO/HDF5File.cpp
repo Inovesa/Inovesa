@@ -45,7 +45,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csri_dims( 0 ),
     _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
     _ps_size( ps->nMeshCells(0) ),
-    imp_size( imp->nFreqs()/2 ),
+    imp_size( imp != nullptr ? imp->nFreqs()/2 : 0 ),
     _sm_dims (_ps_dims ) ,
     _sm_size( _ps_size ),
     wf_size( 2*_ps_size )
@@ -103,36 +103,45 @@ vfps::HDF5File::HDF5File(const std::string filename,
     // create group for parameters
     _file->createGroup("/Info/Parameters");
 
+    // frequency information axis, will be taken from ef or imp
+    const Ruler<frequency_t>* axfreq;
+
+    double factor4Ohms = 1.0;
+
     if (imp != nullptr) {
-        // save Values of Frequency Axis
-        if (std::is_same<vfps::meshaxis_t,float>::value) {
-                axfreq_datatype = H5::PredType::IEEE_F32LE;
-        } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
-                axfreq_datatype = H5::PredType::STD_I64LE;
-        } else if (std::is_same<vfps::meshaxis_t,double>::value) {
-                axfreq_datatype = H5::PredType::IEEE_F64LE;
-        }
-        const hsize_t axfreq_dims = maxn;
-        const hsize_t axfreq_maxdims =  maxn;
-
-        H5::DataSpace axfreq_dataspace(axfreq_rank,&axfreq_dims,&axfreq_maxdims);
-
-        const hsize_t axfreq_chunkdims = std::min(static_cast<size_t>(2048),
-                                                  maxn);
-
-
-        H5::DSetCreatPropList axfreq_prop;
-        axfreq_prop.setChunk(axps_rank,&axfreq_chunkdims);
-        axfreq_prop.setShuffle();
-        axfreq_prop.setDeflate(compression);
-
-        axfreq_dataset = _file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
-                                              axfreq_dataspace,axfreq_prop);
-        const double axfreqscale = imp->getRuler()->scale();
-        axfreq_dataset.createAttribute("Factor4Hertz",H5::PredType::IEEE_F64LE,
-                    H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
-        axfreq_dataset.write(imp->getRuler()->data(),axfreq_datatype);
+        axfreq = imp->getRuler();
+        factor4Ohms = imp->factor4Ohms;
+    } else if (ef != nullptr) {
+        axfreq = ef->getFreqRuler();
     }
+    // save Values of Frequency Axis
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            axfreq_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            axfreq_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            axfreq_datatype = H5::PredType::IEEE_F64LE;
+    }
+    const hsize_t axfreq_dims = maxn;
+    const hsize_t axfreq_maxdims =  maxn;
+
+    H5::DataSpace axfreq_dataspace(axfreq_rank,&axfreq_dims,&axfreq_maxdims);
+
+    const hsize_t axfreq_chunkdims = std::min(static_cast<size_t>(2048),
+                                              maxn);
+
+
+    H5::DSetCreatPropList axfreq_prop;
+    axfreq_prop.setChunk(axps_rank,&axfreq_chunkdims);
+    axfreq_prop.setShuffle();
+    axfreq_prop.setDeflate(compression);
+
+    axfreq_dataset = _file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
+                                          axfreq_dataspace,axfreq_prop);
+    const double axfreqscale = axfreq->scale();
+    axfreq_dataset.createAttribute("Factor4Hertz",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
+    axfreq_dataset.write(axfreq->data(),axfreq_datatype);
 
     // get ready to save TimeAxis
     ta_datatype = H5::PredType::IEEE_F64LE;
@@ -430,7 +439,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csr_prop.setDeflate(compression);
 
         const double csr_factor4watts = std::pow(bp_factor4ampere,2)
-                                      * imp->factor4Ohms;
+                                      * factor4Ohms;
 
         csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
                                            csr_dataspace,csr_prop);

@@ -42,16 +42,15 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _wakefunction(nullptr),
     _wakelosses(nullptr),
     _wakelosses_fft(nullptr),
-    _wakepotential_complex(nullptr),
-    _wakepotential_fft(nullptr),
+    _wakepotential_padded(nullptr),
     _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
     _fft_wakelosses(nullptr),
     #ifdef INOVESA_USE_CLFFT
     _wakescaling(OCLH::active?
-                   2*wakescalining*_axis_freq.delta()*_axis_wake.delta()*_nmax:
-                   2*wakescalining*_axis_freq.delta()*_axis_wake.delta())
+                   wakescalining*_axis_freq.delta()*_axis_wake.delta()*_nmax:
+                   wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #else
-    _wakescaling(2*wakescalining*_axis_freq.delta()*_axis_wake.delta())
+    _wakescaling(wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #endif // INOVESA_USE_CLFFT
 {
     #ifdef INOVESA_USE_CLFFT
@@ -122,17 +121,22 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     }
         #else
         _wakelosses = new impedance_t[_nmax];
+
+        // second half is initialized because it is not touched elsewhere
+        std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
+
+
         _wakelosses_buf = cl::Buffer(OCLH::context, CL_MEM_READ_WRITE,
                                      sizeof(impedance_t)*_nmax);
-        _wakepotential_complex = new impedance_t[_nmax];
-        _wakepotential_complex_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
-                                        sizeof(*_wakepotential_complex)*_nmax);
+        _wakepotential_padded = new meshaxis_t[_nmax];
+        _wakepotential_padded_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
+                                        sizeof(*_wakepotential_padded)*_nmax);
         const size_t nmax = _nmax;
         clfftCreateDefaultPlan(&_clfft_wakelosses,
                                OCLH::context(),CLFFT_1D,&nmax);
         clfftSetPlanPrecision(_clfft_wakelosses,CLFFT_SINGLE);
-        clfftSetLayout(_clfft_wakelosses,CLFFT_COMPLEX_INTERLEAVED,
-                       CLFFT_COMPLEX_INTERLEAVED);
+        clfftSetLayout(_clfft_wakelosses,
+                       CLFFT_HERMITIAN_INTERLEAVED, CLFFT_REAL);
         clfftSetResultLocation(_clfft_wakelosses, CLFFT_OUTOFPLACE);
         clfftBakePlan(_clfft_wakelosses,1,&OCLH::queue(), nullptr, nullptr);
 
@@ -157,12 +161,12 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                   const ulong paddedsize,
                                   const uint bpmeshcells,
                                   const data_t scaling,
-                                  const __global impedance_t* wakepot_padded)
+                                  const __global data_t* wakepot_padded)
             {
                 const uint g = get_global_id(0);
                 const uint n = (g+bpmeshcells/2)%bpmeshcells;
                 const uint p = (n+paddedsize-bpmeshcells/2)%paddedsize;
-                wakepot[n] = scaling*wakepot_padded[p].real;
+                wakepot[n] = scaling*wakepot_padded[p];
             }
             )";
 
@@ -172,18 +176,16 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         _clKernScaleWP.setArg(1, _nmax);
         _clKernScaleWP.setArg(2, _bpmeshcells);
         _clKernScaleWP.setArg(3, _wakescaling);
-        _clKernScaleWP.setArg(4, _wakepotential_complex_buf);
+        _clKernScaleWP.setArg(4, _wakepotential_padded_buf);
     } else
     #endif // !INOVESA_USE_CLFFT
     {
         _wakelosses_fft = fft_alloc_complex(_nmax);
-        _wakepotential_fft = fft_alloc_complex(_nmax);
+        _wakepotential_padded = fft_alloc_real(_nmax);
 
         _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
-        _wakepotential_complex=reinterpret_cast<impedance_t*>(_wakepotential_fft);
         _fft_wakelosses = prepareFFT(_nmax,_wakelosses,
-                                     _wakepotential_complex,
-                                     fft_direction::backward);
+                                     _wakepotential_padded);
     }
 }
 
@@ -253,7 +255,7 @@ vfps::ElectricField::~ElectricField()
     if (OCLH::active) {
         delete [] _bp_padded;
         delete [] _formfactor;
-        delete [] _wakepotential_complex;
+        delete [] _wakepotential_padded;
         clfftDestroyPlan(&_clfft_bunchprofile);
         clfftDestroyPlan(&_clfft_wakelosses);
     } else
@@ -264,8 +266,8 @@ vfps::ElectricField::~ElectricField()
         if(_wakelosses_fft != nullptr) {
             fft_free(_wakelosses_fft);
         }
-        if(_wakepotential_fft != nullptr) {
-            fft_free(_wakepotential_fft);
+        if(_wakepotential_padded != nullptr) {
+            fft_free(_wakepotential_padded);
         }
         fft_destroy_plan(_fft_bunchprofile);
         if (_fft_wakelosses != nullptr) {
@@ -335,7 +337,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_wakelosses,CLFFT_BACKWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
-                          &_wakelosses_buf(),&_wakepotential_complex_buf(),nullptr);
+                          &_wakelosses_buf(),&_wakepotential_padded_buf(),nullptr);
         OCLH::queue.enqueueBarrierWithWaitList();
         OCLH::enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
@@ -355,27 +357,29 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
         std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
 
-        // Fourier transorm charge density
-        // FFTW R2C only computes elements 0...n/2, and
-        // sets second half of output array to 0.
-        // This is because Y[n-i] = Y[i].
-        // We will use this, and choose the wake losses
-        // for negetive frequencies to be 0, equivalent to Z(-|f|)=0.
+        /* Fourier transorm bunch profile (_bp_padded),
+         * result will be saved to _formfactor.
+         *
+         * FFTW R2C only computes elements 0...n/2, and
+         * sets second half of output array to 0.
+         * This is because
+         *   Re(Y[n-i]) = Re(Y[i]), and
+         *   Im(Y[n-i]) = -Im(Y[i]).
+         */
         fft_execute(_fft_bunchprofile);
 
         for (unsigned int i=0; i<_nmax/2; i++) {
             _wakelosses[i]= (*_impedance)[i] *_formfactor[i];
         }
-        std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
 
         //Fourier transorm wakelosses
         fft_execute(_fft_wakelosses);
 
         for (size_t i=0; i<_bpmeshcells/2; i++) {
             _wakepotential[_bpmeshcells/2+i]
-                = _wakepotential_complex[        i].real()*_wakescaling;
+                = _wakepotential_padded[        i]*_wakescaling;
             _wakepotential[_bpmeshcells/2-1-i]
-                = _wakepotential_complex[_nmax-1-i].real()*_wakescaling;
+                = _wakepotential_padded[_nmax-1-i]*_wakescaling;
         }
         #ifdef INOVESA_USE_CL
         #ifndef INOVESA_USE_CLFFT
@@ -403,9 +407,9 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         OCLH::queue.enqueueWriteBuffer(_wakelosses_buf,CL_TRUE,0,
                                        sizeof(*_wakelosses)*_nmax,_wakelosses);
         #endif // INOVESA_USE_CLFFT
-        OCLH::queue.enqueueWriteBuffer(_wakepotential_complex_buf,CL_TRUE,0,
-                                       sizeof(*_wakepotential_complex)*_nmax,
-                                       _wakepotential_complex);
+        OCLH::queue.enqueueWriteBuffer(_wakepotential_padded_buf,CL_TRUE,0,
+                                       sizeof(*_wakepotential_padded)*_nmax,
+                                       _wakepotential_padded);
         OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
@@ -418,9 +422,9 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         OCLH::queue.enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
                                       sizeof(*_wakelosses)*_nmax,_wakelosses);
         #endif // INOVESA_USE_CLFFT
-        OCLH::queue.enqueueReadBuffer(_wakepotential_complex_buf,CL_TRUE,0,
-                                      sizeof(*_wakepotential_complex)*_nmax,
-                                      _wakepotential_complex);
+        OCLH::queue.enqueueReadBuffer(_wakepotential_padded_buf,CL_TRUE,0,
+                                      sizeof(*_wakepotential_padded)*_nmax,
+                                      _wakepotential_padded);
         OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
                                       sizeof(*_wakepotential)*_bpmeshcells,
                                       _wakepotential);
@@ -482,6 +486,26 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n, float *in,
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT);
+        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
+        Display::printText("Created some wisdom at "+wisdomfile.str());
+    }
+    return plan;
+}
+
+fftwf_plan vfps::ElectricField::prepareFFT(size_t n, fftwf_complex *in,
+                                           float *out)
+{
+    fftwf_plan plan = nullptr;
+
+    std::stringstream wisdomfile;
+    wisdomfile << "wisdom_c2r32_" << n << ".fftw";
+    // use wisdomfile, if it exists
+    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+        plan = fftwf_plan_dft_c2r_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
+    }
+    // if there was no wisdom (no or bad file), create some
+    if (plan == nullptr) {
+        plan = fftwf_plan_dft_c2r_1d(n,in,out,FFTW_PATIENT);
         fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
         Display::printText("Created some wisdom at "+wisdomfile.str());
     }

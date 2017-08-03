@@ -197,7 +197,6 @@ int main(int argc, char** argv)
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
     const double Ib_scaled = Ib_unscaled/isoscale;
-    const unsigned int haisi = opts.getHaissinskiIterations();
     const double Iz = opts.getStartDistZoom();
 
     const unsigned int steps = std::max(opts.getSteps(),1u);
@@ -328,7 +327,7 @@ int main(int argc, char** argv)
      * so initialization might be moved to a factory function
      * at some point.
      */
-    if (startdistfile.length() <= 4) {
+    if (startdistfile.length() <= 4 || startdistfile == "/dev/null") {
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
@@ -368,6 +367,13 @@ int main(int argc, char** argv)
             Display::printText("Unknown format of input file. Will now quit.");
             return EXIT_SUCCESS;
         }
+    }
+
+    // an initial renormalization might be applied
+    if (renormalize >= 0) {
+        grid_t1->updateXProjection();
+
+        grid_t1->normalize(); // works on XProjection
     }
 
     auto grid_t2 = std::make_shared<PhaseSpace>(*grid_t1);
@@ -586,59 +592,6 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_GUI
 
     /*
-     * Draft for a Haissinski solver
-     *
-     * @TODO: Implement properly and move out of main().
-     */
-    std::vector<std::vector<vfps::projection_t>> profile;
-    std::vector<vfps::projection_t> currprofile;
-    currprofile.resize(ps_size);
-
-    std::vector<std::vector<vfps::projection_t>> wakeout;
-    std::vector<vfps::projection_t> currwake;
-    currwake.resize(ps_size);
-
-    projection_t* xproj = grid_t1->getProjection(0);
-    const Ruler<meshaxis_t>* q_axis = grid_t1->getAxis(0);
-    for (uint32_t i=0;i<haisi;i++) {
-        wkm->update();
-        const meshaxis_t* wake = wkm->getForce();
-        std::copy_n(xproj,ps_size,currprofile.data());
-        profile.push_back(currprofile);
-        std::copy_n(wake,ps_size,currwake.data());
-        wakeout.push_back(currwake);
-        integral_t charge = 0;
-        for (meshindex_t x=0; x<ps_size; x++) {
-            xproj[x] = std::exp(-0.5f*std::pow((*q_axis)[x],2)-wake[x]);
-            charge += xproj[x]*q_axis->delta();
-        }
-        for (meshindex_t x=0; x<ps_size; x++) {
-            xproj[x] /=charge;
-        }
-        grid_t1->createFromProjections();
-        if (psv != nullptr) {
-            psv->createTexture(grid_t1);
-        }
-        if (bpv != nullptr) {
-            bpv->updateLine(grid_t1->nMeshCells(0),xproj);
-        }
-        if (wpv != nullptr) {
-            wpv->updateLine(grid_t1->nMeshCells(0),wake);
-        }
-        display->draw();
-        if (psv != nullptr) {
-            psv->delTexture();
-        }
-    }
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        grid_t1->syncCLMem(clCopyDirection::cpu2dev);
-    }
-    #endif // INOVESA_USE_CL
-
-    // end of Haissinski solver draft
-
-    /*
      * preparation to save results
      */
     #ifdef INOVESA_USE_HDF5
@@ -647,7 +600,7 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, rdtn_impedance,
+        hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
                                 wfm,trackme.size(), t_sync_unscaled);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
