@@ -33,6 +33,7 @@ set(SRC_LIST
 )
 
 set(INC_LIST
+  ./inc/Array.h
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
   ./inc/SM/DriftMap.hpp
