@@ -57,7 +57,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "\tgrayscale png (.png) file\n"
             #endif // INOVESA_USE_PNG
             "\ttext file (.txt) w/ particle coordinates\n"
-            "\t'\dev/null' to explicitly state no read-in")
+            "\t'/dev/null' to explicitly state no read-in")
         ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
             "Select step of HDF5 file for initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
@@ -160,7 +160,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Shift grid by X mesh points")
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
-        ("RenormalizeCharge",po::value<uint32_t>(&renormalize)->default_value(0),
+        ("RenormalizeCharge",po::value<int32_t>(&renormalize)->default_value(0),
             ">0: renormalize charge every n-th simulation step\n"
             " 0: do just one initial renormalization\n"
             "<0: no renormalization")
