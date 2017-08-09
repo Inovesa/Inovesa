@@ -617,8 +617,11 @@ int main(int argc, char** argv)
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_PNG
-    {
+    if ( ofname == "/dev/null") {
         Display::printText("Will not save results.");
+    } else {
+        Display::printText("Unkown filetype for output.");
+        return EXIT_SUCCESS;
     }
 
     #ifdef INOVESA_USE_HDF5
