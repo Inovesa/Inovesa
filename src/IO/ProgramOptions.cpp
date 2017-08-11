@@ -180,9 +180,14 @@ vfps::ProgramOptions::ProgramOptions() :
         ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(false),
             "Restrict result of interpolation to the values of the neighboring grid points")
     ;
+    _compatopts.add_options()
+        ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
+            "(currently ignored)")
+    ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
     _cfgfileopts.add(_simulopts);
+    _cfgfileopts.add(_compatopts);
     _commandlineopts.add(_proginfoopts);
     _commandlineopts.add(_programopts_cli);
     _commandlineopts.add(_simulopts);
@@ -251,6 +256,10 @@ void vfps::ProgramOptions::save(std::string fname)
     ofs << "# " << vfps::inovesa_version() << std::endl;
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
+        // currently, the _compatopts are ignored manually
+        if (it->first == "HaissinskiIterations"){
+            continue;
+        }
         if (!it->second.value().empty()) {
             if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
