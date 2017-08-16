@@ -22,18 +22,45 @@
 
 #include <fstream>
 
-vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
-                           const frequency_t f_max) :
+vfps::Impedance::Impedance(const vfps::Impedance &other) :
+    Impedance(other._axis,other._data)
+{
+}
+
+vfps::Impedance::Impedance(Ruler<vfps::frequency_t> axis,
+                           const std::vector<vfps::impedance_t> &z) :
     _nfreqs(z.size()),
-    _axis(Ruler<frequency_t>(_nfreqs,0,f_max,1)),
+    _axis(axis),
     _data(z)
 {
     syncCLMem();
 }
 
+vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
+                           const frequency_t f_max) :
+    Impedance(Ruler<frequency_t>(z.size(),0,f_max,1),z)
+{
+}
+
+vfps::Impedance::Impedance(const size_t nfreqs,
+                           const vfps::frequency_t f_max) :
+    Impedance(Ruler<frequency_t>(nfreqs,0,f_max,1),
+              std::vector<impedance_t>(nfreqs,0))
+{
+}
+
 vfps::Impedance::Impedance(std::string datafile, double f_max) :
     Impedance(readData(datafile),f_max)
 {
+}
+
+vfps::Impedance &vfps::Impedance::operator+=(const vfps::Impedance &rhs)
+{
+    for (size_t i=0; i<_nfreqs; i++) {
+        _data[i] += rhs._data[i];
+    }
+    syncCLMem();
+    return *this;
 }
 
 void vfps::Impedance::syncCLMem()

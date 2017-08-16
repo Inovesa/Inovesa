@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -18,7 +18,45 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
+#include <sstream>
+
+#include "MessageStrings.hpp"
 #include "IO/Display.hpp"
+
+
+std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
+                                                  std::string ofname,
+                                                  int cldev,
+                                                  uint_fast8_t glversion)
+{
+    const std::time_t start_ctime
+            = std::chrono::system_clock::to_time_t(Display::start_time);
+    std::stringstream sstream;
+    sstream << std::ctime(&start_ctime);
+
+    std::string timestring = sstream.str();
+    timestring.resize(timestring.size()-1);
+
+    #ifdef INOVESA_USE_CL
+    if (cldev >= 0)
+    #endif // INOVESA_USE_CL
+    {
+        if (ofname != "/dev/null") {
+            Display::logfile.open(ofname+".log");
+        }
+        Display::printText("Started Inovesa ("
+                           +vfps::inovesa_version()+") at "+timestring);
+        if (ofname != "/dev/null") {
+            Display::printText("Will create log at \""+ofname+".log\".");
+        }
+        if (gui) {
+            return std::make_unique<Display>(glversion);
+        }
+    }
+
+    return nullptr;
+}
+
 
 vfps::Display::Display(uint_fast8_t glversion)
     #ifdef INOVESA_USE_GUI
@@ -176,14 +214,3 @@ std::chrono::system_clock::time_point vfps::Display::start_time;
 std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 
 std::ofstream vfps::Display::logfile;
-
-
-std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
-                                                  uint_fast8_t glversion)
-{
-    if (gui) {
-        return std::make_unique<Display>(glversion);
-    } else {
-        return nullptr;
-    }
-}

@@ -65,28 +65,47 @@ private:
 
 /**
  * @brief make_display factory function for Display
+ * @param gui
+ * @param ofname name of result file (will be used for according log file)
  * @param glversion
- * @return
+ * @return pointer to fully initialized Display (may be non-graphical)
+ *
+ * This factory function will also initialize loging.
+ * When no (graphical) display is wanted make_display may
+ * just initialize the log, print some status information, or do nothing
+ * but to return a nullptr.
  */
-std::unique_ptr<Display> make_display(bool gui, uint_fast8_t glversion=0);
+std::unique_ptr<Display> make_display(bool gui,
+                                      std::string ofname, int cldev,
+                                      uint_fast8_t glversion=0);
 
 class Display
 {
 public:
-        static std::chrono::system_clock::time_point start_time;
+    /**
+     * @brief start_time time stamp of the program start
+     *
+     * start_time will be used in output and log files to display the
+     * progress of execution.
+     */
+    static std::chrono::system_clock::time_point start_time;
 
 public:
+    /**
+     * @brief Display
+     * @param glversion
+     */
     Display(uint_fast8_t glversion);
 
-        ~Display();
+    ~Display();
 
     #ifdef INOVESA_USE_GUI
         void addElement(std::shared_ptr<GUIElement> newitem);
     #endif // INOVESA_USE_GUI
 
-        void draw();
+    void draw();
 
-        static void printText(std::string txt, float silentTime=0.0f);
+    static void printText(std::string txt, float silentTime=0.0f);
 
     #ifdef INOVESA_USE_GUI
         void takeElement(std::shared_ptr<GUIElement> item);
@@ -102,9 +121,12 @@ private:
     GLFWwindow* window;
     #endif
 
-        std::vector<std::shared_ptr<GUIElement>> _item;
+    std::vector<std::shared_ptr<GUIElement>> _item;
     #endif // INOVESA_USE_GUI
 
+    /**
+     * @brief _lastmessage
+     */
     static std::chrono::system_clock::time_point _lastmessage;
 };
 

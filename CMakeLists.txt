@@ -22,14 +22,18 @@ set(SRC_LIST
   ./src/SM/WakeKickMap.cpp
   ./src/SM/WakePotentialMap.cpp
   ./src/SM/WakeFunctionMap.cpp
+  ./src/Z/CollimatorImpedance.cpp
   ./src/Z/Impedance.cpp
+  ./src/Z/ImpedanceFactory.cpp
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
+  ./src/Z/ResistiveWall.cpp
   ./src/MessageStrings.cpp
   ./src/main.cpp
 )
 
 set(INC_LIST
+  ./inc/Array.h
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
   ./inc/SM/DriftMap.hpp
@@ -52,9 +56,12 @@ set(INC_LIST
   ./inc/SM/WakePotentialMap.hpp
   ./inc/SM/WakeKickMap.hpp
   ./inc/SM/WakeFunctionMap.hpp
+  ./inc/Z/CollimatorImpedance.hpp
   ./inc/Z/Impedance.hpp
+  ./inc/Z/ImpedanceFactory.hpp
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
+  ./inc/Z/ResistiveWall.hpp
   ./inc/MessageStrings.hpp
   ./inc/defines.hpp
   ./inc/fixed_point.h
@@ -71,6 +78,14 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 add_definitions("-DGIT_BRANCH=\"${GIT_BRANCH}\"")
+
+execute_process(
+  COMMAND git rev-parse --verify HEAD
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_COMMIT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 
 add_definitions(-std=c++14)
 if(DEFINED CMAKE_BUILD_TYPE)

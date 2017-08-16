@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2017: Patrik Schönfeldt                                      *
+ * Copyright (c) 2017: Karlsruhe Institute of Technology                      *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -18,30 +18,33 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PARALLELPLATESCSR_HPP
-#define PARALLELPLATESCSR_HPP
+#include "Z/CollimatorImpedance.hpp"
 
-#include "Z/Impedance.hpp"
-
-namespace vfps
+vfps::CollimatorImpedance::CollimatorImpedance(const size_t n,
+                                   const frequency_t f_max,
+                                   const double outer,
+                                   const double inner)
+    :
+      Impedance(__calcImpedance(n,outer,inner),f_max)
 {
+}
 
-class ParallelPlatesCSR : public Impedance
+std::vector<vfps::impedance_t>
+vfps::CollimatorImpedance::__calcImpedance(const size_t n,
+                                     const double outer,
+                                     const double inner)
 {
-public:
-    ParallelPlatesCSR(const size_t n,
-                      const frequency_t f_rev,
-                      const frequency_t f_max,
-                      const double g);
+    std::vector<vfps::impedance_t> rv;
+    rv.reserve(n);
 
-private:
-    static std::vector<vfps::impedance_t>
-    __calcImpedance(const size_t n,
-                    const frequency_t f_rev,
-                    const frequency_t f_max,
-                    const double g);
-};
+    const impedance_t Z(Z0/M_PI*std::log(outer/inner),0);
 
-} // namespace VFPS
+    for (size_t i=0; i<=n/2; i++) {
+        rv.push_back(Z);
+    }
+    for (size_t i=n/2+1; i<n; i++) {
+        rv.push_back(impedance_t(0,0));
+    }
 
-#endif // PARALLELPLATESCSR_HPP
+    return rv;
+}

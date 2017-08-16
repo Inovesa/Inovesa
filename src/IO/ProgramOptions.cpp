@@ -50,17 +50,16 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
-             #ifdef INOVESA_USE_HDF5
-             "\tInovesa result file (HDF5, .h5)\n"
-             #endif // INOVESA_USE_HDF5
-             #ifdef INOVESA_USE_PNG
-             "\tgrayscale png (.png) file\n"
-             #endif // INOVESA_USE_PNG
-             "\ttext file (.txt) w/ particle coordinates")
+            #ifdef INOVESA_USE_HDF5
+            "\tInovesa result file (HDF5, .h5)\n"
+            #endif // INOVESA_USE_HDF5
+            #ifdef INOVESA_USE_PNG
+            "\tgrayscale png (.png) file\n"
+            #endif // INOVESA_USE_PNG
+            "\ttext file (.txt) w/ particle coordinates\n"
+            "\t'\dev/null' to explicitly state no read-in")
         ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
             "Select step of HDF5 file for initial distribution")
-        ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
-            "Iterations to find (initial) Haissinsky distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
         ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),
@@ -78,7 +77,19 @@ vfps::ProgramOptions::ProgramOptions() :
             "Full height of vacuum chamber (m)\n"
             "<0: free space CSR\n"
             " 0: no CSR\n"
-            ">0: parallel plates CSR")
+            ">0: parallel plates CSR\n"
+            "(|G| used as size of the beam pipe for other impedances)")
+        ("UseCSR", po::value<bool>(&use_csr)->default_value(true),
+            "Switch to turn off CSR for VacuumGap != 0")
+        ("CollimatorRadius", po::value<double>(&collimator)->default_value(0),
+            "Radius of collimator opening (m)\n"
+            "<=0: no collimator")
+        ("WallConductivity", po::value<double>(&s_c)->default_value(0),
+            "Conductivity of the vacuum pipe (S/m)\n"
+            "<=0: perfect conductor")
+        ("WallSusceptibility", po::value<double>(&xi_wall)->default_value(0),
+            "Magnetic susceptibility of the vacuum pipe (1)\n"
+            "<-1: -1")
         ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
             "Beamline cutoff frequency (Hz)")
         ("AcceleratingVoltage,V",
@@ -150,7 +161,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
         ("RenormalizeCharge",po::value<uint32_t>(&renormalize)->default_value(0),
-            "Reset charge every n-th simulation step.")
+            ">0: renormalize charge every n-th simulation step\n"
+            " 0: do just one initial renormalization\n"
+            "<0: no renormalization")
         ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
             "Used implementation for rotation\n"
             " 0: Standard rotation without source map\n"

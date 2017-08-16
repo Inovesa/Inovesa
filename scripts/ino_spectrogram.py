@@ -24,7 +24,7 @@ def main():
   parser.add_argument('--colmin', type=float,default=None, help='minimum of intensity (color) axis')
   parser.add_argument('--colmax', type=float,default=None, help='maximum of intensity (color) axis')
   parser.add_argument('--title', action='store_true', help='print title in plot (derived from directory)')
-  parser.add_argument('--scaling', type=float,default=0.31621, help='args.scaling factor, default 0.31621 (for ANKA equivalent)')
+  parser.add_argument('--scaling', type=float,default=1, help='scaling factor for concersion from isomagnetic to real ring')
   parser.add_argument('--xlog', action='store_true', help='set x axis logarithmic')
   parser.add_argument('--ylog', action='store_true', help='set y axis logarithmic')
 

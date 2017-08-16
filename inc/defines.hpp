@@ -28,7 +28,7 @@
 #include "fixed_point.h"
 
 #define INOVESA_VERSION_RELEASE 0
-#define INOVESA_VERSION_MINOR   13
+#define INOVESA_VERSION_MINOR   15
 #define INOVESA_VERSION_FIX     -2
 
 //#define INOVESA_SYNC_CL
@@ -82,6 +82,9 @@ constexpr double IAlfven = 17045;
 
 /// electron rest energy (in eV)
 constexpr double me = 510998.9;
+
+/// magnetic constant (in H/m)
+constexpr double mu0 = 1/(epsilon0*c*c);
 } // namespace physcons
 
 } // namespace vfps

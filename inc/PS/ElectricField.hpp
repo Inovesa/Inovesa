@@ -52,12 +52,11 @@ public:
      * @param wakescaling scaling of wakepotential
      *        (As being part of fourier transform,
      *         delta t and delta f will be automatically taken into account.
-     *         Also factor of 2 is applied to fix (Z*Rho)(k<0)=0)
      *
      * Use other constructors when you want to use wake function or potential.
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  const Impedance* impedance,
+                  const std::shared_ptr<Impedance> impedance,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
 
@@ -81,7 +80,7 @@ public:
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  const Impedance* impedance,
+                  std::shared_ptr<Impedance> impedance,
                   const double revolutionpart,
                   const double Ib, const double E0,
                   const double sigmaE, const double dt);
@@ -100,7 +99,8 @@ public:
      * @param nmax
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  const Impedance* impedance, const double Ib, const double E0,
+                  std::shared_ptr<Impedance> impedance,
+                  const double Ib, const double E0,
                   const double sigmaE, const double dt, const double rbend,
                   const double fs, const size_t nmax);
 
@@ -115,7 +115,7 @@ public:
     inline csrpower_t* getISRSpectrum() const
         { return _isrspectrum; }
 
-    inline const Impedance* getImpedance() const
+    inline const std::shared_ptr<Impedance> getImpedance() const
         { return _impedance; }
 
     inline size_t getNMax() const
@@ -194,25 +194,55 @@ private: // wrappers for FFTW
 
     inline fftw_plan prepareFFT(size_t n, double* in, std::complex<double>* out)
         {return prepareFFT(n,in, reinterpret_cast<fftw_complex*>(out)); }
+
     fftw_plan prepareFFT(size_t n, double* in, fftw_complex* out);
+
     inline fftwf_plan prepareFFT(size_t n, float* in, std::complex<float>* out)
         {return prepareFFT(n,in, reinterpret_cast<fftwf_complex*>(out)); }
+
+    /**
+     * @brief prepareFFT real to complex (Hermitian) FFT, "forward"
+     * @param n
+     * @param in
+     * @param out
+     * @return
+     */
     fftwf_plan prepareFFT(size_t n, float* in, fftwf_complex* out);
 
+    inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in, float* out)
+        {return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in), out); }
+
+    /**
+     * @brief prepareFFT Hermitian (complex) to real FFT, "backward"
+     * @param n
+     * @param in
+     * @param out
+     * @return
+     */
+    fftwf_plan prepareFFT(size_t n, fftwf_complex* in, float* out);
 
     inline fftw_plan prepareFFT(size_t n, std::complex<double>* in,
                                 std::complex<double>* out,
                                 fft_direction direction)
         { return prepareFFT(n,reinterpret_cast<fftw_complex*>(in),
                             reinterpret_cast<fftw_complex*>(out),direction); }
+
+    /**
+     * @brief prepareFFT (unmaintained for C2C FFT)
+     */
     fftw_plan prepareFFT(size_t n, fftw_complex *in,
                          fftw_complex *out,
                          fft_direction direction);
+
     inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in,
                                 std::complex<float>* out,
                                 fft_direction direction)
         { return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in),
                             reinterpret_cast<fftwf_complex*>(out),direction); }
+
+    /**
+     * @brief prepareFFT (unmaintained for C2C FFT)
+     */
     fftwf_plan prepareFFT(size_t n, fftwf_complex* in,
                           fftwf_complex* out,
                           fft_direction direction);
@@ -232,9 +262,13 @@ private:
 
     csrpower_t* _csrspectrum;
 
+<<<<<<< HEAD
     csrpower_t* _isrspectrum;
 
     const Impedance* _impedance;
+=======
+    const std::shared_ptr<Impedance> _impedance;
+>>>>>>> 9fccbaea7d1f75ba47fc17918e18546b39029e28
 
     integral_t* _bp_padded;
 
@@ -274,9 +308,13 @@ private:
     cl::Buffer _wakelosses_buf;
     #endif // INOVESA_USE_CLFFT
 
-    impedance_t* _wakepotential_complex;
-
-    fft_complex* _wakepotential_fft;
+    /**
+     * @brief _wakepotential_complex wake potential of size _nmax
+     *
+     * Actually, this is a real value.
+     * Implement usage of C2R FFT to use that fact.
+     */
+    meshaxis_t* _wakepotential_padded;
 
     #ifdef INOVESA_USE_CL
 public:
@@ -284,7 +322,7 @@ public:
 
 private:
     // non-interleaved internal data format might be usefull
-    cl::Buffer _wakepotential_complex_buf;
+    cl::Buffer _wakepotential_padded_buf;
 
     cl::Program _clProgScaleWP;
     cl::Kernel _clKernScaleWP;

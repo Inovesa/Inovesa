@@ -35,12 +35,36 @@ namespace vfps
 class Impedance
 {
 public:
+    Impedance() = delete;
+
     /**
      * @brief Impedance basic constructor that initializes everything
+     * @param axis
+     * @param z
+     */
+    Impedance(Ruler<frequency_t> axis,
+              const std::vector<impedance_t> &z);
+
+    /**
+     * @brief Impedance copy constructor
+     * @param other
+     */
+    Impedance(const Impedance& other);
+
+
+    /**
+     * @brief Impedance
      * @param z
      * @param f_max
+     *
+     * Note that we will use this for DFT,
+     * so n>z.size()/2 is defined to be equivalent to n<0.
      */
     Impedance(const std::vector<impedance_t>& z, const frequency_t f_max);
+
+
+    Impedance(const size_t nfreqs, const frequency_t f_max);
+
 
     /**
      * @brief Impedance
@@ -71,6 +95,19 @@ public:
 
     static constexpr double factor4Ohms = 1;
 
+    /// vacuum impedance (in Ohms)
+    static constexpr double Z0 = 376.730313461;
+
+public:
+    /**
+     * @brief operator +=
+     * @param rhs
+     * @return
+     *
+     * assumes size() equals rhs.size()
+     */
+    Impedance& operator+=(const Impedance& rhs);
+
 private:
     size_t _nfreqs;
 
@@ -93,6 +130,12 @@ private:
      */
     uint64_t upper_power_of_two(uint64_t v);
 };
+
+inline Impedance operator+(Impedance lhs, const Impedance& rhs)
+{
+    lhs += rhs;
+    return lhs;
+}
 
 } // namespace vfps
 

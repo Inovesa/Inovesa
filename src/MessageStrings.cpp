@@ -33,6 +33,8 @@ const std::string vfps::copyright_notice() noexcept {
     }
     rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 1997-2016 John C. Bowman,\n"
+        "\tUniversity of Alberta (Array class)\n"
         "\n"
         "Inovesa is free software: you can redistribute it and/or modify\n"
         "it under the terms of the GNU General Public License as published by\n"
@@ -63,6 +65,9 @@ const std::string vfps::inovesa_version() {
     }
     if (std::string(GIT_BRANCH) != version) {
         sstream << ", Branch: "<< GIT_BRANCH;
+    }
+    if (std::string(GIT_BRANCH) != version || INOVESA_VERSION_FIX < 0) {
+        sstream << ", Commit: "<< GIT_COMMIT;
     }
     return sstream.str();
 }
