@@ -154,17 +154,24 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
         _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
         if (_kickdirection == Axis::x) {
-            applyHM = cl::Kernel(_cl_prog, "apply_xKick");
+            applySM = cl::Kernel(_cl_prog, "apply_xKick");
         } else {
-            applyHM = cl::Kernel(_cl_prog, "apply_yKick");
+            applySM = cl::Kernel(_cl_prog, "apply_yKick");
         }
-        applyHM.setArg(0, _in->data_buf);
-        applyHM.setArg(1, _offset_buf);
-        applyHM.setArg(2, _meshsize_kd);
-        applyHM.setArg(3, _out->data_buf);
+        applySM.setArg(0, _in->data_buf);
+        applySM.setArg(1, _offset_buf);
+        applySM.setArg(2, _meshsize_kd);
+        applySM.setArg(3, _out->data_buf);
     }
-    #endif // INOVESA_USE_CL
+#endif // INOVESA_USE_CL
 }
+
+vfps::KickMap::~KickMap()
+#ifdef INOVESA_ENABLE_CLPROFILING
+    { std::cout << "~KickMap() -> "; }
+#else
+    = default;
+#endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::KickMap::apply()
 {
@@ -176,7 +183,7 @@ void vfps::KickMap::apply()
         #ifdef INOVESA_ENABLE_CLPROFILING
         cl::Event evt;
         OCLH::enqueueNDRangeKernel (
-                    applyHM,
+                    applySM,
                     cl::NullRange,
                     cl::NDRange(_meshsize_pd),
                     cl::NullRange,
@@ -185,7 +192,7 @@ void vfps::KickMap::apply()
         applySMEvents.push_back(evt);
         #else
         OCLH::enqueueNDRangeKernel (
-                    applyHM,
+                    applySM,
                     cl::NullRange,
                     cl::NDRange(_meshsize_pd));
         #endif // INOVESA_ENABLE_CLPROFILING
@@ -282,7 +289,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 }
 #endif // INOVESA_USE_CL
 
-void vfps::KickMap::updateHM()
+void vfps::KickMap::updateSM()
 {
     #ifdef INOVESA_USE_CL
     if (!OCLH::active)
@@ -292,9 +299,9 @@ void vfps::KickMap::updateHM()
     hi* ph = new hi[_it];
 
     // arrays of interpolation coefficients
-    interpol_t* hmc = new interpol_t[_it];
+    interpol_t* smc = new interpol_t[_it];
 
-    // translate offset into HM
+    // translate offset into SM
     for (meshindex_t i=0; i< static_cast<meshindex_t>(_meshsize_pd); i++) {
         meshaxis_t poffs = _meshsize_kd/2+_offset[i];
         meshaxis_t qp_int;
@@ -306,17 +313,17 @@ void vfps::KickMap::updateHM()
 
         if (jd < static_cast<meshindex_t>(_meshsize_kd)) {
             // create vectors containing interpolation coefficiants
-            calcCoefficiants(hmc,xip,_it);
+            calcCoefficiants(smc,xip,_it);
 
             // renormlize to minimize rounding errors
-            // renormalize(hmc.size(),hmc.data());
+            // renormalize(smc.size(),smc.data());
 
             // write heritage map
             for (unsigned int j1=0; j1<_it; j1++) {
                 unsigned int j0 = jd+j1-(_it-1)/2;
                 if(j0 < static_cast<meshindex_t>(_meshsize_kd)) {
                     ph[j1].index = j0;
-                    ph[j1].weight = hmc[j1];
+                    ph[j1].weight = smc[j1];
                 } else {
                     ph[j1].index = _meshsize_kd/2;
                     ph[j1].weight = 0;
@@ -333,6 +340,6 @@ void vfps::KickMap::updateHM()
     }
 
     delete [] ph;
-    delete [] hmc;
+    delete [] smc;
     }
 }

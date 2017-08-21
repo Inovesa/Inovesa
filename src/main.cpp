@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     // scaling for isomagnetic approximation, defined to be <= 1
     const double isoscale = f_rev/f0;
 
-    const double fc = opts.getCutoffFrequency();
+    const frequency_t fc = opts.getCutoffFrequency();
     const double H_unscaled = opts.getHarmonicNumber();
     const double H = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
@@ -208,8 +208,10 @@ int main(int argc, char** argv)
     const double t_sync_unscaled = 1.0/fs_unscaled;
 
     const double padding =std::max(opts.getPadding(),1.0);
-    const double fmax = ps_size*vfps::physcons::c/(pqsize*bl);
-    const size_t nfreqs = ps_size*padding;
+    const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
+    const size_t nfreqs = opts.getRoundPadding() ?
+                    Impedance::upper_power_of_two(ps_size*padding) :
+                    ps_size*padding;
     const auto s = opts.getWallConductivity();
     const auto xi = opts.getWallSusceptibility();
     const auto collimator_radius = opts.getCollimatorRadius();
@@ -464,7 +466,7 @@ int main(int argc, char** argv)
     }
 
     // time constant for damping and diffusion
-    const double  e1 = (t_d > 0) ? 2.0/(fs*t_d*steps) : 0;
+    const timeaxis_t  e1 = (t_d > 0) ? 2.0/(fs*t_d*steps) : 0;
 
     // SourceMap for damping and diffusion
     SourceMap* fpm;
@@ -617,8 +619,11 @@ int main(int argc, char** argv)
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_PNG
-    {
+    if ( ofname == "/dev/null") {
         Display::printText("Will not save results.");
+    } else {
+        Display::printText("Unkown filetype for output.");
+        return EXIT_SUCCESS;
     }
 
     #ifdef INOVESA_USE_HDF5
@@ -829,7 +834,8 @@ int main(int argc, char** argv)
         png::image< png::gray_pixel_16 > png_file(ps_size, ps_size);
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
-                png_file[ps_size-y-1][x]=(*grid_t1)[x][y]/maxval*float(UINT16_MAX);
+                png_file[ps_size-y-1][x]=
+                        static_cast<png::gray_pixel_16>((*grid_t1)[x][y]/maxval*float(UINT16_MAX));
             }
         }
         png_file.write(ofname);

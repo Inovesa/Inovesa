@@ -57,7 +57,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "\tgrayscale png (.png) file\n"
             #endif // INOVESA_USE_PNG
             "\ttext file (.txt) w/ particle coordinates\n"
-            "\t'\dev/null' to explicitly state no read-in")
+            "\t'/dev/null' to explicitly state no read-in")
         ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
             "Select step of HDF5 file for initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
@@ -145,7 +145,8 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", "print information more detailed")
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+            "print information more detailed")
     ;
     _simulopts.add_options()
         ("steps,N", po::value<uint32_t>(&steps)->default_value(1000),
@@ -154,13 +155,15 @@ vfps::ProgramOptions::ProgramOptions() :
             "Save results every n steps.")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
             "Factor for zero padding of bunch profile")
+        ("RoundPadding", po::value<bool>(&roundpadding)->default_value(true),
+            "Always do zero padding up to 2 to the power of N")
         ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),
             "Size of phase space")
         ("PhaseSpaceShiftX",po::value<double>(&meshshiftx)->default_value(0),
             "Shift grid by X mesh points")
         ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
-        ("RenormalizeCharge",po::value<uint32_t>(&renormalize)->default_value(0),
+        ("RenormalizeCharge",po::value<int32_t>(&renormalize)->default_value(0),
             ">0: renormalize charge every n-th simulation step\n"
             " 0: do just one initial renormalization\n"
             "<0: no renormalization")

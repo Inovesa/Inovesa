@@ -123,21 +123,21 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
     _cl_code += R"(
-    __kernel void applyHM_Y(const __global data_t* src,
-                            const __global hi* hm,
-                            const uint hm_len,
+    __kernel void applySM_Y(const __global data_t* src,
+                            const __global hi* sm,
+                            const uint sm_len,
                             const uint ysize,
                             __global data_t* dst)
     {
         data_t value = 0;
         const uint x = get_global_id(0);
         const uint y = get_global_id(1);
-        const uint hmoffset = y*hm_len;
+        const uint smoffset = y*sm_len;
         const uint meshoffs = x*ysize;
-        for (uint j=0; j<hm_len; j++)
+        for (uint j=0; j<sm_len; j++)
         {
-            value += mult(  src[meshoffs+hm[hmoffset+j].src],
-                            hm[hmoffset+j].weight);
+            value += mult(  src[meshoffs+sm[smoffset+j].src],
+                            sm[smoffset+j].weight);
         }
         dst[meshoffs+y] = value;
     }
@@ -150,16 +150,23 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
                              CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                              sizeof(hi)*_ip*_ysize,
                              _hinfo);
-        applyHM = cl::Kernel(_cl_prog, "applyHM_Y");
-        applyHM.setArg(0, _in->data_buf);
-        applyHM.setArg(1, _hi_buf);
-        applyHM.setArg(2, _ip);
-        applyHM.setArg(3, _ysize);
-        applyHM.setArg(4, _out->data_buf);
+        applySM = cl::Kernel(_cl_prog, "applySM_Y");
+        applySM.setArg(0, _in->data_buf);
+        applySM.setArg(1, _hi_buf);
+        applySM.setArg(2, _ip);
+        applySM.setArg(3, _ysize);
+        applySM.setArg(4, _out->data_buf);
     }
     }
 #endif
 }
+
+vfps::FokkerPlanckMap::~FokkerPlanckMap()
+#ifdef INOVESA_ENABLE_CLPROFILING
+    { std::cout << "~FokkerPlanckMap() -> "; }
+#else
+    = default;
+#endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::FokkerPlanckMap::apply()
 {
@@ -171,7 +178,7 @@ void vfps::FokkerPlanckMap::apply()
         #ifdef INOVESA_ENABLE_CLPROFILING
         cl::Event evt;
         OCLH::enqueueNDRangeKernel (
-                    applyHM,
+                    applySM,
                     cl::NullRange,
                     cl::NDRange(_meshxsize,_ysize),
                     cl::NullRange,
@@ -180,7 +187,7 @@ void vfps::FokkerPlanckMap::apply()
         applySMEvents.push_back(evt);
         #else
         OCLH::enqueueNDRangeKernel (
-                    applyHM,
+                    applySM,
                     cl::NullRange,
                     cl::NDRange(_meshxsize,_ysize));
         #endif // INOVESA_ENABLE_CLPROFILING

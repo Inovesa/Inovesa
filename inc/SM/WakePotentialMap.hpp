@@ -39,12 +39,7 @@ public:
                      const InterpolationType it,
                      bool interpol_clamp);
 
-    ~WakePotentialMap()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~WakePotentialMap() -> "; }
-    #else
-    = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~WakePotentialMap();
 
 public:
     /**

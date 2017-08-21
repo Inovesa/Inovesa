@@ -45,11 +45,11 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
             genCode4Rotation();
             _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-            applyHM = cl::Kernel(_cl_prog, "applyRotation");
-            applyHM.setArg(0, _in->data_buf);
-            applyHM.setArg(1, imgsize);
-            applyHM.setArg(2, rot);
-            applyHM.setArg(3, _out->data_buf);
+            applySM = cl::Kernel(_cl_prog, "applyRotation");
+            applySM.setArg(0, _in->data_buf);
+            applySM.setArg(1, imgsize);
+            applySM.setArg(2, rot);
+            applySM.setArg(3, _out->data_buf);
         } else
         #endif // INOVESA_USE_CL
         {
@@ -78,29 +78,36 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
             if (_clamp) {
                 if (it == InterpolationType::cubic) {
                     if (_rotmapsize == _size) {
-                        genCode4HM4sat();
+                        genCode4SM4sat();
                         _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-                        applyHM = cl::Kernel(_cl_prog, "applyHM4sat");
-                        applyHM.setArg(0, _in->data_buf);
-                        applyHM.setArg(1, _hi_buf);
-                        applyHM.setArg(2, _out->data_buf);
+                        applySM = cl::Kernel(_cl_prog, "applySM4sat");
+                        applySM.setArg(0, _in->data_buf);
+                        applySM.setArg(1, _hi_buf);
+                        applySM.setArg(2, _out->data_buf);
                     }
                 }
             } else {
-                genCode4HM1D();
+                genCode4SM1D();
                 _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
-                applyHM = cl::Kernel(_cl_prog, "applyHM1D");
-                applyHM.setArg(0, _in->data_buf);
-                applyHM.setArg(1, _hi_buf);
-                applyHM.setArg(2, _ip);
-                applyHM.setArg(3, _out->data_buf);
+                applySM = cl::Kernel(_cl_prog, "applySM1D");
+                applySM.setArg(0, _in->data_buf);
+                applySM.setArg(1, _hi_buf);
+                applySM.setArg(2, _ip);
+                applySM.setArg(3, _out->data_buf);
             }
         }
         #endif // INOVESA_USE_CL
     }
 }
+
+vfps::RotationMap::~RotationMap()
+#ifdef INOVESA_ENABLE_CLPROFILING
+    { std::cout << "~RotationMap() -> "; }
+#else
+= default;
+#endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::RotationMap::apply()
 {
@@ -112,12 +119,12 @@ void vfps::RotationMap::apply()
         if (_rotmapsize == 0) {
              // stay away from mesh borders
             OCLH::enqueueNDRangeKernel (
-                        applyHM,
+                        applySM,
                         cl::NDRange(1,1),
                         cl::NDRange(_xsize-_it+1,_ysize-_it+1));
         } else {
             OCLH::enqueueNDRangeKernel (
-                        applyHM,
+                        applySM,
                         cl::NullRange,
                         cl::NDRange(_rotmapsize));
         }
@@ -219,7 +226,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
     interpol_t* icq = new interpol_t[_it];
     interpol_t* icp = new interpol_t[_it];
 
-    interpol_t* hmc = new interpol_t[_ip];
+    interpol_t* smc = new interpol_t[_ip];
 
     // Cell of inverse image (qp,pp) of grid point i,j.
     meshaxis_t qp; //q', backward mapping
@@ -281,15 +288,15 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
         /*  Assemble interpolation
          * (using uint_fast16_t so product won't overflow)
          */
-        for (uint_fast16_t hmq=0; hmq<_it; hmq++) {
-            for (uint_fast16_t hmp=0; hmp<_it; hmp++){
-                hmc[hmp*_it+hmq] = icq[hmp]*icp[hmq];
+        for (uint_fast16_t smq=0; smq<_it; smq++) {
+            for (uint_fast16_t smp=0; smp<_it; smp++){
+                smc[smp*_it+smq] = icq[smp]*icp[smq];
             }
         }
 
 
         // renormlize to minimize rounding errors
-        // renormalize(hmc.size(),hmc.data());
+        // renormalize(smc.size(),smc.data());
 
         // write heritage map
         for (meshindex_t j1=0; j1<_it; j1++) {
@@ -298,7 +305,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
                  meshindex_t i0 = xi+i1-(_it-1)/2;
                 if(i0< _xsize && j0 < _ysize ){
                     ph[i1][j1].index = i0*_ysize+j0;
-                    ph[i1][j1].weight = hmc[i1*_it+j1];
+                    ph[i1][j1].weight = smc[i1*_it+j1];
                 } else {
                     ph[i1][j1] = {0,0};
                 }
@@ -313,7 +320,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
     delete [] icp;
     delete [] icq;
-    delete [] hmc;
+    delete [] smc;
 
     delete [] ph;
     delete [] ph1D;
@@ -321,11 +328,11 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
 
 #ifdef INOVESA_USE_CL
-void vfps::RotationMap::genCode4HM4sat()
+void vfps::RotationMap::genCode4SM4sat()
 {
     _cl_code+= R"(
-    __kernel void applyHM4sat(    const __global data_t* src,
-                                const __global hi* hm,
+    __kernel void applySM4sat(    const __global data_t* src,
+                                const __global hi* sm,
                                 __global data_t* dst)
     {
         data_t value = 0;
@@ -360,34 +367,34 @@ void vfps::RotationMap::genCode4HM4sat()
     }
     _cl_code += R"(
         data_t tmp;
-        value += mult(src[hm[offset].src],hm[offset].weight);
-        value += mult(src[hm[offset+1].src],hm[offset+1].weight);
-        value += mult(src[hm[offset+2].src],hm[offset+2].weight);
-        value += mult(src[hm[offset+3].src],hm[offset+3].weight);
-        value += mult(src[hm[offset+4].src],hm[offset+4].weight);
-        tmp = src[hm[offset+5].src];
-        value += mult(tmp,hm[offset+5].weight);
+        value += mult(src[sm[offset].src],sm[offset].weight);
+        value += mult(src[sm[offset+1].src],sm[offset+1].weight);
+        value += mult(src[sm[offset+2].src],sm[offset+2].weight);
+        value += mult(src[sm[offset+3].src],sm[offset+3].weight);
+        value += mult(src[sm[offset+4].src],sm[offset+4].weight);
+        tmp = src[sm[offset+5].src];
+        value += mult(tmp,sm[offset+5].weight);
         ceil = max(ceil,tmp);
         flor = min(flor,tmp);
-        tmp = src[hm[offset+6].src];
-        value += mult(tmp,hm[offset+6].weight);
+        tmp = src[sm[offset+6].src];
+        value += mult(tmp,sm[offset+6].weight);
         ceil = max(ceil,tmp);
         flor = min(flor,tmp);
-        value += mult(src[hm[offset+7].src],hm[offset+7].weight);
-        value += mult(src[hm[offset+8].src],hm[offset+8].weight);
-        tmp = src[hm[offset+9].src];
-        value += mult(tmp,hm[offset+9].weight);
+        value += mult(src[sm[offset+7].src],sm[offset+7].weight);
+        value += mult(src[sm[offset+8].src],sm[offset+8].weight);
+        tmp = src[sm[offset+9].src];
+        value += mult(tmp,sm[offset+9].weight);
         ceil = max(ceil,tmp);
         flor = min(flor,tmp);
-        tmp = src[hm[offset+10].src];
-        value += mult(tmp,hm[offset+10].weight);
+        tmp = src[sm[offset+10].src];
+        value += mult(tmp,sm[offset+10].weight);
         ceil = max(ceil,tmp);
         flor = min(flor,tmp);
-        value += mult(src[hm[offset+11].src],hm[offset+11].weight);
-        value += mult(src[hm[offset+12].src],hm[offset+12].weight);
-        value += mult(src[hm[offset+13].src],hm[offset+13].weight);
-        value += mult(src[hm[offset+14].src],hm[offset+14].weight);
-        value += mult(src[hm[offset+15].src],hm[offset+15].weight);
+        value += mult(src[sm[offset+11].src],sm[offset+11].weight);
+        value += mult(src[sm[offset+12].src],sm[offset+12].weight);
+        value += mult(src[sm[offset+13].src],sm[offset+13].weight);
+        value += mult(src[sm[offset+14].src],sm[offset+14].weight);
+        value += mult(src[sm[offset+15].src],sm[offset+15].weight);
         dst[i] = clamp(value,flor,ceil);
 })";
 }

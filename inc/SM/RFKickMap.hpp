@@ -34,12 +34,7 @@ public:
               const meshaxis_t angle, const InterpolationType it,
               const bool interpol_clamp);
 
-    ~RFKickMap()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~RFKickMap() -> "; }
-    #else
-    = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~RFKickMap();
 };
 
 } // namespace vfps

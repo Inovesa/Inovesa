@@ -55,141 +55,144 @@ public:
     #endif // INOVESA_USE_HDF5
 
 public:
-    inline int getCLDevice() const
+    inline auto getCLDevice() const
         { return _cldevice; }
 
-    inline std::string getImpedanceFile() const
+    inline auto getImpedanceFile() const
         { return _impedancefile; }
 
-    inline std::string getOutFile() const
+    inline auto getOutFile() const
         { return _outfile; }
 
-    inline bool getSavePhaseSpace() const
+    inline auto getSavePhaseSpace() const
         { return _savephasespace; }
 
-    inline bool getSaveSourceMap() const
+    inline auto getSaveSourceMap() const
         { return _savesourcemap; }
 
-    inline int getOpenGLVersion() const
+    inline auto getOpenGLVersion() const
         { return _glversion; }
 
-    inline bool showPhaseSpace() const
+    inline auto showPhaseSpace() const
         { return _showphasespace; }
 
-    inline std::string getStartDistFile() const
+    inline auto getStartDistFile() const
         { return _startdistfile; }
 
-    inline int64_t getStartDistStep() const
+    inline auto getStartDistStep() const
         { return _startdiststep; }
 
-    inline std::string getParticleTracking() const
+    inline auto getParticleTracking() const
         { return _trackingfile; }
 
-    inline bool getVerbosity() const
+    inline auto getVerbosity() const
         { return _verbose; }
 
-    inline std::string getWakeFile() const
+    inline auto getWakeFile() const
         { return _wakefile; }
 
 public:
-    inline uint32_t getGridSize() const
+    inline auto getGridSize() const
         { return meshsize; }
 
-    inline uint32_t getOutSteps() const
+    inline auto getOutSteps() const
         { return outsteps; }
 
-    inline double getPadding() const
+    inline auto getPadding() const
         { return padding; }
 
-    inline uint32_t getSteps() const
+    inline auto getRoundPadding() const
+        { return roundpadding; }
+
+    inline auto getSteps() const
         { return steps; }
 
-    inline float getNRotations() const
+    inline auto getNRotations() const
         { return rotations; }
 
-    inline double getPhaseSpaceSize() const
+    inline auto getPhaseSpaceSize() const
         { return pq_size; }
 
-    inline double getPSShiftX() const
+    inline auto getPSShiftX() const
         { return meshshiftx; }
 
-    inline double getPSShiftY() const
+    inline auto getPSShiftY() const
         { return meshshifty; }
 
-    inline uint32_t getRenormalizeCharge() const
+    inline auto getRenormalizeCharge() const
         { return renormalize; }
 
-    inline int getRotationType() const
+    inline auto getRotationType() const
         { return rotationtype; }
 
-    inline uint32_t getDerivationType() const
+    inline auto getDerivationType() const
         { return deriv_type; }
 
-    inline uint32_t getInterpolationPoints() const
+    inline auto getInterpolationPoints() const
         { return interpol_type; }
 
-    inline bool getInterpolationClamped() const
+    inline auto getInterpolationClamped() const
         { return interpol_clamp; }
 
 public:
-    inline double getAlpha0() const
+    inline auto getAlpha0() const
         { return alpha0; }
 
-    inline double getAlpha1() const
+    inline auto getAlpha1() const
         { return alpha1; }
 
-    inline double getAlpha2() const
+    inline auto getAlpha2() const
         { return alpha2; }
 
-    inline double getBeamEnergy() const
+    inline auto getBeamEnergy() const
         { return E_0; }
 
-    inline double getBendingRadius() const
+    inline auto getBendingRadius() const
         { return r_bend; }
 
-    inline double getBunchCurrent() const
+    inline auto getBunchCurrent() const
         { return I_b; }
 
-    inline double getCutoffFrequency() const
+    inline auto getCutoffFrequency() const
         { return f_c; }
 
-    inline double getEnergySpread() const
+    inline auto getEnergySpread() const
         { return s_E; }
 
-    inline unsigned int getHaissinskiIterations() const
+    inline auto getHaissinskiIterations() const
         { return _hi; }
 
-    inline double getHarmonicNumber() const
+    inline auto getHarmonicNumber() const
         { return H; }
 
-    inline double getRevolutionFrequency() const
+    inline auto getRevolutionFrequency() const
         { return f0; }
 
-    inline double getRFVoltage() const
+    inline auto getRFVoltage() const
         { return V_RF; }
 
-    inline double getStartDistZoom() const
+    inline auto getStartDistZoom() const
         { return zoom; }
 
-    inline double getSyncFreq() const
+    inline auto getSyncFreq() const
         { return f_s; }
 
-    inline double getDampingTime() const
+    inline auto getDampingTime() const
         { return t_d; }
 
-    inline double getVacuumChamberGap() const
+    inline auto getVacuumChamberGap() const
         { return g; }
 
-    inline bool getUseCSR() const
+    inline auto getUseCSR() const
         { return use_csr; }
 
-    inline double getCollimatorRadius() const
+    inline auto getCollimatorRadius() const
         { return collimator; }
 
-    inline double getWallConductivity() const
+    inline auto getWallConductivity() const
         { return s_c; }
 
-    inline double getWallSusceptibility() const
+    inline auto getWallSusceptibility() const
         { return xi_wall; }
 
 private: // program parameters
@@ -223,11 +226,12 @@ private: // simulation parameters
     uint32_t meshsize;
     uint32_t outsteps;
     double padding;
+    bool roundpadding;
     double pq_size;
     double meshshiftx;
     double meshshifty;
     uint32_t steps;
-    uint32_t renormalize;
+    int32_t renormalize;
     double rotations;
     uint32_t rotationtype;
     uint32_t deriv_type;

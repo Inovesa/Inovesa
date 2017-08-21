@@ -214,3 +214,7 @@ std::chrono::system_clock::time_point vfps::Display::start_time;
 std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 
 std::ofstream vfps::Display::logfile;
+
+const char*
+vfps::DisplayException::what() const noexcept
+    { return _msg.c_str(); }
