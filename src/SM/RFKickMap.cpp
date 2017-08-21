@@ -40,5 +40,12 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in,
         syncCLMem(clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_CL
-    updateHM();
+    updateSM();
 }
+
+vfps::RFKickMap::~RFKickMap()
+#ifdef INOVESA_ENABLE_CLPROFILING
+    { std::cout << "~RFKickMap() -> "; }
+#else
+= default;
+#endif // INOVESA_ENABLE_CLPROFILING

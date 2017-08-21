@@ -29,14 +29,8 @@ namespace vfps
 class WakeFunctionMap : public WakeKickMap
 {
 public:
-    /**
-     * @brief WakeFunctionMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param fname
-     */
+    WakeFunctionMap() = delete;
+
     WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
@@ -45,15 +39,6 @@ public:
                     const double Ib, const double dt,
                     const InterpolationType it, const bool interpol_clamp);
 
-    /**
-     * @brief WakeFunctionMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param csrimpedance
-     * @param it
-     */
     WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
@@ -67,7 +52,7 @@ public:
         { return _wakefunction; }
 
     /**
-     * @brief update implements WakeKickMap
+     * @brief update overrides WakeKickMap
      *
      * @todo currently uses phasespace in CPU Ram
      */
@@ -75,24 +60,13 @@ public:
 
 private:
     /**
-     * @brief wakeFromFile
+     * @brief _wakeFromFile reads in a file and scales wake to internal units
      * @param fname file name to read wake from
-     * @return
-     *
-     * reads in a file and scales wake to internal units
      */
     void _wakeFromFile(const std::string fname, const double scaling);
 
 
 private:
-    /**
-     * @brief WakeFunctionMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param it
-     */
     WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,

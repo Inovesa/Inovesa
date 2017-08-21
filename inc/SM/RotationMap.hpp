@@ -37,14 +37,14 @@ class RotationMap : public SourceMap
 public:
     /**
      * @brief RotationMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param angle
-     * @param it
-     * @param rt
-     * @param interpol_saturating
+     * @param in data source
+     * @param out data target
+     * @param xsize horizontal size of thne mesh
+     * @param ysize vertical size of thne mesh
+     * @param angle to rotate the phase space
+     * @param it number of points to use for (1D) interpolation
+     * @param interpol_clamped turn clamping on and off
+     * @param rt choose between real and Manhattan style
      * @param rotmapsize size of rotation map (can be 0, _size or _size/2)
      *
      * Saturation only makes sense with quadratic/cubic interpolation.
@@ -58,22 +58,15 @@ public:
                 const bool interpol_clamped,
                 const RotationCoordinates rt, const size_t rotmapsize=0);
 
-    ~RotationMap()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~RotationMap() -> "; }
-    #else
-    = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~RotationMap();
 
     /**
-     * @brief apply
+     * @brief apply overrides HM::apply() by an optimized implementation
      */
     void apply() override;
 
     /**
-     * @brief applyTo
-     * @param x
-     * @param y
+     * @brief apply overrides HM::apply() by an optimized implementation
      */
     PhaseSpace::Position apply(const PhaseSpace::Position pos) const override;
 
@@ -89,7 +82,7 @@ private:
     const meshaxis_t _sin_dt;
 
     #ifdef INOVESA_USE_CL
-    void genCode4HM4sat();
+    void genCode4SM4sat();
 
     void genCode4Rotation();
 

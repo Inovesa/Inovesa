@@ -144,7 +144,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
     axfreq_dataset.write(axfreq->data(),axfreq_datatype);
 
     // get ready to save TimeAxis
-    ta_datatype = H5::PredType::IEEE_F64LE;
+    if (std::is_same<vfps::timeaxis_t,float>::value) {
+            ta_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::timeaxis_t,fixp64>::value) {
+            ta_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::timeaxis_t,double>::value) {
+            ta_datatype = H5::PredType::IEEE_F64LE;
+    }
 
     hsize_t ta_maxdims = H5S_UNLIMITED;
 
@@ -859,7 +865,7 @@ void vfps::HDF5File::append(const WakeKickMap* wkm)
     delete filespace;
 }
 
-void vfps::HDF5File::appendTime(const double t)
+void vfps::HDF5File::appendTime(const timeaxis_t t)
 {
     // append to TimeAxis
     hsize_t ta_offset = ta_dims;

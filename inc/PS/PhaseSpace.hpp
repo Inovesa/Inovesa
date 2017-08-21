@@ -62,10 +62,8 @@ public:
     };
 
 public:
-    /**
-     * @brief PhaseSpace
-     * @param axis
-     */
+    PhaseSpace() = delete;
+
     PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                const double bunch_charge, const double bunch_current,
                const double zoom=1, meshdata_t *data = nullptr);
@@ -107,7 +105,7 @@ public:
 
     /**
      * @brief getAxis
-     * @param x
+     * @param x which axis? (0 -> x or 1 -> y)
      * @return reference to the Axis describing mesh in x direction
      */
     inline const Ruler<meshaxis_t>* getAxis(const uint_fast8_t x) const
@@ -115,8 +113,8 @@ public:
 
     /**
      * @brief average
-     * @param axis
-     * @return
+     * @param axis which axis? (0 -> x or 1 -> y)
+     * @return projection to axis
      *
      * relies on an up-t date _projection[axis]
      */
@@ -124,7 +122,7 @@ public:
 
     /**
      * @brief integral
-     * @return
+     * @return integrated phase space volume
      *
      * relies on an up-to-date _projection[0]
      */
@@ -135,8 +133,8 @@ public:
 
     /**
      * @brief variance
-     * @param axis
-     * @return
+     * @param axis which axis? (0 -> x or 1 -> y)
+     * @return bunch length / energy spread
      *
      * relies on an up-to-date _projection[axis]
      */
@@ -155,8 +153,7 @@ public:
         { return _projection[x]; }
 
     /**
-     * @brief projectionToX
-     * @return
+     * @brief updateXProjection
      *
      * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
      */

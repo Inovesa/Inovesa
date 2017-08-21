@@ -34,12 +34,7 @@ public:
              const meshindex_t xsize, const meshindex_t ysize) :
         SourceMap(in, out, xsize, ysize, 0, 0) {}
 
-    ~Identity()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~Identity() -> "; }
-    #else
-    = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~Identity();
 
     /**
      * @brief apply copys data from in to out
@@ -72,10 +67,9 @@ public:
 
     /**
      * @brief applyTo does nothing
-     * @param x
-     * @param y
      */
-    PhaseSpace::Position apply(const PhaseSpace::Position pos) const override
+    inline PhaseSpace::Position
+    apply(const PhaseSpace::Position pos) const override
         { return pos; }
 };
 

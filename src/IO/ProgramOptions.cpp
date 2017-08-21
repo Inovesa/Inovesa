@@ -145,7 +145,8 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", "print information more detailed")
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+            "print information more detailed")
     ;
     _simulopts.add_options()
         ("steps,N", po::value<uint32_t>(&steps)->default_value(1000),

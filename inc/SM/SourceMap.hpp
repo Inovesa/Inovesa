@@ -84,10 +84,15 @@ public:
     virtual ~SourceMap();
 
     /**
-     * @brief apply
+     * @brief apply the SM
      */
     virtual void apply();
 
+    /**
+     * @brief apply
+     * @param pos
+     * @return  updated position
+     */
     virtual PhaseSpace::Position apply(PhaseSpace::Position pos) const =0;
 
     void applyTo(std::vector<PhaseSpace::Position> &particles);
@@ -135,9 +140,9 @@ protected:
     cl::Buffer _hi_buf;
 
     /**
-     * @brief applyHM
+     * @brief applySM
      */
-    cl::Kernel applyHM;
+    cl::Kernel applySM;
 
     cl::vector<cl::Event> applySMEvents;
 
@@ -153,9 +158,9 @@ protected:
 protected:
     #ifdef INOVESA_USE_CL
     /**
-     * @brief genCode4HM1D generates OpenCL code for a generic heritage map
+     * @brief genCode4SM1D generates OpenCL code for a generic heritage map
      */
-    void genCode4HM1D();
+    void genCode4SM1D();
     #endif // INOVESA_USE_CL
 
     /**
