@@ -104,7 +104,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file->createGroup("/Info/Parameters");
 
     // frequency information axis, will be taken from ef or imp
-    const Ruler<frequency_t>* axfreq;
+    const Ruler<frequency_t>* axfreq(nullptr);
 
     double factor4Ohms = 1.0;
 
