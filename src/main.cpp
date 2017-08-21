@@ -209,7 +209,9 @@ int main(int argc, char** argv)
 
     const double padding =std::max(opts.getPadding(),1.0);
     const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
-    const size_t nfreqs = ps_size*padding;
+    const size_t nfreqs = opts.getRoundPadding() ?
+                    Impedance::upper_power_of_two(ps_size*padding) :
+                    ps_size*padding;
     const auto s = opts.getWallConductivity();
     const auto xi = opts.getWallSusceptibility();
     const auto collimator_radius = opts.getCollimatorRadius();

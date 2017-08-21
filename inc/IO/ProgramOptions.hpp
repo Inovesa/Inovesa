@@ -101,6 +101,9 @@ public:
     inline auto getPadding() const
         { return padding; }
 
+    inline auto getRoundPadding() const
+        { return roundpadding; }
+
     inline auto getSteps() const
         { return steps; }
 
@@ -223,6 +226,7 @@ private: // simulation parameters
     uint32_t meshsize;
     uint32_t outsteps;
     double padding;
+    bool roundpadding;
     double pq_size;
     double meshshiftx;
     double meshshifty;
