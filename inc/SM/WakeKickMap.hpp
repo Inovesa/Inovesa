@@ -43,12 +43,7 @@ public:
                 const meshindex_t xsize, const meshindex_t ysize,
                 const InterpolationType it, const bool interpol_clamp);
 
-    ~WakeKickMap()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~WakeKickMap() -> "; }
-    #else
-    = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~WakeKickMap();
 
 public:
     virtual void update()=0;

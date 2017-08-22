@@ -10,6 +10,7 @@
 
 std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
                                                const frequency_t fmax,
+                                               const double f0,
                                                const double frev,
                                                const double gap,
                                                const bool use_csr,
@@ -32,10 +33,10 @@ std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
             Display::printText("... using CSR impedance");
             if (gap>0) {
                 Display::printText("... shielded by parallel plates.");
-                *rv += ParallelPlatesCSR(nfreqs,frev,fmax,gap);
+                *rv += ParallelPlatesCSR(nfreqs,f0,fmax,gap);
             } else {
                 Display::printText("... in free space.");
-                *rv += FreeSpaceCSR(nfreqs,frev,fmax);
+                *rv += FreeSpaceCSR(nfreqs,f0,fmax);
             }
         }
         auto radius = std::abs(gap/2);

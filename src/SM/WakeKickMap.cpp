@@ -28,3 +28,10 @@ vfps::WakeKickMap::WakeKickMap(std::shared_ptr<PhaseSpace> in,
     KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y)
 {
 }
+
+vfps::WakeKickMap::~WakeKickMap()
+#ifdef INOVESA_ENABLE_CLPROFILING
+    { std::cout << "~WakeKickMap() -> "; }
+#else
+= default;
+#endif // INOVESA_ENABLE_CLPROFILING

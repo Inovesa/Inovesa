@@ -18,6 +18,7 @@ set(SRC_LIST
   ./src/SM/KickMap.cpp
   ./src/SM/RFKickMap.cpp
   ./src/SM/RotationMap.cpp
+  ./src/SM/Identity.cpp
   ./src/SM/SourceMap.cpp
   ./src/SM/WakeKickMap.cpp
   ./src/SM/WakePotentialMap.cpp
@@ -89,10 +90,15 @@ add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 add_definitions(-std=c++14)
 if(DEFINED CMAKE_BUILD_TYPE)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        add_definitions(-g -Wall -Wextra -DDEBUG)
+#        if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+#            add_definitions(-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+#        else()
+            add_definitions(-Wall -Wextra)
+#        endif()
+        add_definitions(-g -DDEBUG)
         MESSAGE ("Doing debug compile, including debug symbols.")
     else()
-        add_definitions(-O3 -w )
+        add_definitions(-Wall -O3 -w )
         MESSAGE ("Doing release compile, using optimization flags.")
     endif()
 endif()

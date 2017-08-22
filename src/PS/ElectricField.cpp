@@ -95,10 +95,10 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     {
         _bp_padded_fft = fft_alloc_real(_nmax);
         _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fft);
-        std::fill_n(_bp_padded,_nmax,integral_t(0));
+
         _formfactor_fft = fft_alloc_complex(_nmax);
         _formfactor = reinterpret_cast<impedance_t*>(_formfactor_fft);
-        std::fill_n(_formfactor,_nmax,integral_t(0));
+
         _fft_bunchprofile = prepareFFT(_nmax,_bp_padded,_formfactor);
     }
 }
@@ -181,9 +181,10 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     #endif // !INOVESA_USE_CLFFT
     {
         _wakelosses_fft = fft_alloc_complex(_nmax);
+        _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
+
         _wakepotential_padded = fft_alloc_real(_nmax);
 
-        _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
         _fft_wakelosses = prepareFFT(_nmax,_wakelosses,
                                      _wakepotential_padded);
     }
@@ -435,20 +436,27 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
 
 vfps::fft_complex* vfps::ElectricField::fft_alloc_complex(size_t n)
 {
+    fft_complex* rv;
     if (std::is_same<vfps::csrpower_t,float>::value) {
-        return reinterpret_cast<fft_complex*>(fftwf_alloc_complex(n));
+        rv = reinterpret_cast<fft_complex*>(fftwf_alloc_complex(n));
     } else if (std::is_same<vfps::csrpower_t,double>::value) {
-        return reinterpret_cast<fft_complex*>(fftw_alloc_complex(n));
+        rv = reinterpret_cast<fft_complex*>(fftw_alloc_complex(n));
     }
+    // initialize as 2*n long real array
+    std::fill_n(reinterpret_cast<csrpower_t*>(rv),2*n,0);
+    return rv;
 }
 
 vfps::integral_t* vfps::ElectricField::fft_alloc_real(size_t n)
 {
+    integral_t* rv;
     if (std::is_same<vfps::csrpower_t,float>::value) {
-        return reinterpret_cast<integral_t*>(fftwf_alloc_real(n));
+        rv = reinterpret_cast<integral_t*>(fftwf_alloc_real(n));
     } else if (std::is_same<vfps::csrpower_t,double>::value) {
-        return reinterpret_cast<integral_t*>(fftw_alloc_real(n));
+        rv = reinterpret_cast<integral_t*>(fftw_alloc_real(n));
     }
+    std::fill_n(rv,n,integral_t(0));
+    return rv;
 }
 
 fftw_plan vfps::ElectricField::prepareFFT(size_t n, double* in,

@@ -93,7 +93,7 @@ void vfps::SourceMap::apply()
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         OCLH::enqueueNDRangeKernel (
-                    applyHM,
+                    applySM,
                     cl::NullRange,
                     cl::NDRange(_size));
         #ifdef CL_VERSION_1_2
@@ -129,20 +129,20 @@ void vfps::SourceMap::applyTo(std::vector<vfps::PhaseSpace::Position> &particles
 
 
 #ifdef INOVESA_USE_CL
-void vfps::SourceMap::genCode4HM1D()
+void vfps::SourceMap::genCode4SM1D()
 {
     _cl_code += R"(
-    __kernel void applyHM1D(const __global data_t* src,
-                            const __global hi* hm,
-                            const uint hm_len,
+    __kernel void applySM1D(const __global data_t* src,
+                            const __global hi* sm,
+                            const uint sm_len,
                             __global data_t* dst)
     {
         data_t value = 0;
         const uint i = get_global_id(0);
-        const uint offset = i*hm_len;
-        for (uint j=0; j<hm_len; j++)
+        const uint offset = i*sm_len;
+        for (uint j=0; j<sm_len; j++)
         {
-            value += mult(src[hm[offset+j].src],hm[offset+j].weight);
+            value += mult(src[sm[offset+j].src],sm[offset+j].weight);
         }
         dst[i] = value;
     }

@@ -52,13 +52,11 @@ public:
     };
 
 public:
+    FokkerPlanckMap() = delete;
+
     /**
-     * @brief FokkerPlanckMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param fpt
+     * @brief FokkerPlanckMap the (only) constructor
+     * @param fpt any combination of damping/diffusion
      * @param e1 Marit: (deltat*2./(omegas*td))
      */
     FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
@@ -66,16 +64,11 @@ public:
                     const meshindex_t xsize, const meshindex_t ysize,
                     FPType fpt, timeaxis_t e1, DerivationType dt);
 
-    ~FokkerPlanckMap()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~FokkerPlanckMap() -> "; }
-    #else
-        = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~FokkerPlanckMap();
 
 
     /**
-     * @brief apply custom apply method needed to handle one dimensional HM
+     * @brief apply custom apply method needed to handle one dimensional SM
      */
     void apply() override;
 

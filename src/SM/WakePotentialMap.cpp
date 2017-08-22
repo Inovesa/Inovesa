@@ -32,6 +32,13 @@ vfps::WakePotentialMap::WakePotentialMap(std::shared_ptr<PhaseSpace> in,
 {
 }
 
+vfps::WakePotentialMap::~WakePotentialMap()
+#ifdef INOVESA_ENABLE_CLPROFILING
+    { std::cout << "~WakePotentialMap() -> "; }
+#else
+= default;
+#endif // INOVESA_ENABLE_CLPROFILING
+
 void vfps::WakePotentialMap::update()
 {
     #ifdef INOVESA_USE_CL
@@ -47,5 +54,5 @@ void vfps::WakePotentialMap::update()
     {
         std::copy_n(_field->wakePotential(),_xsize,_offset.data());
     }
-    updateHM();
+    updateSM();
 }

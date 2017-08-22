@@ -47,12 +47,7 @@ public:
             const InterpolationType it, const bool interpol_clamp,
             const Axis kd);
 
-    ~KickMap()
-    #ifdef INOVESA_ENABLE_CLPROFILING
-        { std::cout << "~KickMap() -> "; }
-    #else
-        = default;
-    #endif // INOVESA_ENABLE_CLPROFILING
+    ~KickMap();
 
 public:
     const inline meshaxis_t* getForce() const
@@ -101,11 +96,11 @@ protected:
     #endif
 
     /**
-     * @brief updateHM
+     * @brief updateSM
      *
      * does nothing when OpenCL is used
      */
-    void updateHM();
+    void updateSM();
 };
 
 }

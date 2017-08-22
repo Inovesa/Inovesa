@@ -50,9 +50,6 @@ enum class clCopyDirection {
 #include <iostream>
 
 /**
- * @brief prepareCLEnvironment
- * @return true on successful initialization
- *
  * Picks the last available platform.
  * If several platforms are available,
  * AMD plattforms are prefered.

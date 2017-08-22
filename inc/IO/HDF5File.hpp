@@ -41,10 +41,10 @@ public:
     /**
      * @brief HDF5File
      * @param filename file name to save HDF5 file to
-     * @param ps
+     * @param ps phase space (to know dimensions, etc.)
      * @param ef electric field used for CSR computation
-     * @param imp
-     * @param wfm
+     * @param imp Impedance
+     * @param wfm wake
      * @param nparticles
      * @param t_sync
      */
@@ -90,7 +90,7 @@ public:
 
     void append(const WakeKickMap* wkm);
 
-    void appendTime(const double t);
+    void appendTime(const timeaxis_t t);
 
 public:
     static std::unique_ptr<PhaseSpace>
