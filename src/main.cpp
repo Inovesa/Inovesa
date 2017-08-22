@@ -488,12 +488,12 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance(nfreqs,fmax,f0,gap,use_csr,
+            = vfps::makeImpedance(nfreqs,fmax,f0,f_rev,gap,use_csr,
                                   s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
-            = vfps::makeImpedance(nfreqs,fmax,f0,(gap>0)?gap:-1);
+            = vfps::makeImpedance(nfreqs,fmax,f0,f_rev,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)

@@ -12,6 +12,7 @@ namespace vfps
  * @brief makeImpedance is a factory function for all kinds of impedances
  * @param nfreqs
  * @param fmax
+ * @param f0
  * @param frev
  * @param gap
  * @param use_csr
@@ -28,6 +29,7 @@ namespace vfps
  */
 std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs,
                                          const frequency_t fmax,
+                                         const double f0,
                                          const double frev,
                                          const double gap,
                                          const bool use_csr = true,
