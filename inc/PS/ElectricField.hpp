@@ -262,13 +262,9 @@ private:
 
     csrpower_t* _csrspectrum;
 
-<<<<<<< HEAD
     csrpower_t* _isrspectrum;
 
-    const Impedance* _impedance;
-=======
     const std::shared_ptr<Impedance> _impedance;
->>>>>>> 9fccbaea7d1f75ba47fc17918e18546b39029e28
 
     integral_t* _bp_padded;
 
