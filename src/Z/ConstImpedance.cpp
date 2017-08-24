@@ -18,16 +18,24 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "Z/CollimatorImpedance.hpp"
+#include "Z/ConstImpedance.hpp"
 
-vfps::CollimatorImpedance::CollimatorImpedance(const size_t n,
-                                   const frequency_t f_max,
-                                   const double outer,
-                                   const double inner)
+vfps::ConstImpedance::ConstImpedance(const size_t n,
+                                     const frequency_t f_max,
+                                     const vfps::impedance_t Z)
     :
-      ConstImpedance( n,f_max,
-          {static_cast<frequency_t>(Z0/M_PI*std::log(outer/inner)),
-           static_cast<frequency_t>(0)}
-      )
+      Impedance(__calcImpedance(n,Z),f_max)
 {
+}
+
+std::vector<vfps::impedance_t>
+vfps::ConstImpedance::__calcImpedance(const size_t n,
+                                      const vfps::impedance_t Z)
+{
+    std::vector<vfps::impedance_t> rv;
+    rv.reserve(n);
+    rv.resize(n/2,Z);
+    rv.resize(n,0);
+
+    return rv;
 }

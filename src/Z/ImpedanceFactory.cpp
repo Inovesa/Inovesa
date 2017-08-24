@@ -3,6 +3,7 @@
 #include "IO/Display.hpp"
 
 #include "Z/Impedance.hpp"
+#include "Z/ConstImpedance.hpp"
 #include "Z/CollimatorImpedance.hpp"
 #include "Z/FreeSpaceCSR.hpp"
 #include "Z/ParallelPlatesCSR.hpp"
