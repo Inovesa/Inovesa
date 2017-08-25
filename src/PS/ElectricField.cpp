@@ -38,7 +38,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _phasespace(ps),
     _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0)),
     _csrNBL(ps->getDelta(0)*_nmax/(2*M_PI)),
-    _csrrenorm(2*_axis_freq.scale()/_csrNBL),
+    factor4perNBL2(2/_csrNBL/_csrNBL),
     _csrintensity(0),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
@@ -321,7 +321,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
         _csrspectrum[i] = renorm * ((*_impedance)[i]).real()
                         * std::norm(_formfactor[i]);
 
-        _csrintensity += _csrrenorm*_csrspectrum[i];
+        _csrintensity += _csrspectrum[i];
     }
 
     return _csrspectrum;

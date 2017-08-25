@@ -104,14 +104,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file->createGroup("/Info/Parameters");
 
     // frequency information axis, will be taken from ef or imp
-    const Ruler<frequency_t>* axfreq(nullptr);
+    const Ruler<frequency_t>* axfreq{nullptr};
 
-    double factor4Ohms(0.0);
+    double factor4Ohms{0.0};
 
     if (imp != nullptr) {
-        axfreq = imp->getRuler();
+        if (ef == nullptr) {
+            axfreq = imp->getRuler();
+        }
         factor4Ohms = imp->factor4Ohms;
-    } else if (ef != nullptr) {
+    }
+    if (ef != nullptr) {
         axfreq = ef->getFreqRuler();
     }
     // save Values of Frequency Axis
@@ -449,6 +452,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csr_prop.setDeflate(compression);
 
         const double csr_factor4watts = std::pow(bp_factor4AmperePerSigma,2)
+                                      * ef->factor4perNBL2/axfreqscale
                                       * factor4Ohms;
 
         csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
@@ -482,8 +486,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csri_dataset = _file->createDataSet("/CSR/Intensity/data",csri_datatype,
                                             csrp_dataspace,csri_prop);
 
+        const double csri_factor4watts = std::pow(bp_factor4AmperePerSigma,2)
+                                      * ef->factor4perNBL2
+                                      * factor4Ohms;
+
         csri_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
-                H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                       &csri_factor4watts);
     }
 
     // get ready to save PhaseSpace

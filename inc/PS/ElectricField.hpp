@@ -264,13 +264,14 @@ public:
      */
     const csrpower_t _csrNBL;
 
-private:
     /**
      * @brief _csrrenorm to calculate frpm sum over bins to actual power
      *
      * includes factor 2 to use positive frequencies only
      */
-    const csrpower_t _csrrenorm;
+    const csrpower_t factor4perNBL2;
+
+private:
 
     csrpower_t _csrintensity;
 
