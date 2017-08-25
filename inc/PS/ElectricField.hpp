@@ -133,7 +133,7 @@ public:
      *
      * relies on an up-t date PhaseSpace::_projection[0]
      */
-    csrpower_t* updateCSR(frequency_t cutoff);
+    csrpower_t* updateCSR(const frequency_t cutoff);
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
@@ -254,6 +254,23 @@ private:
     const Ruler<meshaxis_t> _axis_wake;
 
     std::shared_ptr<PhaseSpace> _phasespace;
+
+    /// factor to normalize form factor
+    const csrpower_t _formfactorrenorm;
+
+public:
+    /**
+     * @brief _csrNBL factor to scale from FFT bin to 1/NBL
+     */
+    const csrpower_t _csrNBL;
+
+private:
+    /**
+     * @brief _csrrenorm to calculate frpm sum over bins to actual power
+     *
+     * includes factor 2 to use positive frequencies only
+     */
+    const csrpower_t _csrrenorm;
 
     csrpower_t _csrintensity;
 

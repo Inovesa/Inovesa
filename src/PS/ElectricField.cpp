@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -36,6 +36,9 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                   ps->getDelta(0)*(_bpmeshcells-1),
                                  ps->getScale(0))),
     _phasespace(ps),
+    _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0)),
+    _csrNBL(ps->getDelta(0)*_nmax/(2*M_PI)),
+    _csrrenorm(2*_axis_freq.scale()/_csrNBL),
     _csrintensity(0),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
@@ -278,7 +281,7 @@ vfps::ElectricField::~ElectricField()
     }
 }
 
-vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
+vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
@@ -307,15 +310,18 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(frequency_t cutoff)
         fft_execute(_fft_bunchprofile);
     }
     _csrintensity = 0;
+
     for (unsigned int i=0; i<_nmax; i++) {
-        frequency_t highpass(1);
+        frequency_t renorm(_formfactorrenorm);
         if (cutoff > 0) {
-            highpass -= std::exp(-std::pow((_axis_freq.scale()*_axis_freq[i]/cutoff),2));
+            renorm *= (1-std::exp(-std::pow((_axis_freq.scale()*_axis_freq[i]/cutoff),2)));
         }
 
         // norm = squared magnitude
-        _csrspectrum[i] = ((*_impedance)[i]).real()*std::norm(_formfactor[i]);
-        _csrintensity += highpass*_csrspectrum[i];
+        _csrspectrum[i] = renorm * ((*_impedance)[i]).real()
+                        * std::norm(_formfactor[i]);
+
+        _csrintensity += _csrrenorm*_csrspectrum[i];
     }
 
     return _csrspectrum;
