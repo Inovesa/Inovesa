@@ -260,16 +260,9 @@ private:
 
 public:
     /**
-     * @brief _csrNBL factor to scale from FFT bin to 1/NBL
+     * @brief factor4Watts includes factor 2 to use positive frequencies only
      */
-    const csrpower_t _csrNBL;
-
-    /**
-     * @brief _csrrenorm to calculate frpm sum over bins to actual power
-     *
-     * includes factor 2 to use positive frequencies only
-     */
-    const csrpower_t factor4perNBL2;
+    const csrpower_t factor4Watts;
 
 private:
 

@@ -38,7 +38,6 @@
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
-#include "Z/ConstImpedance.hpp"
 #include "Z/ImpedanceFactory.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "SM/FokkerPlanckMap.hpp"
