@@ -57,6 +57,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  const double f_rev,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
 
@@ -81,6 +82,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   std::shared_ptr<Impedance> impedance,
+                  const double f_rev,
                   const double revolutionpart,
                   const double Ib, const double E0,
                   const double sigmaE, const double dt);
@@ -100,6 +102,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   std::shared_ptr<Impedance> impedance,
+                  const double f_rev,
                   const double Ib, const double E0,
                   const double sigmaE, const double dt, const double rbend,
                   const double fs, const size_t nmax);
@@ -251,6 +254,8 @@ private:
 
     const Ruler<meshaxis_t> _axis_freq;
 
+    const double _f_rev;
+
     const Ruler<meshaxis_t> _axis_wake;
 
     std::shared_ptr<PhaseSpace> _phasespace;
@@ -259,6 +264,11 @@ private:
     const csrpower_t _formfactorrenorm;
 
 public:
+    /**
+     * @brief OhmsPerHertz includes factor 2 to use positive frequencies only
+     */
+    const csrpower_t factor4WattPerHertz;
+
     /**
      * @brief factor4Watts includes factor 2 to use positive frequencies only
      */

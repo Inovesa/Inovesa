@@ -452,15 +452,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csr_prop.setShuffle();
         csr_prop.setDeflate(compression);
 
-        const double csrs_Watt = std::pow(bp_AmperePerSigma,2)
-                                      * ef->factor4Watts;
-        const double csrs_WattPerHertz = csrs_Watt*ax_z_seconds;
+        const double csrs_WattPerHertz = ef->factor4WattPerHertz;
 
         csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
                                            csr_dataspace,csr_prop);
-        csr_dataset.createAttribute("WattNBL",H5::PredType::IEEE_F64LE,
-                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
-                                       &csrs_Watt);
         csr_dataset.createAttribute("WattPerHertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                        &csrs_WattPerHertz);
@@ -490,8 +485,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csri_dataset = _file->createDataSet("/CSR/Intensity/data",csri_datatype,
                                             csrp_dataspace,csri_prop);
 
-        const double csri_watt = std::pow(bp_AmperePerSigma,2)
-                                      * ef->factor4Watts;
+        const double csri_watt = ef->factor4Watts;
 
         csri_dataset.createAttribute("Watt",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
@@ -647,7 +641,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     std::array<hsize_t,1> version_dims {{3}};
     H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
     H5::DataSet version_dset = _file->createDataSet
-                    ("/Info/INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
+                    ("/Info/Inovesa_v", H5::PredType::STD_I32LE,version_dspace);
     std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
                                     INOVESA_VERSION_MINOR,
                                     INOVESA_VERSION_FIX}};

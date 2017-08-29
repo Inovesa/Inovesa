@@ -22,6 +22,7 @@
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const std::shared_ptr<Impedance> impedance,
+                                   const double f_rev,
                                    const double revolutionpart,
                                    const meshaxis_t wakescalining) :
     volts(ps->getAxis(1)->delta()*ps->getScale(1)*revolutionpart),
@@ -30,6 +31,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _axis_freq(Ruler<frequency_t>(_nmax,0,
                                   1/(ps->getDelta(0)),
                                   physcons::c/ps->getScale(0))),
+    _f_rev(f_rev),
     // _axis_wake[_bpmeshcells] will be at position 0
     _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
                                  -ps->getDelta(0)*_bpmeshcells,
@@ -37,7 +39,8 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                  ps->getScale(0))),
     _phasespace(ps),
     _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0)),
-    factor4Watts(2*impedance->factor4Ohms),
+    factor4WattPerHertz(2*impedance->factor4Ohms*ps->current*ps->current/f_rev),
+    factor4Watts(factor4WattPerHertz*_axis_freq.scale()),
     _csrintensity(0),
     _csrspectrum(new csrpower_t[_nmax]),
     _impedance(impedance),
@@ -107,10 +110,11 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const std::shared_ptr<Impedance> impedance,
+                                   const double f_rev,
                                    const double revolutionpart,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt) :
-    ElectricField(ps,impedance,revolutionpart,
+    ElectricField(ps,impedance,f_rev,revolutionpart,
                   Ib*dt*physcons::c/ps->getScale(0)/(ps->getDelta(1)*sigmaE*E0))
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
@@ -195,11 +199,12 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const std::shared_ptr<Impedance> impedance,
+                                   const double f_rev,
                                    const double Ib, const double E0,
                                    const double sigmaE, const double dt,
                                    const double rbend, const double fs,
                                    const size_t nmax) :
-        ElectricField(ps,impedance,dt*physcons::c/(2*M_PI*rbend))
+        ElectricField(ps,impedance,f_rev,dt*physcons::c/(2*M_PI*rbend))
 {
     _wakefunction = new meshaxis_t[2*_bpmeshcells];
     fftw_complex* z_fftw = fftw_alloc_complex(nmax);
