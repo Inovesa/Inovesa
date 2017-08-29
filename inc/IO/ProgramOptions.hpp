@@ -282,6 +282,11 @@ private:
 
     po::options_description _programopts_file;
 
+    /**
+     * @brief _compatopts options from old config files
+     */
+    po::options_description _compatopts;
+
     po::options_description _simulopts;
 
     po::options_description _visibleopts;

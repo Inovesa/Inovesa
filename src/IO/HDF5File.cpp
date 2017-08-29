@@ -82,17 +82,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     ax0ps_dataset = _file->createDataSet("/Info/AxisValues_z",axps_datatype,
                                          ax0ps_dataspace,axps_prop);
-    const double ax0scale0 = ps->getScale(0);
-    ax0ps_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
-    const double ax0scale1 = ax0scale0/physcons::c;
-    ax0ps_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
+    const double ax_z_meter = ps->getScale(0);
+    ax0ps_dataset.createAttribute("Meter",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_meter);
+    const double ax_z_seconds = ax_z_meter/physcons::c;
+    ax0ps_dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_seconds);
 
     ax1ps_dataset = _file->createDataSet("/Info/AxisValues_E",axps_datatype,
                                          ax1ps_dataspace,axps_prop);
     const double ax1scale = ps->getScale(1);
-    ax1ps_dataset.createAttribute("Factor4ElectronVolts"
+    ax1ps_dataset.createAttribute("ElectronVolt"
                                   ,H5::PredType::IEEE_F64LE,
                                   H5::DataSpace()).write(
           H5::PredType::IEEE_F64LE,&ax1scale);
@@ -104,14 +104,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file->createGroup("/Info/Parameters");
 
     // frequency information axis, will be taken from ef or imp
-    const Ruler<frequency_t>* axfreq(nullptr);
+    const Ruler<frequency_t>* axfreq{nullptr};
 
-    double factor4Ohms = 1.0;
+    double factor4Ohms{0.0};
 
     if (imp != nullptr) {
-        axfreq = imp->getRuler();
+        if (ef == nullptr) {
+            axfreq = imp->getRuler();
+        }
         factor4Ohms = imp->factor4Ohms;
-    } else if (ef != nullptr) {
+    }
+    if (ef != nullptr) {
         axfreq = ef->getFreqRuler();
     }
     // save Values of Frequency Axis
@@ -139,7 +142,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     axfreq_dataset = _file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
                                           axfreq_dataspace,axfreq_prop);
     const double axfreqscale = axfreq->scale();
-    axfreq_dataset.createAttribute("Factor4Hertz",H5::PredType::IEEE_F64LE,
+    axfreq_dataset.createAttribute("Hertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
     axfreq_dataset.write(axfreq->data(),axfreq_datatype);
 
@@ -167,7 +170,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     ta_dataset = _file->createDataSet("/Info/AxisValues_t",ta_datatype,
                                       ta_dataspace,ta_prop);
     const double axtimescale = t_sync;
-    ta_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
+    ta_dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
 
     // get ready to save BunchCharge
@@ -188,15 +191,15 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     bc_dataset = _file->createDataSet("/BunchPopulation/data",bc_datatype,
                                       bc_dataspace,bc_prop);
-    bc_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
+    bc_dataset.createAttribute("Ampere",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->current));
-    bc_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
+    bc_dataset.createAttribute("Coulomb",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->charge));
 
     // get ready to save BunchProfiles
     _file->createGroup("BunchProfile");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/BunchProfile/axis0" );
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis1" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis0" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/BunchProfile/axis1" );
 
     if (std::is_same<vfps::integral_t,float>::value) {
             bp_datatype = H5::PredType::IEEE_F32LE;
@@ -219,15 +222,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
     bp_prop.setShuffle();
     bp_prop.setDeflate(compression);
 
-    const double bp_factor4ampere = ps->getAxis(0)->delta()*ps->current;
-    const double bp_factor4coulomb = ps->getAxis(0)->delta()*ps->charge;
+    const double bp_AmperePerSigma = ps->current;
+    const double bp_factor4CoulombPerSigma = ps->charge;
 
     bp_dataset = _file->createDataSet("/BunchProfile/data",bp_datatype,
                                       bp_dataspace,bp_prop);
-    bp_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&bp_factor4ampere);
-    bp_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&bp_factor4coulomb);
+    bp_dataset.createAttribute("AmperePerNBL",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &bp_AmperePerSigma);
+    bp_dataset.createAttribute("CoulombPerNBL",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &bp_factor4CoulombPerSigma);
 
     // get ready to save BunchLength
     _file->createGroup("BunchLength");
@@ -253,10 +258,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     bl_dataset = _file->createDataSet("/BunchLength/data",bl_datatype,
                                       bl_dataspace,bl_prop);
-    bl_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
-    bl_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
+    bl_dataset.createAttribute("Meter",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_meter);
+    bl_dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_seconds);
 
     // get ready to save BunchPosition
     _file->createGroup("BunchPosition");
@@ -282,17 +287,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     qb_dataset = _file->createDataSet("/BunchPosition/data",qb_datatype,
                                       qb_dataspace,qb_prop);
-    qb_dataset.createAttribute("Factor4Meters",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale0);
-    qb_dataset.createAttribute("Factor4Seconds",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax0scale1);
+    qb_dataset.createAttribute("Meter",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_meter);
+    qb_dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_seconds);
 
 
 
     // get ready to save EnergyProfiles
     _file->createGroup("EnergyProfile");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/EnergyProfile/axis0" );
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyProfile/axis1" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyProfile/axis0" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/EnergyProfile/axis1" );
 
     if (std::is_same<vfps::integral_t,float>::value) {
             ep_datatype = H5::PredType::IEEE_F32LE;
@@ -316,16 +321,18 @@ vfps::HDF5File::HDF5File(const std::string filename,
     ep_prop.setDeflate(compression);
 
 
-    const double ep_factor4ampere = ps->getAxis(1)->delta()*ps->current;
-    const double ep_factor4coulomb = ps->getAxis(1)->delta()*ps->charge;
+    const double ep_AmperePerSigma = ps->current;
+    const double ep_CoulombPerSigma = ps->charge;
 
     ep_dataset = _file->createDataSet("/EnergyProfile/data",ep_datatype,
                                       ep_dataspace,ep_prop);
 
-    ep_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ep_factor4ampere);
-    ep_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ep_factor4coulomb);
+    ep_dataset.createAttribute("AmperePerNES",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &ep_AmperePerSigma);
+    ep_dataset.createAttribute("CoulombPerNES",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &ep_CoulombPerSigma);
 
     // get ready to save Energy Spread
     _file->createGroup("EnergySpread");
@@ -351,7 +358,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     es_dataset = _file->createDataSet("/EnergySpread/data",es_datatype,
                                       es_dataspace,es_prop);
-    es_dataset.createAttribute("Factor4ElectronVolts",H5::PredType::IEEE_F64LE,
+    es_dataset.createAttribute("ElectronVolt",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax1scale);
 
     // get ready to save particles from (pseudo-) tracking
@@ -389,7 +396,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     // get ready to save WakePotential
     if (ef != nullptr) {
         _file->createGroup("WakePotential");
-        _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/WakePotential/axis0" );
+        _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/WakePotential/axis0" );
+        _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/WakePotential/axis1" );
 
         if (std::is_same<vfps::meshaxis_t,float>::value) {
             wp_datatype = H5::PredType::IEEE_F32LE;
@@ -414,7 +422,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
         wp_dataset = _file->createDataSet("/WakePotential/data",wp_datatype,
                                           wp_dataspace,wp_prop);
-        wp_dataset.createAttribute("Factor4Volts",H5::PredType::IEEE_F64LE,
+        wp_dataset.createAttribute("Volt",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                        &(ef->volts));
 
@@ -444,13 +452,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csr_prop.setShuffle();
         csr_prop.setDeflate(compression);
 
-        const double csr_factor4watts = std::pow(bp_factor4ampere,2)
-                                      * factor4Ohms;
+        const double csrs_WattPerHertz = ef->factor4WattPerHertz;
 
         csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
                                            csr_dataspace,csr_prop);
-        csr_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
-                H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
+        csr_dataset.createAttribute("WattPerHertz",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                       &csrs_WattPerHertz);
 
         // get ready to save CSR Intensity
         _file->createGroup("CSR/Intensity");
@@ -477,14 +485,18 @@ vfps::HDF5File::HDF5File(const std::string filename,
         csri_dataset = _file->createDataSet("/CSR/Intensity/data",csri_datatype,
                                             csrp_dataspace,csri_prop);
 
-        csri_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
-                H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
+        const double csri_watt = ef->factor4Watts;
+
+        csri_dataset.createAttribute("Watt",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                       &csri_watt);
     }
 
     // get ready to save PhaseSpace
     _file->createGroup("PhaseSpace");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis0" );
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis1" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/PhaseSpace/axis0" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis1" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis2" );
 
     if (std::is_same<vfps::meshdata_t,float>::value) {
         _ps_datatype = H5::PredType::IEEE_F32LE;
@@ -515,17 +527,15 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _ps_dataset = _file->createDataSet("/PhaseSpace/data",_ps_datatype,
                                        ps_dataspace,ps_prop);
 
-    const double ps_factor4ampere = ps->getAxis(0)->delta()
-                                  * ps->getAxis(1)->delta()
-                                  * ps->current;
-    const double ps_factor4coulomb = ps->getAxis(0)->delta()
-                                   * ps->getAxis(1)->delta()
-                                   * ps->charge;
+    const double ps_AmperePerSigma2 = ps->current;
+    const double ps_CoulombPerSigma2 = ps->charge;
 
-    _ps_dataset.createAttribute("Factor4Ampere",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ps_factor4ampere);
-    _ps_dataset.createAttribute("Factor4Coulomb",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ps_factor4coulomb);
+    _ps_dataset.createAttribute("AmperePerNBLPerNES",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &ps_AmperePerSigma2);
+    _ps_dataset.createAttribute("CoulombPerNBLPerNES",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                   &ps_CoulombPerSigma2);
 
 
     if (imp != nullptr) {
@@ -552,7 +562,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
         imp_prop.setDeflate(compression);
 
         _file->createGroup("Impedance/data").createAttribute
-            ("Factor4Ohms",H5::PredType::IEEE_F64LE,
+            ("Ohm",H5::PredType::IEEE_F64LE,
              H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(imp->factor4Ohms));
         imp_dataset_real = _file->createDataSet("/Impedance/data/real",imp_datatype,
                                                 imp_dataspace,imp_prop);
@@ -574,8 +584,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     // get ready to save SourceMap
     _file->createGroup("SourceMap");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/SourceMap/axis0" );
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/SourceMap/axis1" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/SourceMap/axis0" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/SourceMap/axis1" );
+    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/SourceMap/axis2" );
 
     _sm_datatype = H5::PredType::IEEE_F32LE;
 
@@ -630,7 +641,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     std::array<hsize_t,1> version_dims {{3}};
     H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
     H5::DataSet version_dset = _file->createDataSet
-                    ("/Info/INOVESA_v", H5::PredType::STD_I32LE,version_dspace);
+                    ("/Info/Inovesa_v", H5::PredType::STD_I32LE,version_dspace);
     std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
                                     INOVESA_VERSION_MINOR,
                                     INOVESA_VERSION_FIX}};

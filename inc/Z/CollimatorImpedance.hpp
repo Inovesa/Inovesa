@@ -21,7 +21,7 @@
 #ifndef COLLIMATORIMPEDANCE_HPP
 #define COLLIMATORIMPEDANCE_HPP
 
-#include "Z/Impedance.hpp"
+#include "Z/ConstImpedance.hpp"
 
 namespace vfps
 {
@@ -30,19 +30,13 @@ namespace vfps
  * @brief The CollimatorImpedance class models
  * the impedance effect of a collimator
  */
-class CollimatorImpedance : public Impedance
+class CollimatorImpedance : public ConstImpedance
 {
 public:
     CollimatorImpedance(const size_t n,
                   const frequency_t f_max,
                   const double outer,
                   const double inner);
-
-private:
-    static std::vector<vfps::impedance_t>
-    __calcImpedance(const size_t n,
-                    const double outer,
-                    const double inner);
 };
 
 } // namespace vfps

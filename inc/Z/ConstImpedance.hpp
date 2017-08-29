@@ -18,16 +18,31 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include "Z/CollimatorImpedance.hpp"
+#ifndef CONSTIMPEDANCE_HPP
+#define CONSTIMPEDANCE_HPP
 
-vfps::CollimatorImpedance::CollimatorImpedance(const size_t n,
-                                   const frequency_t f_max,
-                                   const double outer,
-                                   const double inner)
-    :
-      ConstImpedance( n,f_max,
-          {static_cast<frequency_t>(Z0/M_PI*std::log(outer/inner)),
-           static_cast<frequency_t>(0)}
-      )
+#include "Z/Impedance.hpp"
+
+namespace vfps
 {
-}
+
+/**
+ * @brief The CollimatorImpedance class models
+ * the impedance effect of a collimator
+ */
+class ConstImpedance : public Impedance
+{
+public:
+    ConstImpedance(const size_t n,
+                  const frequency_t f_max,
+                  const vfps::impedance_t Z);
+
+private:
+    static std::vector<vfps::impedance_t>
+    __calcImpedance(const size_t n,
+                    const vfps::impedance_t Z);
+};
+
+} // namespace vfps
+
+#endif // CONSTIMPEDANCE_HPP
