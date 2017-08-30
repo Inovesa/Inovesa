@@ -186,6 +186,8 @@ vfps::ProgramOptions::ProgramOptions() :
     _compatopts.add_options()
         ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
             "(currently ignored)")
+        ("InitialDistParam",po::value<unsigned int>(&_hi)->default_value(0),
+            "(currently ignored)")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
