@@ -25,7 +25,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const ElectricField* ef,
                          const Impedance* imp,
                          const WakeFunctionMap* wfm,
-                         const double t_sync) :
+                         const double t_sync,
+                         const double f_rev) :
     _file( nullptr ),
     fname( filename ),
     ta_dims( 0 ),
@@ -369,8 +370,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csr_prop.setShuffle();
     csr_prop.setDeflate(compression);
 
-    const double csr_factor4watts = std::pow(bp_factor4ampere,2)
-                                  * imp->factor4Ohms;
+    const double csr_factor4watts = 2*std::pow(bp_factor4ampere,2)
+                                  * imp->factor4Ohms/f_rev;
 
     csr_dataset = _file->createDataSet("/CSR/Spectrum/data",csr_datatype,
                                        csr_dataspace,csr_prop);
@@ -397,11 +398,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
     csri_prop.setShuffle();
     csri_prop.setDeflate(compression);
 
+    const double csri_factor4watts = 0;
+
     csri_dataset = _file->createDataSet("/CSR/Intensity/data",csri_datatype,
                                         csrp_dataspace,csri_prop);
 
     csri_dataset.createAttribute("Factor4Watts",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csr_factor4watts);
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &csri_factor4watts);
 
     // get ready to save PhaseSpace
     _file->createGroup("PhaseSpace");

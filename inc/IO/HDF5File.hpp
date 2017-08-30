@@ -47,7 +47,8 @@ public:
              const ElectricField* ef,
              const Impedance* imp,
              const WakeFunctionMap *wfm,
-             const double t_sync);
+             const double t_sync,
+             const double f_rev);
 
     ~HDF5File();
 

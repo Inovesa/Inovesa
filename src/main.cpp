@@ -630,7 +630,7 @@ int main(int argc, char** argv)
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         hdf_file = new HDF5File(ofname,mesh1,field,impedance,wfm,
-                                t_sync_unscaled);
+                                t_sync_unscaled,f_rev);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
