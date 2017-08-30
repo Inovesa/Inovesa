@@ -497,7 +497,7 @@ int main(int argc, char** argv)
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field(grid_t1,rdtn_impedance,revolutionpart);
+    ElectricField rdtn_field(grid_t1,rdtn_impedance,f_rev,revolutionpart);
 
     /**************************************************************************
      * Part modeling the self-interaction of the electron-bunch.              *
@@ -522,8 +522,8 @@ int main(int argc, char** argv)
     } else {
         if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField(grid_t1,wake_impedance,revolutionpart,
-                                      Ib_scaled,E0,sE,dt);
+            wake_field = new ElectricField(grid_t1,wake_impedance,f_rev,
+                                           revolutionpart, Ib_scaled,E0,sE,dt);
 
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap(grid_t1,grid_t2,ps_size,ps_size,wake_field,
