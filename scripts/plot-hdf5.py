@@ -26,7 +26,10 @@ csr_label = r"CSR Intensity (arb. units)"
 for fname in fnames:
     hdf_f = h5py.File(fname, 'r')
 
-    inovesa_version = hdf_f['/Info/INOVESA_v']
+    try:
+        inovesa_version = hdf_f['/Info/Inovesa_v']
+    except:
+        inovesa_version = hdf_f['/Info/INOVESA_v']
 
     current.append(hdf_f['/Info/Parameters'].attrs['BunchCurrent'])
     grid_size = (hdf_f['/Info/Parameters'].attrs['GridSize'])
@@ -37,8 +40,8 @@ for fname in fnames:
     bunchlength = np.append(bunchlength,hdf_f['/BunchLength/data'][...])
     energyspread = np.append(energyspread,hdf_f['/EnergySpread/data'][...])
     csr_power = np.append(csr_power,hdf_f['/CSR/Intensity/data'][...])
-    if inovesa_version[1] >= 12:
-        csr_factor = (hdf_f['/CSR/Intensity/data']).attrs['Factor4Watts']
+    if inovesa_version[1] >= 14:
+        csr_factor = (hdf_f['/CSR/Intensity/data']).attrs['Watt']
         csr_label = r"CSR Intensity (W)"
 
 plt.figure()
