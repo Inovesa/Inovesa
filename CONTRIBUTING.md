@@ -38,9 +38,9 @@ Note: One month of coding can save you one day of propper planning.
 ## Documentation
 
 * For every task or feature, there should be at least one
-small how-to describing a (the intended) way to use it.
+small HOWTO describing a (the intended) way to use it.
 If you miss something, please ask.
-Users are also welcomed to write their own how-tos and tutorials
+Users are also welcomed to write their own HOWTOs and tutorials
 (we will probably link them).
 * Abstract functionality can be documented,
 but it is also possible to just refer to scientific publications.

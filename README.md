@@ -21,7 +21,7 @@ please read the [contibuting file][2].
 
 [1]: https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.20.030704 "Parallelized Vlasov-Fokker-Planck solver for desktop personal computers"
 
-[2]: (CONTRIBUTING.md)
+[2]: CONTRIBUTING.md
 "Information on contributing to Inovesa"
 
 
