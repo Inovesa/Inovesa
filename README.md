@@ -10,10 +10,19 @@ Vlasov-Fokker-Planck equation.
 Inovesa is modularly extensible and uses OpenCL to massively parallelize the
 computation. It was designed with standard desktop PCs and usability in mind.
 The working principle and example numerical studies can be found in the
-[paper describing Inovesa][1].
+[paper describing Inovesa (PRAB)][1].
+
+Inovesa and the experience of any user greatly profits from
+contributions of any form -- starting from questions or bug reports
+going all the way to implementation of new features.
+If you consider contributing to Inovesa,
+please read the [contibuting file][2].
 
 
-[1]: https://arxiv.org/abs/1611.05293 "A Parallelized Vlasov-Fokker-Planck-Solver for Desktop PCs"
+[1]: https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.20.030704 "Parallelized Vlasov-Fokker-Planck solver for desktop personal computers"
+
+[2]: CONTRIBUTING.md
+"Information on contributing to Inovesa"
 
 
 Build Requirenments
