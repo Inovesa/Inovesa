@@ -21,7 +21,8 @@ else, please, report the bug first.
 Features or enhancement can be requested using the
 [Inovesa issue tracker at GitHub](https://github.com/Inovesa/Inovesa/issues).
 Please check, whether there is already a corresponding feature request.
-If you like to 
+If you like to suggest a feature to check a new (and unpublished) theory,
+feel free to directly contact [the maintainer](CONTRIBUTORS.md#maintainer).
 
 
 ## Implementing a feature
