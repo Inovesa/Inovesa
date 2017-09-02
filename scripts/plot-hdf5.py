@@ -41,8 +41,11 @@ for fname in fnames:
     energyspread = np.append(energyspread,hdf_f['/EnergySpread/data'][...])
     csr_power = np.append(csr_power,hdf_f['/CSR/Intensity/data'][...])
     if inovesa_version[1] >= 14:
-        csr_factor = (hdf_f['/CSR/Intensity/data']).attrs['Watt']
-        csr_label = r"CSR Intensity (W)"
+        try:
+            csr_label = r"CSR Intensity (W)"
+            csr_factor = (hdf_f['/CSR/Intensity/data']).attrs['Watt']
+        except:
+            csr_label = r"CSR Intensity (arb. units)"
 
 plt.figure()
 ax1 = plt.subplot(111)
