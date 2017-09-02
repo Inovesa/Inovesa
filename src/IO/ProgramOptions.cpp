@@ -274,9 +274,9 @@ void vfps::ProgramOptions::save(std::string fname)
                 ofs << it->first << '='
                     << _vm[it->first].as<uint32_t>()
                     << std::endl;
-            } else if (it->second.value().type() == typeid(int32_t)) {
+            } else if (it->second.value().type() == typeid(int64_t)) {
                 ofs << it->first << '='
-                    << _vm[it->first].as<int32_t>()
+                    << _vm[it->first].as<int64_t>()
                     << std::endl;
             } else if (it->second.value().type() == typeid(bool)) {
                 ofs << it->first << '='
@@ -309,6 +309,10 @@ void vfps::ProgramOptions::save(vfps::HDF5File* file)
                                           H5::PredType::IEEE_F64LE,&data);
             } else if (it->second.value().type() == typeid(uint32_t)) {
                 uint32_t data = _vm[it->first].as<uint32_t>();
+                file->addParameterToGroup("/Info/Parameters",it->first,
+                                          H5::PredType::STD_U32LE,&data);
+            } else if (it->second.value().type() == typeid(uint64_t)) {
+                uint64_t data = _vm[it->first].as<uint64_t>();
                 file->addParameterToGroup("/Info/Parameters",it->first,
                                           H5::PredType::STD_U32LE,&data);
             } else if (it->second.value().type() == typeid(int32_t)) {

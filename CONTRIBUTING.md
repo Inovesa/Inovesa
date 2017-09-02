@@ -21,7 +21,8 @@ else, please, report the bug first.
 Features or enhancement can be requested using the
 [Inovesa issue tracker at GitHub](https://github.com/Inovesa/Inovesa/issues).
 Please check, whether there is already a corresponding feature request.
-If you like to 
+If you like to suggest a feature to check a new (and unpublished) theory,
+feel free to directly contact [the maintainer](CONTRIBUTORS.md#maintainer).
 
 
 ## Implementing a feature
@@ -38,9 +39,9 @@ Note: One month of coding can save you one day of propper planning.
 ## Documentation
 
 * For every task or feature, there should be at least one
-small how-to describing a (the intended) way to use it.
+small HOWTO describing a (the intended) way to use it.
 If you miss something, please ask.
-Users are also welcomed to write their own how-tos and tutorials
+Users are also welcomed to write their own HOWTOs and tutorials
 (we will probably link them).
 * Abstract functionality can be documented,
 but it is also possible to just refer to scientific publications.
