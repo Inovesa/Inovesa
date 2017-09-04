@@ -107,7 +107,7 @@ public:
                   const double sigmaE, const double dt, const double rbend,
                   const double fs, const size_t nmax);
 
-    ~ElectricField();
+    ~ElectricField() noexcept;
 
     inline csrpower_t getCSRPower() const
         { return _csrintensity; }

@@ -49,13 +49,11 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _wakelosses_fft(nullptr),
     _wakepotential_padded(nullptr),
     _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr),
-    _fft_wakelosses(nullptr),
+    _fft_wakelosses(nullptr)
     #ifdef INOVESA_USE_CLFFT
-    _wakescaling(OCLH::active?
-                   wakescalining*_axis_freq.delta()*_axis_wake.delta()*_nmax:
-                   wakescalining*_axis_freq.delta()*_axis_wake.delta())
+    , _wakescaling(OCLH::active ? wakescalining : wakescalining/_nmax )
     #else
-    _wakescaling(wakescalining*_axis_freq.delta()*_axis_wake.delta())
+    , _wakescaling(wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #endif // INOVESA_USE_CLFFT
 {
     #ifdef INOVESA_USE_CLFFT

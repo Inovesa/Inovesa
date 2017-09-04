@@ -39,7 +39,7 @@ public:
                      const InterpolationType it,
                      bool interpol_clamp);
 
-    ~WakePotentialMap();
+    ~WakePotentialMap() noexcept;
 
 public:
     /**

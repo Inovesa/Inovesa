@@ -34,7 +34,7 @@ public:
               const meshaxis_t angle, const InterpolationType it,
               const bool interpol_clamp);
 
-    ~RFKickMap();
+    ~RFKickMap() noexcept;
 };
 
 } // namespace vfps

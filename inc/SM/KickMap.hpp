@@ -47,7 +47,7 @@ public:
             const InterpolationType it, const bool interpol_clamp,
             const Axis kd);
 
-    ~KickMap();
+    ~KickMap() noexcept;
 
 public:
     const inline meshaxis_t* getForce() const
