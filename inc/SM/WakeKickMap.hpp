@@ -43,7 +43,7 @@ public:
                 const meshindex_t xsize, const meshindex_t ysize,
                 const InterpolationType it, const bool interpol_clamp);
 
-    ~WakeKickMap();
+    ~WakeKickMap() noexcept;
 
 public:
     virtual void update()=0;

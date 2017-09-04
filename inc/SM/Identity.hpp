@@ -34,7 +34,7 @@ public:
              const meshindex_t xsize, const meshindex_t ysize) :
         SourceMap(in, out, xsize, ysize, 0, 0) {}
 
-    ~Identity();
+    ~Identity() noexcept;
 
     /**
      * @brief apply copys data from in to out

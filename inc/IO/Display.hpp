@@ -91,13 +91,24 @@ public:
     static std::chrono::system_clock::time_point start_time;
 
 public:
+    Display() = delete;
+
+    Display(const Display&) = delete;
+    Display(Display&&) = delete;
+
+    Display& operator=(const Display&) = delete;
+    Display& operator=(Display&&) = delete;
+
     /**
-     * @brief Display
+     * @brief Display initializes OpenGL
      * @param glversion
      */
     Display(uint_fast8_t glversion);
 
-    ~Display();
+    /**
+     * @brief ~Display() terminats OpenGL (if used)
+     */
+    ~Display() noexcept;
 
     #ifdef INOVESA_USE_GUI
         void addElement(std::shared_ptr<GUIElement> newitem);
@@ -114,11 +125,16 @@ public:
     static std::ofstream logfile;
 
 private:
-    void openWindow(uint_fast8_t glversion);
+    GLFWwindow* openWindow(uint_fast8_t glversion);
 
     #ifdef INOVESA_USE_GUI
     #if GLFW_VERSION_MAJOR == 3
-    GLFWwindow* window;
+    /**
+     * @brief _window pointer to window struct
+     *
+     * must not be deleted, is owned by GLFW runtime
+     */
+    GLFWwindow* _window;
     #endif
 
     std::vector<std::shared_ptr<GUIElement>> _item;

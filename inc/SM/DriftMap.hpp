@@ -34,7 +34,7 @@ public:
              const std::vector<meshaxis_t> slip, const double E0,
              const InterpolationType it, const bool interpol_clamp);
 
-    ~DriftMap();
+    ~DriftMap() noexcept;
 };
 
 } // namespace fvps

@@ -45,7 +45,7 @@ public:
                     const ElectricField* csr,
                     const InterpolationType it, const bool interpol_clamp);
 
-    ~WakeFunctionMap();
+    ~WakeFunctionMap() noexcept;
 
 public:
     inline const meshaxis_t* getWakeFunction() const

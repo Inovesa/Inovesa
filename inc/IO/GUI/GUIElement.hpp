@@ -50,7 +50,7 @@ class GUIElement
 public:
     GUIElement();
 
-    virtual ~GUIElement();
+    virtual ~GUIElement() noexcept;
 
     virtual void draw() =0;
 

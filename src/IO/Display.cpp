@@ -62,7 +62,7 @@ vfps::Display::Display(uint_fast8_t glversion)
     #ifdef INOVESA_USE_GUI
     #if GLFW_VERSION_MAJOR == 3
         :
-        window(nullptr)
+        _window(nullptr)
     #endif // GLFW_VERSION_MAJOR == 3
     #endif // INOVESA_USE_GUI
 {
@@ -82,17 +82,17 @@ vfps::Display::Display(uint_fast8_t glversion)
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
+    glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);GLFWwindow
     glfwSetWindowTitle("Inovesa");
     GUIElement::glversion = 2;
     #else // GLFW3
-    openWindow(glversion);
-    if( window == nullptr ) {
+    _window = openWindow(glversion);
+    if( _window == nullptr ) {
         glfwTerminate();
         throw DisplayException("Failed to initialize GLFW.");
         return;
     }
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(_window);
     #endif // GLFW3
 
     // Initialize GLEW
@@ -105,7 +105,7 @@ vfps::Display::Display(uint_fast8_t glversion)
     #if GLFW_VERSION_MAJOR < 3
     glfwEnable(GLFW_STICKY_KEYS);
     #else
-    glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwSetInputMode(_window, GLFW_STICKY_KEYS, GL_TRUE);
     #endif // GLFW_VERSION_MAJOR == 3
 
     // White background
@@ -145,7 +145,7 @@ void vfps::Display::draw() {
 
     // Swap buffers
     #if GLFW_VERSION_MAJOR == 3
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(_window);
     #else
     glfwSwapBuffers();
     #endif
@@ -186,7 +186,7 @@ void vfps::Display::takeElement(std::shared_ptr<GUIElement> item)
     }
 }
 
-void vfps::Display::openWindow(uint_fast8_t glversion)
+GLFWwindow* vfps::Display::openWindow(uint_fast8_t glversion)
 {
     std::string title("Inovesa");
     GUIElement::glversion = glversion;
@@ -205,7 +205,7 @@ void vfps::Display::openWindow(uint_fast8_t glversion)
         title+=" (GL3)";
         break;
     }
-    window = glfwCreateWindow( 512, 512, title.c_str(), NULL, NULL);
+    return glfwCreateWindow( 512, 512, title.c_str(), NULL, NULL);
 }
 #endif // INOVESA_USE_GUI
 

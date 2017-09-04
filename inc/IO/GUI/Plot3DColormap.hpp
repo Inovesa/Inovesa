@@ -37,7 +37,7 @@ class Plot3DColormap : public GUIElement
 public:
     Plot3DColormap(vfps::meshdata_t maxvalue=1);
 
-    ~Plot3DColormap();
+    ~Plot3DColormap() noexcept;
 
     void createTexture(std::shared_ptr<PhaseSpace> mesh);
 

@@ -64,7 +64,7 @@ public:
                     const meshindex_t xsize, const meshindex_t ysize,
                     FPType fpt, timeaxis_t e1, DerivationType dt);
 
-    ~FokkerPlanckMap();
+    ~FokkerPlanckMap() noexcept;
 
 
     /**

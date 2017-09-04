@@ -81,7 +81,7 @@ public:
                 size_t xsize, size_t ysize,
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
-    virtual ~SourceMap();
+    virtual ~SourceMap() noexcept;
 
     /**
      * @brief apply the SM

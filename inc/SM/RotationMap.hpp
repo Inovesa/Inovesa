@@ -58,7 +58,7 @@ public:
                 const bool interpol_clamped,
                 const RotationCoordinates rt, const size_t rotmapsize=0);
 
-    ~RotationMap();
+    ~RotationMap() noexcept;
 
     /**
      * @brief apply overrides HM::apply() by an optimized implementation

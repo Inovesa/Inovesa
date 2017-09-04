@@ -56,7 +56,7 @@ public:
              const size_t nparticles,
              const double t_sync);
 
-    ~HDF5File();
+    ~HDF5File() noexcept;
 
     void addParameterToGroup(std::string groupname,
                              std::string paramname,

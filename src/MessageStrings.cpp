@@ -59,14 +59,17 @@ const std::string vfps::inovesa_version() {
     if ( INOVESA_VERSION_FIX >= 0 ) {
         sstream << '.' << INOVESA_VERSION_FIX;
     } else if ( INOVESA_VERSION_FIX == -1 ) {
-        sstream << " beta";
-    } else if ( INOVESA_VERSION_FIX == -2 ) {
         sstream << " alpha";
+    } else if ( INOVESA_VERSION_FIX == -2 ) {
+        sstream << " beta";
+    } else {
+        sstream << " RC" << std::abs(INOVESA_VERSION_FIX)-2;
     }
     if (std::string(GIT_BRANCH) != version) {
         sstream << ", Branch: "<< GIT_BRANCH;
     }
-    if (std::string(GIT_BRANCH) != version || INOVESA_VERSION_FIX < 0) {
+    if (std::string(GIT_BRANCH) != version
+            && (INOVESA_VERSION_FIX == -1 || INOVESA_VERSION_FIX == -2)) {
         sstream << ", Commit: "<< GIT_COMMIT;
     }
     return sstream.str();

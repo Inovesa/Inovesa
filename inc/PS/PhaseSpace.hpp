@@ -81,7 +81,7 @@ public:
 
     PhaseSpace(const PhaseSpace& other);
 
-    ~PhaseSpace();
+    ~PhaseSpace() noexcept;
 
      /**
       * @brief getData gives direct access to held data

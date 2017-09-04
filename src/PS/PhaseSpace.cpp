@@ -168,7 +168,9 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
     PhaseSpace(other._axis,other.charge,other.current,-1)
-{ std::copy_n(other._data1D,nMeshCells(0)*nMeshCells(1),_data1D); }
+{
+    std::copy_n(other._data1D,nMeshCells(0)*nMeshCells(1),_data1D);
+}
 
 vfps::PhaseSpace::~PhaseSpace()
 {
