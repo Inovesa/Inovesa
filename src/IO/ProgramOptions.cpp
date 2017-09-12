@@ -40,7 +40,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Quadratic Momentum compaction factor (1)")
         ("alpha2", po::value<double>(&alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
-        ("SyncFreq,f", po::value<double>(&f_s)->default_value(-1,"(ignore)"),
+        ("SyncFreq,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
             "Synchrotron frequency (Hz), will overwrite alpha0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")

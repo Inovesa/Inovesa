@@ -173,11 +173,14 @@ int main(int argc, char** argv)
     double fs_tmp = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
-    // positive f_s will be used, negative imply usage of alpha0
-    if (fs_tmp < 0) {
+    // non-zero f_s will be used, zero implies usage of alpha0
+    if (fs_tmp == 0) {
         fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*M_PI*E0));
     } else {
-        alpha0_tmp = 2*M_PI*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
+        // alpha0 should have same sign as fs
+        auto sign = (fs_tmp > 0) ? 1 : -1;
+
+        alpha0_tmp = sign*2*M_PI*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
     }
 
     // synchrotron frequency (comparable to real storage ring)
