@@ -16,7 +16,7 @@ def main():
   parser.add_argument('--ending', type=str, default='b.h5', help='only files ending with the specified string are used')
   parser.add_argument('--saveplot', type=str, nargs='?', default=False, const='replace by args.directory', help='save plot under filename (including path). Without additional argument, plot is save with standard name in path of hdf5 files. ')
   parser.add_argument('--showplot', action='store_true', help='shows plot')
-  parser.add_argument('--datalen', type=int, default=10000, help='spezifies how many simulations steps (starting from the end of the file) will be used')
+  parser.add_argument('--datalen', type=int, default=0, help='spezifies how many simulations steps (starting from the end of the file) will be used')
   parser.add_argument('--currentmin', type=float,default=None, help='minimum of bunch current axis')
   parser.add_argument('--currentmax', type=float,default=None, help='maximum of bunch current axis')
   parser.add_argument('--freqmin', type=float,default=None, help='minimum of frequency axis')
@@ -24,7 +24,7 @@ def main():
   parser.add_argument('--colmin', type=float,default=None, help='minimum of intensity (color) axis')
   parser.add_argument('--colmax', type=float,default=None, help='maximum of intensity (color) axis')
   parser.add_argument('--title', action='store_true', help='print title in plot (derived from directory)')
-  parser.add_argument('--scaling', type=float,default=1, help='scaling factor for concersion from isomagnetic to real ring')
+  parser.add_argument('--scaling', type=float,default=1, help='scaling factor for conversion from isomagnetic to real ring (if needed)')
   parser.add_argument('--xlog', action='store_true', help='set x axis logarithmic')
   parser.add_argument('--ylog', action='store_true', help='set y axis logarithmic')
 
@@ -66,21 +66,28 @@ def main():
   data = []
   currents = []
   deltat = 1
+  
+  datalen = args.datalen
 
   for fname in fnames:
     try:
       h5file1 = h5py.File(args.directory+'/'+fname, 'r')
       tmp=deltat
-      deltat = h5file1['/Info/AxisValues_t'].attrs['Factor4Seconds']*h5file1['/Info/AxisValues_t'][1]  
+      try: # Inovesa v0.14
+          deltat = h5file1['/Info/AxisValues_t'].attrs['Second']*h5file1['/Info/AxisValues_t'][1]
+      except: # older versions
+          deltat = h5file1['/Info/AxisValues_t'].attrs['Factor4Seconds']*h5file1['/Info/AxisValues_t'][1]
       assert tmp==deltat or tmp==1, 'not same deltat in all files (at file %s)' %fname
-      assert len(h5file1[dataname][...]) > 2*args.datalen, 'to few data points (in file %s)' %fname
-      data.append(np.abs(np.fft.rfft(h5file1[dataname][-2*args.datalen:]))[1:])
+      if datalen == 0:
+      	  datalen = int(len(h5file1[dataname][...])/2-1)
+      assert len(h5file1[dataname][...]) > 2*datalen, 'to few data points (in file %s)' %fname
+      data.append(np.abs(np.fft.rfft(h5file1[dataname][-2*datalen:]))[1:])
       currents.append(h5file1['/Info/Parameters'].attrs['BunchCurrent'])
       h5file1.close()
     except IOError as e:
       print(e, 'skipping %s and continuing with next file' %fname)
 
-  freqs = np.linspace(0,args.scaling/(2*deltat),args.datalen)/1000.
+  freqs = np.linspace(0,args.scaling/(2*deltat),datalen)/1000.
 
   data = np.array(data)
   currents = np.array(currents)
@@ -101,8 +108,8 @@ def main():
   matplotlib.rc('font', **font)
 
   plt.figure(figsize=(10,5),tight_layout=True)
-  plt.xlabel("Frequency / %.2f kHz" %args.scaling if args.scaling !=1 else "Frequency / kHz")
-  plt.ylabel("Bunch Current / %.2f mA" %args.scaling if args.scaling !=1 else "Bunch Current / mA")
+  plt.xlabel("Frequency / %.2f kHz" %args.scaling if args.scaling !=1 else "Frequency (kHz)")
+  plt.ylabel("Bunch Current / %.2f mA" %args.scaling if args.scaling !=1 else "Bunch Current (mA)")
   spectrogram = plt.pcolormesh(freqs,currents,data,shading='flat',norm=matplotlib.colors.LogNorm(vmin=args.colmin,vmax=args.colmax))
   if args.ylog:
     plt.yscale('log', subsy=np.arange(1, 10, 1)[1:])
@@ -118,7 +125,7 @@ def main():
   plt.ylim((args.currentmin if args.currentmin else currents[0],args.currentmax if args.currentmax else currents[-1]))
   if args.ylog:
     plt.minorticks_on()
-  plt.colorbar(spectrogram).set_label("Spectral Intensity / a.u.")
+  plt.colorbar(spectrogram).set_label("Spectral Intensity (arb. units)")
   spectrogram.set_cmap('inferno')
   plt.title(title)
 
