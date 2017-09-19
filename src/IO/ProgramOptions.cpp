@@ -99,7 +99,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "File containing wake function.")
     ;
     _programopts_file.add_options()
-        ("cldev", po::value<int>(&_cldevice)->default_value(1),
+        ("cldev", po::value<int32_t>(&_cldevice)->default_value(1),
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
@@ -123,7 +123,7 @@ vfps::ProgramOptions::ProgramOptions() :
     ;
     _programopts_cli.add_options()
         #ifdef INOVESA_USE_CL
-        ("cldev", po::value<int>(&_cldevice)->default_value(0),
+        ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
         #endif // INOVESA_USE_CL
         ("config,c", po::value<std::string>(&_configfile),
@@ -184,9 +184,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "Restrict result of interpolation to the values of the neighboring grid points")
     ;
     _compatopts.add_options()
-        ("HaissinskiIterations",po::value<unsigned int>(&_hi)->default_value(0),
+        ("HaissinskiIterations",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
-        ("InitialDistParam",po::value<unsigned int>(&_hi)->default_value(0),
+        ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
     ;
     _cfgfileopts.add(_physopts);
@@ -269,6 +269,10 @@ void vfps::ProgramOptions::save(std::string fname)
             if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
                     << _vm[it->first].as<double>()
+                    << std::endl;
+            } else if (it->second.value().type() == typeid(int32_t)) {
+                ofs << it->first << '='
+                    << _vm[it->first].as<int32_t>()
                     << std::endl;
             } else if (it->second.value().type() == typeid(uint32_t)) {
                 ofs << it->first << '='
