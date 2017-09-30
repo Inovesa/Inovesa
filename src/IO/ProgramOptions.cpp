@@ -51,7 +51,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
             #ifdef INOVESA_USE_HDF5
-            "\tInovesa result file (HDF5, .h5)\n"
+            "\tInovesa result file (.hdf5, .h5)\n"
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_PNG
             "\tgrayscale png (.png) file\n"
