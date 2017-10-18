@@ -242,6 +242,7 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     } else if (_configfile != "default.cfg") {
         std::cout << "Config file \"" << _configfile
                   << "\" does not exist."<< std::endl;
+        return false;
     }
     #ifndef INOVESA_USE_CL
     if (_vm.count("cldev")) {
