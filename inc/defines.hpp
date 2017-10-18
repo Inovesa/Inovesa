@@ -34,6 +34,7 @@
  * -1: alpha
  * -2: beta
  * -3 RC1
+ * -n RC(n-2)
  */
 #define INOVESA_VERSION_FIX     -1
 
@@ -96,3 +97,4 @@ constexpr double mu0 = 1/(epsilon0*c*c);
 } // namespace vfps
 
 #endif // DEFINES_HPP
+

@@ -18,4 +18,7 @@ In chronological order of first contribution:
 * Tobias Boltz
   * Found and investigated an [issue with charge renormalization](https://github.com/Inovesa/Inovesa/issues/3)
 
+* Patrick Schreiber
+  * Found various small problems, [fixed one](https://github.com/Inovesa/Inovesa/commit/ea803b78c45d0e0d7a408edce60f45992cfe1667)
+
 

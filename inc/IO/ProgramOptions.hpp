@@ -196,7 +196,7 @@ public:
         { return xi_wall; }
 
 private: // program parameters
-    int _cldevice;
+    int32_t _cldevice;
 
     std::string _impedancefile;
 
@@ -216,7 +216,7 @@ private: // program parameters
 
     std::string _configfile;
 
-    int _glversion;
+    int32_t _glversion;
 
     bool _verbose;
 
@@ -245,7 +245,7 @@ private: // phsical parameters
 
     double E_0;
 
-    unsigned int _hi;
+    uint32_t _hi;
 
     /**
      * @brief zoom initial distribution

@@ -33,6 +33,7 @@ const std::string vfps::copyright_notice() noexcept {
     }
     rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
         "\n"
@@ -72,6 +73,9 @@ const std::string vfps::inovesa_version() {
             && (INOVESA_VERSION_FIX == -1 || INOVESA_VERSION_FIX == -2)) {
         sstream << ", Commit: "<< GIT_COMMIT;
     }
+    #ifdef DEBUG
+    sstream << " (Debug Build)";
+    #endif
     return sstream.str();
 }
 
@@ -89,3 +93,38 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
 
     return status.str();
 }
+
+#ifdef INOVESA_ENABLE_CLPROFILING
+const std::string vfps::printProfilingInfo(const cl::vector<cl::Event> &events)
+{
+    double predevicewait = 0;
+    double atdevicewait = 0;
+    double exectime = 0;
+    for (auto ev : events) {
+        predevicewait += ev.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>()
+                       - ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+        atdevicewait += ev.getProfilingInfo<CL_PROFILING_COMMAND_START>()
+                      - ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+        exectime += ev.getProfilingInfo<CL_PROFILING_COMMAND_END>()
+                  - ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>();
+    }
+    double nEvents = events.size();
+    predevicewait /= nEvents;
+    atdevicewait /= nEvents;
+    exectime /= nEvents;
+
+
+    std::stringstream timings;
+    timings << std::setiosflags(std::ios::fixed)
+              << std::setprecision(6)
+              << std::setw(12)
+              << predevicewait/1e6
+              << std::setw(12)
+              << atdevicewait/1e6
+              << std::setw(12)
+              << exectime/1e6 << std::endl;
+
+    return timings.str();
+}
+#endif
+
