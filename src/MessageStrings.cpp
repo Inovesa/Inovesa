@@ -33,6 +33,7 @@ const std::string vfps::copyright_notice() noexcept {
     }
     rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 2017 Patrick Schreiber\n"
         "\n"
         "Inovesa is free software: you can redistribute it and/or modify\n"
         "it under the terms of the GNU General Public License as published by\n"
