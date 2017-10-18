@@ -146,6 +146,8 @@ protected:
 
     cl::vector<cl::Event> applySMEvents;
 
+    cl::vector<cl::Event> syncSMEvents;
+
     std::string _cl_code;
 
     cl::Program _cl_prog;
@@ -172,7 +174,7 @@ protected:
     void calcCoefficiants(interpol_t* ic, const interpol_t f,
                           const uint_fast8_t it) const;
 
-    void notClampedMessage();
+    static void notClampedMessage();
 };
 
 }

@@ -39,6 +39,10 @@ const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,
                                 float total_rotations);
 
+#ifdef INOVESA_ENABLE_CLPROFILING
+const std::string printProfilingInfo(const cl::vector<cl::Event> &events);
+#endif
+
 } // namespace vfps
 
 #endif // MESSAGESTRINGS_HPP
