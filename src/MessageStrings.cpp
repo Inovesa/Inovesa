@@ -71,6 +71,9 @@ const std::string vfps::inovesa_version() {
             && (INOVESA_VERSION_FIX == -1 || INOVESA_VERSION_FIX == -2)) {
         sstream << ", Commit: "<< GIT_COMMIT;
     }
+    #ifdef DEBUG
+    sstream << " (Debug Build)";
+    #endif
     return sstream.str();
 }
 
