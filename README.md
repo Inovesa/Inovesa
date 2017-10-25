@@ -24,6 +24,11 @@ please read the [contibuting file][2].
 [2]: CONTRIBUTING.md
 "Information on contributing to Inovesa"
 
+Installation
+------------
+
+Compiling inovesa follows the standard build procedure of CMake.
+Details can be found at the corresponding [Inovesa Wiki page](https://github.com/Inovesa/Inovesa/wiki/Installation).
 
 Build Requirenments
 -------------------
