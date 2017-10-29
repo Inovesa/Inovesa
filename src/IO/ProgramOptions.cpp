@@ -189,6 +189,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "(currently ignored)")
         ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
+        ("RFVoltage",po::value<double>(&V_RF),
+            "(compatibility for AcceleratingVoltage)")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
