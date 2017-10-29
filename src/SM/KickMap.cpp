@@ -274,9 +274,9 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
 #ifdef INOVESA_USE_CL
 void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
-    auto evt
+    std::unique_ptr<cl::Event> evt
     #ifdef INOVESA_ENABLE_CLPROFILING
-    = new cl::Event();
+    = std::make_unique<cl::Event>();
     #else
     = nullptr;
     #endif
@@ -284,13 +284,13 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
     case clCopyDirection::cpu2dev:
         OCLH::queue.enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
                                       sizeof(meshaxis_t)*_meshsize_pd,
-                                      _offset.data(),nullptr,evt);
+                                      _offset.data(),nullptr,evt.get());
 
         break;
     case clCopyDirection::dev2cpu:
         OCLH::queue.enqueueReadBuffer(_offset_buf,CL_TRUE,0,
                                       sizeof(meshaxis_t)*_meshsize_pd,
-                                      _offset.data(),nullptr,evt);
+                                      _offset.data(),nullptr,evt.get());
         break;
     }
     #ifdef INOVESA_ENABLE_CLPROFILING
