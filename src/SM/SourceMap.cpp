@@ -55,15 +55,24 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    std::cout << "~SourceMap()" <<std::endl;
-    if (OCLH::active) {
-    OCLH::queue.flush();
-    std::cout << printProfilingInfo(applySMEvents);
-    std::cout << printProfilingInfo(syncSMEvents);
-    }
-    #endif // INOVESA_ENABLE_CLPROFILING
 }
+
+
+#ifdef INOVESA_ENABLE_CLPROFILING
+void vfps::SourceMap::saveTimings(std::string mapname) {
+    if (OCLH::active) {
+        OCLH::queue.flush();
+        for (auto ev : applySMEvents) {
+            OCLH::timings.push_back(vfps::CLTiming(ev,"Apply"+mapname));
+        }
+        applySMEvents.clear();
+        for (auto ev : syncSMEvents) {
+            OCLH::timings.push_back(vfps::CLTiming(ev,"Sync"+mapname));
+        }
+        syncSMEvents.clear();
+    }
+}
+#endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::SourceMap::apply()
 {

@@ -71,7 +71,7 @@ vfps::WakeFunctionMap::~WakeFunctionMap()
 {
     delete [] _wakefunction;
     #ifdef INOVESA_ENABLE_CLPROFILING
-    std::cout << "~WakeFunctionMap() -> ";
+    saveTimings("WakeFunctionMap");
     #endif // INOVESA_ENABLE_CLPROFILING
 }
 

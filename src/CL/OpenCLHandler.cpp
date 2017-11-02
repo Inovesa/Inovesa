@@ -99,6 +99,10 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
     OCLH::ogl_sharing
                     = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_EXTENSIONS>().find(
                             "_gl_sharing") != std::string::npos;
+
+    // place initial marker
+    OCLH::queue.enqueueMarker(&init);
+
     vfps::Display::printText("Initialized \""
                              + OCLH::devices[selecteddevice].getInfo<CL_DEVICE_NAME>()
                              + "\" (on platform \""
@@ -141,6 +145,19 @@ void OCLH::teardownCLEnvironment()
 #ifdef INOVESA_USE_CLFFT
     clfftTeardown();
 #endif // INOVESA_USE_CLFFT
+#ifdef INOVESA_ENABLE_CLPROFILING
+    std::ofstream timefile("inovesa-timings.txt");
+    cl_ulong starttime(init.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>());
+    timings.sort();
+    for (auto ev : timings) {
+        timefile << ev.submit-starttime
+         << '\t' << ev.queued-starttime
+         << '\t' << ev.start-starttime
+         << '\t' << ev.finish-starttime
+         << '\t' << ev.msg
+         << std::endl;
+    }
+#endif
 }
 
 void OCLH::listCLDevices()
@@ -207,6 +224,10 @@ cl_device_type OCLH::devicetype;
 cl::CommandQueue OCLH::queue;
 
 bool OCLH::ogl_sharing;
+
+std::list<vfps::CLTiming> OCLH::timings;
+
+cl::Event OCLH::init;
 
 #ifdef INOVESA_USE_CLFFT
 clfftSetupData OCLH::fft_setup;

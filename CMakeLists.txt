@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
+  ./src/CL/CLProfiler.cpp
   ./src/CL/OpenCLHandler.cpp
   ./src/IO/Display.cpp
   ./src/IO/GUI/GUIElement.cpp
@@ -36,6 +37,7 @@ set(SRC_LIST
 
 set(INC_LIST
   ./inc/Array.h
+  ./inc/CL/CLProfiler.hpp
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
   ./inc/SM/DriftMap.hpp

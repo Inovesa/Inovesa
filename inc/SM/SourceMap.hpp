@@ -69,7 +69,7 @@ public:
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
     /**
-     * @brief HeritageMap
+     * @brief SourceMap
      * @param in
      * @param out
      * @param xsize
@@ -119,23 +119,23 @@ protected:
     hi* const _hinfo;
 
     /**
-     * @brief _size size of the HeritageMap (_xsize*_ysize)
+     * @brief _size size of the SourceMap (_xsize*_ysize)
      */
     const meshindex_t _size;
 
     /**
-     * @brief _xsize horizontal size of the HeritageMap
+     * @brief _xsize horizontal size of the SourceMap
      */
     const meshindex_t _xsize;
 
     /**
-     * @brief _ysize vertical size of the HeritageMap
+     * @brief _ysize vertical size of the SourceMap
      */
     const meshindex_t _ysize;
 
     #ifdef INOVESA_USE_CL
     /**
-     * @brief _hi_buf buffer for heritage information
+     * @brief _hi_buf buffer for source information
      */
     cl::Buffer _hi_buf;
 
@@ -157,10 +157,9 @@ protected:
     std::shared_ptr<PhaseSpace> _in;
     std::shared_ptr<PhaseSpace> _out;
 
-protected:
     #ifdef INOVESA_USE_CL
     /**
-     * @brief genCode4SM1D generates OpenCL code for a generic heritage map
+     * @brief genCode4SM1D generates OpenCL code for a generic source map
      */
     void genCode4SM1D();
     #endif // INOVESA_USE_CL
@@ -175,6 +174,10 @@ protected:
                           const uint_fast8_t it) const;
 
     static void notClampedMessage();
+
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    void saveTimings(std::string mapname);
+    #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 }

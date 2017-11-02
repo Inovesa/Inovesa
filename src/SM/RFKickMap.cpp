@@ -45,7 +45,9 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in,
 
 vfps::RFKickMap::~RFKickMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~RFKickMap() -> "; }
+{
+    saveTimings("RFKickMap");
+}
 #else
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING

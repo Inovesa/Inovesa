@@ -22,10 +22,6 @@
 #define OPENCLHANDLER_HPP
 #ifdef INOVESA_USE_CL
 
-#ifdef DEBUG
-#define INOVESA_ENABLE_CLPROFILING
-#endif
-
 enum class clCopyDirection {
     cpu2dev,
     dev2cpu
@@ -42,12 +38,24 @@ enum class clCopyDirection {
 #include "CL/local_cl.hpp"
 #pragma GCC diagnostic pop
 
+#define INOVESA_ENABLE_CLPROFILING
+#ifdef INOVESA_ENABLE_CLPROFILING
+#include "CL/CLProfiler.hpp"
+#endif
+
 #ifdef INOVESA_USE_CLFFT
 #include <clFFT.h>
 #endif // INOVESA_USE_CLFFT
 
 #include <climits>
+#include <list>
 #include <iostream>
+
+#define INOVESA_ENABLE_CLPROFILING
+
+#ifdef INOVESA_ENABLE_CLPROFILING
+#include "CL/CLProfiler.hpp"
+#endif // INOVESA_ENABLE_CLPROFILING
 
 /**
  * Picks the last available platform.
@@ -84,6 +92,13 @@ public:
     static cl::CommandQueue queue;
 
     static bool ogl_sharing;
+
+
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    static std::list<vfps::CLTiming> timings;
+
+    static cl::Event init;
+    #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
     /**

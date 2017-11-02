@@ -104,7 +104,9 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
 
 vfps::RotationMap::~RotationMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~RotationMap() -> "; }
+{
+    saveTimings("RotationMap");
+}
 #else
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING

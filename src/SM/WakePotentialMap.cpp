@@ -34,7 +34,9 @@ vfps::WakePotentialMap::WakePotentialMap(std::shared_ptr<PhaseSpace> in,
 
 vfps::WakePotentialMap::~WakePotentialMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~WakePotentialMap() -> "; }
+{
+    saveTimings("WakePotentialMap");
+}
 #else
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING
