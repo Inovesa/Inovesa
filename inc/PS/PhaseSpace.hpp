@@ -195,7 +195,7 @@ public:
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
     #ifdef INOVESA_USE_CL
-    void syncCLMem(clCopyDirection dir);
+    void syncCLMem(clCopyDirection dir, cl::Event* evt = nullptr);
     #endif
 
 protected:

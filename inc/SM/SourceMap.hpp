@@ -144,6 +144,8 @@ protected:
      */
     cl::Kernel applySM;
 
+    std::unique_ptr<cl::Event> evt;
+
     cl::vector<cl::Event> applySMEvents;
 
     cl::vector<cl::Event> syncSMEvents;

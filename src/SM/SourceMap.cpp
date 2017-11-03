@@ -27,15 +27,20 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
                            meshindex_t xsize, meshindex_t ysize,
                            size_t memsize,
                            uint_fast8_t interpoints,
-                           uint_fast8_t intertype) :
-    _ip(interpoints),
-    _it(intertype),
-    _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))]),
-    _size(xsize*ysize),
-    _xsize(xsize),
-    _ysize(ysize),
-    _in(in),
-    _out(out)
+                           uint_fast8_t intertype)
+  : _ip(interpoints)
+  , _it(intertype)
+  , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
+  , _size(xsize*ysize)
+  , _xsize(xsize)
+  , _ysize(ysize)
+  #ifdef INOVESA_ENABLE_CLPROFILING
+  , evt(std::make_unique<cl::Event>())
+  #else
+  , evt(nullptr)
+  #endif // INOVESA_ENABLE_CLPROFILING
+  , _in(in)
+  , _out(out)
 {
     #ifdef INOVESA_USE_CL
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
@@ -84,7 +89,13 @@ void vfps::SourceMap::apply()
         OCLH::enqueueNDRangeKernel (
                     applySM,
                     cl::NullRange,
-                    cl::NDRange(_size));
+                    cl::NDRange(_size),
+                    cl::NullRange,
+                    nullptr,
+                    evt.get());
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        applySMEvents.push_back(*evt);
+        #endif
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2

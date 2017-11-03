@@ -56,6 +56,11 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     #else
     , _wakescaling(wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #endif // INOVESA_USE_CLFFT
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    , evt(std::make_unique<cl::Event>())
+    #elif defined INOVESA_USE_CL
+    , evt(nullptr)
+    #endif
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
@@ -302,7 +307,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     } else
     #elif defined INOVESA_USE_CL
     if (OCLH::active) {
-        _phasespace->syncCLMem(clCopyDirection::dev2cpu);
+        _phasespace->syncCLMem(clCopyDirection::dev2cpu,evt.get());
     }
     #endif // INOVESA_USE_CLTTT
     {
@@ -359,7 +364,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     } else
     #elif defined INOVESA_USE_CL
     if (OCLH::active) {
-        _phasespace->syncCLMem(clCopyDirection::dev2cpu);
+        _phasespace->syncCLMem(clCopyDirection::dev2cpu,evt.get());
     }
     #endif // INOVESA_USE_CL
     {
