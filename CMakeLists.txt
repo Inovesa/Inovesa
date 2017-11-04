@@ -106,7 +106,7 @@ if(DEFINED CMAKE_BUILD_TYPE)
     endif()
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "./cmake")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(OpenCL QUIET)
 IF(OPENCL_FOUND)
     add_definitions( -DINOVESA_USE_CL)
