@@ -35,9 +35,8 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
   , _xsize(xsize)
   , _ysize(ysize)
   #ifdef INOVESA_ENABLE_CLPROFILING
-  , evt(std::make_unique<cl::Event>())
-  #else
-  , evt(nullptr)
+  , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
+  , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
   #endif // INOVESA_ENABLE_CLPROFILING
   , _in(in)
   , _out(out)
@@ -67,14 +66,12 @@ vfps::SourceMap::~SourceMap()
 void vfps::SourceMap::saveTimings(std::string mapname) {
     if (OCLH::active) {
         OCLH::queue.flush();
-        for (auto ev : applySMEvents) {
-            OCLH::timings.push_back(vfps::CLTiming(ev,"Apply"+mapname));
+        for (auto ev : *applySMEvents) {
+            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"Apply"+mapname));
         }
-        applySMEvents.clear();
-        for (auto ev : syncSMEvents) {
-            OCLH::timings.push_back(vfps::CLTiming(ev,"Sync"+mapname));
+        for (auto ev : *syncSMEvents) {
+            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"Sync"+mapname));
         }
-        syncSMEvents.clear();
     }
 }
 #endif // INOVESA_ENABLE_CLPROFILING
@@ -92,15 +89,8 @@ void vfps::SourceMap::apply()
                     cl::NDRange(_size),
                     cl::NullRange,
                     nullptr,
-                    evt.get());
-        #ifdef INOVESA_ENABLE_CLPROFILING
-        applySMEvents.push_back(*evt);
-        #endif
-        #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
-        #endif // CL_VERSION_1_2
+                    nullptr,
+                    applySMEvents.get());
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL

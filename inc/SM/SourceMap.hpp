@@ -144,11 +144,18 @@ protected:
      */
     cl::Kernel applySM;
 
-    std::unique_ptr<cl::Event> evt;
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    std::unique_ptr<cl::vector<cl::Event*>> applySMEvents;
 
-    cl::vector<cl::Event> applySMEvents;
+    std::unique_ptr<cl::vector<cl::Event*>> syncSMEvents;
+    #else
+    constexpr static std::unique_ptr<cl::vector<cl::Event*>>
+        applySMEvents = nullptr;
 
-    cl::vector<cl::Event> syncSMEvents;
+    constexpr static std::unique_ptr<cl::vector<cl::Event*>>
+        syncSMEvents = nullptr;
+
+    #endif // INOVESA_ENABLE_CLPROFILING
 
     std::string _cl_code;
 

@@ -148,8 +148,8 @@ void OCLH::teardownCLEnvironment()
 #ifdef INOVESA_ENABLE_CLPROFILING
     std::ofstream timefile("inovesa-timings.txt");
     cl_ulong starttime(init.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>());
-    timings.sort();
-    for (auto ev : timings) {
+    timingInfo.sort();
+    for (auto ev : timingInfo) {
         timefile << ev.submit-starttime
          << '\t' << ev.queued-starttime
          << '\t' << ev.start-starttime
@@ -225,7 +225,7 @@ cl::CommandQueue OCLH::queue;
 
 bool OCLH::ogl_sharing;
 
-std::list<vfps::CLTiming> OCLH::timings;
+std::list<vfps::CLTiming> OCLH::timingInfo;
 
 cl::Event OCLH::init;
 

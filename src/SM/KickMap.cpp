@@ -188,10 +188,8 @@ void vfps::KickMap::apply()
                     cl::NDRange(_meshsize_pd),
                     cl::NullRange,
                     nullptr,
-                    evt.get());
-        #ifdef INOVESA_ENABLE_CLPROFILING
-        applySMEvents.push_back(*evt);
-        #endif // INOVESA_ENABLE_CLPROFILING
+                    nullptr,
+                    applySMEvents.get());
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2
@@ -272,20 +270,19 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::queue.enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
-                                      sizeof(meshaxis_t)*_meshsize_pd,
-                                      _offset.data(),nullptr,evt.get());
+        OCLH::enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
+                                 sizeof(meshaxis_t)*_meshsize_pd,
+                                 _offset.data(),nullptr,nullptr,
+                                 syncSMEvents.get());
 
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::queue.enqueueReadBuffer(_offset_buf,CL_TRUE,0,
-                                      sizeof(meshaxis_t)*_meshsize_pd,
-                                      _offset.data(),nullptr,evt.get());
+        OCLH::enqueueReadBuffer(_offset_buf,CL_TRUE,0,
+                                sizeof(meshaxis_t)*_meshsize_pd,
+                                _offset.data(),nullptr,nullptr,
+                                syncSMEvents.get());
         break;
     }
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    syncSMEvents.push_back(*evt);
-    #endif
 }
 #endif // INOVESA_USE_CL
 

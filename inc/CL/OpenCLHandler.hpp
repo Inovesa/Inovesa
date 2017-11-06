@@ -92,10 +92,8 @@ public:
     static cl::CommandQueue queue;
 
     static bool ogl_sharing;
-
-
     #ifdef INOVESA_ENABLE_CLPROFILING
-    static std::list<vfps::CLTiming> timings;
+    static std::list<vfps::CLTiming> timingInfo;
 
     static cl::Event init;
     #endif // INOVESA_ENABLE_CLPROFILING
@@ -103,7 +101,6 @@ public:
 public:
     /**
      * This wrapper function allows to centrally controll queuing kernels.
-     * At the moment, it just forwards the arguments.
      */
     static inline void
     enqueueNDRangeKernel(const cl::Kernel& kernel,
@@ -111,9 +108,21 @@ public:
                          const cl::NDRange& global,
                          const cl::NDRange& local = cl::NullRange,
                          const cl::vector<cl::Event>* events = nullptr,
-                         cl::Event* event = nullptr)
+                         cl::Event* event = nullptr,
+                         cl::vector<cl::Event*>* timings = nullptr)
     {
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        timings->push_back(event);
+        #endif
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
+        #ifdef CL_VERSION_1_2
+        OCLH::queue.enqueueBarrierWithWaitList();
+        #else // CL_VERSION_1_2
+        OCLH::queue.enqueueBarrier();
+        #endif // CL_VERSION_1_2
     }
 
     /**
@@ -126,9 +135,62 @@ public:
                       cl::size_type dst_offset,
                       cl::size_type size,
                       const cl::vector<cl::Event>* events = nullptr,
-                      cl::Event* event = nullptr)
+                      cl::Event* event = nullptr,
+                      cl::vector<cl::Event*>* timings = nullptr)
     {
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        timings->push_back(event);
+        #endif
         queue.enqueueCopyBuffer(src, dst, src_offset,dst_offset,size,
+                                events, event);
+    }
+
+    /**
+     * This wrapper function allows to centrally controll queuing readBuffer
+     */
+    static inline void
+    enqueueReadBuffer(const cl::Buffer& buffer,
+                       cl_bool blocking,
+                       cl::size_type src_offset,
+                       cl::size_type size,
+                       void* ptr,
+                       const cl::vector<cl::Event>* events = nullptr,
+                       cl::Event* event = nullptr,
+                       cl::vector<cl::Event*>* timings = nullptr)
+    {
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        timings->push_back(event);
+        #endif
+        queue.enqueueReadBuffer(buffer, blocking, src_offset,size,ptr,
+                                events, event);
+    }
+
+    /**
+     * This wrapper function allows to centrally controll queuing writeBuffer
+     */
+    static inline void
+    enqueueWriteBuffer(const cl::Buffer& buffer,
+                       cl_bool blocking,
+                       cl::size_type src_offset,
+                       cl::size_type size,
+                       const void* ptr,
+                      const cl::vector<cl::Event>* events = nullptr,
+                      cl::Event* event = nullptr,
+                       cl::vector<cl::Event*>* timings = nullptr)
+    {
+        #ifdef INOVESA_ENABLE_CLPROFILING
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        timings->push_back(event);
+        #endif
+        queue.enqueueWriteBuffer(buffer, blocking, src_offset,size,ptr,
                                 events, event);
     }
 

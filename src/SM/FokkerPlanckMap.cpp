@@ -183,10 +183,8 @@ void vfps::FokkerPlanckMap::apply()
                     cl::NDRange(_meshxsize,_ysize),
                     cl::NullRange,
                     nullptr,
-                    evt.get());
-        #ifdef INOVESA_ENABLE_CLPROFILING
-        applySMEvents.push_back(*evt);
-        #endif // INOVESA_ENABLE_CLPROFILING
+                    nullptr,
+                    applySMEvents.get());
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2

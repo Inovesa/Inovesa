@@ -25,11 +25,11 @@ vfps::Identity::~Identity()
 {
     if (OCLH::active) {
         OCLH::queue.flush();
-        for (auto ev : applySMEvents) {
-            OCLH::timings.push_back(vfps::CLTiming(ev,"ApplyIDM"));
+        for (auto ev : *applySMEvents) {
+            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"ApplyIDM"));
         }
-        for (auto ev : syncSMEvents) {
-            OCLH::timings.push_back(vfps::CLTiming(ev,"SyncIDM"));
+        for (auto ev : *syncSMEvents) {
+            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"SyncIDM"));
         }
     }
 }

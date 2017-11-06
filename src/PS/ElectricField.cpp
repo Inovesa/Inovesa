@@ -400,9 +400,9 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         #ifdef INOVESA_USE_CL
         #ifndef INOVESA_USE_CLFFT
         if (OCLH::active) {
-            OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
-                                          sizeof(*_wakepotential)*_bpmeshcells,
-                                          _wakepotential);
+            OCLH::enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
+                                     sizeof(*_wakepotential)*_bpmeshcells,
+                                     _wakepotential);
         }
         #endif // INOVESA_USE_CLFFT
         #endif // INOVESA_USE_CL
