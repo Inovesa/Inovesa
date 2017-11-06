@@ -36,7 +36,7 @@
  * -3 RC1
  * -n RC(n-2)
  */
-#define INOVESA_VERSION_FIX     -4
+#define INOVESA_VERSION_FIX     -5
 
 //#define INOVESA_SYNC_CL
 

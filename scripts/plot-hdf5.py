@@ -19,6 +19,7 @@ grid_size = []
 time = np.array([])
 bunchlength = np.array([])
 energyspread = np.array([])
+avgphase = np.array([])
 csr_power = np.array([])
 csr_factor = 1e-6
 csr_label = r"CSR Intensity (arb. units)"
@@ -39,6 +40,7 @@ for fname in fnames:
         time = np.append(time,hdf_f['/Info/AxisValues_t'][...])
     bunchlength = np.append(bunchlength,hdf_f['/BunchLength/data'][...])
     energyspread = np.append(energyspread,hdf_f['/EnergySpread/data'][...])
+    avgphase = np.append(avgphase,hdf_f['/BunchPosition/data'][...])
     csr_power = np.append(csr_power,hdf_f['/CSR/Intensity/data'][...])
     if inovesa_version[1] >= 14:
         try:
@@ -50,11 +52,13 @@ for fname in fnames:
 plt.figure()
 ax1 = plt.subplot(111)
 ax1.set_xlabel(r"Time ($T_s$)")
-ax1.set_ylabel(r"$\sigma_{p,q}$")
+ax1.set_ylabel(r"Long. Quantity (q/p)")
 if ("sq" in quantities):
     ax1.plot(time,bunchlength,label=r"$\sigma_q$")
 if ("sp" in quantities):
     ax1.plot(time,energyspread,label=r"$\sigma_p$")
+if ("mq" in quantities):
+    ax1.plot(time,avgphase,label=r"$\mu_q$")
 
 h1, l1 = ax1.get_legend_handles_labels()
 

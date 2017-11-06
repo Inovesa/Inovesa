@@ -27,7 +27,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const std::shared_ptr<Impedance> imp,
                          const WakeFunctionMap* wfm,
                          const size_t nparticles,
-                         const double t_sync) :
+                         const double t_sync,
+                         const double f_rev) :
     _file( nullptr ),
     fname( filename ),
     ta_dims( 0 ),
@@ -172,6 +173,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
     const double axtimescale = t_sync;
     ta_dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
+
+    const double axturnscale = axtimescale*f_rev;
+    ta_dataset.createAttribute("Turn",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axturnscale);
 
     // get ready to save BunchCharge
     _file->createGroup("BunchPopulation");
