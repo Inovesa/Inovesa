@@ -107,17 +107,12 @@ vfps::HDF5File::HDF5File(const std::string filename,
     // frequency information axis, will be taken from ef or imp
     const Ruler<frequency_t>* axfreq{nullptr};
 
-    double factor4Ohms{0.0};
-
-    if (imp != nullptr) {
-        if (ef == nullptr) {
-            axfreq = imp->getRuler();
-        }
-        factor4Ohms = imp->factor4Ohms;
-    }
     if (ef != nullptr) {
         axfreq = ef->getFreqRuler();
+    } else if (imp != nullptr) {
+        axfreq = imp->getRuler();
     }
+
     // save Values of Frequency Axis
     if (std::is_same<vfps::meshaxis_t,float>::value) {
             axfreq_datatype = H5::PredType::IEEE_F32LE;

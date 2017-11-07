@@ -120,10 +120,9 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     if (OCLH::active) {
         _wakepotential_buf = cl::Buffer(OCLH::context, CL_MEM_READ_WRITE,
                                         sizeof(*_wakepotential)*_bpmeshcells);
-        #endif // INOVESA_USE_CL
-        #ifndef INOVESA_USE_CLFFT
+    #ifndef INOVESA_USE_CLFFT
     }
-        #else
+    #else
         _wakelosses = new impedance_t[_nmax];
 
         // second half is initialized because it is not touched elsewhere
@@ -182,7 +181,8 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         _clKernScaleWP.setArg(3, _wakescaling);
         _clKernScaleWP.setArg(4, _wakepotential_padded_buf);
     } else
-    #endif // !INOVESA_USE_CLFFT
+    #endif // INOVESA_USE_CLFFT
+    #endif // INOVESA_USE_CL
     {
         _wakelosses_fft = fft_alloc_complex(_nmax);
         _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
@@ -403,6 +403,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     return _wakepotential;
 }
 
+#ifdef INOVESA_USE_CL
 void vfps::ElectricField::syncCLMem(clCopyDirection dir)
 {
     if (OCLH::active) {
@@ -441,6 +442,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
     }
     }
 }
+#endif // INOVESA_USE_CL
 
 vfps::fft_complex* vfps::ElectricField::fft_alloc_complex(size_t n)
 {
