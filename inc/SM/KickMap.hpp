@@ -92,7 +92,7 @@ protected:
     #ifdef INOVESA_USE_CL
     const cl_int _meshsize_pd;
     #else
-    const meshindex_t _meshsize_kd;
+    const meshindex_t _meshsize_pd;
     #endif
 
     /**

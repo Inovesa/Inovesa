@@ -38,7 +38,9 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
         auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax,
                                            bunch_charge,bunch_current,
                                            xscale,yscale,startdiststep);
+        #ifdef INOVESA_USE_CL
         ps->syncCLMem(clCopyDirection::cpu2dev);
+        #endif // INOVESA_USE_CL
         return ps;
     } catch (const std::exception& ex) {
         std::cerr << "Error loading initial distribution from \""
@@ -93,7 +95,9 @@ vfps::makePSFromPNG(std::string fname,
         ps->updateXProjection();
         ps->normalize();
 
+        #ifdef INOVESA_USE_CL
         ps->syncCLMem(clCopyDirection::cpu2dev);
+        #endif // INOVESA_USE_CL
         std::stringstream imgsize;
         imgsize << ps_size;
         Display::printText("Read phase space (a="+imgsize.str()+" px).");
@@ -153,6 +157,8 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size,
 
     // normalize integral to 1
     ps->normalize();
+    #ifdef INOVESA_USE_CL
     ps->syncCLMem(clCopyDirection::cpu2dev);
+    #endif // INOVESA_USE_CL
     return ps;
 }

@@ -1,5 +1,5 @@
 project(inovesa)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
@@ -90,7 +90,8 @@ execute_process(
 )
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 
-add_definitions(-std=c++14)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(DEFINED CMAKE_BUILD_TYPE)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 #        if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -104,6 +105,9 @@ if(DEFINED CMAKE_BUILD_TYPE)
         add_definitions(-Wall -O3 -w )
         MESSAGE ("Doing release compile, using optimization flags.")
     endif()
+else()
+    add_definitions(-Wall -O3 -w )
+    MESSAGE ("Doing release compile, using optimization flags.")
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -111,10 +115,12 @@ find_package(OpenCL QUIET)
 IF(OPENCL_FOUND)
     add_definitions( -DINOVESA_USE_CL)
     MESSAGE ("Found OpenCL. Will add support.")
+    SET(LIBS ${LIBS} ${OPENCL_LIBRARIES})
     find_package(clFFT QUIET)
     IF(clFFT_FOUND)
         add_definitions( -DINOVESA_USE_CLFFT)
         MESSAGE ("Found clFFT. Will add support.")
+        SET(LIBS ${LIBS} ${CLFFT_LIBRARIES})
     ENDIF()
 ELSE()
     MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
@@ -136,7 +142,7 @@ IF(HDF5_FOUND)
     add_definitions( -DINOVESA_USE_HDF5)
     MESSAGE ("Found HDF5. Will add support.")
     set (INOVESA_HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
-    set (INOVESA_HDF5_LIBRARIES ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
+    set (LIBS ${LIBS} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
 ELSE()
     MESSAGE ("Did not find HDF5. Will compile without HDF5 support.")
 ENDIF()
@@ -155,9 +161,7 @@ include_directories(./inc
 )
 SET(LIBS ${LIBS} ${Boost_LIBRARIES}
     ${GLFW_LIBRARIES} ${GLEW_LIBRARIES}
-    ${GL_LIBRARY} ${INOVESA_HDF5_LIBRARIES}
-    ${OPENGL_LIBRARIES} ${OPENCL_LIBRARIES}
+    ${GL_LIBRARY} ${OPENGL_LIBRARIES}
     ${PNG_LIBRARIES} ${FFTW_LIBRARIES}
-    ${CLFFT_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME} ${LIBS})

@@ -366,6 +366,7 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
     }
     }
 }
+#endif // INOVESA_USE_CL
 
 void vfps::PhaseSpace::createFromProjections()
 {
@@ -375,7 +376,6 @@ void vfps::PhaseSpace::createFromProjections()
         }
     }
 }
-#endif // INOVESA_USE_CL
 
 void vfps::PhaseSpace::gaus(const uint_fast8_t axis, const double zoom)
 {
@@ -396,6 +396,7 @@ void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
     std::swap(first._data1D,second._data1D);
 }
 
+#ifdef INOVESA_USE_CL
 std::string vfps::PhaseSpace::cl_code_integral = R"(
     __kernel void integral(const __global float* proj,
                            const __global float* ws,
@@ -425,4 +426,4 @@ std::string vfps::PhaseSpace::cl_code_projection_x = R"(
          proj[x] = value;
      }
      )";
-
+#endif // INOVESA_USE_CL
