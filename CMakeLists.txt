@@ -35,7 +35,6 @@ set(SRC_LIST
 )
 
 set(INC_LIST
-  ./inc/Array.h
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
   ./inc/SM/DriftMap.hpp
@@ -89,42 +88,41 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
+include_directories(./inc)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if(DEFINED CMAKE_BUILD_TYPE)
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#        if ( CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-#            add_definitions(-Weverything -Wno-padded -Wno-c++98-compat -Wno-c++98-compat-pedantic)
-#        else()
-            add_definitions(-Wall -Wextra)
-#        endif()
-        add_definitions(-g -DDEBUG)
-        MESSAGE ("Doing debug compile, including debug symbols.")
-    else()
-        add_definitions(-Wall -O3 -w )
-        MESSAGE ("Doing release compile, using optimization flags.")
-    endif()
+if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    add_definitions(-Wall -Wextra)
+    add_definitions(-g -DDEBUG)
+    MESSAGE ("Doing debug compile, including debug symbols.")
 else()
     add_definitions(-Wall -O3 -w )
     MESSAGE ("Doing release compile, using optimization flags.")
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+
+## OpenCL (optional)
 find_package(OpenCL QUIET)
 IF(OPENCL_FOUND)
     add_definitions( -DINOVESA_USE_CL)
     MESSAGE ("Found OpenCL. Will add support.")
     SET(LIBS ${LIBS} ${OPENCL_LIBRARIES})
+    include_directories(${OPENCL_INCLUDE_DIRS})
     find_package(clFFT QUIET)
     IF(clFFT_FOUND)
         add_definitions( -DINOVESA_USE_CLFFT)
         MESSAGE ("Found clFFT. Will add support.")
         SET(LIBS ${LIBS} ${CLFFT_LIBRARIES})
+        include_directories(${CLFFT_INCLUDE_DIRS})
     ENDIF()
 ELSE()
     MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
 ENDIF()
+
+## OpenGL (optional)
 find_package(OpenGL QUIET)
 IF(OPENGL_FOUND)
     add_definitions( -DINOVESA_USE_GUI)
@@ -132,36 +130,46 @@ IF(OPENGL_FOUND)
     find_package(GLEW REQUIRED QUIET)
     find_package(GLFW REQUIRED QUIET)
     add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
+    include_directories(${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+    set (LIBS ${LIBS} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES}
+              ${GL_LIBRARY} ${OPENGL_LIBRARIES}
+    )
 ELSE()
     MESSAGE ("Did not find OpenGL. Will compile without OpenGL support.")
 ENDIF()
+
+## Boost (needed)
 find_package(Boost COMPONENTS filesystem program_options system REQUIRED QUIET)
+SET(LIBS ${LIBS} ${Boost_LIBRARIES})
+
+## FFTW (needed)
 find_package(FFTW REQUIRED QUIET)
+include_directories(${FFTW_INCLUDE_DIRS})
+SET(LIBS ${LIBS} ${FFTW_LIBRARIES} )
+
+## HDF5 (optional)
 find_package(HDF5 COMPONENTS CXX QUIET)
 IF(HDF5_FOUND)
     add_definitions( -DINOVESA_USE_HDF5)
     MESSAGE ("Found HDF5. Will add support.")
-    set (INOVESA_HDF5_INCLUDE_DIRS ${HDF5_INCLUDE_DIRS})
+    include_directories(${HDF5_INCLUDE_DIRS})
     set (LIBS ${LIBS} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
 ELSE()
     MESSAGE ("Did not find HDF5. Will compile without HDF5 support.")
 ENDIF()
+
+## PNG (optional)
 find_package(PNG++ QUIET)
 IF(PNG++_FOUND)
     add_definitions( -DINOVESA_USE_PNG)
+    include_directories(${PNG_INCLUDE_DIRS})
+    SET(LIBS ${LIBS} ${PNG_LIBRARIES})
     MESSAGE ("Found PNG++. Will add PNG support.")
 ELSE()
     MESSAGE ("Did not find PNG++. Will compile without PNG support.")
 ENDIF()
 
-include_directories(./inc
-    ${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS}
-    ${INOVESA_HDF5_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS}
-    ${OPENCL_INCLUDE_DIRS} ${CLFFT_INCLUDE_DIRS}
-)
-SET(LIBS ${LIBS} ${Boost_LIBRARIES}
-    ${GLFW_LIBRARIES} ${GLEW_LIBRARIES}
-    ${GL_LIBRARY} ${OPENGL_LIBRARIES}
-    ${PNG_LIBRARIES} ${FFTW_LIBRARIES}
-)
+
 target_link_libraries(${PROJECT_NAME} ${LIBS})
+
+
