@@ -1,5 +1,6 @@
-project(inovesa)
 cmake_minimum_required(VERSION 3.1)
+
+project(inovesa)
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
@@ -92,6 +93,10 @@ include_directories(./inc)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(APPLE) # workaround bug in OSX
+  add_definitions(--std=c++14)
+endif()
+
 if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     add_definitions(-Wall -Wextra)
     add_definitions(-g -DDEBUG)
