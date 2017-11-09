@@ -267,7 +267,7 @@ private:
     static std::string cl_code_integral;
 
     static std::string cl_code_projection_x;
-#endif
+#endif // INOVESA_USE_CL
 
 public:
     void createFromProjections();

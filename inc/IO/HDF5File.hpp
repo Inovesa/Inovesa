@@ -54,7 +54,8 @@ public:
              const std::shared_ptr<Impedance> imp,
              const WakeFunctionMap *wfm,
              const size_t nparticles,
-             const double t_sync);
+             const double t_sync,
+             const double f_rev);
 
     ~HDF5File() noexcept;
 

@@ -20,5 +20,10 @@ In chronological order of first contribution:
 
 * Patrick Schreiber
   * Found various small problems, [fixed one](https://github.com/Inovesa/Inovesa/commit/ea803b78c45d0e0d7a408edce60f45992cfe1667)
+  
+* Matthias Blaicher
+  * [Improved cmake experience](https://github.com/Inovesa/Inovesa/commit/0d1a8414334a3935da7db56e648cf46c0fcc465c)
 
+* Julian Gethmann
+  * Found and partly fixed [issues when building w/o OpenCL](https://github.com/Inovesa/Inovesa/issues/16)
 

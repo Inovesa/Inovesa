@@ -31,7 +31,11 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
     _meshsize_kd(kd==Axis::x?xsize:ysize),
     _meshsize_pd(kd==Axis::x?ysize:xsize)
 {
-    if (interpol_clamp && !OCLH::active) {
+    if (interpol_clamp
+        #ifdef INOVESA_USE_CL
+            && !OCLH::active
+        #endif
+       ) {
         notClampedMessage();
     }
     _offset.resize(_meshsize_pd,meshaxis_t(0));
