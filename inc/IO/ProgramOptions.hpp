@@ -88,6 +88,9 @@ public:
     inline auto getVerbosity() const
         { return _verbose; }
 
+    inline auto getForceRun() const
+        { return _forcerun; }
+
     inline auto getWakeFile() const
         { return _wakefile; }
 
@@ -219,6 +222,8 @@ private: // program parameters
     int32_t _glversion;
 
     bool _verbose;
+
+    bool _forcerun;
 
     std::string _wakefile;
 

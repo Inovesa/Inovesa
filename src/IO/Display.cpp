@@ -41,7 +41,7 @@ std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
     if (cldev >= 0)
     #endif // INOVESA_USE_CL
     {
-        if (ofname != "/dev/null") {
+        if (ofname != "") {
             Display::logfile.open(ofname+".log");
         }
         Display::printText("Started Inovesa ("

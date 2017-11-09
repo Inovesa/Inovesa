@@ -146,8 +146,10 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+        ("verbose,v",
             "print information more detailed")
+        ("run_anyway",
+            "set to omit consistency check for parameters")
     ;
     _simulopts.add_options()
         ("steps,N", po::value<uint32_t>(&steps)->default_value(1000),
@@ -199,11 +201,6 @@ vfps::ProgramOptions::ProgramOptions() :
     _commandlineopts.add(_simulopts);
     _commandlineopts.add(_physopts);
     _visibleopts.add(_commandlineopts);
-
-
-    std::stringstream timestamp;
-    timestamp << time(nullptr);
-    _outfile = "inovesa-result_" + timestamp.str() + ".h5";
 }
 
 bool vfps::ProgramOptions::parse(int ac, char** av)
@@ -213,6 +210,9 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
 
     if (_vm.count("verbose")) {
         _verbose = true;
+    }
+    if (_vm.count("run_anyway")) {
+        _forcerun = true;
     }
     if (_vm.count("help")) {
         std::cout << _visibleopts << std::endl;
@@ -245,6 +245,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
                   << "\" does not exist."<< std::endl;
         return false;
     }
+    if (_outfile == "/dev/null") {
+        _outfile.clear();
+    }
+    if (_startdistfile == "/dev/null") {
+        _startdistfile.clear();
+    }
     #ifndef INOVESA_USE_CL
     if (_vm.count("cldev")) {
         std::cout    << "Warning: Defined device for OpenCL "
@@ -265,6 +271,12 @@ void vfps::ProgramOptions::save(std::string fname)
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         // currently, the _compatopts are ignored manually
         if (it->first == "HaissinskiIterations"){
+            continue;
+        }
+        if (it->first == "InitialDistParam"){
+            continue;
+        }
+        if (it->first == "run_anyway") {
             continue;
         }
         if (!it->second.value().empty()) {

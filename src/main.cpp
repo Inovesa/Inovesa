@@ -81,6 +81,15 @@ int main(int argc, char** argv)
     // see documentation of make_display(...)
     auto cldev = opts.getCLDevice();
     std::string ofname = opts.getOutFile();
+
+    if (!opts.showPhaseSpace() && ofname.empty() && !opts.getForceRun()) {
+        std::cout << "Nothing to do. Set at least one of "
+                     " 'gui',"
+                     " 'output', or"
+                     " 'run_anyway'." << std::endl;
+        return EXIT_SUCCESS;
+    }
+
     auto display = make_display(opts.showPhaseSpace(),
                                 ofname,
                                 cldev,
@@ -332,7 +341,7 @@ int main(int argc, char** argv)
      * so initialization might be moved to a factory function
      * at some point.
      */
-    if (startdistfile.length() <= 4 || startdistfile == "/dev/null") {
+    if (startdistfile.empty()) {
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
@@ -622,7 +631,7 @@ int main(int argc, char** argv)
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_PNG
-    if ( ofname == "/dev/null") {
+    if ( ofname.empty() ) {
         Display::printText("Will not save results.");
     } else {
         Display::printText("Unkown filetype for output.");
