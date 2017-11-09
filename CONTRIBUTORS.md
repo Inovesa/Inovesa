@@ -24,4 +24,6 @@ In chronological order of first contribution:
 * Matthias Blaicher
   * [Improved cmake experience](https://github.com/Inovesa/Inovesa/commit/0d1a8414334a3935da7db56e648cf46c0fcc465c)
 
+* Julian Gethmann
+  * Found and partly fixed [issues when building w/o OpenCL](https://github.com/Inovesa/Inovesa/issues/16)
 

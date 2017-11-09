@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2017: Patrik Schönfeldt                                      *
+ * Copyright (c) 2017: Julian Gethmann                                        *
  * Copyright (c) 2017: Karlsruhe Institute of Technology                      *
  *                                                                            *
  * This file is part of Inovesa.                                              *
@@ -107,8 +108,8 @@ vfps::makePSFromPNG(std::string fname,
                   << fname << std::endl;
     }
     return nullptr;
-}
 #endif // INOVESA_USE_PNG
+}
 
 std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromTXT(std::string fname, int64_t ps_size,
