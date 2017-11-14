@@ -95,7 +95,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # workaround CMake bug (e.g. in MacOS)
-add_definitions(--std=c++14)
+set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
 if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     add_definitions(-Wall -Wextra)
@@ -177,4 +177,6 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
+
+INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 
