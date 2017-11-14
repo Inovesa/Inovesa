@@ -36,13 +36,13 @@ Build Requirenments
 CMake will check whether build requirenmens are met.
 The following is needed:
 
-### Mandatory Build Requirenments
+### Mandatory Dependencies
 * [cmake](https://cmake.org/) (Version 3.1 or later)
 * C++ 14 compatible compiler (e.g. [g++](https://gcc.gnu.org/) 5.0 or later, [clang](http://clang.llvm.org/) 3.5 or later)
 * [boost](http://www.boost.org/) (boost-system, boost-filesystem, boost-program-options)
 * [FFTW](http://fftw.org/) (Version 3)
 
-### Optional Build Requirenments
+### Optional Dependencies
 * [GLEW](https://www.opengl.org/sdk/libs/GLEW/) (for GUI support)
 * [GLFW](http://www.glfw.org/) (for GUI support)
 * [HDF5](https://www.hdfgroup.org/downloads/hdf5/) (to write out data)
