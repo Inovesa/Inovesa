@@ -226,24 +226,28 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << vfps::inovesa_version() << std::endl;
         return false;
     }
-    if (boost::filesystem::exists(_configfile) &&
-        boost::filesystem::is_regular_file(_configfile) ) {
-        std::ifstream ifs(_configfile.c_str());
-        if (!ifs) {
-            std::cout << "Cannot open config file: " << _configfile
-                      << std::endl;
+    if (_configfile == "/dev/null") {
+        _configfile.clear();
+    } else if (!_configfile.empty()) {
+        if (boost::filesystem::exists(_configfile) &&
+            boost::filesystem::is_regular_file(_configfile) ) {
+            std::ifstream ifs(_configfile.c_str());
+            if (!ifs) {
+                std::cout << "Cannot open config file: " << _configfile
+                          << std::endl;
+                return false;
+            } else {
+                std::string message = "Loading configuration from \""
+                                     + _configfile + "\".";
+                Display::printText(message);
+                store(parse_config_file(ifs, _cfgfileopts), _vm);
+                notify(_vm);
+            }
+        } else if (_configfile != "default.cfg") {
+            std::cout << "Config file \"" << _configfile
+                      << "\" does not exist."<< std::endl;
             return false;
-        } else {
-            std::string message = "Loading configuration from \""
-                                 + _configfile + "\".";
-            Display::printText(message);
-            store(parse_config_file(ifs, _cfgfileopts), _vm);
-            notify(_vm);
         }
-    } else if (_configfile != "default.cfg") {
-        std::cout << "Config file \"" << _configfile
-                  << "\" does not exist."<< std::endl;
-        return false;
     }
     #ifndef INOVESA_USE_CL
     if (_vm.count("cldev")) {
