@@ -54,7 +54,7 @@ const std::string vfps::copyright_notice() noexcept {
 
 const std::string vfps::inovesa_version() {
     std::stringstream sstream;
-    sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
+    sstream << 'v' << INOVESA_VERSION_MAJOR << '.'
             << INOVESA_VERSION_MINOR;
     std::string version(sstream.str());
     if ( INOVESA_VERSION_FIX >= 0 ) {

@@ -26,17 +26,7 @@
 #include <fftw3.h>
 
 #include "fixed_point.h"
-
-#define INOVESA_VERSION_RELEASE 0
-#define INOVESA_VERSION_MINOR   15
-
-/* pre release:
- * -1: alpha
- * -2: beta
- * -3 RC1
- * -n RC(n-2)
- */
-#define INOVESA_VERSION_FIX     -1
+#include "InovesaConfig.hpp"
 
 //#define INOVESA_SYNC_CL
 

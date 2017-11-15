@@ -1,6 +1,22 @@
 cmake_minimum_required(VERSION 3.1)
 
 project(inovesa)
+
+set (INOVESA_VERSION_MAJOR 0)
+set (INOVESA_VERSION_MINOR 15)
+set (INOVESA_VERSION_FIX -1)
+# pre release numbers:
+# -1: alpha
+# -2: beta
+# -3 RC1
+# -n RC(n-2)
+
+configure_file (
+  "${PROJECT_SOURCE_DIR}/InovesaConfig.hpp.in"
+  "${PROJECT_BINARY_DIR}/InovesaConfig.hpp"
+)
+include_directories("${PROJECT_BINARY_DIR}")
+
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
