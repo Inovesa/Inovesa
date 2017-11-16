@@ -189,8 +189,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "(currently ignored)")
         ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
-	("SyncFreq,f", po::value<double>(&f_s),
-            "Synchrotron frequency (Hz), will overwrite alpha0")
+        ("SyncFreq", po::value<double>(&f_s),
+            "(compatibility naming for SynchrotronFrequency)")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
@@ -270,9 +270,15 @@ void vfps::ProgramOptions::save(std::string fname)
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         // currently, the _compatopts are ignored manually
-        if (it->first == "HaissinskiIterations"){
+        if (it->first == "HaissinskiIterations" ||
+            it->first == "InitialDistParam"){
             continue;
-        }
+        } else
+        if (it->first == "SyncFreq"){
+            ofs << "SynchrotronFrequency" << '='
+                << _vm["SyncFreq"].as<double>()
+                << std::endl;
+        } else
         if (!it->second.value().empty()) {
             if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
