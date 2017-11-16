@@ -3,6 +3,7 @@
  * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
  * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  * Copyright (c) 2017: Patrick Schreiber                                      *
+ * Copyright (c) 2017: Tobias Boltz                                           *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
