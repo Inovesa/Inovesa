@@ -36,6 +36,10 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
     _cos_dt(cos(-angle)),
     _sin_dt(sin(-angle))
 {
+    if (-in->getMin(0) != in->getMin(0) || -in->getMin(0) != in->getMin(1)) {
+        Display::printText("Warning: Off-center roatation"
+                           "not implemented for this rotation method.");
+    }
     if (_rotmapsize == 0) {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {

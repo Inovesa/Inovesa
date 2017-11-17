@@ -467,6 +467,10 @@ int main(int argc, char** argv)
                            E0,interpolationtype,interpol_clamp));
         break;
     }
+    if (rotationtype != 2 && (alpha1 != 0.0 || alpha2 != 0.0)) {
+        Display::printText("Warning: Nonlinear momentum compaction"
+                           "incompatible with classical rotation.");
+    }
 
     // time constant for damping and diffusion
     const timeaxis_t  e1 = (t_d > 0) ? 2.0/(fs*t_d*steps) : 0;
