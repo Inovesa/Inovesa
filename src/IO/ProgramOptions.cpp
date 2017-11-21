@@ -270,7 +270,10 @@ void vfps::ProgramOptions::save(std::string fname)
         // currently, the _compatopts are ignored manually
         if (it->first == "HaissinskiIterations"){
             continue;
-        }
+        } else if (it->first == "alpha0" and f_s != 0.0) {
+            ofs << "alpha0=0" << std::endl;
+            continue;
+        } else
         if (!it->second.value().empty()) {
             if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
