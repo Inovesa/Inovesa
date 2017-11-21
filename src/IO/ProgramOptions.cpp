@@ -105,7 +105,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+        ("gui,g", po::value<bool>(&_showphasespace)->default_value(false),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
@@ -120,7 +120,7 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->implicit_value(false),
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(true),
             "print information more detailed")
     ;
     _programopts_cli.add_options()
@@ -132,22 +132,22 @@ vfps::ProgramOptions::ProgramOptions() :
             "name of a file containing a configuration.")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+        ("gui,g", po::value<bool>(&_showphasespace)->implicit_value(true),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
         ("SavePhaseSpace",
-            po::value<bool>(&_savephasespace)->default_value(false),
+            po::value<bool>(&_savephasespace)->implicit_value(true),
             "save every outstep's phase space to HDF5 file")
         ("SaveSourceMap",
-            po::value<bool>(&_savesourcemap)->default_value(false),
+            po::value<bool>(&_savesourcemap)->implicit_value(true),
             "save every outstep's source map to HDF5 file")
         ("tracking",
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->implicit_value(false),
+        ("verbose,v", po::value<bool>(&_verbose)->implicit_value(true),
             "print information more detailed")
     ;
     _simulopts.add_options()
