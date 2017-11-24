@@ -3,6 +3,7 @@
  * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
  * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
  * Copyright (c) 2017: Patrick Schreiber                                      *
+ * Copyright (c) 2017: Tobias Boltz                                           *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -41,7 +42,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Quadratic Momentum compaction factor (1)")
         ("alpha2", po::value<double>(&alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
-        ("SyncFreq,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
+        ("SynchrotronFrequency,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
             "Synchrotron frequency (Hz), will overwrite alpha0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")
@@ -104,7 +105,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+        ("gui,g", po::value<bool>(&_showphasespace)->default_value(false),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
@@ -119,7 +120,7 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(true),
             "print information more detailed")
     ;
     _programopts_cli.add_options()
@@ -131,22 +132,22 @@ vfps::ProgramOptions::ProgramOptions() :
             "name of a file containing a configuration.")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true),
+        ("gui,g", po::value<bool>(&_showphasespace)->implicit_value(true),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
         ("SavePhaseSpace",
-            po::value<bool>(&_savephasespace)->default_value(false),
+            po::value<bool>(&_savephasespace)->implicit_value(true),
             "save every outstep's phase space to HDF5 file")
         ("SaveSourceMap",
-            po::value<bool>(&_savesourcemap)->default_value(false),
+            po::value<bool>(&_savesourcemap)->implicit_value(true),
             "save every outstep's source map to HDF5 file")
         ("tracking",
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+        ("verbose,v", po::value<bool>(&_verbose)->implicit_value(true),
             "print information more detailed")
     ;
     _simulopts.add_options()
@@ -189,6 +190,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "(currently ignored)")
         ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
+        ("SyncFreq", po::value<double>(&f_s),
+            "(compatibility naming for SynchrotronFrequency)")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
@@ -242,6 +245,10 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
                 Display::printText(message);
                 store(parse_config_file(ifs, _cfgfileopts), _vm);
                 notify(_vm);
+                if(_vm.count("SyncFreq")) {
+                    _vm.at("SynchrotronFrequency").value() = _vm["SyncFreq"].value();
+                }
+                notify(_vm);
             }
         } else if (_configfile != "default.cfg") {
             std::cout << "Config file \"" << _configfile
@@ -268,9 +275,16 @@ void vfps::ProgramOptions::save(std::string fname)
 
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
         // currently, the _compatopts are ignored manually
-        if (it->first == "HaissinskiIterations"){
+        if(it->first == "HaissinskiIterations"
+        || it->first == "InitialDistParam"
+        || it->first == "SyncFreq"
+        ){
             continue;
-        }
+        } else
+        if (it->first == "alpha0" and f_s != 0.0) {
+            ofs << "alpha0=0" << std::endl;
+            continue;
+        } else
         if (!it->second.value().empty()) {
             if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
