@@ -149,6 +149,14 @@ public:
     inline auto getAlpha2() const
         { return alpha2; }
 
+    inline auto getPhaseSpread() const {
+        return s_phase;
+    }
+
+    inline auto getPeakSpread() const {
+        return s_peak;
+    }
+
     inline auto getBeamEnergy() const
         { return E_0; }
 
@@ -249,6 +257,9 @@ private: // phsical parameters
     double alpha0;
     double alpha1;
     double alpha2;
+
+    double s_phase;
+    double s_peak;
 
     double E_0;
 

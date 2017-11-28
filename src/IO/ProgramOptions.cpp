@@ -42,6 +42,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Quadratic Momentum compaction factor (1)")
         ("alpha2", po::value<double>(&alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
+        ("Phase+-", po::value<double>(&s_phase)->default_value(0),
+            "Absolute RF phase spread per turn (mrad)")
+        ("Amplitude+-", po::value<double>(&s_peak)->default_value(0),
+            "Relative RF amplitude spread per turn (%)")
         ("SynchrotronFrequency,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
             "Synchrotron frequency (Hz), will overwrite alpha0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),

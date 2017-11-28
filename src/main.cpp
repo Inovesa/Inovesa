@@ -35,6 +35,7 @@
 #include "SM/DriftMap.hpp"
 #include "SM/RotationMap.hpp"
 #include "SM/RFKickMap.hpp"
+#include "SM/DynamicRFKickMap.hpp"
 #include "SM/WakeFunctionMap.hpp"
 #include "SM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
@@ -255,6 +256,26 @@ int main(int argc, char** argv)
     const auto collimator_radius = opts.getCollimatorRadius();
     const auto impedance_file = opts.getImpedanceFile();
     const auto use_csr = opts.getUseCSR();
+
+    /// RF Phase Noise Amplitude (Rad)
+    const auto s_phase = opts.getPhaseSpread()/1000.0;
+
+    /// RF Amplitude Noise, relative value
+    const auto s_peak = opts.getPeakSpread()/100.0;
+
+    auto RFadd = 0.0;
+    auto RFmultiply = 0.0;
+
+    if (s_phase != 0 || s_peak != 0) {
+        if (s_phase > 0) {
+            const auto a0 = std::sqrt(revolutionpart)*V/dE*ps_size/pqsize;
+            RFadd = s_phase * a0;
+        }
+        if (s_peak > 0) {
+            const auto a1 = std::sqrt(revolutionpart)/2.0;
+            RFmultiply = s_peak * a1;
+        }
+    }
 
     /*
      * angle of one rotation step (in rad)
@@ -494,18 +515,34 @@ int main(int argc, char** argv)
         break;
     case 2:
     default:
-        Display::printText("Building RFKickMap.");
-        rm1.reset(new RFKickMap(grid_t2,grid_t1,ps_size,ps_size,angle,
+        if (s_phase != 0 || s_peak != 0) {
+            Display::printText("Building RFKickMap with Noise.");
+            rm1.reset(new DynamicRFKickMap(grid_t2, grid_t1, ps_size, ps_size,
+                            angle, RFadd, RFmultiply,
                             interpolationtype,interpol_clamp));
+        } else {
+            Display::printText("Building RFKickMap.");
+            rm1.reset(new RFKickMap(grid_t2,grid_t1,ps_size,ps_size,angle,
+                            interpolationtype,interpol_clamp));
+        }
+
+
 
         Display::printText("Building DriftMap.");
         rm2.reset(new DriftMap(grid_t1,grid_t3,ps_size,ps_size,
                            {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}},
                            E0,interpolationtype,interpol_clamp));
+
+
         break;
     }
     if (rotationtype != 2 && (alpha1 != 0.0 || alpha2 != 0.0)) {
         Display::printText("Warning: Nonlinear momentum compaction"
+                           "incompatible with classical rotation.");
+    }
+
+    if (rotationtype != 2 && (s_phase != 0.0 || s_peak != 0.0)) {
+        Display::printText("Warning: Nonuniform rotation step"
                            "incompatible with classical rotation.");
     }
 
