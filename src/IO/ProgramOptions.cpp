@@ -120,7 +120,7 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(true),
+        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
             "print information more detailed")
     ;
     _programopts_cli.add_options()
@@ -132,7 +132,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "name of a file containing a configuration.")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(false)->implicit_value(true),
+        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true)->implicit_value(true),
             "Show phase space view")
         ("output,o",
             po::value<std::string>(&_outfile),
