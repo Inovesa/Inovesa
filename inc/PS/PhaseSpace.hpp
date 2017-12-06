@@ -141,10 +141,10 @@ public:
     meshdata_t variance(const uint_fast8_t axis);
 
     inline meshdata_t getBunchLength() const
-        { return getMoment(0,1); }
+        { return std::sqrt(getMoment(0,1)); }
 
     inline meshdata_t getEnergySpread() const
-        { return getMoment(1,1); }
+        { return std::sqrt(getMoment(1,1)); }
 
     inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
