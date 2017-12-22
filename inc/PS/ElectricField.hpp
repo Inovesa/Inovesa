@@ -293,9 +293,6 @@ private:
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _bp_padded_buf;
-
-    cl::Program _clProgPadBP;
-    cl::Kernel _clKernPadBP;
     #endif // INOVESA_USE_CL
 
     impedance_t* _formfactor;

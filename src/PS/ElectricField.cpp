@@ -74,26 +74,6 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
         clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
         clfftBakePlan(_clfft_bunchprofile,1,&OCLH::queue(), nullptr, nullptr);
-
-        std::string cl_code_padbp = R"(
-            __kernel void pad_bp(__global data_t* bp_padded,
-                                 const ulong paddedsize,
-                                 const uint bpmeshcells,
-                                 const __global data_t* bp)
-            {
-                const uint g = get_global_id(0);
-                const uint b = (g+bpmeshcells/2)%bpmeshcells;
-                const uint p = (b+paddedsize-bpmeshcells/2)%paddedsize;
-                bp_padded[p] = bp[b];
-            }
-            )";
-
-        _clProgPadBP = OCLH::prepareCLProg(cl_code_padbp);
-        _clKernPadBP = cl::Kernel(_clProgPadBP, "pad_bp");
-        _clKernPadBP.setArg(0, _bp_padded_buf);
-        _clKernPadBP.setArg(1, _nmax);
-        _clKernPadBP.setArg(2, _bpmeshcells);
-        _clKernPadBP.setArg(3, _phasespace->projectionX_buf);
     } else
     #endif // INOVESA_USE_CLFFT
     {
@@ -162,25 +142,19 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 
         std::string cl_code_wakepotential = R"(
             __kernel void scalewp(__global data_t* wakepot,
-                                  const ulong paddedsize,
-                                  const uint bpmeshcells,
                                   const data_t scaling,
                                   const __global data_t* wakepot_padded)
             {
                 const uint g = get_global_id(0);
-                const uint n = (g+bpmeshcells/2)%bpmeshcells;
-                const uint p = (n+paddedsize-bpmeshcells/2)%paddedsize;
-                wakepot[n] = scaling*wakepot_padded[p];
+                wakepot[g] = scaling*wakepot_padded[g];
             }
             )";
 
         _clProgScaleWP = OCLH::prepareCLProg(cl_code_wakepotential);
         _clKernScaleWP = cl::Kernel(_clProgScaleWP, "scalewp");
         _clKernScaleWP.setArg(0, _wakepotential_buf);
-        _clKernScaleWP.setArg(1, _nmax);
-        _clKernScaleWP.setArg(2, _bpmeshcells);
-        _clKernScaleWP.setArg(3, _wakescaling);
-        _clKernScaleWP.setArg(4, _wakepotential_padded_buf);
+        _clKernScaleWP.setArg(1, _wakescaling);
+        _clKernScaleWP.setArg(2, _wakepotential_padded_buf);
     } else
     #endif // INOVESA_USE_CLFFT
     #endif // INOVESA_USE_CL
@@ -289,8 +263,8 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
-        OCLH::enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
-                                    cl::NDRange(_bpmeshcells));
+        OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
+                                0,0,sizeof(_bp_padded[0])*_bpmeshcells);
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
@@ -335,8 +309,8 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active){
-        OCLH::enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
-                                          cl::NDRange(_bpmeshcells));
+        OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
+                                0,0,sizeof(_bp_padded[0])*_bpmeshcells);
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
@@ -365,8 +339,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     {
         // copy bunch profile so that negative times are at maximum bins
         const vfps::projection_t* bp= _phasespace->getProjection(0);
-        std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
-        std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
+        std::copy_n(bp,_bpmeshcells,_bp_padded);
 
         /* Fourier transorm bunch profile (_bp_padded),
          * result will be saved to _formfactor.
@@ -386,11 +359,8 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         //Fourier transorm wakelosses
         fft_execute(_fft_wakelosses);
 
-        for (size_t i=0; i<_bpmeshcells/2; i++) {
-            _wakepotential[_bpmeshcells/2+i]
-                = _wakepotential_padded[        i]*_wakescaling;
-            _wakepotential[_bpmeshcells/2-1-i]
-                = _wakepotential_padded[_nmax-1-i]*_wakescaling;
+        for (size_t i=0; i<_bpmeshcells; i++) {
+            _wakepotential[i] = _wakepotential_padded[i]*_wakescaling;
         }
         #ifdef INOVESA_USE_CL
         #ifndef INOVESA_USE_CLFFT
