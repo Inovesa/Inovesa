@@ -86,6 +86,12 @@ public:
     static bool ogl_sharing;
 
 public:
+    static inline void
+    enqueueBarrierWithWaitList()
+    {
+        queue.enqueueBarrierWithWaitList();
+    }
+
     /**
      * This wrapper function allows to centrally controll queuing kernels.
      * At the moment, it just forwards the arguments.
