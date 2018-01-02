@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -149,8 +149,8 @@ public:
     inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
 
-    inline projection_t* getProjection(const uint_fast8_t x) const
-        { return _projection[x]; }
+    inline const projection_t* getProjection(const uint_fast8_t x) const
+        { return _projection[x].data(); }
 
     /**
      * @brief updateXProjection
@@ -218,7 +218,7 @@ protected:
      */
     integral_t _integral;
 
-    const std::array<projection_t*,2> _projection;
+    std::array<std::vector<projection_t>,2> _projection;
 
     const uint32_t _nmeshcellsX;
 
@@ -243,7 +243,7 @@ protected:
      */
     std::array<std::array<meshdata_t,4>,2> _moment;
 
-    meshdata_t* _ws;
+    std::vector<meshdata_t> _ws;
 
 #ifdef INOVESA_USE_CL
 public:

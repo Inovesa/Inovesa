@@ -20,6 +20,8 @@
 
 #include "PS/PhaseSpace.hpp"
 
+#include <numeric>
+
 vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
                              const double bunch_charge,
                              const double bunch_current,
@@ -28,9 +30,6 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
     charge(bunch_charge),
     current(bunch_current),
     _integral(0),
-    _projection(std::array<integral_t*,2> {{ new integral_t[nMeshCells(0)],
-                                             new integral_t[nMeshCells(1)]
-                                          }}),
     _nmeshcellsX(nMeshCells(0)),
     _nmeshcellsY(nMeshCells(1)),
     _nmeshcells(_nmeshcellsX*_nmeshcellsY),
@@ -41,7 +40,9 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
     for (size_t i=0; i<nMeshCells(0); i++) {
         _data[i] = &(_data1D[i*nMeshCells(1)]);
     }
-    _ws = new meshdata_t[nMeshCells(0)];
+    _projection[0].resize(nMeshCells(0));
+    _projection[1].resize(nMeshCells(1));
+    _ws.resize(nMeshCells(0));
 
     if (data == nullptr) {
         gaus(0,zoom); // creates gaussian for x axis
@@ -119,14 +120,14 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
         projectionX_buf = cl::Buffer(OCLH::context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(projection_t)*_nmeshcellsX,
-                                     _projection[0]);
+                                     _projection[0].data());
         integral_buf = cl::Buffer(OCLH::context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(integral_t),&_integral);
         ws_buf = cl::Buffer(OCLH::context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*_nmeshcellsX,
-                            _ws);
+                            _ws.data());
 
         _clProgProjX  = OCLH::prepareCLProg(cl_code_projection_x);
         _clKernProjX = cl::Kernel(_clProgProjX, "projectionX");
@@ -176,9 +177,6 @@ vfps::PhaseSpace::~PhaseSpace()
 {
     delete [] _data;
     delete [] _data1D;
-    delete [] _projection[0];
-    delete [] _projection[1];
-    delete [] _ws;
 }
 
 vfps::integral_t vfps::PhaseSpace::integral()
@@ -194,17 +192,18 @@ vfps::integral_t vfps::PhaseSpace::integral()
     } else
     #endif
     {
-    _integral = 0;
+
     switch (_integraltype) {
     case IntegralType::sum:
-        for (size_t x=0; x< nMeshCells(0); x++) {
-            _integral += _projection[0][x];
-        }
+        _integral = std::accumulate(std::begin(_projection[0]),
+                                    std::end(_projection[0]),
+                                    static_cast<integral_t>(0));
         break;
     case IntegralType::simpson:
-        for (size_t x=0; x< nMeshCells(0); x++) {
-            _integral += _projection[0][x]*static_cast<integral_t>(_ws[x]);
-        }
+        _integral = std::inner_product(_projection[0].begin(),
+                                       _projection[0].end(),
+                                       _ws.begin(),
+                                       static_cast<integral_t>(0));
         break;
     }
     }
@@ -218,7 +217,7 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
         if (OCLH::active) {
         OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
-                                      _projection[0]);
+                                      _projection[0].data());
         }
         #endif
     }
@@ -262,7 +261,7 @@ void vfps::PhaseSpace::updateXProjection() {
         #ifdef INOVESA_SYNC_CL
         OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
-                                      _projection[0]);
+                                      _projection[0].data());
         #endif
     } else
     #endif
@@ -361,7 +360,7 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir)
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
         OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
-                                      _projection[0]);
+                                      _projection[0].data());
         break;
     }
     }
