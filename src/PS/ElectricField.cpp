@@ -423,6 +423,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
+        break;
     case clCopyDirection::dev2cpu:
         OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
