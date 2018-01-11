@@ -112,6 +112,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
+    try {
         data_buf = cl::Buffer(OCLH::context,
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*nMeshCells(0)*nMeshCells(1),
@@ -141,6 +142,9 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
         _clKernIntegral.setArg(1, ws_buf);
         _clKernIntegral.setArg(2, _nmeshcellsX);
         _clKernIntegral.setArg(3, integral_buf);
+    } catch (cl::Error &e) {
+        OCLH::teardownCLEnvironment(e);
+    }
     }
     #endif
 }

@@ -66,6 +66,8 @@ public:
 
     static void teardownCLEnvironment();
 
+    static void teardownCLEnvironment(cl::Error& e);
+
     static void listCLDevices();
 
     static bool active;

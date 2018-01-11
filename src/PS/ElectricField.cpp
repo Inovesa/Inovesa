@@ -58,6 +58,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
+    try {
         _bp_padded = new integral_t[_nmax];
         std::fill_n(_bp_padded,_nmax,0);
         _bp_padded_buf = cl::Buffer(OCLH::context,
@@ -93,8 +94,18 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         _clKernPadBP.setArg(1, _nmax);
         _clKernPadBP.setArg(2, _bpmeshcells);
         _clKernPadBP.setArg(3, _phasespace->projectionX_buf);
-    } else
+
+    } catch (cl::Error &e) {
+        OCLH::teardownCLEnvironment(e);
+    }
+        /* If setup using OpenCL was succesfull,
+         * the code below is not needed.
+         */
+        return;
+    }
     #endif // INOVESA_USE_CLFFT
+    /* You might want to see this is an else block that also
+     * is used if an error is thrown in the if statement. */
     {
         _bp_padded_fft = fft_alloc_real(_nmax);
         _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fft);
