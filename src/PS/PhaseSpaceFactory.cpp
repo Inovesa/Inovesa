@@ -28,6 +28,7 @@
 #include "IO/HDF5File.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
 
+#ifdef INOVESA_USE_HDF5
 std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
                      vfps::meshaxis_t qmin, vfps::meshaxis_t qmax,
@@ -55,6 +56,7 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
     }
     return nullptr;
 }
+#endif // INOVESA_USE_HDF5
 
 std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromPNG(std::string fname,

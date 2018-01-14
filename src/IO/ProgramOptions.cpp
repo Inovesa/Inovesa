@@ -190,6 +190,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "(currently ignored)")
         ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
+        ("RFVoltage",
+            po::value<double>(&V_RF),
+            "compatibility naming for AcceleratingVoltage")
         ("SyncFreq", po::value<double>(&f_s),
             "(compatibility naming for SynchrotronFrequency)")
     ;
@@ -278,6 +281,7 @@ void vfps::ProgramOptions::save(std::string fname)
         if(it->first == "HaissinskiIterations"
         || it->first == "InitialDistParam"
         || it->first == "SyncFreq"
+        || it->first == "RFVoltage"
         ){
             continue;
         } else

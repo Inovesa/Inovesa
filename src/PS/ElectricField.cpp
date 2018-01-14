@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -59,6 +59,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
+        try {
         _bp_padded = new integral_t[_nmax];
         std::fill_n(_bp_padded,_nmax,0);
         _bp_padded_buf = cl::Buffer(OCLH::context,
@@ -74,8 +75,17 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
         clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
         clfftBakePlan(_clfft_bunchprofile,1,&OCLH::queue(), nullptr, nullptr);
-    } else
+        } catch (cl::Error &e) {
+            OCLH::teardownCLEnvironment(e);
+        }
+        /* If setup using OpenCL was succesfull,
+         * the code below is not needed.
+         */
+        return;
+    }
     #endif // INOVESA_USE_CLFFT
+    /* You might want to see this is an else block that also
+     * is used if an error is thrown in the if statement. */
     {
         _bp_padded_fft = fft_alloc_real(_nmax);
         _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fft);
@@ -395,6 +405,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
+        break;
     case clCopyDirection::dev2cpu:
         OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
