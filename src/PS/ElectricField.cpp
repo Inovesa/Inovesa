@@ -20,6 +20,8 @@
 
 #include "PS/ElectricField.hpp"
 
+#include "IO/FSPath.hpp"
+
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const std::shared_ptr<Impedance> impedance,
                                    const double f_rev,
@@ -457,17 +459,21 @@ fftw_plan vfps::ElectricField::prepareFFT(size_t n, double* in,
 {
     fftw_plan plan = nullptr;
 
-    std::stringstream wisdomfile;
-    wisdomfile << "wisdom_r2c64_" << n << ".fftw";
+    std::stringstream wisdomfname;
+    wisdomfname << "wisdom_r2c64_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftw_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftw_plan_dft_r2c_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftw_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT);
-        fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftw_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -478,17 +484,21 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n, float *in,
 {
     fftwf_plan plan = nullptr;
 
-    std::stringstream wisdomfile;
-    wisdomfile << "wisdom_r2c32_" << n << ".fftw";
+    std::stringstream wisdomfname;
+    wisdomfname << "wisdom_r2c32_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftwf_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftwf_plan_dft_r2c_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT);
-        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftwf_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -498,17 +508,21 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n, fftwf_complex *in,
 {
     fftwf_plan plan = nullptr;
 
-    std::stringstream wisdomfile;
-    wisdomfile << "wisdom_c2r32_" << n << ".fftw";
+    std::stringstream wisdomfname;
+    wisdomfname << "wisdom_c2r32_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftwf_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftwf_plan_dft_c2r_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_c2r_1d(n,in,out,FFTW_PATIENT);
-        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftwf_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -530,18 +544,22 @@ fftw_plan vfps::ElectricField::prepareFFT(size_t n,
         sign = -1;
     }
 
-    std::stringstream wisdomfile;
+    std::stringstream wisdomfname;
     // find filename for wisdom
-    wisdomfile << "wisdom_c" << dir << "c64_" << n << ".fftw";
+    wisdomfname << "wisdom_c" << dir << "c64_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftw_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftw_plan_dft_1d(n,in,out,sign,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftw_plan_dft_1d(n,in,out,sign,FFTW_PATIENT);
-        fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftw_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -564,18 +582,22 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n,
         sign = -1;
     }
 
-    std::stringstream wisdomfile;
+    std::stringstream wisdomfname;
     // find filename for wisdom
-    wisdomfile << "wisdom_c" << dir << "c32_" << n << ".fftw";
+    wisdomfname << "wisdom_c" << dir << "c32_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftwf_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftwf_plan_dft_1d(n,in,out,sign,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_1d(n,in,out,sign,FFTW_PATIENT);
-        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftwf_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }

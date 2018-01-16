@@ -34,6 +34,7 @@
 #include "defines.hpp"
 #include "MessageStrings.hpp"
 #include "IO/Display.hpp"
+#include "IO/FSPath.hpp"
 #include "IO/GUI/Plot2DLine.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"

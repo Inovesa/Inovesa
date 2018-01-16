@@ -22,6 +22,7 @@ aux_source_directory(./src SRC_LIST)
 set(SRC_LIST
   ./src/CL/OpenCLHandler.cpp
   ./src/IO/Display.cpp
+  ./src/IO/FSPath.cpp
   ./src/IO/GUI/GUIElement.cpp
   ./src/IO/GUI/Plot2DLine.cpp
   ./src/IO/GUI/Plot3DColormap.cpp
@@ -55,17 +56,18 @@ set(INC_LIST
   ./inc/Array.h
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
-  ./inc/SM/DriftMap.hpp
   ./inc/PS/ElectricField.hpp
   ./inc/PS/PhaseSpace.hpp
   ./inc/PS/PhaseSpaceFactory.hpp
   ./inc/PS/Ruler.hpp
   ./inc/IO/Display.hpp
+  ./inc/IO/FSPath.hpp
   ./inc/IO/GUI/GUIElement.hpp
   ./inc/IO/GUI/Plot2DLine.hpp
   ./inc/IO/GUI/Plot3DColormap.hpp
   ./inc/IO/HDF5File.hpp
   ./inc/IO/ProgramOptions.hpp
+  ./inc/SM/DriftMap.hpp
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
   ./inc/SM/RFKickMap.hpp
