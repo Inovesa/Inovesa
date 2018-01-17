@@ -58,7 +58,11 @@ public:
                 const bool interpol_clamped,
                 const RotationCoordinates rt, const size_t rotmapsize=0);
 
+    #ifdef INOVESA_ENABLE_CLPROFILING
     ~RotationMap() noexcept;
+    #else
+    ~RotationMap() noexcept = default;
+    #endif
 
     /**
      * @brief apply overrides HM::apply() by an optimized implementation

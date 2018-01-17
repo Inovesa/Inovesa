@@ -71,7 +71,7 @@ public:
     ~Ruler() noexcept
     {
         delete [] _data;
-    };
+    }
 
     inline const ruler_t& at(meshindex_t d) const
         { return _data[d]; }

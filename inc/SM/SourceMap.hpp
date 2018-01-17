@@ -42,6 +42,7 @@ public:
     };
 
     enum class RotationCoordinates : uint_fast8_t {
+        phys_pq = 0,
         mesh = 1, // rotate on mesh
         norm_0_1 = 2, // normalized space between 0 and 1
         norm_pm1 = 3 // normalized space between -1 and +1
@@ -69,7 +70,7 @@ public:
                 uint_fast8_t interpoints, uint_fast8_t intertype);
 
     /**
-     * @brief HeritageMap
+     * @brief SourceMap
      * @param in
      * @param out
      * @param xsize
@@ -119,25 +120,25 @@ protected:
     hi* const _hinfo;
 
     /**
-     * @brief _size size of the HeritageMap (_xsize*_ysize)
+     * @brief _size size of the SourceMap (_xsize*_ysize)
      */
     const meshindex_t _size;
 
     /**
-     * @brief _xsize horizontal size of the HeritageMap
+     * @brief _xsize horizontal size of the SourceMap (in grid points)
      */
     const meshindex_t _xsize;
 
     /**
-     * @brief _ysize vertical size of the HeritageMap
+     * @brief _ysize vertical size of the SourceMap (in grid points)
      */
     const meshindex_t _ysize;
 
     #ifdef INOVESA_USE_CL
     /**
-     * @brief _hi_buf buffer for heritage information
+     * @brief _sm_buf buffer for source map
      */
-    cl::Buffer _hi_buf;
+    cl::Buffer _sm_buf;
 
     /**
      * @brief applySM

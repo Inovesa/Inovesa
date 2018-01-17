@@ -75,7 +75,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
         }
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
-            _hi_buf = cl::Buffer(OCLH::context,
+            _sm_buf = cl::Buffer(OCLH::context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                  sizeof(hi)*_ip*_rotmapsize,
                                  _hinfo);
@@ -87,7 +87,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
 
                         applySM = cl::Kernel(_cl_prog, "applySM4sat");
                         applySM.setArg(0, _in->data_buf);
-                        applySM.setArg(1, _hi_buf);
+                        applySM.setArg(1, _sm_buf);
                         applySM.setArg(2, _out->data_buf);
                     }
                 }
@@ -97,7 +97,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
 
                 applySM = cl::Kernel(_cl_prog, "applySM1D");
                 applySM.setArg(0, _in->data_buf);
-                applySM.setArg(1, _hi_buf);
+                applySM.setArg(1, _sm_buf);
                 applySM.setArg(2, _ip);
                 applySM.setArg(3, _out->data_buf);
             }
@@ -106,11 +106,11 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
     }
 }
 
-vfps::RotationMap::~RotationMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~RotationMap() -> "; }
-#else
-= default;
+vfps::RotationMap::~RotationMap()
+{
+    std::cout << "~RotationMap() -> ";
+}
 #endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::RotationMap::apply()
@@ -227,10 +227,10 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
     }
 
     // arrays of interpolation coefficients
-    interpol_t* icq = new interpol_t[_it];
-    interpol_t* icp = new interpol_t[_it];
+    std::unique_ptr<interpol_t[]> icq(new interpol_t[_it]);
+    std::unique_ptr<interpol_t[]> icp(new interpol_t[_it]);
 
-    interpol_t* smc = new interpol_t[_ip];
+    std::unique_ptr<interpol_t[]> smc(new interpol_t[_ip]);
 
     // Cell of inverse image (qp,pp) of grid point i,j.
     meshaxis_t qp; //q', backward mapping
@@ -256,6 +256,13 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
         qcoord = qp;
         pcoord = pp;
         break;
+    case RotationCoordinates::phys_pq:
+    default:
+        qp = _cos_dt*_in->getAxis(0)->at(q_i)-_sin_dt*_in->getAxis(1)->at(p_i);
+        pp = _sin_dt*_in->getAxis(0)->at(q_i)+_sin_dt*_in->getAxis(1)->at(p_i);
+        qcoord = qp/_in->getAxis(1)->delta();
+        pcoord = pp/_in->getAxis(1)->delta();
+        break;
     case RotationCoordinates::norm_0_1:
         qp = _cos_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
            - _sin_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
@@ -265,7 +272,6 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
         pcoord = (pp+meshaxis_t(0.5))*meshaxis_t(_ysize-1);
         break;
     case RotationCoordinates::norm_pm1:
-    default:
         qp = _cos_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
                     /meshaxis_t(_xsize-1)
            - _sin_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
@@ -286,8 +292,8 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
     if (xi <  _xsize && yi < _ysize) {
         // create vectors containing interpolation coefficiants
-        calcCoefficiants(icq,xf,_it);
-        calcCoefficiants(icp,yf,_it);
+        calcCoefficiants(icq.get(),xf,_it);
+        calcCoefficiants(icp.get(),yf,_it);
 
         /*  Assemble interpolation
          * (using uint_fast16_t so product won't overflow)
@@ -302,7 +308,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
         // renormlize to minimize rounding errors
         // renormalize(smc.size(),smc.data());
 
-        // write heritage map
+        // write source map
         for (meshindex_t j1=0; j1<_it; j1++) {
              meshindex_t j0 = yi+j1-(_it-1)/2;
             for (meshindex_t i1=0; i1<_it; i1++) {
@@ -321,10 +327,6 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
             myhinfo[i] = {0,0};
         }
     }
-
-    delete [] icp;
-    delete [] icq;
-    delete [] smc;
 
     delete [] ph;
     delete [] ph1D;
