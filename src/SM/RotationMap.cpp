@@ -260,8 +260,8 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
     default:
         qp = _cos_dt*_in->getAxis(0)->at(q_i)-_sin_dt*_in->getAxis(1)->at(p_i);
         pp = _sin_dt*_in->getAxis(0)->at(q_i)+_sin_dt*_in->getAxis(1)->at(p_i);
-        qcoord = qp/_in->getAxis(1)->delta();
-        pcoord = pp/_in->getAxis(1)->delta();
+        qcoord = qp/_in->getAxis(0)->delta()+_in->getAxis(0)->zerobin();
+        pcoord = pp/_in->getAxis(1)->delta()+_in->getAxis(1)->zerobin();
         break;
     case RotationCoordinates::norm_0_1:
         qp = _cos_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
