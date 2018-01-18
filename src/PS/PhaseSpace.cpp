@@ -168,7 +168,7 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              const double zoom, meshdata_t *data) :
     PhaseSpace(meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale)),
                meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale)),
-               bunch_charge,bunch_current,zoom, data)
+               bunch_charge,bunch_current, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
