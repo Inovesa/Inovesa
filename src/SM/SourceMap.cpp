@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -27,15 +27,16 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
                            meshindex_t xsize, meshindex_t ysize,
                            size_t memsize,
                            uint_fast8_t interpoints,
-                           uint_fast8_t intertype) :
-    _ip(interpoints),
-    _it(intertype),
-    _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))]),
-    _size(xsize*ysize),
-    _xsize(xsize),
-    _ysize(ysize),
-    _in(in),
-    _out(out)
+                           uint_fast8_t intertype)
+    : _ip(interpoints)
+    , _it(intertype)
+    , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
+    , _size(xsize*ysize)
+    , _xsize(xsize)
+    , _ysize(ysize)
+    , _axis(std::array<meshRuler_ptr,2>{in->getAxis(0),in->getAxis(1)})
+    , _in(in)
+    , _out(out)
 {
     #ifdef INOVESA_USE_CL
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";

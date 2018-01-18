@@ -33,6 +33,7 @@
 #include <OpenGL/gl.h>
 #endif // non-Apple
 #include <list>
+#include <memory>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -64,11 +65,12 @@ public:
 public:
     PhaseSpace() = delete;
 
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
+    PhaseSpace(std::array<meshRuler_ptr,2> axis,
                const double bunch_charge, const double bunch_current,
                const double zoom=1, meshdata_t *data = nullptr);
 
-    PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+    PhaseSpace(meshRuler_ptr axis0,
+               meshRuler_ptr axis1,
                const double bunch_charge, const double bunch_current,
                const double zoom=1, meshdata_t *data = nullptr);
 
@@ -92,24 +94,24 @@ public:
     { return _data1D; }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
-    { return _axis[x].delta(); }
+    { return _axis[x]->delta(); }
 
     inline meshaxis_t getMax(const uint_fast8_t x) const
-    { return _axis[x].max(); }
+    { return _axis[x]->max(); }
 
     inline meshaxis_t getMin(const uint_fast8_t x) const
-    { return _axis[x].min(); }
+    { return _axis[x]->min(); }
 
     inline double getScale(const uint_fast8_t x) const
-    { return _axis[x].scale(); }
+    { return _axis[x]->scale(); }
 
     /**
      * @brief getAxis
      * @param x which axis? (0 -> x or 1 -> y)
      * @return reference to the Axis describing mesh in x direction
      */
-    inline const Ruler<meshaxis_t>* getAxis(const uint_fast8_t x) const
-    { return &(_axis[x]); }
+    inline const meshRuler_ptr getAxis(const uint_fast8_t x) const
+    { return _axis[x]; }
 
     /**
      * @brief average
@@ -177,16 +179,16 @@ public:
     PhaseSpace& operator=(PhaseSpace other);
 
     inline size_t nMeshCells() const
-    { return _axis[0].steps()*_axis[1].steps(); }
+    { return _axis[0]->steps()*_axis[1]->steps(); }
 
     inline size_t nMeshCells(const uint_fast8_t x) const
-    { return _axis[x].steps(); }
+    { return _axis[x]->steps(); }
 
     inline meshaxis_t size(const uint_fast8_t x) const
-    { return _axis[x].size(); }
+    { return _axis[x]->size(); }
 
     inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
-        { return _axis[axis][n]; }
+        { return _axis[axis]->at(n); }
 
     /**
      * @brief swap
@@ -199,7 +201,7 @@ public:
     #endif
 
 protected:
-    const std::array<Ruler<meshaxis_t>,2> _axis;
+    const std::array<meshRuler_ptr,2> _axis;
 
 public:
     /**

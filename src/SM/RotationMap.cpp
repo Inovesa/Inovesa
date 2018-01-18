@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -258,10 +258,10 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
         break;
     case RotationCoordinates::phys_pq:
     default:
-        qp = _cos_dt*_in->getAxis(0)->at(q_i)-_sin_dt*_in->getAxis(1)->at(p_i);
-        pp = _sin_dt*_in->getAxis(0)->at(q_i)+_sin_dt*_in->getAxis(1)->at(p_i);
-        qcoord = qp/_in->getAxis(0)->delta()+_in->getAxis(0)->zerobin();
-        pcoord = pp/_in->getAxis(1)->delta()+_in->getAxis(1)->zerobin();
+        qp = _cos_dt*_axis[0]->at(q_i)-_sin_dt*_axis[1]->at(p_i);
+        pp = _sin_dt*_axis[0]->at(q_i)+_sin_dt*_axis[1]->at(p_i);
+        qcoord = qp/_axis[1]->delta()+_axis[0]->zerobin();
+        pcoord = pp/_axis[1]->delta()+_axis[1]->zerobin();
         break;
     case RotationCoordinates::norm_0_1:
         qp = _cos_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
