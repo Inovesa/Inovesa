@@ -27,19 +27,18 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                                const meshaxis_t angle,
                                const InterpolationType it,
                                const bool interpol_clamped,
-                               const RotationCoordinates rt,
                                const size_t rotmapsize) :
     SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
     _rotmapsize(rotmapsize),
     _clamp(interpol_clamped),
-    _rt(rt),
     _cos_dt(cos(-angle)),
     _sin_dt(sin(-angle))
 {
     if (-in->getMin(0) != in->getMin(0) || -in->getMin(0) != in->getMin(1)) {
         Display::printText("Warning: Off-center roatation"
-                           "not implemented for this rotation method.");
+                           "not fully implemented for this rotation method.");
     }
+
     if (_rotmapsize == 0) {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
@@ -215,13 +214,13 @@ vfps::RotationMap::apply(const PhaseSpace::Position pos) const
     return rv;
 }
 
-void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
-                                 vfps::meshindex_t p_i,
+void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
+                                 vfps::meshindex_t y0,
                                  vfps::SourceMap::hi* myhinfo)
 {
     // gridpoint matrix used for interpolation
-    hi* ph1D = new hi[_ip];
-    hi** ph = new hi*[_it];
+    std::unique_ptr<hi[]> ph1D(new hi[_ip]);
+    std::unique_ptr<hi*[]> ph(new hi*[_it]);
     for (uint_fast8_t i=0; i<_it;i++) {
         ph[i] = &ph1D[i*_it];
     }
@@ -232,65 +231,23 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
     std::unique_ptr<interpol_t[]> smc(new interpol_t[_ip]);
 
-    // Cell of inverse image (qp,pp) of grid point i,j.
-    meshaxis_t qp; //q', backward mapping
-    meshaxis_t pp; //p'
-    // interpolation type specific q and p coordinates
-    meshaxis_t pcoord;
-    meshaxis_t qcoord;
-    meshaxis_t qq_int;
-    meshaxis_t qp_int;
-    //Scaled arguments of interpolation functions:
-    meshindex_t xi; //meshpoint smaller q'
-    meshindex_t yi; //numper of lower mesh point from p'
-    interpol_t xf; //distance from id
-    interpol_t yf; //distance of p' from lower mesh point
-    switch (_rt) {
-    case RotationCoordinates::mesh:
-        qp = _cos_dt*meshaxis_t(q_i-(_xsize-1)/2.0)
-                - _sin_dt*meshaxis_t(p_i-(_ysize-1)/2.0)
-                + meshaxis_t((_xsize-1)/2.0);
-        pp = _sin_dt*meshaxis_t(q_i-(_xsize-1)/2.0)
-                + _cos_dt*meshaxis_t(p_i-(_ysize-1)/2.0)
-                +meshaxis_t((_ysize-1)/2.0);
-        qcoord = qp;
-        pcoord = pp;
-        break;
-    case RotationCoordinates::phys_pq:
-    default:
-        qp = _cos_dt*_axis[0]->at(q_i)-_sin_dt*_axis[1]->at(p_i);
-        pp = _sin_dt*_axis[0]->at(q_i)+_cos_dt*_axis[1]->at(p_i);
-        qcoord = qp/_axis[0]->delta()+_axis[0]->zerobin();
-        pcoord = pp/_axis[1]->delta()+_axis[1]->zerobin();
-        break;
-    case RotationCoordinates::norm_0_1:
-        qp = _cos_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
-           - _sin_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
-        pp = _sin_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
-           + _cos_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
-        qcoord = (qp+meshaxis_t(0.5))*meshaxis_t(_xsize-1);
-        pcoord = (pp+meshaxis_t(0.5))*meshaxis_t(_ysize-1);
-        break;
-    case RotationCoordinates::norm_pm1:
-        qp = _cos_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
-                    /meshaxis_t(_xsize-1)
-           - _sin_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
-                    /meshaxis_t(_ysize-1);
+    // new coordinates of grid point x0,y0.
+    meshaxis_t x1r = (_cos_dt*_axis[0]->at(x0)-_sin_dt*_axis[1]->at(y0))
+                    / _axis[0]->delta()
+                    + _axis[0]->zerobin();
+    meshaxis_t y1r = (_sin_dt*_axis[0]->at(x0)+_cos_dt*_axis[1]->at(y0))
+                    / _axis[1]->delta()
+                    + _axis[1]->zerobin();
 
-        pp = _sin_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
-                    /meshaxis_t(_xsize-1)
-           + _cos_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
-                    /meshaxis_t(_ysize-1);
-        qcoord = (qp+meshaxis_t(1))*meshaxis_t(_xsize-1)/meshaxis_t(2);
-        pcoord = (pp+meshaxis_t(1))*meshaxis_t(_ysize-1)/meshaxis_t(2);
-        break;
-    }
-    xf = modf(qcoord, &qq_int);
-    yf = modf(pcoord, &qp_int);
-    xi = qq_int;
-    yi = qp_int;
+    // new coordinates floating point part
+    interpol_t xf = std::modf(x1r, &x1r);
+    interpol_t yf = std::modf(y1r, &y1r);
 
-    if (xi <  _xsize && yi < _ysize) {
+    // new coordinates integer parts
+    meshindex_t x1 = x1r;
+    meshindex_t y1 = y1r;
+
+    if (x1 <  _xsize && y1 < _ysize) {
         // create vectors containing interpolation coefficiants
         calcCoefficiants(icq.get(),xf,_it);
         calcCoefficiants(icp.get(),yf,_it);
@@ -310,9 +267,9 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
 
         // write source map
         for (meshindex_t j1=0; j1<_it; j1++) {
-             meshindex_t j0 = yi+j1-(_it-1)/2;
+             meshindex_t j0 = y1+j1-(_it-1)/2;
             for (meshindex_t i1=0; i1<_it; i1++) {
-                 meshindex_t i0 = xi+i1-(_it-1)/2;
+                 meshindex_t i0 = x1+i1-(_it-1)/2;
                 if(i0< _xsize && j0 < _ysize ){
                     ph[i1][j1].index = i0*_ysize+j0;
                     ph[i1][j1].weight = smc[i1*_it+j1];
@@ -327,9 +284,6 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
             myhinfo[i] = {0,0};
         }
     }
-
-    delete [] ph;
-    delete [] ph1D;
 }
 
 

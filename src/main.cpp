@@ -446,15 +446,13 @@ int main(int argc, char** argv)
     case 0:
         Display::printText("Initializing RotationMap.");
         rm1.reset(new RotationMap(grid_t1,grid_t3,ps_size,ps_size,angle,
-                             interpolationtype,interpol_clamp,
-                             RotationMap::RotationCoordinates::phys_pq,0));
+                             interpolationtype,interpol_clamp,0));
         break;
     case 1:
         Display::printText("Building RotationMap.");
         rm1.reset(new RotationMap(grid_t2,grid_t3,ps_size,ps_size,angle,
-                             interpolationtype,interpol_clamp,
-                             RotationMap::RotationCoordinates::phys_pq,
-                             ps_size*ps_size));
+                                  interpolationtype,interpol_clamp,
+                                  ps_size*ps_size));
         break;
     case 2:
     default:

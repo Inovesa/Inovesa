@@ -55,8 +55,7 @@ public:
                 std::shared_ptr<PhaseSpace> out,
                 const meshindex_t xsize, const meshindex_t ysize,
                 const meshaxis_t angle, const InterpolationType it,
-                const bool interpol_clamped,
-                const RotationCoordinates rt, const size_t rotmapsize=0);
+                const bool interpol_clamped, const size_t rotmapsize=0);
 
     #ifdef INOVESA_ENABLE_CLPROFILING
     ~RotationMap() noexcept;
@@ -79,9 +78,8 @@ private:
 
     const bool _clamp;
 
-    void genHInfo(meshindex_t q_i, meshindex_t p_i, hi* myhinfo);
+    void genHInfo(meshindex_t x0, meshindex_t y0, hi* myhinfo);
 
-    const RotationCoordinates _rt;
     const meshaxis_t _cos_dt;
     const meshaxis_t _sin_dt;
 
