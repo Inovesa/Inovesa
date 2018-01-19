@@ -680,19 +680,19 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_INTERRUPT
     //Install signal handler for SIGINT
     signal(SIGINT, SIGINT_handler);
-    unsigned int keep_track_of_steps = 0;
     #endif // INOVESA_USE_INTERRUPT
 
     /*
      * main simulation loop
      * (everything inside this loop will be run a multitude of times)
      */
-    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
+    unsigned int simulationstep=0, outstepnr=0;
+    for (;simulationstep<steps*rotations;simulationstep++) {
         if (wkm != nullptr) {
             // works on XProjection
             wkm->update();
         }
-        if (renormalize > 0 && i%renormalize == 0) {
+        if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
             grid_t1->normalize();
         } else {
@@ -700,7 +700,7 @@ int main(int argc, char** argv)
             grid_t1->integral();
         }
 
-        if (outstep > 0 && i%outstep == 0) {
+        if (outstep > 0 && simulationstep%outstep == 0) {
             outstepnr++;
 
             // works on XProjection
@@ -717,7 +717,7 @@ int main(int argc, char** argv)
             #endif // INOVESA_USE_CL
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
-                hdf_file->appendTime(static_cast<double>(i)
+                hdf_file->appendTime(static_cast<double>(simulationstep)
                                 /static_cast<double>(steps));
                 hdf_file->append(grid_t1,h5save);
                 rdtn_field.updateCSR(fc);
@@ -773,7 +773,7 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESSA_USE_GUI
-            Display::printText(status_string(grid_t1,static_cast<float>(i)/steps,
+            Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps,
                                rotations),updatetime);
         }
         wm->apply();
@@ -792,8 +792,7 @@ int main(int argc, char** argv)
 
         #ifdef INOVESA_USE_INTERRUPT
         if(interrupt) {  // break out of main loop if sigint was triggered
-            keep_track_of_steps = i;  // Save the current simulation step
-            break;
+	    break;
         }
         #endif // INOVESA_USE_INTERRUPT
     } // end of main simulation loop
@@ -828,8 +827,8 @@ int main(int argc, char** argv)
         #endif // INOVESA_USE_CL
         #ifdef INOVESA_USE_INTERRUPT
 	// Write current Timestep to the HDF5 File if interrupt was triggered
-        if(interrupt) {  // keep_track_of_steps is only set when interrupt is true
-            hdf_file->appendTime(static_cast<double>(keep_track_of_steps) /static_cast<double>(steps));
+        if(interrupt) {
+            hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
         } else  // If not interrupted write the end time to the HDF5 file
         #endif INOVESA_USE_INTERRUPT
         {
@@ -883,7 +882,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_INTERRUPT
     // Print the last status if interrupted (even if this would not normally be printed). Also for Log file.
     if(interrupt){
-        Display::printText(status_string(grid_t1,static_cast<float>(keep_track_of_steps)/steps, rotations));
+        Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps, rotations));
     } else
     #endif // INOVESA_USE_INTERRUPT
     {
