@@ -54,6 +54,16 @@
 
 using namespace vfps;
 
+#ifdef INOVESA_USE_INTERRUPT
+#include<csignal> // for SIGINT handling
+#include<atomic> // might be overkill
+
+volatile std::atomic_bool interrupt(false);
+void SIGINT_handler(int s) {
+    interrupt = true;
+}
+#endif // INOVESA_USE_INTERRUPT
+
 int main(int argc, char** argv)
 {
     /*
@@ -667,6 +677,12 @@ int main(int argc, char** argv)
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations));
 
+    #ifdef INOVESA_USE_INTERRUPT
+    //Install signal handler for SIGINT
+    signal(SIGINT, SIGINT_handler);
+    unsigned int keep_track_of_steps = 0;
+    #endif // INOVESA_USE_INTERRUPT
+
     /*
      * main simulation loop
      * (everything inside this loop will be run a multitude of times)
@@ -774,6 +790,12 @@ int main(int argc, char** argv)
         // udate for next time step
         grid_t1->updateXProjection();
 
+        #ifdef INOVESA_USE_INTERRUPT
+        if(interrupt) {  // break out of main loop if sigint was triggered
+            keep_track_of_steps = i;  // Save the current simulation step
+            break;
+        }
+        #endif // INOVESA_USE_INTERRUPT
     } // end of main simulation loop
 
     #ifdef INOVESA_USE_HDF5
@@ -804,7 +826,15 @@ int main(int argc, char** argv)
             }
         }
         #endif // INOVESA_USE_CL
-        hdf_file->appendTime(rotations);
+        #ifdef INOVESA_USE_INTERRUPT
+	// Write current Timestep to the HDF5 File if interrupt was triggered
+        if(interrupt) {  // keep_track_of_steps is only set when interrupt is true
+            hdf_file->appendTime(static_cast<double>(keep_track_of_steps) /static_cast<double>(steps));
+        } else  // If not interrupted write the end time to the HDF5 file
+        #endif INOVESA_USE_INTERRUPT
+        {
+            hdf_file->appendTime(rotations);
+        }
 
         // for the final result, everything will be saved
         hdf_file->append(grid_t1,HDF5File::AppendType::All);
@@ -850,7 +880,15 @@ int main(int argc, char** argv)
     }
     #endif
 
-    Display::printText(status_string(grid_t1,rotations,rotations));
+    #ifdef INOVESA_USE_INTERRUPT
+    // Print the last status if interrupted (even if this would not normally be printed). Also for Log file.
+    if(interrupt){
+        Display::printText(status_string(grid_t1,static_cast<float>(keep_track_of_steps)/steps, rotations));
+    } else
+    #endif // INOVESA_USE_INTERRUPT
+    {
+        Display::printText(status_string(grid_t1, rotations, rotations));
+    }
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -863,7 +901,15 @@ int main(int argc, char** argv)
     delete wm;
     delete fpm;
 
-    Display::printText("Finished.");
+    #ifdef INOVESA_USE_INTERRUPT
+    // Print Aborted instead of Finished if it was aborted. Also for log file.
+    if(interrupt) {
+        Display::printText("Aborted.");
+    } else
+    #endif
+    {
+        Display::printText("Finished.");
+    }
 
     return EXIT_SUCCESS;
 }

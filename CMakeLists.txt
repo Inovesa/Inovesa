@@ -110,6 +110,9 @@ execute_process(
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 include_directories(./inc)
 
+# Enable Interrupts (Ctrl+C).
+add_definitions(-DINOVESA_USE_INTERRUPT)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
