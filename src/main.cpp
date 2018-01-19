@@ -686,8 +686,10 @@ int main(int argc, char** argv)
      * main simulation loop
      * (everything inside this loop will be run a multitude of times)
      */
-    unsigned int simulationstep=0, outstepnr=0;
-    for (;simulationstep<steps*rotations;simulationstep++) {
+    unsigned int simulationstep=0;
+    unsigned int outstepnr=0;
+    unsigned int laststep=steps*rotations;
+    while (simulationstep<laststep) {
         if (wkm != nullptr) {
             // works on XProjection
             wkm->update();
@@ -792,9 +794,10 @@ int main(int argc, char** argv)
 
         #ifdef INOVESA_USE_INTERRUPT
         if(interrupt) {  // break out of main loop if sigint was triggered
-	    break;
+	    laststep = simulationstep+1;
         }
         #endif // INOVESA_USE_INTERRUPT
+        simulationstep++;
     } // end of main simulation loop
 
     #ifdef INOVESA_USE_HDF5
