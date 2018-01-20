@@ -830,6 +830,7 @@ int main(int argc, char** argv)
         #ifdef INOVESA_USE_INTERRUPT
 	    // Write current Timestep to the HDF5 File if interrupt was triggered
         hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
+	#endif // INOVESA_USE_INTERRUPT
 
         // for the final result, everything will be saved
         hdf_file->append(grid_t1,HDF5File::AppendType::All);
