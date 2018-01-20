@@ -689,7 +689,11 @@ int main(int argc, char** argv)
     unsigned int simulationstep=0;
     unsigned int outstepnr=0;
     unsigned int laststep=steps*rotations;
+    #ifdef INOVESA_USE_INTERRUPT
+    while (simulationstep<laststep && !interrupt) {
+    #else
     while (simulationstep<laststep) {
+    #endif // INOVESA_USE_INTERRUPT
         if (wkm != nullptr) {
             // works on XProjection
             wkm->update();
@@ -792,11 +796,6 @@ int main(int argc, char** argv)
         // udate for next time step
         grid_t1->updateXProjection();
 
-        #ifdef INOVESA_USE_INTERRUPT
-        if(interrupt) {  // break out of main loop if sigint was triggered
-	    laststep = simulationstep+1;
-        }
-        #endif // INOVESA_USE_INTERRUPT
         simulationstep++;
     } // end of main simulation loop
 
@@ -829,14 +828,8 @@ int main(int argc, char** argv)
         }
         #endif // INOVESA_USE_CL
         #ifdef INOVESA_USE_INTERRUPT
-	// Write current Timestep to the HDF5 File if interrupt was triggered
-        if(interrupt) {
-            hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
-        } else  // If not interrupted write the end time to the HDF5 file
-        #endif INOVESA_USE_INTERRUPT
-        {
-            hdf_file->appendTime(rotations);
-        }
+	    // Write current Timestep to the HDF5 File if interrupt was triggered
+        hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
 
         // for the final result, everything will be saved
         hdf_file->append(grid_t1,HDF5File::AppendType::All);
@@ -882,15 +875,8 @@ int main(int argc, char** argv)
     }
     #endif
 
-    #ifdef INOVESA_USE_INTERRUPT
-    // Print the last status if interrupted (even if this would not normally be printed). Also for Log file.
-    if(interrupt){
-        Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps, rotations));
-    } else
-    #endif // INOVESA_USE_INTERRUPT
-    {
-        Display::printText(status_string(grid_t1, rotations, rotations));
-    }
+    // Print the last status.
+    Display::printText(status_string(grid_t1, rotations, rotations));
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
