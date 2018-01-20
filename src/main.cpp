@@ -876,7 +876,7 @@ int main(int argc, char** argv)
     #endif
 
     // Print the last status.
-    Display::printText(status_string(grid_t1, rotations, rotations));
+    Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
