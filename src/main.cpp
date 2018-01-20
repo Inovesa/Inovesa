@@ -54,6 +54,16 @@
 
 using namespace vfps;
 
+#ifdef INOVESA_USE_INTERRUPT
+#include<csignal> // for SIGINT handling
+#include<atomic> // might be overkill
+
+volatile std::atomic_bool interrupt(false);
+void SIGINT_handler(int s) {
+    interrupt = true;
+}
+#endif // INOVESA_USE_INTERRUPT
+
 int main(int argc, char** argv)
 {
     /*
@@ -667,16 +677,28 @@ int main(int argc, char** argv)
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations));
 
+    #ifdef INOVESA_USE_INTERRUPT
+    //Install signal handler for SIGINT
+    signal(SIGINT, SIGINT_handler);
+    #endif // INOVESA_USE_INTERRUPT
+
     /*
      * main simulation loop
      * (everything inside this loop will be run a multitude of times)
      */
-    for (unsigned int i=0, outstepnr=0;i<steps*rotations;i++) {
+    unsigned int simulationstep=0;
+    unsigned int outstepnr=0;
+    unsigned int laststep=steps*rotations;
+    #ifdef INOVESA_USE_INTERRUPT
+    while (simulationstep<laststep && !interrupt) {
+    #else
+    while (simulationstep<laststep) {
+    #endif // INOVESA_USE_INTERRUPT
         if (wkm != nullptr) {
             // works on XProjection
             wkm->update();
         }
-        if (renormalize > 0 && i%renormalize == 0) {
+        if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
             grid_t1->normalize();
         } else {
@@ -684,7 +706,7 @@ int main(int argc, char** argv)
             grid_t1->integral();
         }
 
-        if (outstep > 0 && i%outstep == 0) {
+        if (outstep > 0 && simulationstep%outstep == 0) {
             outstepnr++;
 
             // works on XProjection
@@ -701,7 +723,7 @@ int main(int argc, char** argv)
             #endif // INOVESA_USE_CL
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
-                hdf_file->appendTime(static_cast<double>(i)
+                hdf_file->appendTime(static_cast<double>(simulationstep)
                                 /static_cast<double>(steps));
                 hdf_file->append(grid_t1,h5save);
                 rdtn_field.updateCSR(fc);
@@ -757,7 +779,7 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESSA_USE_GUI
-            Display::printText(status_string(grid_t1,static_cast<float>(i)/steps,
+            Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps,
                                rotations),updatetime);
         }
         wm->apply();
@@ -774,6 +796,7 @@ int main(int argc, char** argv)
         // udate for next time step
         grid_t1->updateXProjection();
 
+        simulationstep++;
     } // end of main simulation loop
 
     #ifdef INOVESA_USE_HDF5
@@ -804,7 +827,7 @@ int main(int argc, char** argv)
             }
         }
         #endif // INOVESA_USE_CL
-        hdf_file->appendTime(rotations);
+        hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
 
         // for the final result, everything will be saved
         hdf_file->append(grid_t1,HDF5File::AppendType::All);
@@ -850,7 +873,8 @@ int main(int argc, char** argv)
     }
     #endif
 
-    Display::printText(status_string(grid_t1,rotations,rotations));
+    // Print the last status.
+    Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
 
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -863,7 +887,15 @@ int main(int argc, char** argv)
     delete wm;
     delete fpm;
 
-    Display::printText("Finished.");
+    #ifdef INOVESA_USE_INTERRUPT
+    // Print Aborted instead of Finished if it was aborted. Also for log file.
+    if(interrupt) {
+        Display::printText("Aborted.");
+    } else
+    #endif
+    {
+        Display::printText("Finished.");
+    }
 
     return EXIT_SUCCESS;
 }
