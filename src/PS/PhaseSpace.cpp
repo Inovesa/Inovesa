@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -22,7 +22,7 @@
 
 #include <numeric>
 
-vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
+vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis,
                              const double bunch_charge,
                              const double bunch_current,
                              const double zoom, meshdata_t *data) :
@@ -147,17 +147,17 @@ vfps::PhaseSpace::PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
         OCLH::teardownCLEnvironment(e);
     }
     }
-    #endif
+#endif
 }
 
-
-vfps::PhaseSpace::PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+vfps::PhaseSpace::PhaseSpace(meshRuler_ptr axis0, meshRuler_ptr axis1,
                              const double bunch_charge,
                              const double bunch_current,
-                             const double zoom, meshdata_t *data) :
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2>{{axis1,axis2}},
-               bunch_charge,bunch_current,zoom,data)
-{}
+                             const double zoom,
+                             vfps::meshdata_t *data) :
+    PhaseSpace({axis0,axis1},bunch_charge,bunch_current,zoom,data)
+{
+}
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              meshaxis_t xmin, meshaxis_t xmax,
@@ -166,9 +166,9 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size,
                              const double bunch_current,
                              double xscale, double yscale,
                              const double zoom, meshdata_t *data) :
-    PhaseSpace(Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale),
-               Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale),
-               bunch_charge,bunch_current,zoom, data)
+    PhaseSpace(meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale)),
+               meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale)),
+               bunch_charge,bunch_current, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -385,7 +385,7 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis, const double zoom)
     double charge =0;
     const double zoom2=zoom*zoom;
     for(uint32_t i=0; i<nMeshCells(axis); i++){
-        _projection[axis][i]=std::exp((-0.5)*_axis[axis][i]*_axis[axis][i]/zoom2);
+        _projection[axis][i]=std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
         charge+=_projection[axis][i]*getDelta(axis);
     }
     for (uint32_t i=0;i<nMeshCells(axis);i++){ // Normalize distribution

@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -33,14 +33,13 @@ vfps::DriftMap::DriftMap(std::shared_ptr<PhaseSpace> in,
     :
       KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::x)
 {
-    const Ruler<meshaxis_t>* energy = in->getAxis(1);
     for(meshindex_t y=0; y<_ysize; y++) {
         _offset[y] = 0;
         for (size_t i=0; i<slip.size(); i++) {
-            _offset[y] += slip[i]*energy->at(y)
-                       *  std::pow(energy->at(y)*energy->scale()/E0,i);
+            _offset[y] += slip[i]*_axis[1]->at(y)
+                       *  std::pow(_axis[1]->at(y)*_axis[1]->scale()/E0,i);
         }
-        _offset[y] /= energy->delta();
+        _offset[y] /= _axis[1]->delta();
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
@@ -50,9 +49,9 @@ vfps::DriftMap::DriftMap(std::shared_ptr<PhaseSpace> in,
     updateSM();
 }
 
-vfps::DriftMap::~DriftMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~DriftMap() -> "; }
-#else
-= default;
+vfps::DriftMap::~DriftMap()
+{
+    std::cout << "~DriftMap() -> ";
+}
 #endif // INOVESA_ENABLE_CLPROFILING

@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -34,7 +34,11 @@ public:
              const std::vector<meshaxis_t> slip, const double E0,
              const InterpolationType it, const bool interpol_clamp);
 
+    #ifdef INOVESA_ENABLE_CLPROFILING
     ~DriftMap() noexcept;
+    #else
+    ~DriftMap() = default;
+    #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 } // namespace fvps
