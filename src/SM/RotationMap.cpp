@@ -31,43 +31,30 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
     SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
     _rotmapsize(rotmapsize),
     _clamp(interpol_clamped),
-    _cos_dt(cos(-angle)),
-    _sin_dt(sin(-angle))
+    _cos_dt(std::cos(-angle)),
+    _sin_dt(std::sin(-angle))
 {
-    if (-in->getMin(0) != in->getMin(0) || -in->getMin(0) != in->getMin(1)) {
-        Display::printText("Warning: Off-center roatation"
-                           "not fully implemented for this rotation method.");
-    }
-
     if (_rotmapsize == 0) {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
             rot = {{float(_cos_dt),float(_sin_dt)}};
             imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
+            zerobin = {{(_axis[0]->zerobin()),(_axis[1]->zerobin())}};
+
 
             genCode4Rotation();
             _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
             applySM = cl::Kernel(_cl_prog, "applyRotation");
             applySM.setArg(0, _in->data_buf);
-            applySM.setArg(1, imgsize);
-            applySM.setArg(2, rot);
-            applySM.setArg(3, _out->data_buf);
-        } else
+            applySM.setArg(1, rot);
+            applySM.setArg(2, imgsize);
+            applySM.setArg(3, zerobin);
+            applySM.setArg(4, _out->data_buf);
+        }
         #endif // INOVESA_USE_CL
-        {
-            if (_clamp) {
-                notClampedMessage();
-            }
-        }
     } else {
-        meshindex_t maxx;
-        if (_rotmapsize == _size) {
-            maxx = _xsize;
-        } else {
-            maxx = _xsize/2;
-        }
-        for (meshindex_t q_i=0; q_i< maxx; q_i++) {
+        for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
             for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
                 genHInfo(q_i,p_i,&_hinfo[(q_i*ysize+p_i)*_ip]);
             }
@@ -146,16 +133,26 @@ void vfps::RotationMap::apply()
         meshdata_t* data_out = _out->getData();
 
         if (_rotmapsize == 0) {
-            for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
+            for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
                 for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
                     meshindex_t i = q_i*_ysize+p_i;
                     data_out[i] = 0;
-                    data_out[_size-1-i] = 0;
-                    genHInfo(q_i,p_i,_hinfo);
+                    genHInfo(q_i,p_i,&(_hinfo[0]));
                     for (uint_fast8_t j=0; j<_ip; j++) {
                         hi h = _hinfo[j];
                         data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-                        data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
+                    }
+                    if (_clamp) {
+                        // handle overshooting
+                        meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
+                        meshdata_t flor=std::numeric_limits<meshdata_t>::max();
+                        for (size_t x=1; x<=2; x++) {
+                            for (size_t y=1; y<=2; y++) {
+                                ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
+                                flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
+                            }
+                        }
+                        data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
                     }
                 }
             }
@@ -345,17 +342,16 @@ void vfps::RotationMap::genCode4Rotation()
 {
     _cl_code += R"(
     __kernel void applyRotation(    const __global data_t* src,
-                                    const int2 imgSize,
                                     const float2 rot,
+                                    const int2 imgSize,
+                                    const float2 zerobin,
                                     __global data_t* dst)
     {
-        const int x = get_global_id(0)+1;
-        const int y = get_global_id(1)+1;
+        const int x = get_global_id(0);
+        const int y = get_global_id(1);
 
-        const data_t srcx = rot.x*(x-(imgSize.x+1)/2)-rot.y*(y-(imgSize.y+1)/2)
-                                +(imgSize.x+1)/2;
-        const data_t srcy = rot.y*(x-(imgSize.x+1)/2)+rot.x*(y-(imgSize.y+1)/2)
-                                +(imgSize.y+1)/2;
+        const data_t srcx = rot.x*(x-zerobin.x)-rot.y*(y-zerobin.y)+zerobin.x;
+        const data_t srcy = rot.y*(x-zerobin.x)+rot.x*(y-zerobin.y)+zerobin.y;
         const int xi = floor(srcx);
         const int yi = floor(srcy);
         const data_t xf = srcx - xi;

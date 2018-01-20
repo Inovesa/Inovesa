@@ -88,9 +88,11 @@ private:
 
     void genCode4Rotation();
 
+    cl_float2 rot;
+
     cl_int2 imgsize;
 
-    cl_float2 rot;
+    cl_float2 zerobin;
     #endif // INOVESA_USE_CL
 };
 
