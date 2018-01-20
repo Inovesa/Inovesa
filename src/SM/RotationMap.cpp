@@ -162,15 +162,9 @@ void vfps::RotationMap::apply()
         } else {
             for (meshindex_t i=0; i< _rotmapsize; i++) {
                 data_out[i] = 0;
-                if (_rotmapsize == _size/2) {
-                    data_out[_size-1-i] = 0;
-                }
                 for (uint_fast8_t j=0; j<_ip; j++) {
                     hi h = _hinfo[i*_ip+j];
                     data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-                    if (_rotmapsize == _size/2) {
-                        data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
-                    }
                 }
                 if (_clamp) {
                     // handle overshooting
@@ -183,18 +177,6 @@ void vfps::RotationMap::apply()
                         }
                     }
                     data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
-
-                    if (_rotmapsize == _size/2) {
-                        ceil=std::numeric_limits<meshdata_t>::min();
-                        flor=std::numeric_limits<meshdata_t>::max();
-                        for (size_t x=1; x<=2; x++) {
-                            for (size_t y=1; y<=2; y++) {
-                                ceil = std::max(ceil,data_in[_size-1-_hinfo[i*_ip+x*_it+y].index]);
-                                flor = std::min(flor,data_in[_size-1-_hinfo[i*_ip+x*_it+y].index]);
-                            }
-                        }
-                        data_out[_size-1-i] = std::max(std::min(ceil,data_out[_size-1-i]),flor);
-                    }
                 }
             }
         }
@@ -205,12 +187,12 @@ vfps::PhaseSpace::Position
 vfps::RotationMap::apply(const PhaseSpace::Position pos) const
 {
     PhaseSpace::Position rv;
-    rv.x = _cos_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
-         + _sin_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
-         + meshaxis_t((_xsize-1)/2.0);
-    rv.y = _cos_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
-         - _sin_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
-         + meshaxis_t((_ysize-1)/2.0);
+    rv.x = _cos_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
+         + _sin_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
+         + _axis[0]->zerobin();
+    rv.y = _cos_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
+         - _sin_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
+         + _axis[1]->zerobin();
     return rv;
 }
 
