@@ -135,21 +135,25 @@ void vfps::Display::addElement(std::shared_ptr<GUIElement> newitem)
 
 #ifdef INOVESA_USE_GUI
 void vfps::Display::draw() {
-    // Clear the screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (! glfwWindowShouldClose(_window)) {
+        // Clear the screen
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // draw GUIElements
-    for (auto i : _item) {
-        i->draw();
+        // draw GUIElements
+        for (auto i : _item) {
+            i->draw();
+        }
+
+        // Swap buffers
+        #if GLFW_VERSION_MAJOR == 3
+        glfwSwapBuffers(_window);
+        #else
+        glfwSwapBuffers();
+        #endif
+        glfwPollEvents();
+    } else {
+        Display::abort = true;
     }
-
-    // Swap buffers
-    #if GLFW_VERSION_MAJOR == 3
-    glfwSwapBuffers(_window);
-    #else
-    glfwSwapBuffers();
-    #endif
-    glfwPollEvents();
 }
 #endif // INOVESA_USE_GUI
 
@@ -210,6 +214,8 @@ GLFWwindow* vfps::Display::openWindow(uint_fast8_t glversion)
 #endif // INOVESA_USE_GUI
 
 std::chrono::system_clock::time_point vfps::Display::start_time;
+
+volatile bool vfps::Display::abort(false);
 
 std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 

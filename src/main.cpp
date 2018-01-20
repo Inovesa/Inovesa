@@ -56,11 +56,9 @@ using namespace vfps;
 
 #ifdef INOVESA_USE_INTERRUPT
 #include<csignal> // for SIGINT handling
-#include<atomic> // might be overkill
 
-volatile std::atomic_bool interrupt(false);
 void SIGINT_handler(int s) {
-    interrupt = true;
+    Display::abort = true;
 }
 #endif // INOVESA_USE_INTERRUPT
 
@@ -689,11 +687,7 @@ int main(int argc, char** argv)
     unsigned int simulationstep=0;
     unsigned int outstepnr=0;
     unsigned int laststep=steps*rotations;
-    #ifdef INOVESA_USE_INTERRUPT
-    while (simulationstep<laststep && !interrupt) {
-    #else
-    while (simulationstep<laststep) {
-    #endif // INOVESA_USE_INTERRUPT
+    while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection
             wkm->update();
@@ -887,13 +881,10 @@ int main(int argc, char** argv)
     delete wm;
     delete fpm;
 
-    #ifdef INOVESA_USE_INTERRUPT
     // Print Aborted instead of Finished if it was aborted. Also for log file.
-    if(interrupt) {
+    if(Display::abort) {
         Display::printText("Aborted.");
-    } else
-    #endif
-    {
+    } else {
         Display::printText("Finished.");
     }
 
