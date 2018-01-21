@@ -260,7 +260,12 @@ void vfps::PhaseSpace::updateXProjection() {
         OCLH::enqueueNDRangeKernel (
                     _clKernProjX,
                     cl::NullRange,
-                    cl::NDRange(nMeshCells(0)));
+                    cl::NDRange(nMeshCells(0)),
+                    cl::NullRange,
+                    nullptr,
+                    nullptr,
+                    xProjEvents.get()
+                    );
         OCLH::queue.enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
         OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,

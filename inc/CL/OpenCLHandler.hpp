@@ -120,10 +120,12 @@ public:
                          cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (event == nullptr) {
-            event = new cl::Event();
+        if (timings != nullptr) {
+            if (event == nullptr) {
+                event = new cl::Event();
+            }
+            timings->push_back(event);
         }
-        timings->push_back(event);
         #endif
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
         #ifdef CL_VERSION_1_2
@@ -147,10 +149,12 @@ public:
                       cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (event == nullptr) {
-            event = new cl::Event();
+        if (timings != nullptr) {
+            if (event == nullptr) {
+                event = new cl::Event();
+            }
+            timings->push_back(event);
         }
-        timings->push_back(event);
         #endif
         queue.enqueueCopyBuffer(src, dst, src_offset,dst_offset,size,
                                 events, event);
@@ -170,10 +174,12 @@ public:
                        cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (event == nullptr) {
-            event = new cl::Event();
+        if (timings != nullptr) {
+            if (event == nullptr) {
+                event = new cl::Event();
+            }
+            timings->push_back(event);
         }
-        timings->push_back(event);
         #endif
         queue.enqueueReadBuffer(buffer, blocking, src_offset,size,ptr,
                                 events, event);
@@ -193,10 +199,12 @@ public:
                        cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (event == nullptr) {
-            event = new cl::Event();
+        if (timings != nullptr) {
+            if (event == nullptr) {
+                event = new cl::Event();
+            }
+            timings->push_back(event);
         }
-        timings->push_back(event);
         #endif
         queue.enqueueWriteBuffer(buffer, blocking, src_offset,size,ptr,
                                 events, event);

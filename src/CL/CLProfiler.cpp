@@ -1,6 +1,6 @@
 #include "CL/CLProfiler.hpp"
 
-vfps::CLTiming::CLTiming(const cl::Event& ev, std::__1::string msg)
+vfps::CLTiming::CLTiming(const cl::Event& ev, std::string msg)
     : msg(msg)
     , submit(ev.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>())
     , queued(ev.getProfilingInfo<CL_PROFILING_COMMAND_QUEUED>())

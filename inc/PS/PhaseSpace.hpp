@@ -264,6 +264,18 @@ private:
 
     cl::Kernel  _clKernIntegral;
 
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    std::unique_ptr<cl::vector<cl::Event*>> xProjEvents;
+
+    std::unique_ptr<cl::vector<cl::Event*>> syncSMEvents;
+    #else
+    constexpr static std::unique_ptr<cl::vector<cl::Event*>>
+        xProjEvents = nullptr;
+
+    constexpr static std::unique_ptr<cl::vector<cl::Event*>>
+        syncSMEvents = nullptr;
+    #endif // INOVESA_ENABLE_CLPROFILING
+
     cl::Buffer  ws_buf;
 
     static std::string cl_code_integral;
