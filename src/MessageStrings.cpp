@@ -33,6 +33,7 @@ const std::string vfps::copyright_notice() noexcept {
     }
     rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
@@ -54,7 +55,7 @@ const std::string vfps::copyright_notice() noexcept {
 
 const std::string vfps::inovesa_version() {
     std::stringstream sstream;
-    sstream << 'v' << INOVESA_VERSION_RELEASE << '.'
+    sstream << 'v' << INOVESA_VERSION_MAJOR << '.'
             << INOVESA_VERSION_MINOR;
     std::string version(sstream.str());
     if ( INOVESA_VERSION_FIX >= 0 ) {

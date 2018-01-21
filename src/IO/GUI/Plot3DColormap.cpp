@@ -139,7 +139,7 @@ vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue) :
 				 g_uv_buffer_data, GL_STATIC_DRAW);
 }
 
-vfps::Plot3DColormap::~Plot3DColormap()
+vfps::Plot3DColormap::~Plot3DColormap() noexcept
 {
     glDeleteBuffers(1,&uvbuffer);
     glDeleteBuffers(1,&vertexbuffer);

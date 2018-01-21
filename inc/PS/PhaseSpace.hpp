@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -33,6 +33,7 @@
 #include <OpenGL/gl.h>
 #endif // non-Apple
 #include <list>
+#include <memory>
 #include <stdexcept>
 #include <tuple>
 #include <vector>
@@ -64,11 +65,12 @@ public:
 public:
     PhaseSpace() = delete;
 
-    PhaseSpace(std::array<Ruler<meshaxis_t>,2> axis,
+    PhaseSpace(std::array<meshRuler_ptr,2> axis,
                const double bunch_charge, const double bunch_current,
                const double zoom=1, meshdata_t *data = nullptr);
 
-    PhaseSpace(Ruler<meshaxis_t> axis1, Ruler<meshaxis_t> axis2,
+    PhaseSpace(meshRuler_ptr axis0,
+               meshRuler_ptr axis1,
                const double bunch_charge, const double bunch_current,
                const double zoom=1, meshdata_t *data = nullptr);
 
@@ -92,24 +94,24 @@ public:
     { return _data1D; }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
-    { return _axis[x].delta(); }
+    { return _axis[x]->delta(); }
 
     inline meshaxis_t getMax(const uint_fast8_t x) const
-    { return _axis[x].max(); }
+    { return _axis[x]->max(); }
 
     inline meshaxis_t getMin(const uint_fast8_t x) const
-    { return _axis[x].min(); }
+    { return _axis[x]->min(); }
 
     inline double getScale(const uint_fast8_t x) const
-    { return _axis[x].scale(); }
+    { return _axis[x]->scale(); }
 
     /**
      * @brief getAxis
      * @param x which axis? (0 -> x or 1 -> y)
      * @return reference to the Axis describing mesh in x direction
      */
-    inline const Ruler<meshaxis_t>* getAxis(const uint_fast8_t x) const
-    { return &(_axis[x]); }
+    inline const meshRuler_ptr getAxis(const uint_fast8_t x) const
+    { return _axis[x]; }
 
     /**
      * @brief average
@@ -141,16 +143,16 @@ public:
     meshdata_t variance(const uint_fast8_t axis);
 
     inline meshdata_t getBunchLength() const
-        { return getMoment(0,1); }
+        { return std::sqrt(getMoment(0,1)); }
 
     inline meshdata_t getEnergySpread() const
-        { return getMoment(1,1); }
+        { return std::sqrt(getMoment(1,1)); }
 
     inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
         { return _moment[x][m]; }
 
-    inline projection_t* getProjection(const uint_fast8_t x) const
-        { return _projection[x]; }
+    inline const projection_t* getProjection(const uint_fast8_t x) const
+        { return _projection[x].data(); }
 
     /**
      * @brief updateXProjection
@@ -177,16 +179,16 @@ public:
     PhaseSpace& operator=(PhaseSpace other);
 
     inline size_t nMeshCells() const
-    { return _axis[0].steps()*_axis[1].steps(); }
+    { return _axis[0]->steps()*_axis[1]->steps(); }
 
     inline size_t nMeshCells(const uint_fast8_t x) const
-    { return _axis[x].steps(); }
+    { return _axis[x]->steps(); }
 
     inline meshaxis_t size(const uint_fast8_t x) const
-    { return _axis[x].size(); }
+    { return _axis[x]->size(); }
 
     inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
-        { return _axis[axis][n]; }
+        { return _axis[axis]->at(n); }
 
     /**
      * @brief swap
@@ -199,7 +201,7 @@ public:
     #endif
 
 protected:
-    const std::array<Ruler<meshaxis_t>,2> _axis;
+    const std::array<meshRuler_ptr,2> _axis;
 
 public:
     /**
@@ -218,7 +220,7 @@ protected:
      */
     integral_t _integral;
 
-    const std::array<projection_t*,2> _projection;
+    std::array<std::vector<projection_t>,2> _projection;
 
     const uint32_t _nmeshcellsX;
 
@@ -243,7 +245,7 @@ protected:
      */
     std::array<std::array<meshdata_t,4>,2> _moment;
 
-    meshdata_t* _ws;
+    std::vector<meshdata_t> _ws;
 
 #ifdef INOVESA_USE_CL
 public:

@@ -34,23 +34,19 @@ Build Requirenments
 -------------------
 
 CMake will check whether build requirenmens are met.
-On Debian 8 the following packages have to be installed.
+The following is needed:
 
-Mandatory:
-* cmake
-* g++
-* libboost-dev
-* libboost-system-dev
-* libboost-filesystem-dev
-* libboost-program-options-dev
-* libfftw3-dev
+### Mandatory Dependencies
+* [cmake](https://cmake.org/) (Version 3.1 or later)
+* C++ 14 compatible compiler (e.g. [g++](https://gcc.gnu.org/) 5.0 or later, [clang](http://clang.llvm.org/) 3.5 or later)
+* [boost](http://www.boost.org/) (boost-system, boost-filesystem, boost-program-options)
+* [FFTW](http://fftw.org/) (Version 3)
 
-Optional:
-* libglew-dev (for GUI support)
-* libglfw3-dev (for GUI support)
-* libhdf5-dev (for HDF5 support)
-* libpng++-dev (for PNG support)
-* libxrandr-dev (for GUI support)
-* opencl-dev (optional for parallelization)
-* libclfft-dev (for faster FFT using parallelization)
+### Optional Dependencies
+* [GLEW](https://www.opengl.org/sdk/libs/GLEW/) (for GUI support)
+* [GLFW](http://www.glfw.org/) (for GUI support)
+* [HDF5](https://www.hdfgroup.org/downloads/hdf5/) (to write out data)
+* [PNG++](http://www.nongnu.org/pngpp/) (for PNG support)
+* [OpenCL](https://www.khronos.org/opencl/) (>=1.1, optional for parallelization)
+* [clFFT](https://github.com/clMathLibraries/clFFT) (for faster FFT using parallelization)
 

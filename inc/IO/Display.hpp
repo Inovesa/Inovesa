@@ -90,6 +90,8 @@ public:
      */
     static std::chrono::system_clock::time_point start_time;
 
+    volatile static bool abort;
+
 public:
     Display() = delete;
 

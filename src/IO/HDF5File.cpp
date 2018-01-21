@@ -642,13 +642,13 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
     H5::DataSet version_dset = _file->createDataSet
                     ("/Info/Inovesa_v", H5::PredType::STD_I32LE,version_dspace);
-    std::array<int32_t,3> version {{INOVESA_VERSION_RELEASE,
+    std::array<int32_t,3> version {{INOVESA_VERSION_MAJOR,
                                     INOVESA_VERSION_MINOR,
                                     INOVESA_VERSION_FIX}};
     version_dset.write(version.data(),H5::PredType::NATIVE_INT);
 }
 
-vfps::HDF5File::~HDF5File()
+vfps::HDF5File::~HDF5File() noexcept
 {
     delete _file;
 }
@@ -799,7 +799,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(bl_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
         memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
-        meshaxis_t bunchlength = ps->getMoment(0,1);
+        meshaxis_t bunchlength = ps->getBunchLength();
         bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -839,7 +839,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(es_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
         memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
-        meshaxis_t energyspread = ps->getMoment(1,1);
+        meshaxis_t energyspread = ps->getEnergySpread();
         es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;

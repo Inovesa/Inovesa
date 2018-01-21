@@ -42,7 +42,7 @@ vfps::GUIElement::GUIElement()
 {
 }
 
-vfps::GUIElement::~GUIElement()
+vfps::GUIElement::~GUIElement() noexcept
 {
     glDeleteProgram(programID);
 }

@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -19,6 +19,8 @@
  ******************************************************************************/
 
 #include "PS/ElectricField.hpp"
+
+#include "IO/FSPath.hpp"
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const std::shared_ptr<Impedance> impedance,
@@ -64,6 +66,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
+        try {
         _bp_padded = new integral_t[_nmax];
         std::fill_n(_bp_padded,_nmax,0);
         _bp_padded_buf = cl::Buffer(OCLH::context,
@@ -79,28 +82,17 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
         clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
         clfftBakePlan(_clfft_bunchprofile,1,&OCLH::queue(), nullptr, nullptr);
-
-        std::string cl_code_padbp = R"(
-            __kernel void pad_bp(__global data_t* bp_padded,
-                                 const ulong paddedsize,
-                                 const uint bpmeshcells,
-                                 const __global data_t* bp)
-            {
-                const uint g = get_global_id(0);
-                const uint b = (g+bpmeshcells/2)%bpmeshcells;
-                const uint p = (b+paddedsize-bpmeshcells/2)%paddedsize;
-                bp_padded[p] = bp[b];
-            }
-            )";
-
-        _clProgPadBP = OCLH::prepareCLProg(cl_code_padbp);
-        _clKernPadBP = cl::Kernel(_clProgPadBP, "pad_bp");
-        _clKernPadBP.setArg(0, _bp_padded_buf);
-        _clKernPadBP.setArg(1, _nmax);
-        _clKernPadBP.setArg(2, _bpmeshcells);
-        _clKernPadBP.setArg(3, _phasespace->projectionX_buf);
-    } else
+        } catch (cl::Error &e) {
+            OCLH::teardownCLEnvironment(e);
+        }
+        /* If setup using OpenCL was succesfull,
+         * the code below is not needed.
+         */
+        return;
+    }
     #endif // INOVESA_USE_CLFFT
+    /* You might want to see this is an else block that also
+     * is used if an error is thrown in the if statement. */
     {
         _bp_padded_fft = fft_alloc_real(_nmax);
         _bp_padded = reinterpret_cast<meshdata_t*>(_bp_padded_fft);
@@ -167,25 +159,19 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
 
         std::string cl_code_wakepotential = R"(
             __kernel void scalewp(__global data_t* wakepot,
-                                  const ulong paddedsize,
-                                  const uint bpmeshcells,
                                   const data_t scaling,
                                   const __global data_t* wakepot_padded)
             {
                 const uint g = get_global_id(0);
-                const uint n = (g+bpmeshcells/2)%bpmeshcells;
-                const uint p = (n+paddedsize-bpmeshcells/2)%paddedsize;
-                wakepot[n] = scaling*wakepot_padded[p];
+                wakepot[g] = scaling*wakepot_padded[g];
             }
             )";
 
         _clProgScaleWP = OCLH::prepareCLProg(cl_code_wakepotential);
         _clKernScaleWP = cl::Kernel(_clProgScaleWP, "scalewp");
         _clKernScaleWP.setArg(0, _wakepotential_buf);
-        _clKernScaleWP.setArg(1, _nmax);
-        _clKernScaleWP.setArg(2, _bpmeshcells);
-        _clKernScaleWP.setArg(3, _wakescaling);
-        _clKernScaleWP.setArg(4, _wakepotential_padded_buf);
+        _clKernScaleWP.setArg(1, _wakescaling);
+        _clKernScaleWP.setArg(2, _wakepotential_padded_buf);
     } else
     #endif // INOVESA_USE_CLFFT
     #endif // INOVESA_USE_CL
@@ -294,8 +280,8 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
-        OCLH::enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
-                                    cl::NDRange(_bpmeshcells));
+        OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
+                                0,0,sizeof(_bp_padded[0])*_bpmeshcells);
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
@@ -340,8 +326,8 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active){
-        OCLH::enqueueNDRangeKernel( _clKernPadBP,cl::NullRange,
-                                          cl::NDRange(_bpmeshcells));
+        OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
+                                0,0,sizeof(_bp_padded[0])*_bpmeshcells);
         OCLH::queue.enqueueBarrierWithWaitList();
         clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
                           0,nullptr,nullptr,
@@ -370,8 +356,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     {
         // copy bunch profile so that negative times are at maximum bins
         const vfps::projection_t* bp= _phasespace->getProjection(0);
-        std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
-        std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
+        std::copy_n(bp,_bpmeshcells,_bp_padded);
 
         /* Fourier transorm bunch profile (_bp_padded),
          * result will be saved to _formfactor.
@@ -391,11 +376,8 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         //Fourier transorm wakelosses
         fft_execute(_fft_wakelosses);
 
-        for (size_t i=0; i<_bpmeshcells/2; i++) {
-            _wakepotential[_bpmeshcells/2+i]
-                = _wakepotential_padded[        i]*_wakescaling;
-            _wakepotential[_bpmeshcells/2-1-i]
-                = _wakepotential_padded[_nmax-1-i]*_wakescaling;
+        for (size_t i=0; i<_bpmeshcells; i++) {
+            _wakepotential[i] = _wakepotential_padded[i]*_wakescaling;
         }
         #ifdef INOVESA_USE_CL
         #ifndef INOVESA_USE_CLFFT
@@ -430,6 +412,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
+        break;
     case clCopyDirection::dev2cpu:
         OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
@@ -481,17 +464,21 @@ fftw_plan vfps::ElectricField::prepareFFT(size_t n, double* in,
 {
     fftw_plan plan = nullptr;
 
-    std::stringstream wisdomfile;
-    wisdomfile << "wisdom_r2c64_" << n << ".fftw";
+    std::stringstream wisdomfname;
+    wisdomfname << "wisdom_r2c64_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftw_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftw_plan_dft_r2c_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftw_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT);
-        fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftw_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -502,17 +489,21 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n, float *in,
 {
     fftwf_plan plan = nullptr;
 
-    std::stringstream wisdomfile;
-    wisdomfile << "wisdom_r2c32_" << n << ".fftw";
+    std::stringstream wisdomfname;
+    wisdomfname << "wisdom_r2c32_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftwf_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftwf_plan_dft_r2c_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT);
-        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftwf_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -522,17 +513,21 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n, fftwf_complex *in,
 {
     fftwf_plan plan = nullptr;
 
-    std::stringstream wisdomfile;
-    wisdomfile << "wisdom_c2r32_" << n << ".fftw";
+    std::stringstream wisdomfname;
+    wisdomfname << "wisdom_c2r32_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftwf_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftwf_plan_dft_c2r_1d(n,in,out,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_c2r_1d(n,in,out,FFTW_PATIENT);
-        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftwf_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -554,18 +549,22 @@ fftw_plan vfps::ElectricField::prepareFFT(size_t n,
         sign = -1;
     }
 
-    std::stringstream wisdomfile;
+    std::stringstream wisdomfname;
     // find filename for wisdom
-    wisdomfile << "wisdom_c" << dir << "c64_" << n << ".fftw";
+    wisdomfname << "wisdom_c" << dir << "c64_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftw_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftw_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftw_plan_dft_1d(n,in,out,sign,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftw_plan_dft_1d(n,in,out,sign,FFTW_PATIENT);
-        fftw_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftw_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }
@@ -588,18 +587,22 @@ fftwf_plan vfps::ElectricField::prepareFFT(size_t n,
         sign = -1;
     }
 
-    std::stringstream wisdomfile;
+    std::stringstream wisdomfname;
     // find filename for wisdom
-    wisdomfile << "wisdom_c" << dir << "c32_" << n << ".fftw";
+    wisdomfname << "wisdom_c" << dir << "c32_" << n << ".fftw";
+
+    FSPath wisdompath(FSPath::datapath());
+    wisdompath.append("fftwisdom/"+wisdomfname.str());
+
     // use wisdomfile, if it exists
-    if (fftwf_import_wisdom_from_filename(wisdomfile.str().c_str()) != 0) {
+    if (fftwf_import_wisdom_from_filename(wisdompath.c_str()) != 0) {
         plan = fftwf_plan_dft_1d(n,in,out,sign,FFTW_WISDOM_ONLY|FFTW_PATIENT);
     }
     // if there was no wisdom (no or bad file), create some
     if (plan == nullptr) {
         plan = fftwf_plan_dft_1d(n,in,out,sign,FFTW_PATIENT);
-        fftwf_export_wisdom_to_filename(wisdomfile.str().c_str());
-        Display::printText("Created some wisdom at "+wisdomfile.str());
+        fftwf_export_wisdom_to_filename(wisdompath.c_str());
+        Display::printText("Created some wisdom at "+wisdompath.str());
     }
     return plan;
 }

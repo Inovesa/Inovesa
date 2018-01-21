@@ -1,12 +1,29 @@
 cmake_minimum_required(VERSION 3.1)
 
 project(inovesa)
+
+set (INOVESA_VERSION_MAJOR 0)
+set (INOVESA_VERSION_MINOR 15)
+set (INOVESA_VERSION_FIX -1)
+# pre release numbers:
+# -1: alpha
+# -2: beta
+# -3 RC1
+# -n RC(n-2)
+
+configure_file (
+  "${PROJECT_SOURCE_DIR}/InovesaConfig.hpp.in"
+  "${PROJECT_BINARY_DIR}/InovesaConfig.hpp"
+)
+include_directories("${PROJECT_BINARY_DIR}")
+
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
   ./src/CL/CLProfiler.cpp
   ./src/CL/OpenCLHandler.cpp
   ./src/IO/Display.cpp
+  ./src/IO/FSPath.cpp
   ./src/IO/GUI/GUIElement.cpp
   ./src/IO/GUI/Plot2DLine.cpp
   ./src/IO/GUI/Plot3DColormap.cpp
@@ -37,20 +54,22 @@ set(SRC_LIST
 )
 
 set(INC_LIST
+  ./inc/Array.h
   ./inc/CL/CLProfiler.hpp
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
-  ./inc/SM/DriftMap.hpp
   ./inc/PS/ElectricField.hpp
   ./inc/PS/PhaseSpace.hpp
   ./inc/PS/PhaseSpaceFactory.hpp
   ./inc/PS/Ruler.hpp
   ./inc/IO/Display.hpp
+  ./inc/IO/FSPath.hpp
   ./inc/IO/GUI/GUIElement.hpp
   ./inc/IO/GUI/Plot2DLine.hpp
   ./inc/IO/GUI/Plot3DColormap.hpp
   ./inc/IO/HDF5File.hpp
   ./inc/IO/ProgramOptions.hpp
+  ./inc/SM/DriftMap.hpp
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
   ./inc/SM/RFKickMap.hpp
@@ -93,11 +112,14 @@ execute_process(
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 include_directories(./inc)
 
+# Enable Interrupts (Ctrl+C).
+add_definitions(-DINOVESA_USE_INTERRUPT)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-if(APPLE) # workaround bug in OSX
-  add_definitions(--std=c++14)
-endif()
+
+# workaround CMake bug (e.g. in MacOS)
+set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
 if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     add_definitions(-Wall -Wextra)
@@ -179,4 +201,6 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
+
+INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 

@@ -146,13 +146,13 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
     _cl_prog = OCLH::prepareCLProg(_cl_code);
 
     if (OCLH::active) {
-        _hi_buf = cl::Buffer(OCLH::context,
+        _sm_buf = cl::Buffer(OCLH::context,
                              CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                              sizeof(hi)*_ip*_ysize,
                              _hinfo);
         applySM = cl::Kernel(_cl_prog, "applySM_Y");
         applySM.setArg(0, _in->data_buf);
-        applySM.setArg(1, _hi_buf);
+        applySM.setArg(1, _sm_buf);
         applySM.setArg(2, _ip);
         applySM.setArg(3, _ysize);
         applySM.setArg(4, _out->data_buf);

@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -27,51 +27,41 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                                const meshaxis_t angle,
                                const InterpolationType it,
                                const bool interpol_clamped,
-                               const RotationCoordinates rt,
                                const size_t rotmapsize) :
     SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
     _rotmapsize(rotmapsize),
     _clamp(interpol_clamped),
-    _rt(rt),
-    _cos_dt(cos(-angle)),
-    _sin_dt(sin(-angle))
+    _cos_dt(std::cos(-angle)),
+    _sin_dt(std::sin(-angle))
 {
     if (_rotmapsize == 0) {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
             rot = {{float(_cos_dt),float(_sin_dt)}};
             imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
+            zerobin = {{(_axis[0]->zerobin()),(_axis[1]->zerobin())}};
+
 
             genCode4Rotation();
             _cl_prog  = OCLH::prepareCLProg(_cl_code);
 
             applySM = cl::Kernel(_cl_prog, "applyRotation");
             applySM.setArg(0, _in->data_buf);
-            applySM.setArg(1, imgsize);
-            applySM.setArg(2, rot);
-            applySM.setArg(3, _out->data_buf);
-        } else
+            applySM.setArg(1, rot);
+            applySM.setArg(2, imgsize);
+            applySM.setArg(3, zerobin);
+            applySM.setArg(4, _out->data_buf);
+        }
         #endif // INOVESA_USE_CL
-        {
-            if (_clamp) {
-                notClampedMessage();
-            }
-        }
     } else {
-        meshindex_t maxx;
-        if (_rotmapsize == _size) {
-            maxx = _xsize;
-        } else {
-            maxx = _xsize/2;
-        }
-        for (meshindex_t q_i=0; q_i< maxx; q_i++) {
+        for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
             for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
                 genHInfo(q_i,p_i,&_hinfo[(q_i*ysize+p_i)*_ip]);
             }
         }
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
-            _hi_buf = cl::Buffer(OCLH::context,
+            _sm_buf = cl::Buffer(OCLH::context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                  sizeof(hi)*_ip*_rotmapsize,
                                  _hinfo);
@@ -83,7 +73,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
 
                         applySM = cl::Kernel(_cl_prog, "applySM4sat");
                         applySM.setArg(0, _in->data_buf);
-                        applySM.setArg(1, _hi_buf);
+                        applySM.setArg(1, _sm_buf);
                         applySM.setArg(2, _out->data_buf);
                     }
                 }
@@ -93,7 +83,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
 
                 applySM = cl::Kernel(_cl_prog, "applySM1D");
                 applySM.setArg(0, _in->data_buf);
-                applySM.setArg(1, _hi_buf);
+                applySM.setArg(1, _sm_buf);
                 applySM.setArg(2, _ip);
                 applySM.setArg(3, _out->data_buf);
             }
@@ -102,13 +92,11 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
     }
 }
 
-vfps::RotationMap::~RotationMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
+vfps::RotationMap::~RotationMap()
 {
     saveTimings("RotationMap");
 }
-#else
-= default;
 #endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::RotationMap::apply()
@@ -145,31 +133,35 @@ void vfps::RotationMap::apply()
         meshdata_t* data_out = _out->getData();
 
         if (_rotmapsize == 0) {
-            for (meshindex_t q_i=0; q_i< _xsize/2; q_i++) {
+            for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
                 for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
                     meshindex_t i = q_i*_ysize+p_i;
                     data_out[i] = 0;
-                    data_out[_size-1-i] = 0;
-                    genHInfo(q_i,p_i,_hinfo);
+                    genHInfo(q_i,p_i,&(_hinfo[0]));
                     for (uint_fast8_t j=0; j<_ip; j++) {
                         hi h = _hinfo[j];
                         data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-                        data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
+                    }
+                    if (_clamp) {
+                        // handle overshooting
+                        meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
+                        meshdata_t flor=std::numeric_limits<meshdata_t>::max();
+                        for (size_t x=1; x<=2; x++) {
+                            for (size_t y=1; y<=2; y++) {
+                                ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
+                                flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
+                            }
+                        }
+                        data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
                     }
                 }
             }
         } else {
             for (meshindex_t i=0; i< _rotmapsize; i++) {
                 data_out[i] = 0;
-                if (_rotmapsize == _size/2) {
-                    data_out[_size-1-i] = 0;
-                }
                 for (uint_fast8_t j=0; j<_ip; j++) {
                     hi h = _hinfo[i*_ip+j];
                     data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-                    if (_rotmapsize == _size/2) {
-                        data_out[_size-1-i] += data_in[_size-1-h.index]*static_cast<meshdata_t>(h.weight);
-                    }
                 }
                 if (_clamp) {
                     // handle overshooting
@@ -182,18 +174,6 @@ void vfps::RotationMap::apply()
                         }
                     }
                     data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
-
-                    if (_rotmapsize == _size/2) {
-                        ceil=std::numeric_limits<meshdata_t>::min();
-                        flor=std::numeric_limits<meshdata_t>::max();
-                        for (size_t x=1; x<=2; x++) {
-                            for (size_t y=1; y<=2; y++) {
-                                ceil = std::max(ceil,data_in[_size-1-_hinfo[i*_ip+x*_it+y].index]);
-                                flor = std::min(flor,data_in[_size-1-_hinfo[i*_ip+x*_it+y].index]);
-                            }
-                        }
-                        data_out[_size-1-i] = std::max(std::min(ceil,data_out[_size-1-i]),flor);
-                    }
                 }
             }
         }
@@ -204,88 +184,52 @@ vfps::PhaseSpace::Position
 vfps::RotationMap::apply(const PhaseSpace::Position pos) const
 {
     PhaseSpace::Position rv;
-    rv.x = _cos_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
-         + _sin_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
-         + meshaxis_t((_xsize-1)/2.0);
-    rv.y = _cos_dt*meshaxis_t(pos.y-(_ysize-1)/2.0)
-         - _sin_dt*meshaxis_t(pos.x-(_xsize-1)/2.0)
-         + meshaxis_t((_ysize-1)/2.0);
+    rv.x = _cos_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
+         + _sin_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
+         + _axis[0]->zerobin();
+    rv.y = _cos_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
+         - _sin_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
+         + _axis[1]->zerobin();
     return rv;
 }
 
-void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
-                                 vfps::meshindex_t p_i,
+void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
+                                 vfps::meshindex_t y0,
                                  vfps::SourceMap::hi* myhinfo)
 {
     // gridpoint matrix used for interpolation
-    hi* ph1D = new hi[_ip];
-    hi** ph = new hi*[_it];
+    std::unique_ptr<hi[]> ph1D(new hi[_ip]);
+    std::unique_ptr<hi*[]> ph(new hi*[_it]);
     for (uint_fast8_t i=0; i<_it;i++) {
         ph[i] = &ph1D[i*_it];
     }
 
     // arrays of interpolation coefficients
-    interpol_t* icq = new interpol_t[_it];
-    interpol_t* icp = new interpol_t[_it];
+    std::unique_ptr<interpol_t[]> icq(new interpol_t[_it]);
+    std::unique_ptr<interpol_t[]> icp(new interpol_t[_it]);
 
-    interpol_t* smc = new interpol_t[_ip];
+    std::unique_ptr<interpol_t[]> smc(new interpol_t[_ip]);
 
-    // Cell of inverse image (qp,pp) of grid point i,j.
-    meshaxis_t qp; //q', backward mapping
-    meshaxis_t pp; //p'
-    // interpolation type specific q and p coordinates
-    meshaxis_t pcoord;
-    meshaxis_t qcoord;
-    meshaxis_t qq_int;
-    meshaxis_t qp_int;
-    //Scaled arguments of interpolation functions:
-    meshindex_t xi; //meshpoint smaller q'
-    meshindex_t yi; //numper of lower mesh point from p'
-    interpol_t xf; //distance from id
-    interpol_t yf; //distance of p' from lower mesh point
-    switch (_rt) {
-    case RotationCoordinates::mesh:
-        qp = _cos_dt*meshaxis_t(q_i-(_xsize-1)/2.0)
-                - _sin_dt*meshaxis_t(p_i-(_ysize-1)/2.0)
-                + meshaxis_t((_xsize-1)/2.0);
-        pp = _sin_dt*meshaxis_t(q_i-(_xsize-1)/2.0)
-                + _cos_dt*meshaxis_t(p_i-(_ysize-1)/2.0)
-                +meshaxis_t((_ysize-1)/2.0);
-        qcoord = qp;
-        pcoord = pp;
-        break;
-    case RotationCoordinates::norm_0_1:
-        qp = _cos_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
-           - _sin_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
-        pp = _sin_dt*meshaxis_t((q_i-(_xsize-1)/2.0)/(_xsize-1))
-           + _cos_dt*meshaxis_t((p_i-(_ysize-1)/2.0)/(_ysize-1));
-        qcoord = (qp+meshaxis_t(0.5))*meshaxis_t(_xsize-1);
-        pcoord = (pp+meshaxis_t(0.5))*meshaxis_t(_ysize-1);
-        break;
-    case RotationCoordinates::norm_pm1:
-    default:
-        qp = _cos_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
-                    /meshaxis_t(_xsize-1)
-           - _sin_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
-                    /meshaxis_t(_ysize-1);
+    // new coordinates of grid point x0,y0.
+    meshaxis_t x1r = (_cos_dt*_axis[0]->at(x0)-_sin_dt*_axis[1]->at(y0))
+                    / _axis[0]->delta()
+                    + _axis[0]->zerobin();
+    meshaxis_t y1r = (_sin_dt*_axis[0]->at(x0)+_cos_dt*_axis[1]->at(y0))
+                    / _axis[1]->delta()
+                    + _axis[1]->zerobin();
 
-        pp = _sin_dt*meshaxis_t(2*int(q_i)-int(_xsize-1))
-                    /meshaxis_t(_xsize-1)
-           + _cos_dt*meshaxis_t(2*int(p_i)-int(_ysize-1))
-                    /meshaxis_t(_ysize-1);
-        qcoord = (qp+meshaxis_t(1))*meshaxis_t(_xsize-1)/meshaxis_t(2);
-        pcoord = (pp+meshaxis_t(1))*meshaxis_t(_ysize-1)/meshaxis_t(2);
-        break;
-    }
-    xf = modf(qcoord, &qq_int);
-    yf = modf(pcoord, &qp_int);
-    xi = qq_int;
-    yi = qp_int;
+    // new coordinates floating point part
+    interpol_t xf = std::modf(x1r, &x1r);
+    interpol_t yf = std::modf(y1r, &y1r);
 
-    if (xi <  _xsize && yi < _ysize) {
+    // new coordinates integer parts
+    meshindex_t x1 = x1r;
+    meshindex_t y1 = y1r;
+
+    if (x1 <  _xsize && y1 < _ysize) {
         // create vectors containing interpolation coefficiants
-        calcCoefficiants(icq,xf,_it);
-        calcCoefficiants(icp,yf,_it);
+        calcCoefficiants(icq.get(),xf,_it);
+        calcCoefficiants(icp.get(),yf,_it);
 
         /*  Assemble interpolation
          * (using uint_fast16_t so product won't overflow)
@@ -300,11 +244,11 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
         // renormlize to minimize rounding errors
         // renormalize(smc.size(),smc.data());
 
-        // write heritage map
+        // write source map
         for (meshindex_t j1=0; j1<_it; j1++) {
-             meshindex_t j0 = yi+j1-(_it-1)/2;
+             meshindex_t j0 = y1+j1-(_it-1)/2;
             for (meshindex_t i1=0; i1<_it; i1++) {
-                 meshindex_t i0 = xi+i1-(_it-1)/2;
+                 meshindex_t i0 = x1+i1-(_it-1)/2;
                 if(i0< _xsize && j0 < _ysize ){
                     ph[i1][j1].index = i0*_ysize+j0;
                     ph[i1][j1].weight = smc[i1*_it+j1];
@@ -319,13 +263,6 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t q_i,
             myhinfo[i] = {0,0};
         }
     }
-
-    delete [] icp;
-    delete [] icq;
-    delete [] smc;
-
-    delete [] ph;
-    delete [] ph1D;
 }
 
 
@@ -405,17 +342,16 @@ void vfps::RotationMap::genCode4Rotation()
 {
     _cl_code += R"(
     __kernel void applyRotation(    const __global data_t* src,
-                                    const int2 imgSize,
                                     const float2 rot,
+                                    const int2 imgSize,
+                                    const float2 zerobin,
                                     __global data_t* dst)
     {
-        const int x = get_global_id(0)+1;
-        const int y = get_global_id(1)+1;
+        const int x = get_global_id(0);
+        const int y = get_global_id(1);
 
-        const data_t srcx = rot.x*(x-(imgSize.x+1)/2)-rot.y*(y-(imgSize.y+1)/2)
-                                +(imgSize.x+1)/2;
-        const data_t srcy = rot.y*(x-(imgSize.x+1)/2)+rot.x*(y-(imgSize.y+1)/2)
-                                +(imgSize.y+1)/2;
+        const data_t srcx = rot.x*(x-zerobin.x)-rot.y*(y-zerobin.y)+zerobin.x;
+        const data_t srcy = rot.y*(x-zerobin.x)+rot.x*(y-zerobin.y)+zerobin.y;
         const int xi = floor(srcx);
         const int yi = floor(srcy);
         const data_t xf = srcx - xi;

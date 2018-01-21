@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -42,6 +42,7 @@ public:
     };
 
     enum class RotationCoordinates : uint_fast8_t {
+        phys_pq = 0,
         mesh = 1, // rotate on mesh
         norm_0_1 = 2, // normalized space between 0 and 1
         norm_pm1 = 3 // normalized space between -1 and +1
@@ -124,12 +125,12 @@ protected:
     const meshindex_t _size;
 
     /**
-     * @brief _xsize horizontal size of the SourceMap
+     * @brief _xsize horizontal size of the SourceMap (in grid points)
      */
     const meshindex_t _xsize;
 
     /**
-     * @brief _ysize vertical size of the SourceMap
+     * @brief _ysize vertical size of the SourceMap (in grid points)
      */
     const meshindex_t _ysize;
 
@@ -137,7 +138,7 @@ protected:
     /**
      * @brief _hi_buf buffer for source information
      */
-    cl::Buffer _hi_buf;
+    cl::Buffer _sm_buf;
 
     /**
      * @brief applySM
@@ -162,6 +163,8 @@ protected:
     cl::Program _cl_prog;
 
     #endif // INOVESA_USE_CL
+
+    std::array<meshRuler_ptr,2> _axis;
 
     std::shared_ptr<PhaseSpace> _in;
     std::shared_ptr<PhaseSpace> _out;

@@ -74,6 +74,8 @@ public:
 
     static void teardownCLEnvironment();
 
+    static void teardownCLEnvironment(cl::Error& e);
+
     static void listCLDevices();
 
     static bool active;
@@ -99,6 +101,12 @@ public:
     #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
+    static inline void
+    enqueueBarrierWithWaitList()
+    {
+        queue.enqueueBarrierWithWaitList();
+    }
+
     /**
      * This wrapper function allows to centrally controll queuing kernels.
      */

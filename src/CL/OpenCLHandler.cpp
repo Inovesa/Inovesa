@@ -118,22 +118,23 @@ cl::Program OCLH::prepareCLProg(std::string code)
     cl::Program::Sources source(codevec);
     cl::Program p(OCLH::context, source);
     try {
-        #ifdef DEBUG
-        p.build(OCLH::devices,"-g -cl-opt-disable");
-        #else
-        p.build(OCLH::devices);
-        #endif
+        // empty for compatibility reasons.
+        std::string OCLBuildOpts("");
+
+        p.build(OCLH::devices,OCLBuildOpts.c_str());
     } catch (cl::Error &e) {
-        e.what();
-        std::cout	<< "===== OpenCL Code =====\n"
+        std::cerr << e.what() << std::endl;
+        std::cout << "===== OpenCL Code =====\n"
                                 << code << std::endl;
     #ifdef DEBUG
+        throw e;
     }
     #endif
         std::cout	<< "===== OpenCL Build Log =====\n"
                                 << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
                                 << std::endl;
     #ifndef DEBUG
+        throw e;
     }
     #endif
 
@@ -158,6 +159,14 @@ void OCLH::teardownCLEnvironment()
          << std::endl;
     }
 #endif
+}
+
+void OCLH::teardownCLEnvironment(cl::Error& e)
+{
+    OCLH::active = false;
+    std::cerr << "Error: " << e.what() << std::endl
+              << "Shutting down OpenCL." << std::endl;
+    teardownCLEnvironment();
 }
 
 void OCLH::listCLDevices()
