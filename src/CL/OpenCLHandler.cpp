@@ -270,7 +270,9 @@ cl::CommandQueue OCLH::queue;
 
 bool OCLH::ogl_sharing;
 
+#ifdef INOVESA_ENABLE_CLPROFILING
 std::list<vfps::CLTiming> OCLH::timingInfo;
+#endif // INOVESA_ENABLE_CLPROFILING
 
 cl::Event OCLH::init;
 

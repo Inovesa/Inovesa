@@ -37,7 +37,8 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis,
     _data1D(new meshdata_t[_nmeshcells]())
   #ifdef INOVESA_ENABLE_CLPROFILING
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
-  , syncSMEvents(std::make_unique<cl::vector<cl::Event*>>())
+  , integEvents(std::make_unique<cl::vector<cl::Event*>>())
+  , syncPSEvents(std::make_unique<cl::vector<cl::Event*>>())
   #endif
 {
     _data = new meshdata_t*[nMeshCells(0)];
@@ -183,20 +184,26 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
 
 vfps::PhaseSpace::~PhaseSpace()
 {
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    if (OCLH::active) {
+        OCLH::saveTimings(xProjEvents.get(),"xProjPS");
+        OCLH::saveTimings(integEvents.get(),"integPS");
+        OCLH::saveTimings(syncPSEvents.get(),"syncPS");
+    }
+    #endif
     delete [] _data;
     delete [] _data1D;
 }
 
-vfps::integral_t vfps::PhaseSpace::integral()
+void vfps::PhaseSpace::integrate()
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         OCLH::enqueueNDRangeKernel (
                     _clKernIntegral,
                     cl::NullRange,
-                    cl::NDRange(1));
-        OCLH::enqueueReadBuffer
-            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral);
+                    cl::NDRange(1),
+                    cl::NullRange,nullptr,nullptr,integEvents.get());
     } else
     #endif
     {
@@ -215,7 +222,6 @@ vfps::integral_t vfps::PhaseSpace::integral()
         break;
     }
     }
-    return _integral;
 }
 
 vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
@@ -244,7 +250,7 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
 
 vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 {
-    meshdata_t avg = average(axis);;
+    meshdata_t avg = average(axis);
     meshdata_t var = 0;
     for (size_t i=0; i<nMeshCells(axis); i++) {
         var += _projection[axis][i]*std::pow(x(axis,i)-avg,2);
@@ -332,7 +338,8 @@ void vfps::PhaseSpace::updateYProjection() {
 
 vfps::integral_t vfps::PhaseSpace::normalize()
 {
-    integral();
+    integrate();
+    getIntegral();
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
         OCLH::enqueueReadBuffer

@@ -65,8 +65,6 @@ public:
 
     static cl::Program prepareCLProg(std::string);
 
-    static void saveProfilingInfo(std::string fname);
-
     static void teardownCLEnvironment();
 
     static void teardownCLEnvironment(cl::Error& e);
@@ -92,10 +90,12 @@ private:
     static bool ogl_sharing;
 
     #ifdef INOVESA_ENABLE_CLPROFILING
+    static void saveProfilingInfo(std::string fname);
+
     static std::list<vfps::CLTiming> timingInfo;
+    #endif // INOVESA_ENABLE_CLPROFILING
 
     static cl::Event init;
-    #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
     #ifdef INOVESA_USE_CLFFT
@@ -112,13 +112,16 @@ public:
                cl::Buffer outputBuffer)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-
         cl::Event* event = new cl::Event();
         timingsDFT.push_back(event);
         #endif // INOVESA_ENABLE_CLPROFILING
-        clfftEnqueueTransform(plHandle,dir,1,&queue(),
-                      0,nullptr,&(*event)(),
-                      &inputBuffer(),&outputBuffer(),nullptr);
+        clfftEnqueueTransform(plHandle,dir,1,&queue(),0,nullptr,
+                              #ifdef INOVESA_ENABLE_CLPROFILING
+                              &(*event)(),
+                              #else
+                              nullptr,
+                              #endif
+                              &inputBuffer(),&outputBuffer(),nullptr);
     }
     #endif // INOVESA_USE_CLFFT
 

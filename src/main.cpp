@@ -676,7 +676,7 @@ int main(int argc, char** argv)
 
     // 1) the integral
     grid_t1->updateXProjection();
-    grid_t1->integral();
+    grid_t1->integrate();
 
     // 2) the energy spread (variance in Y direction)
     grid_t1->updateYProjection();
@@ -705,13 +705,14 @@ int main(int argc, char** argv)
             grid_t1->normalize();
         } else {
             // works on XProjection
-            grid_t1->integral();
+            grid_t1->integrate();
         }
 
         if (outstep > 0 && simulationstep%outstep == 0) {
             outstepnr++;
 
             // works on XProjection
+            grid_t1->getIntegral();
             grid_t1->variance(0);
             grid_t1->updateYProjection();
             grid_t1->variance(1);
@@ -816,7 +817,7 @@ int main(int argc, char** argv)
             grid_t1->normalize();
         } else {
             // works on XProjection
-            grid_t1->integral();
+            grid_t1->integrate();
         }
         grid_t1->variance(0);
         grid_t1->updateYProjection();
