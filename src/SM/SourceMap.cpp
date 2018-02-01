@@ -66,13 +66,8 @@ vfps::SourceMap::~SourceMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
 void vfps::SourceMap::saveTimings(std::string mapname) {
     if (OCLH::active) {
-        OCLH::queue.flush();
-        for (auto ev : *applySMEvents) {
-            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"Apply"+mapname));
-        }
-        for (auto ev : *syncSMEvents) {
-            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"Sync"+mapname));
-        }
+        OCLH::saveTimings(applySMEvents.get(),"Apply"+mapname);
+        OCLH::saveTimings(syncSMEvents.get(),"Sync"+mapname);
     }
 }
 #endif // INOVESA_ENABLE_CLPROFILING

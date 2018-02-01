@@ -878,12 +878,6 @@ int main(int argc, char** argv)
     // Print the last status.
     Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
 
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        OCLH::queue.flush();
-    }
-    #endif // INOVESA_USE_CL
-
     delete wake_field;
 
     delete wm;

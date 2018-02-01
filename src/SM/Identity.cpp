@@ -23,15 +23,7 @@
 vfps::Identity::~Identity()
 #ifdef INOVESA_ENABLE_CLPROFILING
 {
-    if (OCLH::active) {
-        OCLH::queue.flush();
-        for (auto ev : *applySMEvents) {
-            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"ApplyIDM"));
-        }
-        for (auto ev : *syncSMEvents) {
-            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,"SyncIDM"));
-        }
-    }
+    saveTimings("IDM");
 }
 #else
 = default;

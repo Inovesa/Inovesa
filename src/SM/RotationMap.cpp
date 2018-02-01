@@ -111,18 +111,18 @@ void vfps::RotationMap::apply()
             OCLH::enqueueNDRangeKernel (
                         applySM,
                         cl::NDRange(1,1),
-                        cl::NDRange(_xsize-_it+1,_ysize-_it+1));
+                        cl::NDRange(_xsize-_it+1,_ysize-_it+1),
+                        cl::NullRange,nullptr,nullptr,
+                        applySMEvents.get());
         } else {
             OCLH::enqueueNDRangeKernel (
                         applySM,
                         cl::NullRange,
-                        cl::NDRange(_rotmapsize));
+                        cl::NDRange(_rotmapsize),
+                        cl::NullRange,nullptr,nullptr,
+                        applySMEvents.get());
         }
-        #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
-        #endif // CL_VERSION_1_2
+        OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL

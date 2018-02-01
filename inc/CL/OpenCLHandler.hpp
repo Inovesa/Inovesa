@@ -38,7 +38,6 @@ enum class clCopyDirection {
 #include "CL/local_cl.hpp"
 #pragma GCC diagnostic pop
 
-#define INOVESA_ENABLE_CLPROFILING
 #ifdef INOVESA_ENABLE_CLPROFILING
 #include "CL/CLProfiler.hpp"
 #endif
@@ -50,12 +49,6 @@ enum class clCopyDirection {
 #include <climits>
 #include <list>
 #include <iostream>
-
-#define INOVESA_ENABLE_CLPROFILING
-
-#ifdef INOVESA_ENABLE_CLPROFILING
-#include "CL/CLProfiler.hpp"
-#endif // INOVESA_ENABLE_CLPROFILING
 
 /**
  * Picks the last available platform.
@@ -72,6 +65,8 @@ public:
 
     static cl::Program prepareCLProg(std::string);
 
+    static void saveProfilingInfo(std::string fname);
+
     static void teardownCLEnvironment();
 
     static void teardownCLEnvironment(cl::Error& e);
@@ -80,9 +75,10 @@ public:
 
     static bool active;
 
-    static cl::vector<cl::Platform> platforms;
-
     static cl::Context context;
+
+private:
+    static cl::vector<cl::Platform> platforms;
 
     static cl::vector<cl::Device> devices;
 
@@ -94,6 +90,7 @@ public:
     static cl::CommandQueue queue;
 
     static bool ogl_sharing;
+
     #ifdef INOVESA_ENABLE_CLPROFILING
     static std::list<vfps::CLTiming> timingInfo;
 
@@ -101,10 +98,38 @@ public:
     #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
+    #ifdef INOVESA_USE_CLFFT
+    static inline void
+    bakeClfftPlan(clfftPlanHandle& plHandle)
+    {
+        clfftBakePlan(plHandle,1,&queue(), nullptr, nullptr);
+    }
+
+    static inline void
+    enqueueDFT(clfftPlanHandle& plHandle,
+               clfftDirection dir,
+               cl::Buffer inputBuffer,
+               cl::Buffer outputBuffer)
+    {
+        #ifdef INOVESA_ENABLE_CLPROFILING
+
+        cl::Event* event = new cl::Event();
+        timingsDFT.push_back(event);
+        #endif // INOVESA_ENABLE_CLPROFILING
+        clfftEnqueueTransform(plHandle,dir,1,&queue(),
+                      0,nullptr,&(*event)(),
+                      &inputBuffer(),&outputBuffer(),nullptr);
+    }
+    #endif // INOVESA_USE_CLFFT
+
     static inline void
     enqueueBarrierWithWaitList()
     {
-        queue.enqueueBarrierWithWaitList();
+        #ifdef CL_VERSION_1_2
+        OCLH::queue.enqueueBarrierWithWaitList();
+        #else // CL_VERSION_1_2
+        OCLH::queue.enqueueBarrier();
+        #endif // CL_VERSION_1_2
     }
 
     /**
@@ -120,19 +145,18 @@ public:
                          cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (timings != nullptr) {
-            if (event == nullptr) {
-                event = new cl::Event();
-            }
-            timings->push_back(event);
+        if (event == nullptr) {
+            event = new cl::Event();
         }
+        if (timings == nullptr) {
+            timingsExecute.push_back(event);
+        } else {
+            timings->push_back(event);
+        } // INOVESA_ENABLE_CLPROFILING
         #endif
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
-        #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
-        #endif // CL_VERSION_1_2
+
+        enqueueBarrierWithWaitList();
     }
 
     /**
@@ -149,13 +173,15 @@ public:
                       cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (timings != nullptr) {
-            if (event == nullptr) {
-                event = new cl::Event();
-            }
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        if (timings == nullptr) {
+            timingsCopy.push_back(event);
+        } else {
             timings->push_back(event);
         }
-        #endif
+        #endif // INOVESA_ENABLE_CLPROFILING
         queue.enqueueCopyBuffer(src, dst, src_offset,dst_offset,size,
                                 events, event);
     }
@@ -174,13 +200,15 @@ public:
                        cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (timings != nullptr) {
-            if (event == nullptr) {
-                event = new cl::Event();
-            }
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        if (timings == nullptr) {
+            timingsRead.push_back(event);
+        } else {
             timings->push_back(event);
         }
-        #endif
+        #endif // INOVESA_ENABLE_CLPROFILING
         queue.enqueueReadBuffer(buffer, blocking, src_offset,size,ptr,
                                 events, event);
     }
@@ -199,21 +227,35 @@ public:
                        cl::vector<cl::Event*>* timings = nullptr)
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
-        if (timings != nullptr) {
-            if (event == nullptr) {
-                event = new cl::Event();
-            }
+        if (event == nullptr) {
+            event = new cl::Event();
+        }
+        if (timings == nullptr) {
+            timingsWrite.push_back(event);
+        } else {
             timings->push_back(event);
         }
-        #endif
+        #endif // INOVESA_ENABLE_CLPROFILING
         queue.enqueueWriteBuffer(buffer, blocking, src_offset,size,ptr,
                                 events, event);
     }
 
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    static void saveTimings(cl::vector<cl::Event *> *evts, std::string name);
+    #endif // INOVESA_ENABLE_CLPROFILING
+
 private:
-#ifdef INOVESA_USE_CLFFT
-        static clfftSetupData fft_setup;
-#endif // INOVESA_USE_CLFFT
+    #ifdef INOVESA_USE_CLFFT
+    static clfftSetupData fft_setup;
+    #endif // INOVESA_USE_CLFFT
+
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    static cl::vector<cl::Event*> timingsCopy;
+    static cl::vector<cl::Event*> timingsDFT;
+    static cl::vector<cl::Event*> timingsExecute;
+    static cl::vector<cl::Event*> timingsRead;
+    static cl::vector<cl::Event*> timingsWrite;
+    #endif // INOVESA_ENABLE_CLPROFILING
 
     static const std::string custom_datatypes;
 

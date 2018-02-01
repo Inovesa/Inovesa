@@ -58,30 +58,25 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     #else
     , _wakescaling(wakescalining*_axis_freq.delta()*_axis_wake.delta())
     #endif // INOVESA_USE_CLFFT
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    , evt(std::make_unique<cl::Event>())
-    #elif defined INOVESA_USE_CL
-    , evt(nullptr)
-    #endif
 {
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active) {
         try {
-        _bp_padded = new integral_t[_nmax];
-        std::fill_n(_bp_padded,_nmax,0);
-        _bp_padded_buf = cl::Buffer(OCLH::context,
-                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                      sizeof(integral_t)*_nmax,_bp_padded);
-        _formfactor = new impedance_t[_nmax];
-        _formfactor_buf = cl::Buffer(OCLH::context,
-                                       CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                       sizeof(impedance_t)*_nmax,_formfactor);
-        clfftCreateDefaultPlan(&_clfft_bunchprofile,
-                               OCLH::context(),CLFFT_1D,&_nmax);
-        clfftSetPlanPrecision(_clfft_bunchprofile,CLFFT_SINGLE);
-        clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
-        clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
-        clfftBakePlan(_clfft_bunchprofile,1,&OCLH::queue(), nullptr, nullptr);
+            _bp_padded = new integral_t[_nmax];
+            std::fill_n(_bp_padded,_nmax,0);
+            _bp_padded_buf = cl::Buffer(OCLH::context,
+                                          CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                          sizeof(integral_t)*_nmax,_bp_padded);
+            _formfactor = new impedance_t[_nmax];
+            _formfactor_buf = cl::Buffer(OCLH::context,
+                                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                           sizeof(impedance_t)*_nmax,_formfactor);
+            clfftCreateDefaultPlan(&_clfft_bunchprofile,
+                                   OCLH::context(),CLFFT_1D,&_nmax);
+            clfftSetPlanPrecision(_clfft_bunchprofile,CLFFT_SINGLE);
+            clfftSetLayout(_clfft_bunchprofile, CLFFT_REAL, CLFFT_HERMITIAN_INTERLEAVED);
+            clfftSetResultLocation(_clfft_bunchprofile, CLFFT_OUTOFPLACE);
+            OCLH::bakeClfftPlan(_clfft_bunchprofile);
         } catch (cl::Error &e) {
             OCLH::teardownCLEnvironment(e);
         }
@@ -139,7 +134,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         clfftSetLayout(_clfft_wakelosses,
                        CLFFT_HERMITIAN_INTERLEAVED, CLFFT_REAL);
         clfftSetResultLocation(_clfft_wakelosses, CLFFT_OUTOFPLACE);
-        clfftBakePlan(_clfft_wakelosses,1,&OCLH::queue(), nullptr, nullptr);
+        OCLH::bakeClfftPlan(_clfft_wakelosses);
 
         std::string cl_code_wakelosses = R"(
             __kernel void wakeloss(__global impedance_t* wakelosses,
@@ -282,18 +277,17 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     if (OCLH::active) {
         OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
                                 0,0,sizeof(_bp_padded[0])*_bpmeshcells);
-        OCLH::queue.enqueueBarrierWithWaitList();
-        clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
-                          0,nullptr,nullptr,
-                          &_bp_padded_buf(),&_formfactor_buf(),nullptr);
-        OCLH::queue.enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
+                          _bp_padded_buf,_formfactor_buf);
+        OCLH::enqueueBarrierWithWaitList();
 
-        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                       _nmax*sizeof(_formfactor[0]),_formfactor);
     } else
     #elif defined INOVESA_USE_CL
     if (OCLH::active) {
-        _phasespace->syncCLMem(clCopyDirection::dev2cpu,evt.get());
+        _phasespace->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif // INOVESA_USE_CLTTT
     {
@@ -328,29 +322,27 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     if (OCLH::active){
         OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
                                 0,0,sizeof(_bp_padded[0])*_bpmeshcells);
-        OCLH::queue.enqueueBarrierWithWaitList();
-        clfftEnqueueTransform(_clfft_bunchprofile,CLFFT_FORWARD,1,&OCLH::queue(),
-                          0,nullptr,nullptr,
-                          &_bp_padded_buf(),&_formfactor_buf(),nullptr);
-        OCLH::queue.enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
+                         _bp_padded_buf,_formfactor_buf);
+        OCLH::enqueueBarrierWithWaitList();
 
         OCLH::enqueueNDRangeKernel( _clKernWakelosses,cl::NullRange,
                                           cl::NDRange(_nmax));
-        OCLH::queue.enqueueBarrierWithWaitList();
-        clfftEnqueueTransform(_clfft_wakelosses,CLFFT_BACKWARD,1,&OCLH::queue(),
-                          0,nullptr,nullptr,
-                          &_wakelosses_buf(),&_wakepotential_padded_buf(),nullptr);
-        OCLH::queue.enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueDFT(_clfft_wakelosses,CLFFT_BACKWARD,
+                         _wakelosses_buf,_wakepotential_padded_buf);
+        OCLH::enqueueBarrierWithWaitList();
         OCLH::enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
-        OCLH::queue.enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
         syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #elif defined INOVESA_USE_CL
     if (OCLH::active) {
-        _phasespace->syncCLMem(clCopyDirection::dev2cpu,evt.get());
+        _phasespace->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif // INOVESA_USE_CL
     {
@@ -398,34 +390,34 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
     if (OCLH::active) {
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::queue.enqueueWriteBuffer(_bp_padded_buf,CL_TRUE,0,
+        OCLH::enqueueWriteBuffer(_bp_padded_buf,CL_TRUE,0,
                                        sizeof(*_bp_padded)*_nmax,_bp_padded);
-        OCLH::queue.enqueueWriteBuffer(_formfactor_buf,CL_TRUE,0,
+        OCLH::enqueueWriteBuffer(_formfactor_buf,CL_TRUE,0,
                                        sizeof(*_formfactor)*_nmax,_formfactor);
         #ifdef INOVESA_USE_CLFFT
-        OCLH::queue.enqueueWriteBuffer(_wakelosses_buf,CL_TRUE,0,
+        OCLH::enqueueWriteBuffer(_wakelosses_buf,CL_TRUE,0,
                                        sizeof(*_wakelosses)*_nmax,_wakelosses);
         #endif // INOVESA_USE_CLFFT
-        OCLH::queue.enqueueWriteBuffer(_wakepotential_padded_buf,CL_TRUE,0,
+        OCLH::enqueueWriteBuffer(_wakepotential_padded_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential_padded)*_nmax,
                                        _wakepotential_padded);
-        OCLH::queue.enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
+        OCLH::enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::queue.enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
-        OCLH::queue.enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                       sizeof(*_formfactor)*_nmax,_formfactor);
         #ifdef INOVESA_USE_CLFFT
-        OCLH::queue.enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
                                       sizeof(*_wakelosses)*_nmax,_wakelosses);
         #endif // INOVESA_USE_CLFFT
-        OCLH::queue.enqueueReadBuffer(_wakepotential_padded_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(_wakepotential_padded_buf,CL_TRUE,0,
                                       sizeof(*_wakepotential_padded)*_nmax,
                                       _wakepotential_padded);
-        OCLH::queue.enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
                                       sizeof(*_wakepotential)*_bpmeshcells,
                                       _wakepotential);
         break;

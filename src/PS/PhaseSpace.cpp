@@ -35,6 +35,10 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis,
     _nmeshcells(_nmeshcellsX*_nmeshcellsY),
     _integraltype(IntegralType::simpson),
     _data1D(new meshdata_t[_nmeshcells]())
+  #ifdef INOVESA_ENABLE_CLPROFILING
+  , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
+  , syncSMEvents(std::make_unique<cl::vector<cl::Event*>>())
+  #endif
 {
     _data = new meshdata_t*[nMeshCells(0)];
     for (size_t i=0; i<nMeshCells(0); i++) {
@@ -191,7 +195,7 @@ vfps::integral_t vfps::PhaseSpace::integral()
                     _clKernIntegral,
                     cl::NullRange,
                     cl::NDRange(1));
-        OCLH::queue.enqueueReadBuffer
+        OCLH::enqueueReadBuffer
             (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral);
     } else
     #endif
@@ -219,7 +223,7 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
     if (axis == 0) {
         #ifdef INOVESA_USE_CL
         if (OCLH::active) {
-        OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data());
         }
@@ -266,9 +270,9 @@ void vfps::PhaseSpace::updateXProjection() {
                     nullptr,
                     xProjEvents.get()
                     );
-        OCLH::queue.enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
-        OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data());
         #endif
@@ -300,7 +304,7 @@ void vfps::PhaseSpace::updateXProjection() {
 void vfps::PhaseSpace::updateYProjection() {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::queue.enqueueReadBuffer
+        OCLH::enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
     }
     #endif
@@ -331,7 +335,7 @@ vfps::integral_t vfps::PhaseSpace::normalize()
     integral();
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::queue.enqueueReadBuffer
+        OCLH::enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
     }
     #endif // INOVESA_USE_CL
@@ -340,7 +344,7 @@ vfps::integral_t vfps::PhaseSpace::normalize()
     }
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::queue.enqueueWriteBuffer
+        OCLH::enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
              sizeof(meshdata_t)*nMeshCells(),_data1D);
     }
@@ -360,14 +364,14 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
     if (OCLH::active) {
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::queue.enqueueWriteBuffer
+        OCLH::enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
              sizeof(meshdata_t)*nMeshCells(),_data1D,nullptr,evt);
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::queue.enqueueReadBuffer
+        OCLH::enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
-        OCLH::queue.enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+        OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data(),nullptr,evt);
         break;

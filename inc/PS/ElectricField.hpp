@@ -352,10 +352,6 @@ private:
     #endif // INOVESA_USE_CLFFT
 
     const meshdata_t _wakescaling;
-
-    #ifdef INOVESA_USE_CL
-    std::unique_ptr<cl::Event> evt;
-    #endif // INOVESA_USE_CL
 };
 
 } // namespace vfps
