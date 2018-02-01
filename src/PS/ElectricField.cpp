@@ -22,6 +22,9 @@
 
 #include "IO/FSPath.hpp"
 
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::pi;
+
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const std::shared_ptr<Impedance> impedance,
                                    const double f_rev,
@@ -189,7 +192,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const double sigmaE, const double dt,
                                    const double rbend, const double fs,
                                    const size_t nmax) :
-        ElectricField(ps,impedance,f_rev,dt*physcons::c/(2*M_PI*rbend))
+        ElectricField(ps,impedance,f_rev,dt*physcons::c/(2*pi<double>()*rbend))
 {
     _wakefunction = new meshaxis_t[2*_bpmeshcells];
     fftw_complex* z_fftw = fftw_alloc_complex(nmax);
@@ -200,7 +203,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
 
      const double g = - Ib*physcons::c*ps->getDelta(1)*dt
-                    / (2*M_PI*fs*sigmaE*E0)/(M_PI*rbend);
+                    / (2*pi<double>()*fs*sigmaE*E0)/(pi<double>()*rbend);
 
 
     std::copy_n(_impedance->data(),std::min(nmax,_impedance->nFreqs()),z);

@@ -18,19 +18,6 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#include <chrono>
-#include <climits>
-#include <cmath>
-#include <ctime>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#ifdef INOVESA_USE_PNG
-#include <png++/png.hpp>
-#endif
-#include <memory>
-#include <sstream>
-
 #include "defines.hpp"
 #include "MessageStrings.hpp"
 #include "IO/Display.hpp"
@@ -51,6 +38,22 @@
 #include "SM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
+
+#include <chrono>
+#include <climits>
+#include <cmath>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#ifdef INOVESA_USE_PNG
+#include <png++/png.hpp>
+#endif
+#include <memory>
+#include <sstream>
+
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::pi;
 
 using namespace vfps;
 
@@ -159,7 +162,7 @@ int main(int argc, char** argv)
     const auto use_set_bend = (opts.getBendingRadius()>0);
     const auto R_bend = use_set_bend
             ? opts.getBendingRadius()
-            : physcons::c/(2*M_PI*f_rev);
+            : physcons::c/(2*pi<double>()*f_rev);
 
     /*
      * Revolution frequency an iso-magnetic ring
@@ -168,7 +171,7 @@ int main(int argc, char** argv)
      */
     const auto f0 = !use_set_bend
             ? f_rev
-            : physcons::c/(2*M_PI*R_bend);
+            : physcons::c/(2*pi<double>()*R_bend);
 
     // scaling for isomagnetic approximation, defined to be <= 1
     const double isoscale = f_rev/f0;
@@ -184,12 +187,12 @@ int main(int argc, char** argv)
 
     // non-zero f_s will be used, zero implies usage of alpha0
     if (fs_tmp == 0) {
-        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*M_PI*E0));
+        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*pi<double>()*E0));
     } else {
         // alpha0 should have same sign as fs
         auto sign = (fs_tmp > 0) ? 1 : -1;
 
-        alpha0_tmp = sign*2*M_PI*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
+        alpha0_tmp = sign*2*pi<double>()*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
     }
 
     // synchrotron frequency (comparable to real storage ring)
@@ -234,7 +237,7 @@ int main(int argc, char** argv)
      * angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
-    const meshaxis_t angle = 2*M_PI/steps;
+    const meshaxis_t angle = 2*pi<double>()/steps;
 
     std::string startdistfile = opts.getStartDistFile();
 
@@ -260,7 +263,7 @@ int main(int argc, char** argv)
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }
 
-        const double Inorm = physcons::IAlfven/physcons::me*2*M_PI
+        const double Inorm = physcons::IAlfven/physcons::me*2*pi<double>()
                            * std::pow(dE*fs/f0,2)/V/H
                            * std::pow(bl/R_bend,1./3.);
 
@@ -302,7 +305,7 @@ int main(int argc, char** argv)
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
         sstream.str("");
-        sstream << std::scientific << 1/t_d/fs/(2*M_PI);
+        sstream << std::scientific << 1/t_d/fs/(2*pi<double>());
         Display::printText("Damping beta: " +sstream.str());
 
         sstream.str("");

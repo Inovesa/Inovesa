@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -21,6 +21,8 @@
 #include "Z/ParallelPlatesCSR.hpp"
 
 #include <boost/math/special_functions/airy.hpp>
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::pi;
 
 vfps::ParallelPlatesCSR::ParallelPlatesCSR(const size_t n,
                                            const frequency_t f0,
@@ -43,7 +45,7 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
     // frequency resolution: impedance will be sampled at multiples of delta
     const frequency_t delta = f_max/f0/(n-1.0);
 
-    const double r_bend = physcons::c/(2*M_PI*f0);
+    const double r_bend = physcons::c/(2*pi<double>()*f0);
     constexpr std::complex<double> j(0,1);
     rv.push_back(impedance_t(0,0));
     for (size_t i=1; i<=n/2; i++) {
@@ -54,7 +56,7 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
         const double b = std::pow(m,-4./3.);
         std::complex<double> zinc=1;
         for (uint32_t p=1; p<=maxp;p+=2) {
-            const double u = std::pow(M_PI*p,2)/std::pow(2,2./3.)*b;
+            const double u = std::pow(pi<double>()*p,2)/std::pow(2,2./3.)*b;
             try {
                 zinc = boost::math::airy_ai_prime(u)
                     *(boost::math::airy_ai_prime(u)
@@ -68,7 +70,7 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
             }
             Z += zinc;
         }
-        Z *= 4.0*b*n*g/r_bend*std::pow(M_PI,2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
+        Z *= 4.0*b*n*g/r_bend*std::pow(pi<double>(),2)*std::pow(2,1./3.)/(physcons::epsilon0*physcons::c);
         rv.push_back(impedance_t(Z));
     }
     for (size_t i=n/2+1; i<n; i++) {

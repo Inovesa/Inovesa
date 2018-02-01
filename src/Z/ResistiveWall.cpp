@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2017: Patrik Schönfeldt                                      *
- * Copyright (c) 2017: Karlsruhe Institute of Technology                      *
+ * Copyright (c) 2017-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2017-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -19,6 +19,8 @@
  ******************************************************************************/
 
 #include "Z/ResistiveWall.hpp"
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::pi;
 
 vfps::ResistiveWall::ResistiveWall(const size_t n,
                                    const frequency_t f0,
@@ -51,7 +53,7 @@ vfps::ResistiveWall::__calcImpedance(const size_t n,
      */
     const impedance_t Z1 =
             static_cast<frequency_t>(
-                std::sqrt(Z0*mu_r*f0/s/M_PI/physcons::c)*L/2/b
+                std::sqrt(Z0*mu_r*f0/s/pi<double>()/physcons::c)*L/2/b
             ) * impedance_t(1,-1);
 
     // frequency resolution: impedance will be sampled at multiples of delta

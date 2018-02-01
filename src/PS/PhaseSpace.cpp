@@ -22,6 +22,9 @@
 
 #include <numeric>
 
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::pi;
+
 vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis,
                              const double bunch_charge,
                              const double bunch_current,
@@ -76,13 +79,13 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis,
                 x++;
             }
             while (x < ps_size/2+pulsepix) {
-                meshdata_t weight = std::sqrt(2*M_PI)*ps_size/pmax/nParticles
+                meshdata_t weight = std::sqrt(2*pi<meshdata_t>())*ps_size/pmax/nParticles
                         * std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f);
                 for (size_t i=0; i<nParticles; i++) {
                     float xf = x+xdist(engine);
                     float yf = ydist(engine)
                                     + std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35f),2))
-                                    * amplitude * std::sin(2*M_PI*xf/wavelen);
+                                    * amplitude * std::sin(2*pi<meshdata_t>()*xf/wavelen);
                     meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
                     if (y < ps_size) {
                         (*mesh)[x][y] += weight;
