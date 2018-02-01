@@ -167,6 +167,7 @@ ENDIF()
 
 ## Boost (needed)
 find_package(Boost COMPONENTS filesystem program_options system REQUIRED QUIET)
+include_directories(${Boost_INCLUDE_DIRS})
 SET(LIBS ${LIBS} ${Boost_LIBRARIES})
 
 ## FFTW (needed)
