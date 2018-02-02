@@ -22,7 +22,9 @@
 
 vfps::Identity::~Identity()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~Identity() -> "; }
+{
+    saveTimings("IDM");
+}
 #else
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING

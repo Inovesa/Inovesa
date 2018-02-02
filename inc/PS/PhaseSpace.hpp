@@ -128,10 +128,25 @@ public:
      *
      * relies on an up-to-date _projection[0]
      */
-    integral_t integral();
+    void integrate();
 
-    const integral_t& getIntegral() const
-    { return _integral; }
+    const integral_t& getIntegral()
+    {
+        #ifdef INOVESA_USE_CL
+        if (OCLH::active) {
+            OCLH::enqueueReadBuffer
+                (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
+                nullptr,nullptr
+                #ifdef INOVESA_ENABLE_CLPROFILING
+                , syncPSEvents.get()
+                #endif // INOVESA_ENABLE_CLPROFILING
+                );
+
+        }
+        #endif // INOVESA_USE_CL
+
+        return _integral;
+    }
 
     /**
      * @brief variance
@@ -197,7 +212,7 @@ public:
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
     #ifdef INOVESA_USE_CL
-    void syncCLMem(clCopyDirection dir);
+    void syncCLMem(clCopyDirection dir, cl::Event* evt = nullptr);
     #endif
 
 protected:
@@ -263,6 +278,12 @@ private:
     cl::Program _clProgIntegral;
 
     cl::Kernel  _clKernIntegral;
+
+    std::unique_ptr<cl::vector<cl::Event*>> xProjEvents;
+
+    std::unique_ptr<cl::vector<cl::Event*>> integEvents;
+
+    std::unique_ptr<cl::vector<cl::Event*>> syncPSEvents;
 
     cl::Buffer  ws_buf;
 

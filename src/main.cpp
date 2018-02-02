@@ -2,6 +2,7 @@
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
  * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
  * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2018: Patrick Schreiber                                      *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -60,7 +61,7 @@ using namespace vfps;
 #ifdef INOVESA_USE_INTERRUPT
 #include<csignal> // for SIGINT handling
 
-void SIGINT_handler(int s) {
+void SIGINT_handler(int) {
     Display::abort = true;
 }
 #endif // INOVESA_USE_INTERRUPT
@@ -93,6 +94,15 @@ int main(int argc, char** argv)
     // see documentation of make_display(...)
     auto cldev = opts.getCLDevice();
     std::string ofname = opts.getOutFile();
+
+    if (!opts.showPhaseSpace() && ofname.empty() && !opts.getForceRun()) {
+        std::cout << "Nothing to do. Set at least one of "
+                     " 'gui',"
+                     " 'output', or"
+                     " 'run_anyway'." << std::endl;
+        return EXIT_SUCCESS;
+    }
+
     auto display = make_display(opts.showPhaseSpace(),
                                 ofname,
                                 cldev,
@@ -344,7 +354,7 @@ int main(int argc, char** argv)
      * so initialization might be moved to a factory function
      * at some point.
      */
-    if (startdistfile.length() <= 4 || startdistfile == "/dev/null") {
+    if (startdistfile.empty()) {
         if (ps_size == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
@@ -636,7 +646,7 @@ int main(int argc, char** argv)
         Display::printText("Will save results to \""+ofname+"\".");
     } else
     #endif // INOVESA_USE_PNG
-    if ( ofname == "/dev/null") {
+    if ( ofname.empty() ) {
         Display::printText("Will not save results.");
     } else {
         Display::printText("Unkown filetype for output.");
@@ -669,7 +679,7 @@ int main(int argc, char** argv)
 
     // 1) the integral
     grid_t1->updateXProjection();
-    grid_t1->integral();
+    grid_t1->integrate();
 
     // 2) the energy spread (variance in Y direction)
     grid_t1->updateYProjection();
@@ -698,13 +708,14 @@ int main(int argc, char** argv)
             grid_t1->normalize();
         } else {
             // works on XProjection
-            grid_t1->integral();
+            grid_t1->integrate();
         }
 
         if (outstep > 0 && simulationstep%outstep == 0) {
             outstepnr++;
 
             // works on XProjection
+            grid_t1->getIntegral();
             grid_t1->variance(0);
             grid_t1->updateYProjection();
             grid_t1->variance(1);
@@ -809,7 +820,7 @@ int main(int argc, char** argv)
             grid_t1->normalize();
         } else {
             // works on XProjection
-            grid_t1->integral();
+            grid_t1->integrate();
         }
         grid_t1->variance(0);
         grid_t1->updateYProjection();
@@ -870,12 +881,6 @@ int main(int argc, char** argv)
 
     // Print the last status.
     Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
-
-    #ifdef INOVESA_USE_CL
-    if (OCLH::active) {
-        OCLH::queue.flush();
-    }
-    #endif // INOVESA_USE_CL
 
     delete wake_field;
 

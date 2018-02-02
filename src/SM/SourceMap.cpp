@@ -34,6 +34,10 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
     , _size(xsize*ysize)
     , _xsize(xsize)
     , _ysize(ysize)
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
+    , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
+    #endif // INOVESA_ENABLE_CLPROFILING
     , _axis(std::array<meshRuler_ptr,2>{in->getAxis(0),in->getAxis(1)})
     , _in(in)
     , _out(out)
@@ -56,15 +60,23 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    std::cout << "~SourceMap()" <<std::endl;
-    if (OCLH::active) {
-    OCLH::queue.flush();
-    std::cout << printProfilingInfo(applySMEvents);
-    std::cout << printProfilingInfo(syncSMEvents);
+    for (auto ev : *applySMEvents) {
+        delete ev;
     }
-    #endif // INOVESA_ENABLE_CLPROFILING
+    for (auto ev : *syncSMEvents) {
+        delete ev;
+    }
 }
+
+
+#ifdef INOVESA_ENABLE_CLPROFILING
+void vfps::SourceMap::saveTimings(std::string mapname) {
+    if (OCLH::active) {
+        OCLH::saveTimings(applySMEvents.get(),"Apply"+mapname);
+        OCLH::saveTimings(syncSMEvents.get(),"Sync"+mapname);
+    }
+}
+#endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::SourceMap::apply()
 {
@@ -76,12 +88,11 @@ void vfps::SourceMap::apply()
         OCLH::enqueueNDRangeKernel (
                     applySM,
                     cl::NullRange,
-                    cl::NDRange(_size));
-        #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
-        #endif // CL_VERSION_1_2
+                    cl::NDRange(_size),
+                    cl::NullRange,
+                    nullptr,
+                    nullptr,
+                    applySMEvents.get());
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL

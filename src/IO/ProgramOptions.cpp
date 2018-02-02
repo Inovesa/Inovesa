@@ -122,6 +122,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "of particles to be (pseudo-) tracked")
         ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
             "print information more detailed")
+        ("run_anyway", po::value<bool>(&_forcerun)->default_value(false),
+            "set to omit consistency check for parameters")
     ;
     _programopts_cli.add_options()
         #ifdef INOVESA_USE_CL
@@ -149,6 +151,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "of particles to be (pseudo-) tracked")
         ("verbose,v", po::value<bool>(&_verbose)->default_value(false)->implicit_value(true),
             "print information more detailed")
+        ("run_anyway", po::value<bool>(&_forcerun)->default_value(false)->implicit_value(true),
+            "set to omit consistency check for parameters")
     ;
     _simulopts.add_options()
         ("steps,N", po::value<uint32_t>(&steps)->default_value(1000),
@@ -205,11 +209,6 @@ vfps::ProgramOptions::ProgramOptions() :
     _commandlineopts.add(_simulopts);
     _commandlineopts.add(_physopts);
     _visibleopts.add(_commandlineopts);
-
-
-    std::stringstream timestamp;
-    timestamp << time(nullptr);
-    _outfile = "inovesa-result_" + timestamp.str() + ".h5";
 }
 
 bool vfps::ProgramOptions::parse(int ac, char** av)
@@ -217,9 +216,6 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     po::store(po::parse_command_line(ac, av, _commandlineopts), _vm);
     po::notify(_vm);
 
-    if (_vm.count("verbose")) {
-        _verbose = true;
-    }
     if (_vm.count("help")) {
         std::cout << _visibleopts << std::endl;
         return false;
@@ -259,6 +255,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
             return false;
         }
     }
+    if (_outfile == "/dev/null") {
+        _outfile.clear();
+    }
+    if (_startdistfile == "/dev/null") {
+        _startdistfile.clear();
+    }
     #ifndef INOVESA_USE_CL
     if (_vm.count("cldev")) {
         std::cout    << "Warning: Defined device for OpenCL "
@@ -282,6 +284,7 @@ void vfps::ProgramOptions::save(std::string fname)
         || it->first == "InitialDistParam"
         || it->first == "SyncFreq"
         || it->first == "RFVoltage"
+        || it->first == "run_anyway"
         ){
             continue;
         } else

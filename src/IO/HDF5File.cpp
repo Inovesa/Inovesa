@@ -503,7 +503,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     #if FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
         _ps_datatype = H5::PredType::STD_I32LE;
-    #endif
+    #endif // FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
         _ps_datatype = H5::PredType::STD_I64LE;
     } else if (std::is_same<vfps::meshdata_t,double>::value) {
@@ -648,7 +648,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     version_dset.write(version.data(),H5::PredType::NATIVE_INT);
 }
 
-vfps::HDF5File::~HDF5File()
+vfps::HDF5File::~HDF5File() noexcept
 {
     delete _file;
 }
@@ -906,7 +906,7 @@ std::unique_ptr<vfps::PhaseSpace> vfps::HDF5File::readPhaseSpace(std::string fna
     #if FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
         datatype = H5::PredType::STD_I32LE;
-    #endif
+    #endif // FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
         datatype = H5::PredType::STD_I64LE;
     }else if (std::is_same<vfps::meshdata_t,double>::value) {
@@ -935,7 +935,7 @@ std::unique_ptr<vfps::PhaseSpace> vfps::HDF5File::readPhaseSpace(std::string fna
     #if FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshaxis_t,fixp32>::value) {
         axistype = H5::PredType::STD_I32LE;
-    #endif
+    #endif // FXP_FRACPART < 31
     } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
         axistype = H5::PredType::STD_I64LE;
     }else if (std::is_same<vfps::meshaxis_t,double>::value) {

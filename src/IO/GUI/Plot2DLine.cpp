@@ -76,7 +76,7 @@ vfps::Plot2DLine::Plot2DLine(std::array<float,3> rgb) :
     glGenBuffers(1, &vertexbuffer);
 }
 
-vfps::Plot2DLine::~Plot2DLine()
+vfps::Plot2DLine::~Plot2DLine() noexcept
 {
     glDeleteBuffers(1, &vertexbuffer);
     glDeleteVertexArrays(1, &position);

@@ -20,6 +20,7 @@ include_directories("${PROJECT_BINARY_DIR}")
 aux_source_directory(./src SRC_LIST)
 
 set(SRC_LIST
+  ./src/CL/CLProfiler.cpp
   ./src/CL/OpenCLHandler.cpp
   ./src/IO/Display.cpp
   ./src/IO/FSPath.cpp
@@ -54,6 +55,7 @@ set(SRC_LIST
 
 set(INC_LIST
   ./inc/Array.h
+  ./inc/CL/CLProfiler.hpp
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
   ./inc/PS/ElectricField.hpp
@@ -110,7 +112,7 @@ execute_process(
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 include_directories(./inc)
 
-# Enable Interrupts (Ctrl+C).
+# Enable interrupts (Ctrl+C)
 add_definitions(-DINOVESA_USE_INTERRUPT)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -123,6 +125,8 @@ if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     add_definitions(-Wall -Wextra)
     add_definitions(-g -DDEBUG)
     MESSAGE ("Doing debug compile, including debug symbols.")
+    # Enable OpenCL profiling
+    add_definitions(-DINOVESA_ENABLE_CLPROFILING)
 else()
     add_definitions(-Wall -O3 -w )
     MESSAGE ("Doing release compile, using optimization flags.")

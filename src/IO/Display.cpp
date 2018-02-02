@@ -41,12 +41,12 @@ std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
     if (cldev >= 0)
     #endif // INOVESA_USE_CL
     {
-        if (ofname != "/dev/null") {
+        if (!ofname.empty()) {
             Display::logfile.open(ofname+".log");
         }
         Display::printText("Started Inovesa ("
                            +vfps::inovesa_version()+") at "+timestring);
-        if (ofname != "/dev/null") {
+        if (!ofname.empty()) {
             Display::printText("Will create log at \""+ofname+".log\".");
         }
         if (gui) {
@@ -118,7 +118,7 @@ vfps::Display::Display(uint_fast8_t glversion)
     #endif // INOVESA_USE_GUI
 }
 
-vfps::Display::~Display()
+vfps::Display::~Display() noexcept
 {
     #ifdef INOVESA_USE_GUI
     // Close OpenGL window and terminate GLFW

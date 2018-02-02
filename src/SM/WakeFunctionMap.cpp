@@ -71,7 +71,7 @@ vfps::WakeFunctionMap::~WakeFunctionMap()
 {
     delete [] _wakefunction;
     #ifdef INOVESA_ENABLE_CLPROFILING
-    std::cout << "~WakeFunctionMap() -> ";
+    saveTimings("WakeFunctionMap");
     #endif // INOVESA_ENABLE_CLPROFILING
 }
 
@@ -82,7 +82,8 @@ void vfps::WakeFunctionMap::update()
     _in->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif
-    integral_t charge = _in->integral();
+    _in->integrate();
+    integral_t charge = _in->getIntegral();
     const integral_t* density = _in->getProjection(0);
     for (unsigned int i=0;i<_xsize;i++) {
         _offset[i] = 0;

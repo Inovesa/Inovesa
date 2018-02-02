@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2012-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2012-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -99,6 +99,10 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
     OCLH::ogl_sharing
                     = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_EXTENSIONS>().find(
                             "_gl_sharing") != std::string::npos;
+
+    // place initial marker
+    OCLH::queue.enqueueMarker(&init);
+
     vfps::Display::printText("Initialized \""
                              + OCLH::devices[selecteddevice].getInfo<CL_DEVICE_NAME>()
                              + "\" (on platform \""
@@ -137,11 +141,76 @@ cl::Program OCLH::prepareCLProg(std::string code)
 return p;
 }
 
+#ifdef INOVESA_ENABLE_CLPROFILING
+void OCLH::saveProfilingInfo(std::string fname)
+{
+    saveTimings(&timingsCopy,"MiscCopy");
+    saveTimings(&timingsDFT,"DFTrafo");
+    saveTimings(&timingsExecute,"MiscExec");
+    saveTimings(&timingsRead,"MiscRead");
+    saveTimings(&timingsWrite,"MiscWrite");
+
+    std::ofstream timefile(fname);
+    cl_ulong starttime(init.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>());
+    timingInfo.sort();
+    timefile << "submit"
+     << '\t' << "queued"
+     << '\t' << "start"
+     << '\t' << "finish"
+     << '\t' << "type"
+     << std::endl;
+    for (auto ev : timingInfo) {
+        timefile << ev.submit-starttime
+         << '\t' << ev.queued-starttime
+         << '\t' << ev.start-starttime
+         << '\t' << ev.finish-starttime
+         << '\t' << ev.msg
+         << std::endl;
+    }
+}
+#endif // INOVESA_ENABLE_CLPROFILING
+
+#ifdef INOVESA_ENABLE_CLPROFILING
+void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
+{
+    queue.flush();
+    for (auto ev : *evts) {
+        try {
+            OCLH::timingInfo.push_back(vfps::CLTiming(*ev,name));
+        } catch (...) {
+            std::cerr << "Error in " << name << std::endl;
+        }
+    }
+}
+#endif // INOVESA_ENABLE_CLPROFILING
+
 void OCLH::teardownCLEnvironment()
 {
-#ifdef INOVESA_USE_CLFFT
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    saveProfilingInfo("inovesa-timings.txt");
+    #else
+    queue.flush();
+    #endif
+
+    #ifdef INOVESA_USE_CLFFT
     clfftTeardown();
-#endif // INOVESA_USE_CLFFT
+    #endif // INOVESA_USE_CLFFT
+
+    for (auto ev : timingsCopy) {
+        delete ev;
+    }
+    for (auto ev : timingsDFT) {
+        delete ev;
+    }
+    for (auto ev : timingsExecute) {
+        delete ev;
+    }
+    for (auto ev : timingsRead) {
+        delete ev;
+    }
+    for (auto ev : timingsWrite) {
+        delete ev;
+    }
 }
 
 void OCLH::teardownCLEnvironment(cl::Error& e)
@@ -217,6 +286,12 @@ cl::CommandQueue OCLH::queue;
 
 bool OCLH::ogl_sharing;
 
+#ifdef INOVESA_ENABLE_CLPROFILING
+std::list<vfps::CLTiming> OCLH::timingInfo;
+#endif // INOVESA_ENABLE_CLPROFILING
+
+cl::Event OCLH::init;
+
 #ifdef INOVESA_USE_CLFFT
 clfftSetupData OCLH::fft_setup;
 #endif // INOVESA_USE_CLFFT
@@ -279,4 +354,12 @@ std::string OCLH::datatype_aliases()
     return code;
 }
 
-#endif
+#ifdef INOVESA_ENABLE_CLPROFILING
+cl::vector<cl::Event*> OCLH::timingsCopy;
+cl::vector<cl::Event*> OCLH::timingsDFT;
+cl::vector<cl::Event*> OCLH::timingsExecute;
+cl::vector<cl::Event*> OCLH::timingsRead;
+cl::vector<cl::Event*> OCLH::timingsWrite;
+#endif // INOVESA_ENABLE_CLPROFILING
+
+#endif // INOVESA_USE_CL

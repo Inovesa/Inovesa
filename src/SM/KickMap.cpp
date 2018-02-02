@@ -172,7 +172,9 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
 
 vfps::KickMap::~KickMap()
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~KickMap() -> "; }
+{
+    saveTimings("KickMap");
+}
 #else
     = default;
 #endif // INOVESA_ENABLE_CLPROFILING
@@ -184,27 +186,15 @@ void vfps::KickMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        #ifdef INOVESA_ENABLE_CLPROFILING
-        cl::Event evt;
         OCLH::enqueueNDRangeKernel (
                     applySM,
                     cl::NullRange,
                     cl::NDRange(_meshsize_pd),
                     cl::NullRange,
                     nullptr,
-                    &evt);
-        applySMEvents.push_back(evt);
-        #else
-        OCLH::enqueueNDRangeKernel (
-                    applySM,
-                    cl::NullRange,
-                    cl::NDRange(_meshsize_pd));
-        #endif // INOVESA_ENABLE_CLPROFILING
-        #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
-        #endif // CL_VERSION_1_2
+                    nullptr,
+                    applySMEvents.get());
+        OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
@@ -278,28 +268,21 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
 #ifdef INOVESA_USE_CL
 void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
-    std::unique_ptr<cl::Event> evt
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    = std::make_unique<cl::Event>();
-    #else
-    = nullptr;
-    #endif
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::queue.enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
-                                      sizeof(meshaxis_t)*_meshsize_pd,
-                                      _offset.data(),nullptr,evt.get());
+        OCLH::enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
+                                 sizeof(meshaxis_t)*_meshsize_pd,
+                                 _offset.data(),nullptr,nullptr,
+                                 syncSMEvents.get());
 
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::queue.enqueueReadBuffer(_offset_buf,CL_TRUE,0,
-                                      sizeof(meshaxis_t)*_meshsize_pd,
-                                      _offset.data(),nullptr,evt.get());
+        OCLH::enqueueReadBuffer(_offset_buf,CL_TRUE,0,
+                                sizeof(meshaxis_t)*_meshsize_pd,
+                                _offset.data(),nullptr,nullptr,
+                                syncSMEvents.get());
         break;
     }
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    syncSMEvents.push_back(*evt);
-    #endif
 }
 #endif // INOVESA_USE_CL
 

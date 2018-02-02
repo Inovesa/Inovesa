@@ -136,7 +136,7 @@ protected:
 
     #ifdef INOVESA_USE_CL
     /**
-     * @brief _sm_buf buffer for source map
+     * @brief _hi_buf buffer for source information
      */
     cl::Buffer _sm_buf;
 
@@ -145,9 +145,9 @@ protected:
      */
     cl::Kernel applySM;
 
-    cl::vector<cl::Event> applySMEvents;
+    std::unique_ptr<cl::vector<cl::Event*>> applySMEvents;
 
-    cl::vector<cl::Event> syncSMEvents;
+    std::unique_ptr<cl::vector<cl::Event*>> syncSMEvents;
 
     std::string _cl_code;
 
@@ -160,10 +160,9 @@ protected:
     std::shared_ptr<PhaseSpace> _in;
     std::shared_ptr<PhaseSpace> _out;
 
-protected:
     #ifdef INOVESA_USE_CL
     /**
-     * @brief genCode4SM1D generates OpenCL code for a generic heritage map
+     * @brief genCode4SM1D generates OpenCL code for a generic source map
      */
     void genCode4SM1D();
     #endif // INOVESA_USE_CL
@@ -178,6 +177,10 @@ protected:
                           const uint_fast8_t it) const;
 
     static void notClampedMessage();
+
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    void saveTimings(std::string mapname);
+    #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 }

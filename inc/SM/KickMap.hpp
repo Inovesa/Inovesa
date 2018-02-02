@@ -70,7 +70,7 @@ protected:
 
     #ifdef INOVESA_USE_CL
     cl::Buffer _offset_buf;
-    #endif
+    #endif // INOVESA_USE_CL
 
     /**
      * @brief _kickdirection direction of the offset du to the kick
@@ -84,7 +84,7 @@ protected:
     const cl_int _meshsize_kd;
     #else
     const meshindex_t _meshsize_kd;
-    #endif
+    #endif // INOVESA_USE_CL
 
     /**
      * @brief _meshsize_pd size of the mesh perpendicular to the kick
@@ -93,7 +93,7 @@ protected:
     const cl_int _meshsize_pd;
     #else
     const meshindex_t _meshsize_pd;
-    #endif
+    #endif // INOVESA_USE_CL
 
     /**
      * @brief updateSM
