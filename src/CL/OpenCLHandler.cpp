@@ -177,6 +177,7 @@ void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
     for (auto ev : *evts) {
         try {
             OCLH::timingInfo.push_back(vfps::CLTiming(*ev,name));
+            delete ev;
         } catch (...) {
             std::cerr << "Error in " << name << std::endl;
         }
