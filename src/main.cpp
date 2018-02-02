@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     auto cldev = opts.getCLDevice();
     std::string ofname = opts.getOutFile();
 
-    if (ofname.empty() && !opts.getForceRun()
+    if (ofname.empty() && !opts.getForceRun() && cldev >= 0
         #ifdef INOVESA_USE_OPENGL
         && !opts.showPhaseSpace()
         #endif // INOVESA_USE_OPENGL
