@@ -177,7 +177,6 @@ void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
     for (auto ev : *evts) {
         try {
             OCLH::timingInfo.push_back(vfps::CLTiming(*ev,name));
-            delete ev;
         } catch (...) {
             std::cerr << "Error in " << name << std::endl;
         }
@@ -196,6 +195,22 @@ void OCLH::teardownCLEnvironment()
     #ifdef INOVESA_USE_CLFFT
     clfftTeardown();
     #endif // INOVESA_USE_CLFFT
+
+    for (auto ev : timingsCopy) {
+        delete ev;
+    }
+    for (auto ev : timingsDFT) {
+        delete ev;
+    }
+    for (auto ev : timingsExecute) {
+        delete ev;
+    }
+    for (auto ev : timingsRead) {
+        delete ev;
+    }
+    for (auto ev : timingsWrite) {
+        delete ev;
+    }
 }
 
 void OCLH::teardownCLEnvironment(cl::Error& e)

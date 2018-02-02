@@ -189,6 +189,15 @@ vfps::PhaseSpace::~PhaseSpace()
         OCLH::saveTimings(xProjEvents.get(),"xProjPS");
         OCLH::saveTimings(integEvents.get(),"integPS");
         OCLH::saveTimings(syncPSEvents.get(),"syncPS");
+        for (auto ev : *xProjEvents) {
+            delete ev;
+        }
+        for (auto ev : *integEvents) {
+            delete ev;
+        }
+        for (auto ev : *syncPSEvents) {
+            delete ev;
+        }
     }
     #endif
     delete [] _data;

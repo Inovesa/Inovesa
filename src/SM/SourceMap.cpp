@@ -60,6 +60,12 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
+    for (auto ev : *applySMEvents) {
+        delete ev;
+    }
+    for (auto ev : *syncSMEvents) {
+        delete ev;
+    }
 }
 
 
