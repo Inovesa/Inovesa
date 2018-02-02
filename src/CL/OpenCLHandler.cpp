@@ -196,6 +196,7 @@ void OCLH::teardownCLEnvironment()
     clfftTeardown();
     #endif // INOVESA_USE_CLFFT
 
+    #ifdef INOVESA_ENABLE_CLPROFILING
     for (auto ev : timingsCopy) {
         delete ev;
     }
@@ -211,6 +212,7 @@ void OCLH::teardownCLEnvironment()
     for (auto ev : timingsWrite) {
         delete ev;
     }
+    #endif // INOVESA_ENABLE_CLPROFILING
 }
 
 void OCLH::teardownCLEnvironment(cl::Error& e)

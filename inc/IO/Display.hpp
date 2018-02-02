@@ -126,18 +126,20 @@ public:
 
     static std::ofstream logfile;
 
-private:
-    GLFWwindow* openWindow(uint_fast8_t glversion);
 
+private:
     #ifdef INOVESA_USE_GUI
     #if GLFW_VERSION_MAJOR == 3
+
+    GLFWwindow* openWindow(uint_fast8_t glversion);
+
     /**
      * @brief _window pointer to window struct
      *
      * must not be deleted, is owned by GLFW runtime
      */
     GLFWwindow* _window;
-    #endif
+    #endif // GLFW_VERSION_MAJOR == 3
 
     std::vector<std::shared_ptr<GUIElement>> _item;
     #endif // INOVESA_USE_GUI
