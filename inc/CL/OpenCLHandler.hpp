@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2012-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2012-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -61,7 +61,16 @@ enum class clCopyDirection {
 class OCLH
 {
 public:
-    static void prepareCLEnvironment(bool glsharing, uint32_t device);
+    /**
+     * @brief prepareCLEnvironment
+     * @param device
+     * @param glsharing needs to be implemented
+     */
+    static void prepareCLEnvironment( uint32_t device
+                                    #ifdef INOVESA_USE_OPENGL
+                                    , bool glsharing
+                                    #endif
+                                    );
 
     static cl::Program prepareCLProg(std::string);
 
@@ -87,15 +96,17 @@ private:
      */
     static cl::CommandQueue queue;
 
+    #ifdef INOVESA_USE_OPENGL
     static bool ogl_sharing;
+    #endif // INOVESA_USE_OPENGL
 
     #ifdef INOVESA_ENABLE_CLPROFILING
     static void saveProfilingInfo(std::string fname);
 
     static std::list<vfps::CLTiming> timingInfo;
-    #endif // INOVESA_ENABLE_CLPROFILING
 
     static cl::Event init;
+    #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
     #ifdef INOVESA_USE_CLFFT
@@ -144,8 +155,11 @@ public:
                          const cl::NDRange& global,
                          const cl::NDRange& local = cl::NullRange,
                          const cl::vector<cl::Event>* events = nullptr,
-                         cl::Event* event = nullptr,
-                         cl::vector<cl::Event*>* timings = nullptr)
+                         cl::Event* event = nullptr
+                         #ifdef INOVESA_ENABLE_CLPROFILING
+                         , cl::vector<cl::Event*>* timings = nullptr
+                         #endif // INOVESA_ENABLE_CLPROFILING
+                         )
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
         if (event == nullptr) {
@@ -172,8 +186,11 @@ public:
                       cl::size_type dst_offset,
                       cl::size_type size,
                       const cl::vector<cl::Event>* events = nullptr,
-                      cl::Event* event = nullptr,
-                      cl::vector<cl::Event*>* timings = nullptr)
+                      cl::Event* event = nullptr
+                      #ifdef INOVESA_ENABLE_CLPROFILING
+                      , cl::vector<cl::Event*>* timings = nullptr
+                      #endif // INOVESA_ENABLE_CLPROFILING
+                      )
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
         if (event == nullptr) {
@@ -199,8 +216,11 @@ public:
                        cl::size_type size,
                        void* ptr,
                        const cl::vector<cl::Event>* events = nullptr,
-                       cl::Event* event = nullptr,
-                       cl::vector<cl::Event*>* timings = nullptr)
+                       cl::Event* event = nullptr
+                     #ifdef INOVESA_ENABLE_CLPROFILING
+                     , cl::vector<cl::Event*>* timings = nullptr
+                     #endif // INOVESA_ENABLE_CLPROFILING
+                     )
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
         if (event == nullptr) {
@@ -220,14 +240,17 @@ public:
      * This wrapper function allows to centrally controll queuing writeBuffer
      */
     static inline void
-    enqueueWriteBuffer(const cl::Buffer& buffer,
-                       cl_bool blocking,
-                       cl::size_type src_offset,
-                       cl::size_type size,
-                       const void* ptr,
-                      const cl::vector<cl::Event>* events = nullptr,
-                      cl::Event* event = nullptr,
-                       cl::vector<cl::Event*>* timings = nullptr)
+    enqueueWriteBuffer( const cl::Buffer& buffer
+                      , cl_bool blocking
+                      , cl::size_type src_offset
+                      , cl::size_type size
+                      , const void* ptr
+                      , const cl::vector<cl::Event>* events = nullptr
+                      , cl::Event* event = nullptr
+                      #ifdef INOVESA_ENABLE_CLPROFILING
+                      , cl::vector<cl::Event*>* timings = nullptr
+                      #endif // INOVESA_ENABLE_CLPROFILING
+                      )
     {
         #ifdef INOVESA_ENABLE_CLPROFILING
         if (event == nullptr) {

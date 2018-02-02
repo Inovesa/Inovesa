@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -32,7 +32,7 @@
 #include <memory>
 #include <type_traits>
 
-#ifdef INOVESA_USE_GUI
+#ifdef INOVESA_USE_OPENGL
 
 // Include GLEW
 #include <GL/glew.h>
@@ -43,7 +43,7 @@
 #else // GLFW2
 #include <GL/glfw.h>
 #endif // GLFW2
-#endif // INOVESA_USE_GUI
+#endif // INOVESA_USE_OPENGL
 #include <vector>
 
 #include "PS/PhaseSpace.hpp"
@@ -75,9 +75,12 @@ private:
  * just initialize the log, print some status information, or do nothing
  * but to return a nullptr.
  */
-std::unique_ptr<Display> make_display(bool gui,
-                                      std::string ofname, int cldev,
-                                      uint_fast8_t glversion=0);
+std::unique_ptr<Display> make_display(std::string ofname
+                                      #ifdef INOVESA_USE_OPENGL
+		                      , bool gui
+                                      , uint_fast8_t glversion=0
+                                      #endif // INOVESA_USE_OPENGL
+                                     );
 
 class Display
 {
@@ -101,34 +104,36 @@ public:
     Display& operator=(const Display&) = delete;
     Display& operator=(Display&&) = delete;
 
+    #ifdef INOVESA_USE_OPENGL
     /**
      * @brief Display initializes OpenGL
      * @param glversion
      */
     Display(uint_fast8_t glversion);
+    #endif // INOVESA_USE_OPENGL
 
     /**
      * @brief ~Display() terminats OpenGL (if used)
      */
     ~Display() noexcept;
 
-    #ifdef INOVESA_USE_GUI
-        void addElement(std::shared_ptr<GUIElement> newitem);
-    #endif // INOVESA_USE_GUI
+    #ifdef INOVESA_USE_OPENGL
+    void addElement(std::shared_ptr<GUIElement> newitem);
+    #endif // INOVESA_USE_OPENGL
 
     void draw();
 
     static void printText(std::string txt, float silentTime=0.0f);
 
-    #ifdef INOVESA_USE_GUI
-        void takeElement(std::shared_ptr<GUIElement> item);
-    #endif // INOVESA_USE_GUI
+    #ifdef INOVESA_USE_OPENGL
+    void takeElement(std::shared_ptr<GUIElement> item);
+    #endif // INOVESA_USE_OPENGL
 
     static std::ofstream logfile;
 
 
 private:
-    #ifdef INOVESA_USE_GUI
+    #ifdef INOVESA_USE_OPENGL
     #if GLFW_VERSION_MAJOR == 3
 
     GLFWwindow* openWindow(uint_fast8_t glversion);
@@ -142,7 +147,7 @@ private:
     #endif // GLFW_VERSION_MAJOR == 3
 
     std::vector<std::shared_ptr<GUIElement>> _item;
-    #endif // INOVESA_USE_GUI
+    #endif // INOVESA_USE_OPENGL
 
     /**
      * @brief _lastmessage

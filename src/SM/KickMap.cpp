@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -186,14 +186,16 @@ void vfps::KickMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::enqueueNDRangeKernel (
-                    applySM,
-                    cl::NullRange,
-                    cl::NDRange(_meshsize_pd),
-                    cl::NullRange,
-                    nullptr,
-                    nullptr,
-                    applySMEvents.get());
+        OCLH::enqueueNDRangeKernel( applySM
+                                  , cl::NullRange
+                                  , cl::NDRange(_meshsize_pd)
+                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  , cl::NullRange
+                                  , nullptr
+                                  , nullptr
+                                  , applySMEvents.get()
+                                  #endif // INOVESA_ENABLE_CLPROFILING
+                                  );
         OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
@@ -270,17 +272,25 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::enqueueWriteBuffer(_offset_buf,CL_TRUE,0,
-                                 sizeof(meshaxis_t)*_meshsize_pd,
-                                 _offset.data(),nullptr,nullptr,
-                                 syncSMEvents.get());
+        OCLH::enqueueWriteBuffer( _offset_buf,CL_TRUE,0
+                                , sizeof(meshaxis_t)*_meshsize_pd
+                                , _offset.data()
+                                #ifdef INOVESA_ENABLE_CLPROFILING
+                                , nullptr,nullptr
+                                , syncSMEvents.get()
+                                #endif // INOVESA_ENABLE_CLPROFILING
+                                );
 
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::enqueueReadBuffer(_offset_buf,CL_TRUE,0,
-                                sizeof(meshaxis_t)*_meshsize_pd,
-                                _offset.data(),nullptr,nullptr,
-                                syncSMEvents.get());
+        OCLH::enqueueReadBuffer( _offset_buf,CL_TRUE,0
+                               , sizeof(meshaxis_t)*_meshsize_pd
+                               , _offset.data()
+                               #ifdef INOVESA_ENABLE_CLPROFILING
+                               , nullptr,nullptr
+                               , syncSMEvents.get()
+                               #endif // INOVESA_ENABLE_CLPROFILING
+                               );
         break;
     }
 }

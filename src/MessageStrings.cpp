@@ -1,6 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -37,6 +38,10 @@ const std::string vfps::copyright_notice() noexcept {
         "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
+        #ifdef INOVESA_USE_OPENGL
+        "Copyright (c) 2014-2015 Nathaniel J. Smith, Stefan van der Walt\n"
+        "\t (Magma color code)\n"
+        #endif
         "\n"
         "Inovesa is free software: you can redistribute it and/or modify\n"
         "it under the terms of the GNU General Public License as published by\n"

@@ -211,11 +211,16 @@ void vfps::PhaseSpace::integrate()
 {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::enqueueNDRangeKernel (
-                    _clKernIntegral,
-                    cl::NullRange,
-                    cl::NDRange(1),
-                    cl::NullRange,nullptr,nullptr,integEvents.get());
+        OCLH::enqueueNDRangeKernel( _clKernIntegral
+                                  , cl::NullRange
+                                  , cl::NDRange(1)
+                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  , cl::NullRange
+                                  , nullptr
+                                  , nullptr
+                                  , integEvents.get()
+                                  #endif // INOVESA_ENABLE_CLPROFILING
+                                  );
     } else
     #endif
     {
@@ -279,15 +284,16 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
 void vfps::PhaseSpace::updateXProjection() {
     #ifdef INOVESA_USE_CL
     if (OCLH::active) {
-        OCLH::enqueueNDRangeKernel (
-                    _clKernProjX,
-                    cl::NullRange,
-                    cl::NDRange(nMeshCells(0)),
-                    cl::NullRange,
-                    nullptr,
-                    nullptr,
-                    xProjEvents.get()
-                    );
+        OCLH::enqueueNDRangeKernel(_clKernProjX
+                                  , cl::NullRange
+                                  , cl::NDRange(nMeshCells(0))
+                                  # ifdef INOVESA_ENABLE_CLPROFILING
+                                  , cl::NullRange
+                                  , nullptr
+                                  , nullptr
+                                  , xProjEvents.get()
+                                  #endif // INOVESA_ENABLE_CLPROFILING
+                                  );
         OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL
         OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,

@@ -31,7 +31,11 @@
 #include <CL/cl_gl.h>
 #endif
 
-void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
+void OCLH::prepareCLEnvironment( uint32_t device
+                               #ifdef INOVESA_USE_OPENGL
+                               , bool glsharing
+                               #endif // INOVESA_USE_OPENGL
+                               )
 {
     cl::Platform::get(&OCLH::platforms);
 
@@ -59,7 +63,8 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
     clfftSetup(&fft_setup);
     #endif // INOVESA_USE_CLFFT
 
-    glsharing=false;
+    #ifdef INOVESA_USE_OPENGL
+    glsharing = false; // HACK: does not work ATM
     if (glsharing) {
         #ifdef __linux__
         cl_context_properties properties[] = {
@@ -76,7 +81,9 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
         };
         #endif
         OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
-    } else {
+    } else
+    #endif // INOVESA_USE_OPENGL
+    {
         cl_context_properties properties[] = {
                         CL_CONTEXT_PLATFORM,
                         (cl_context_properties)(OCLH::platforms[selectedplatform])(),
@@ -95,13 +102,18 @@ void OCLH::prepareCLEnvironment(bool glsharing, uint32_t device)
     #endif // INOVESA_ENABLE_CLPROFILING
 
     devicetype = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_TYPE>();
+
+    #ifdef INOVESA_USE_OPENGL
     // cl_VENDOR_gl_sharing is present, when string contains the substring
     OCLH::ogl_sharing
                     = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_EXTENSIONS>().find(
                             "_gl_sharing") != std::string::npos;
+    #endif // INOVESA_USE_OPENGL
 
+    #ifdef INOVESA_ENABLE_CLPROFILING
     // place initial marker
     OCLH::queue.enqueueMarker(&init);
+    #endif // INOVESA_ENABLE_CLPROFILING
 
     vfps::Display::printText("Initialized \""
                              + OCLH::devices[selecteddevice].getInfo<CL_DEVICE_NAME>()
@@ -286,13 +298,15 @@ cl_device_type OCLH::devicetype;
 
 cl::CommandQueue OCLH::queue;
 
+#ifdef INOVESA_USE_OPENGL
 bool OCLH::ogl_sharing;
+#endif // INOVESA_USE_OPENGL
 
 #ifdef INOVESA_ENABLE_CLPROFILING
 std::list<vfps::CLTiming> OCLH::timingInfo;
-#endif // INOVESA_ENABLE_CLPROFILING
 
 cl::Event OCLH::init;
+#endif // INOVESA_ENABLE_CLPROFILING
 
 #ifdef INOVESA_USE_CLFFT
 clfftSetupData OCLH::fft_setup;

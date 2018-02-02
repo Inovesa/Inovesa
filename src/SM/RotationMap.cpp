@@ -108,19 +108,27 @@ void vfps::RotationMap::apply()
         #endif // INOVESA_SYNC_CL
         if (_rotmapsize == 0) {
              // stay away from mesh borders
-            OCLH::enqueueNDRangeKernel (
-                        applySM,
-                        cl::NDRange(1,1),
-                        cl::NDRange(_xsize-_it+1,_ysize-_it+1),
-                        cl::NullRange,nullptr,nullptr,
-                        applySMEvents.get());
+            OCLH::enqueueNDRangeKernel( applySM
+                                      , cl::NDRange(1,1)
+                                      , cl::NDRange(_xsize-_it+1,_ysize-_it+1)
+                                      #ifdef INOVESA_ENABLE_CLPROFILING
+                                      , cl::NullRange
+                                      , nullptr
+                                      , nullptr
+                                      , applySMEvents.get()
+                                      #endif // INOVESA_ENABLE_CLPROFILING
+                                      );
         } else {
-            OCLH::enqueueNDRangeKernel (
-                        applySM,
-                        cl::NullRange,
-                        cl::NDRange(_rotmapsize),
-                        cl::NullRange,nullptr,nullptr,
-                        applySMEvents.get());
+            OCLH::enqueueNDRangeKernel( applySM
+                                      , cl::NullRange
+                                      , cl::NDRange(_rotmapsize)
+                                      #ifdef INOVESA_ENABLE_CLPROFILING
+                                      , cl::NullRange
+                                      , nullptr
+                                      ,nullptr
+                                      , applySMEvents.get()
+                                      #endif // INOVESA_ENABLE_CLPROFILING
+                                      );
         }
         OCLH::enqueueBarrierWithWaitList();
         #ifdef INOVESA_SYNC_CL

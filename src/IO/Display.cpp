@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -24,10 +24,12 @@
 #include "IO/Display.hpp"
 
 
-std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
-                                                  std::string ofname,
-                                                  int cldev,
-                                                  uint_fast8_t glversion)
+std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
+                                                  #ifdef INOVESA_USE_OPENGL
+                                                  , bool gui
+                                                  , uint_fast8_t glversion
+                                                  #endif // INOVESA_USE_OPENGL
+						  )
 {
     const std::time_t start_ctime
             = std::chrono::system_clock::to_time_t(Display::start_time);
@@ -37,36 +39,29 @@ std::unique_ptr<vfps::Display> vfps::make_display(bool gui,
     std::string timestring = sstream.str();
     timestring.resize(timestring.size()-1);
 
-    #ifdef INOVESA_USE_CL
-    if (cldev >= 0)
-    #endif // INOVESA_USE_CL
-    {
-        if (!ofname.empty()) {
-            Display::logfile.open(ofname+".log");
-        }
-        Display::printText("Started Inovesa ("
-                           +vfps::inovesa_version()+") at "+timestring);
-        if (!ofname.empty()) {
-            Display::printText("Will create log at \""+ofname+".log\".");
-        }
-        if (gui) {
-            return std::make_unique<Display>(glversion);
-        }
+    if (!ofname.empty()) {
+        Display::logfile.open(ofname+".log");
     }
-
+    Display::printText("Started Inovesa ("
+                       +vfps::inovesa_version()+") at "+timestring);
+    if (!ofname.empty()) {
+        Display::printText("Will create log at \""+ofname+".log\".");
+    }
+    #ifdef INOVESA_USE_OPENGL
+    if (gui) {
+        return std::make_unique<Display>(glversion);
+    }
+    #endif // INOVESA_USE_OPENGL
     return nullptr;
 }
 
-
+#ifdef INOVESA_USE_OPENGL
 vfps::Display::Display(uint_fast8_t glversion)
-    #ifdef INOVESA_USE_GUI
     #if GLFW_VERSION_MAJOR == 3
         :
         _window(nullptr)
     #endif // GLFW_VERSION_MAJOR == 3
-    #endif // INOVESA_USE_GUI
 {
-    #ifdef INOVESA_USE_GUI
     if (glversion == 0) {
         #if defined(__APPLE__) || defined(__MACOSX)
         glversion = 2;
@@ -115,25 +110,25 @@ vfps::Display::Display(uint_fast8_t glversion)
     glEnable(GL_DEPTH_TEST);
     // Accept fragment if it closer to the camera than the former one
     glDepthFunc(GL_LESS);
-    #endif // INOVESA_USE_GUI
 }
+#endif // INOVESA_USE_OPENGL
 
 vfps::Display::~Display() noexcept
 {
-    #ifdef INOVESA_USE_GUI
+    #ifdef INOVESA_USE_OPENGL
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
-    #endif // INOVESA_USE_GUI
+    #endif // INOVESA_USE_OPENGL
 }
 
-#ifdef INOVESA_USE_GUI
+#ifdef INOVESA_USE_OPENGL
 void vfps::Display::addElement(std::shared_ptr<GUIElement> newitem)
 {
     _item.push_back(newitem);
 }
-#endif // INOVESA_USE_GUI
+#endif // INOVESA_USE_OPENGL
 
-#ifdef INOVESA_USE_GUI
+#ifdef INOVESA_USE_OPENGL
 void vfps::Display::draw() {
     if (! glfwWindowShouldClose(_window)) {
         // Clear the screen
@@ -155,7 +150,7 @@ void vfps::Display::draw() {
         Display::abort = true;
     }
 }
-#endif // INOVESA_USE_GUI
+#endif // INOVESA_USE_OPENGL
 
 void vfps::Display::printText(std::string txt, float silentTime)
 {
@@ -179,7 +174,7 @@ void vfps::Display::printText(std::string txt, float silentTime)
     }
 }
 
-#ifdef INOVESA_USE_GUI
+#ifdef INOVESA_USE_OPENGL
 void vfps::Display::takeElement(std::shared_ptr<GUIElement> item)
 {
     for (size_t i=0; i< _item.size(); i++) {
@@ -211,7 +206,7 @@ GLFWwindow* vfps::Display::openWindow(uint_fast8_t glversion)
     }
     return glfwCreateWindow( 512, 512, title.c_str(), NULL, NULL);
 }
-#endif // INOVESA_USE_GUI
+#endif // INOVESA_USE_OPENGL
 
 std::chrono::system_clock::time_point vfps::Display::start_time;
 

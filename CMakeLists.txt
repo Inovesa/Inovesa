@@ -2,6 +2,25 @@ cmake_minimum_required(VERSION 3.1)
 
 project(inovesa)
 
+## User configuration
+# Enable interrupts (Ctrl+C)
+add_definitions(-DINOVESA_ENABLE_INTERRUPT)
+
+
+# (default) options for Debug and Release builds
+if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    add_definitions(-Wall -Wextra)
+    add_definitions(-g -DDEBUG)
+    MESSAGE ("Doing debug compile, including debug symbols.")
+    # Enable OpenCL profiling
+    add_definitions(-DINOVESA_ENABLE_CLPROFILING)
+else()
+    add_definitions(-Wall -O3 -w )
+    MESSAGE ("Doing release compile, using optimization flags.")
+endif()
+
+## end of user configuration
+
 set (INOVESA_VERSION_MAJOR 0)
 set (INOVESA_VERSION_MINOR 15)
 set (INOVESA_VERSION_FIX -1)
@@ -112,25 +131,11 @@ execute_process(
 add_definitions("-DGIT_COMMIT=\"${GIT_COMMIT}\"")
 include_directories(./inc)
 
-# Enable interrupts (Ctrl+C)
-add_definitions(-DINOVESA_USE_INTERRUPT)
-
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # workaround CMake bug (e.g. in MacOS)
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
-
-if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-    add_definitions(-Wall -Wextra)
-    add_definitions(-g -DDEBUG)
-    MESSAGE ("Doing debug compile, including debug symbols.")
-    # Enable OpenCL profiling
-    add_definitions(-DINOVESA_ENABLE_CLPROFILING)
-else()
-    add_definitions(-Wall -O3 -w )
-    MESSAGE ("Doing release compile, using optimization flags.")
-endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -156,7 +161,7 @@ ENDIF()
 ## OpenGL (optional)
 find_package(OpenGL QUIET)
 IF(OPENGL_FOUND)
-    add_definitions( -DINOVESA_USE_GUI)
+    add_definitions( -DINOVESA_USE_OPENGL)
     MESSAGE ("Found OpenGL. Will add support.")
     find_package(GLEW REQUIRED QUIET)
     find_package(GLFW REQUIRED QUIET)

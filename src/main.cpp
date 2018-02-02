@@ -58,13 +58,13 @@ using boost::math::constants::pi;
 
 using namespace vfps;
 
-#ifdef INOVESA_USE_INTERRUPT
+#ifdef INOVESA_ENABLE_INTERRUPT
 #include<csignal> // for SIGINT handling
 
 void SIGINT_handler(int) {
     Display::abort = true;
 }
-#endif // INOVESA_USE_INTERRUPT
+#endif // INOVESA_ENABLE_INTERRUPT
 
 int main(int argc, char** argv)
 {
@@ -95,18 +95,28 @@ int main(int argc, char** argv)
     auto cldev = opts.getCLDevice();
     std::string ofname = opts.getOutFile();
 
-    if (!opts.showPhaseSpace() && ofname.empty() && !opts.getForceRun()) {
+    if (ofname.empty() && !opts.getForceRun()
+        #ifdef INOVESA_USE_OPENGL
+        && !opts.showPhaseSpace()
+        #endif // INOVESA_USE_OPENGL
+       ) {
         std::cout << "Nothing to do. Set at least one of "
+                     #ifdef INOVESA_USE_OPENGL
                      " 'gui',"
+                     #endif // INOVESA_USE_OPENGL
                      " 'output', or"
                      " 'run_anyway'." << std::endl;
         return EXIT_SUCCESS;
     }
 
-    auto display = make_display(opts.showPhaseSpace(),
-                                ofname,
-                                cldev,
-                                opts.getOpenGLVersion());
+    auto display = (cldev < 0)
+                 ? nullptr
+                 : make_display( ofname
+                               #ifdef INOVESA_USE_OPENGL
+                               , opts.showPhaseSpace()
+                               , opts.getOpenGLVersion()
+                               #endif // INOVESA_USE_OPENGL
+                               );
 
     #ifdef INOVESA_USE_CL
     if (cldev < 0) {
@@ -117,8 +127,11 @@ int main(int argc, char** argv)
     OCLH::active = (cldev > 0);
     if (OCLH::active) {
         try {
-            OCLH::prepareCLEnvironment(opts.showPhaseSpace(),
-                                       opts.getCLDevice()-1);
+            OCLH::prepareCLEnvironment( opts.getCLDevice()-1
+                                       #ifdef INOVESA_USE_OPENGL
+                                       , opts.showPhaseSpace()
+                                       #endif // INOVESA_USE_OPENGL
+                                       );
             std::atexit(OCLH::teardownCLEnvironment);
         } catch (cl::Error& e) {
             Display::printText(e.what());
@@ -421,7 +434,7 @@ int main(int argc, char** argv)
                            +sstream.str()+".");
     }
 
-    #ifdef INOVESA_USE_GUI
+    #ifdef INOVESA_USE_OPENGL
     /**************************************************************************
      *  stuff for (graphical) display                                         *
      **************************************************************************/
@@ -589,7 +602,7 @@ int main(int argc, char** argv)
     }
 
     // initialze the rest of the display elements
-    #ifdef INOVESA_USE_GUI
+    #ifdef INOVESA_USE_OPENGL
     if (display != nullptr) {
         try {
             bpv.reset(new Plot2DLine(std::array<float,3>{{1,0,0}}));
@@ -618,7 +631,7 @@ int main(int argc, char** argv)
             wpv.reset();
         }
     }
-    #endif // INOVESA_USE_GUI
+    #endif // INOVESA_USE_OPENGL
 
     /*
      * preparation to save results
@@ -686,10 +699,10 @@ int main(int argc, char** argv)
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations));
 
-    #ifdef INOVESA_USE_INTERRUPT
+    #ifdef INOVESA_ENABLE_INTERRUPT
     //Install signal handler for SIGINT
     signal(SIGINT, SIGINT_handler);
-    #endif // INOVESA_USE_INTERRUPT
+    #endif // INOVESA_ENABLE_INTERRUPT
 
     /*
      * main simulation loop
@@ -756,7 +769,7 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESA_USE_HDF5
-            #ifdef INOVESA_USE_GUI
+            #ifdef INOVESA_USE_OPENGL
             if (display != nullptr) {
                 if (psv != nullptr) {
                     psv->createTexture(grid_t1);

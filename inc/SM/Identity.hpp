@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -46,9 +46,13 @@ public:
             #ifdef INOVESA_SYNC_CL
             _in->syncCLMem(clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
-            OCLH::enqueueCopyBuffer(_in->data_buf, _out->data_buf,
-                                    0,0,sizeof(meshdata_t)*_size,
-                                    nullptr,nullptr,applySMEvents.get());
+            OCLH::enqueueCopyBuffer( _in->data_buf, _out->data_buf
+                                   , 0,0,sizeof(meshdata_t)*_size
+                                   #ifdef INOVESA_ENABLE_CLPROFILING
+                                   , nullptr,nullptr
+                                   , applySMEvents.get()
+                                   # endif // INOVESA_ENABLE_CLPROFILING
+                                   );
             OCLH::enqueueBarrierWithWaitList();
             #ifdef INOVESA_SYNC_CL
             _out->syncCLMem(clCopyDirection::dev2cpu);

@@ -60,12 +60,14 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 vfps::SourceMap::~SourceMap()
 {
     delete [] _hinfo;
+    #ifdef INOVESA_ENABLE_CLPROFILING
     for (auto ev : *applySMEvents) {
         delete ev;
     }
     for (auto ev : *syncSMEvents) {
         delete ev;
     }
+    #endif // INOVESA_ENABLE_CLPROFILING
 }
 
 
@@ -85,14 +87,16 @@ void vfps::SourceMap::apply()
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::enqueueNDRangeKernel (
-                    applySM,
-                    cl::NullRange,
-                    cl::NDRange(_size),
-                    cl::NullRange,
-                    nullptr,
-                    nullptr,
-                    applySMEvents.get());
+        OCLH::enqueueNDRangeKernel( applySM
+                                  , cl::NullRange
+                                  , cl::NDRange(_size)
+                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  , cl::NullRange
+                                  , nullptr
+                                  , nullptr
+                                  , applySMEvents.get()
+                                  #endif // INOVESA_ENABLE_CLPROFILING
+                                  );
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
