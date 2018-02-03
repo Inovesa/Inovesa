@@ -815,6 +815,8 @@ int main(int argc, char** argv)
         // udate for next time step
         grid_t1->updateXProjection();
 
+        OCLH::flush();
+
         simulationstep++;
     } // end of main simulation loop
 

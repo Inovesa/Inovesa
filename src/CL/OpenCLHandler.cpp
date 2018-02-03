@@ -185,7 +185,7 @@ void OCLH::saveProfilingInfo(std::string fname)
 #ifdef INOVESA_ENABLE_CLPROFILING
 void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
 {
-    queue.flush();
+    queue.finish();
     for (auto ev : *evts) {
         try {
             OCLH::timingInfo.push_back(vfps::CLTiming(*ev,name));
@@ -201,7 +201,7 @@ void OCLH::teardownCLEnvironment()
     #ifdef INOVESA_ENABLE_CLPROFILING
     saveProfilingInfo("inovesa-timings.txt");
     #else
-    queue.flush();
+    OCLH::queue.finish();
     #endif
 
     #ifdef INOVESA_USE_CLFFT

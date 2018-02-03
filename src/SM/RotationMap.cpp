@@ -130,7 +130,7 @@ void vfps::RotationMap::apply()
                                       #endif // INOVESA_ENABLE_CLPROFILING
                                       );
         }
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL

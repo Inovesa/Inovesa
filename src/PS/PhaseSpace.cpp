@@ -294,7 +294,7 @@ void vfps::PhaseSpace::updateXProjection() {
                                   , xProjEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
         OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),

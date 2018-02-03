@@ -280,10 +280,10 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     if (OCLH::active) {
         OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
                                 0,0,sizeof(_bp_padded[0])*_bpmeshcells);
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         OCLH::enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
                           _bp_padded_buf,_formfactor_buf);
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
 
         OCLH::enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                       _nmax*sizeof(_formfactor[0]),_formfactor);
@@ -325,20 +325,20 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     if (OCLH::active){
         OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
                                 0,0,sizeof(_bp_padded[0])*_bpmeshcells);
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         OCLH::enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
                          _bp_padded_buf,_formfactor_buf);
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
 
         OCLH::enqueueNDRangeKernel( _clKernWakelosses,cl::NullRange,
                                           cl::NDRange(_nmax));
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         OCLH::enqueueDFT(_clfft_wakelosses,CLFFT_BACKWARD,
                          _wakelosses_buf,_wakepotential_padded_buf);
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         OCLH::enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
-        OCLH::enqueueBarrierWithWaitList();
+        OCLH::enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
         syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL

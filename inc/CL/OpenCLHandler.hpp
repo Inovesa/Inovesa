@@ -137,7 +137,7 @@ public:
     #endif // INOVESA_USE_CLFFT
 
     static inline void
-    enqueueBarrierWithWaitList()
+    enqueueBarrier()
     {
         #ifdef CL_VERSION_1_2
         OCLH::queue.enqueueBarrierWithWaitList();
@@ -173,7 +173,7 @@ public:
         #endif
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
 
-        enqueueBarrierWithWaitList();
+        enqueueBarrier();
     }
 
     /**
@@ -264,6 +264,16 @@ public:
         #endif // INOVESA_ENABLE_CLPROFILING
         queue.enqueueWriteBuffer(buffer, blocking, src_offset,size,ptr,
                                 events, event);
+    }
+
+    static inline void finish()
+    {
+        OCLH::queue.finish();
+    }
+
+    static inline void flush()
+    {
+        OCLH::queue.flush();
     }
 
     #ifdef INOVESA_ENABLE_CLPROFILING
