@@ -704,6 +704,12 @@ int main(int argc, char** argv)
     signal(SIGINT, SIGINT_handler);
     #endif // INOVESA_ENABLE_INTERRUPT
 
+    #ifdef INOVESA_USE_CL
+    if (OCLH::active) {
+        OCLH::finish();
+    }
+    #endif // INOVESA_USE_CL
+
     /*
      * main simulation loop
      * (everything inside this loop will be run a multitude of times)
@@ -814,8 +820,12 @@ int main(int argc, char** argv)
 
         // udate for next time step
         grid_t1->updateXProjection();
-
-        OCLH::flush();
+	
+        #ifdef INOVESA_USE_CL
+        if (OCLH::active) {
+            OCLH::flush();
+        }
+        #endif // INOVESA_USE_CL
 
         simulationstep++;
     } // end of main simulation loop
