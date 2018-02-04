@@ -59,7 +59,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     #ifdef INOVESA_USE_CLFFT
     , _wakescaling(OCLH::active ? wakescalining : wakescalining/_nmax )
     #else
-    , _wakescaling(wakescalining*_axis_freq.delta()*_axis_wake.delta())
+    , _wakescaling(wakescalining/_nmax)
     #endif // INOVESA_USE_CLFFT
 {
     #ifdef INOVESA_USE_CLFFT
