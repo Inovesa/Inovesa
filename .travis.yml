@@ -18,3 +18,10 @@ matrix:
           packages:
             - clang-3.8
           sources: *sources
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+    packages:
+      - cmake-data
+      - cmake
