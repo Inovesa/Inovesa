@@ -35,11 +35,11 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in,
     for(meshindex_t x=0; x<_xsize; x++) {
         _offset[x] = std::tan(angle)*(xcenter-x);
     }
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         syncCLMem(clCopyDirection::cpu2dev);
     }
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     updateSM();
 }
 

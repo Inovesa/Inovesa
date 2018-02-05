@@ -65,7 +65,7 @@ vfps::Impedance &vfps::Impedance::operator+=(const vfps::Impedance &rhs)
 
 void vfps::Impedance::syncCLMem()
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         data_buf = cl::Buffer(OCLH::context,
                               CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,

@@ -91,9 +91,9 @@ public:
     inline const Ruler<frequency_t>* getRuler() const
         { return &_axis; }
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     cl::Buffer data_buf;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     static constexpr double factor4Ohms = 1;
 

@@ -118,7 +118,7 @@ int main(int argc, char** argv)
                                #endif // INOVESA_USE_OPENGL
                                );
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (cldev < 0) {
         OCLH::listCLDevices();
         return EXIT_SUCCESS;
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
             OCLH::active = false;
         }
     }
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     // here follow a lot of settings and options
 
@@ -704,11 +704,11 @@ int main(int argc, char** argv)
     signal(SIGINT, SIGINT_handler);
     #endif // INOVESA_ENABLE_INTERRUPT
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         OCLH::finish();
     }
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     /*
      * main simulation loop
@@ -738,14 +738,14 @@ int main(int argc, char** argv)
             grid_t1->variance(0);
             grid_t1->updateYProjection();
             grid_t1->variance(1);
-            #ifdef INOVESA_USE_CL
+            #ifdef INOVESA_USE_OPENCL
             if (OCLH::active) {
                 grid_t1->syncCLMem(clCopyDirection::dev2cpu);
                 if (wkm != nullptr) {
                     wkm->syncCLMem(clCopyDirection::dev2cpu);
                 }
             }
-            #endif // INOVESA_USE_CL
+            #endif // INOVESA_USE_OPENCL
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
                 hdf_file->appendTime(static_cast<double>(simulationstep)
@@ -821,11 +821,11 @@ int main(int argc, char** argv)
         // udate for next time step
         grid_t1->updateXProjection();
 	
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             OCLH::flush();
         }
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
 
         simulationstep++;
     } // end of main simulation loop
@@ -850,14 +850,14 @@ int main(int argc, char** argv)
         grid_t1->variance(0);
         grid_t1->updateYProjection();
         grid_t1->variance(1);
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             grid_t1->syncCLMem(clCopyDirection::dev2cpu);
             if (wkm != nullptr) {
                 wkm->syncCLMem(clCopyDirection::dev2cpu);
             }
         }
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
         hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
 
         // for the final result, everything will be saved

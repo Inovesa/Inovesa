@@ -155,7 +155,7 @@ public:
      */
     meshaxis_t* wakePotential();
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     void syncCLMem(clCopyDirection dir);
     #endif
 
@@ -291,20 +291,20 @@ private:
 
     integral_t* _bp_padded_fft;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     cl::Buffer _bp_padded_buf;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     impedance_t* _formfactor;
 
     fft_complex* _formfactor_fft;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;
     cl::Kernel _clKernWakelosses;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     fft_plan _fft_bunchprofile;
 
@@ -330,7 +330,7 @@ private:
      */
     meshaxis_t* _wakepotential_padded;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
 public:
     cl::Buffer _wakepotential_buf;
 
@@ -341,7 +341,7 @@ private:
     cl::Program _clProgScaleWP;
     cl::Kernel _clKernScaleWP;
 
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     meshaxis_t* _wakepotential;
 

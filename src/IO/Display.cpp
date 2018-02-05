@@ -29,7 +29,7 @@ std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
                                                   , bool gui
                                                   , uint_fast8_t glversion
                                                   #endif // INOVESA_USE_OPENGL
-						  )
+                                                 )
 {
     const std::time_t start_ctime
             = std::chrono::system_clock::to_time_t(Display::start_time);

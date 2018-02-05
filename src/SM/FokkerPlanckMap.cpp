@@ -120,7 +120,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
         break;
     }
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
     _cl_code += R"(
     __kernel void applySM_Y(const __global data_t* src,
@@ -172,7 +172,7 @@ vfps::FokkerPlanckMap::~FokkerPlanckMap()
 
 void vfps::FokkerPlanckMap::apply()
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
@@ -192,7 +192,7 @@ void vfps::FokkerPlanckMap::apply()
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     {
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();

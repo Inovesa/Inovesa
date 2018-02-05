@@ -32,7 +32,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
     _meshsize_pd(kd==Axis::x?ysize:xsize)
 {
     if (interpol_clamp
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
             && !OCLH::active
         #endif
        ) {
@@ -49,7 +49,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
         }
     }
     #endif
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         _offset_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
@@ -167,7 +167,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
         applySM.setArg(2, _meshsize_kd);
         applySM.setArg(3, _out->data_buf);
     }
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL
 }
 
 vfps::KickMap::~KickMap()
@@ -181,7 +181,7 @@ vfps::KickMap::~KickMap()
 
 void vfps::KickMap::apply()
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
@@ -201,7 +201,7 @@ void vfps::KickMap::apply()
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     {
     meshdata_t* data_in = _in->getData();
     meshdata_t* data_out = _out->getData();
@@ -267,7 +267,7 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
     return pos;
 }
 
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
     switch (dir) {
@@ -294,11 +294,11 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
         break;
     }
 }
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL
 
 void vfps::KickMap::updateSM()
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (!OCLH::active)
     #endif
     {

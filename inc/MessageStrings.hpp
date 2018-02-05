@@ -33,7 +33,7 @@ namespace vfps
 
 const std::string copyright_notice() noexcept;
 
-const std::string inovesa_version();
+const std::string inovesa_version(const bool verbose=false);
 
 const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,

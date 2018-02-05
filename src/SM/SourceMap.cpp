@@ -42,9 +42,9 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
     , _in(in)
     , _out(out)
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 }
 
 vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
@@ -82,7 +82,7 @@ void vfps::SourceMap::saveTimings(std::string mapname) {
 
 void vfps::SourceMap::apply()
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
@@ -101,7 +101,7 @@ void vfps::SourceMap::apply()
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     {
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();
@@ -124,7 +124,7 @@ void vfps::SourceMap::applyTo(std::vector<vfps::PhaseSpace::Position> &particles
 }
 
 
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 void vfps::SourceMap::genCode4SM1D()
 {
     _cl_code += R"(
@@ -144,7 +144,7 @@ void vfps::SourceMap::genCode4SM1D()
     }
 )";
 }
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL
 
 void vfps::SourceMap::calcCoefficiants(vfps::interpol_t* ic,
                                          const vfps::interpol_t f,

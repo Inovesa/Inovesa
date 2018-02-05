@@ -58,9 +58,9 @@ public:
 
     PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     void syncCLMem(clCopyDirection dir);
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
 protected:
     /**
@@ -68,9 +68,9 @@ protected:
      */
     std::vector<meshaxis_t> _offset;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     cl::Buffer _offset_buf;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     /**
      * @brief _kickdirection direction of the offset du to the kick
@@ -80,20 +80,20 @@ protected:
     /**
      * @brief _meshsize_kd size of the mesh in direction of the kick
      */
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     const cl_int _meshsize_kd;
     #else
     const meshindex_t _meshsize_kd;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     /**
      * @brief _meshsize_pd size of the mesh perpendicular to the kick
      */
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     const cl_int _meshsize_pd;
     #else
     const meshindex_t _meshsize_pd;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     /**
      * @brief updateSM

@@ -102,7 +102,7 @@ protected:
     /**
      * @brief _ip holds the total number of points used for interpolation
      */
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     const cl_uint _ip;
     #else
     const uint_fast8_t _ip;
@@ -134,7 +134,7 @@ protected:
      */
     const meshindex_t _ysize;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     /**
      * @brief _hi_buf buffer for source information
      */
@@ -155,19 +155,19 @@ protected:
 
     cl::Program _cl_prog;
 
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     std::array<meshRuler_ptr,2> _axis;
 
     std::shared_ptr<PhaseSpace> _in;
     std::shared_ptr<PhaseSpace> _out;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     /**
      * @brief genCode4SM1D generates OpenCL code for a generic source map
      */
     void genCode4SM1D();
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 
     /**
      * @brief calcCoefficiants

@@ -112,7 +112,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                   Ib*dt*physcons::c/ps->getScale(0)/(ps->getDelta(1)*sigmaE*E0))
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         _wakepotential_buf = cl::Buffer(OCLH::context, CL_MEM_READ_WRITE,
                                         sizeof(*_wakepotential)*_bpmeshcells);
@@ -172,7 +172,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
         _clKernScaleWP.setArg(2, _wakepotential_padded_buf);
     } else
     #endif // INOVESA_USE_CLFFT
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     {
         _wakelosses_fft = fft_alloc_complex(_nmax);
         _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
@@ -288,7 +288,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
         OCLH::enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                       _nmax*sizeof(_formfactor[0]),_formfactor);
     } else
-    #elif defined INOVESA_USE_CL
+    #elif defined INOVESA_USE_OPENCL
     if (OCLH::active) {
         _phasespace->syncCLMem(clCopyDirection::dev2cpu);
     }
@@ -343,11 +343,11 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
-    #elif defined INOVESA_USE_CL
+    #elif defined INOVESA_USE_OPENCL
     if (OCLH::active) {
         _phasespace->syncCLMem(clCopyDirection::dev2cpu);
     }
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     {
         // copy bunch profile so that negative times are at maximum bins
         const vfps::projection_t* bp= _phasespace->getProjection(0);
@@ -374,7 +374,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         for (size_t i=0; i<_bpmeshcells; i++) {
             _wakepotential[i] = _wakepotential_padded[i]*_wakescaling;
         }
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         #ifndef INOVESA_USE_CLFFT
         if (OCLH::active) {
             OCLH::enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
@@ -382,12 +382,12 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                                      _wakepotential);
         }
         #endif // INOVESA_USE_CLFFT
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
     }
     return _wakepotential;
 }
 
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 void vfps::ElectricField::syncCLMem(clCopyDirection dir)
 {
     if (OCLH::active) {
@@ -427,7 +427,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
     }
     }
 }
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL
 
 vfps::fft_complex* vfps::ElectricField::fft_alloc_complex(size_t n)
 {

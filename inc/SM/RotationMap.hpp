@@ -83,7 +83,7 @@ private:
     const meshaxis_t _cos_dt;
     const meshaxis_t _sin_dt;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     void genCode4SM4sat();
 
     void genCode4Rotation();
@@ -93,7 +93,7 @@ private:
     cl_int2 imgsize;
 
     cl_float2 zerobin;
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
 };
 
 }

@@ -35,7 +35,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
     _sin_dt(std::sin(-angle))
 {
     if (_rotmapsize == 0) {
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             rot = {{float(_cos_dt),float(_sin_dt)}};
             imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
@@ -52,14 +52,14 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
             applySM.setArg(3, zerobin);
             applySM.setArg(4, _out->data_buf);
         }
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
     } else {
         for (meshindex_t q_i=0; q_i< _xsize; q_i++) {
             for(meshindex_t p_i=0; p_i< _ysize; p_i++) {
                 genHInfo(q_i,p_i,&_hinfo[(q_i*ysize+p_i)*_ip]);
             }
         }
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             _sm_buf = cl::Buffer(OCLH::context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -88,7 +88,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                 applySM.setArg(3, _out->data_buf);
             }
         }
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
     }
 }
 
@@ -101,7 +101,7 @@ vfps::RotationMap::~RotationMap()
 
 void vfps::RotationMap::apply()
 {
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
@@ -135,7 +135,7 @@ void vfps::RotationMap::apply()
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     {
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();
@@ -274,7 +274,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
 }
 
 
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 void vfps::RotationMap::genCode4SM4sat()
 {
     _cl_code+= R"(
@@ -464,4 +464,4 @@ void vfps::RotationMap::genCode4Rotation()
         ;})";
     }
 }
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL

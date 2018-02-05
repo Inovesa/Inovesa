@@ -57,7 +57,7 @@ public:
              const double t_sync,
              const double f_rev);
 
-    ~HDF5File() noexcept;
+    ~HDF5File() = default;
 
     void addParameterToGroup(std::string groupname,
                              std::string paramname,
@@ -103,7 +103,7 @@ public:
                        int64_t use_step=-1l);
 
 private:
-    H5::H5File* _file;
+    std::unique_ptr<H5::H5File> _file;
 
     std::string fname;
 

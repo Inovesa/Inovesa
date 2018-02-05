@@ -126,10 +126,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "set to omit consistency check for parameters")
     ;
     _programopts_cli.add_options()
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
         ("config,c", po::value<std::string>(&_configfile),
             "name of a file containing a configuration.")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
@@ -225,7 +225,7 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         return false;
     }
     if (_vm.count("version")) {
-        std::cout << vfps::inovesa_version() << std::endl;
+        std::cout << vfps::inovesa_version(true) << std::endl;
         return false;
     }
     if (_configfile == "/dev/null") {
@@ -261,7 +261,7 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     if (_startdistfile == "/dev/null") {
         _startdistfile.clear();
     }
-    #ifndef INOVESA_USE_CL
+    #ifndef INOVESA_USE_OPENCL
     if (_vm.count("cldev")) {
         std::cout    << "Warning: Defined device for OpenCL "
                     << "but running Inovesa without OpenCL support."

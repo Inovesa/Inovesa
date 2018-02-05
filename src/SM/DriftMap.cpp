@@ -41,11 +41,11 @@ vfps::DriftMap::DriftMap(std::shared_ptr<PhaseSpace> in,
         }
         _offset[y] /= _axis[1]->delta();
     }
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {
         syncCLMem(clCopyDirection::cpu2dev);
     }
-    #endif // INOVESA_USE_CL
+    #endif // INOVESA_USE_OPENCL
     updateSM();
 }
 

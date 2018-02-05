@@ -21,6 +21,8 @@
 #ifdef INOVESA_USE_HDF5
 #include "IO/HDF5File.hpp"
 
+#include "MessageStrings.hpp"
+
 vfps::HDF5File::HDF5File(const std::string filename,
                          const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
@@ -29,7 +31,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const size_t nparticles,
                          const double t_sync,
                          const double f_rev) :
-    _file( nullptr ),
+    _file( std::make_unique<H5::H5File>(filename,H5F_ACC_TRUNC) ),
     fname( filename ),
     ta_dims( 0 ),
     bc_dims( 0 ),
@@ -51,8 +53,6 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _sm_size( _ps_size ),
     wf_size( 2*_ps_size )
 {
-    _file = new H5::H5File(filename,H5F_ACC_TRUNC);
-
     _file->createGroup("Info");
     // save Values of Phase Space Axis
     if (std::is_same<vfps::meshaxis_t,float>::value) {
@@ -295,6 +295,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
 
     // get ready to save EnergyProfiles
+    {
     _file->createGroup("EnergyProfile");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyProfile/axis0" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/EnergyProfile/axis1" );
@@ -333,8 +334,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
     ep_dataset.createAttribute("CoulombPerNES",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                    &ep_CoulombPerSigma);
+    }
 
     // get ready to save Energy Spread
+    {
     _file->createGroup("EnergySpread");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergySpread/axis0" );
     if (std::is_same<vfps::meshaxis_t,float>::value) {
@@ -360,8 +363,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                       es_dataspace,es_prop);
     es_dataset.createAttribute("ElectronVolt",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax1scale);
+    }
 
     // get ready to save particles from (pseudo-) tracking
+    {
     _file->createGroup("Particles");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/Particles/axis0" );
     if (std::is_same<vfps::meshaxis_t,float>::value) {
@@ -392,6 +397,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     pt_dataset = _file->createDataSet("/Particles/data",pt_datatype,
                                       pt_dataspace,pt_prop);
+    }
 
     // get ready to save WakePotential
     if (ef != nullptr) {
@@ -493,6 +499,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     // get ready to save PhaseSpace
+    {
     _file->createGroup("PhaseSpace");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/PhaseSpace/axis0" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis1" );
@@ -536,6 +543,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _ps_dataset.createAttribute("CoulombPerNBLPerNES",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                    &ps_CoulombPerSigma2);
+    }
 
 
     if (imp != nullptr) {
@@ -583,6 +591,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     // get ready to save SourceMap
+    {
     _file->createGroup("SourceMap");
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/SourceMap/axis0" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/SourceMap/axis1" );
@@ -609,6 +618,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                        sm_dataspace,sm_prop);
     _sm_dataset_y = _file->createDataSet("/SourceMap/data/y",_sm_datatype,
                                        sm_dataspace,sm_prop);
+    }
 
     if (wfm != nullptr ) {
         // save Wake Function
@@ -638,6 +648,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     }
 
     // save Inovesa version
+    {
     std::array<hsize_t,1> version_dims {{3}};
     H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
     H5::DataSet version_dset = _file->createDataSet
@@ -646,11 +657,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                     INOVESA_VERSION_MINOR,
                                     INOVESA_VERSION_FIX}};
     version_dset.write(version.data(),H5::PredType::NATIVE_INT);
-}
+    }
 
-vfps::HDF5File::~HDF5File() noexcept
-{
-    delete _file;
+    // save full Inovesa version string
+    {
+    std::string ver_string = vfps::inovesa_version(true);
+    const hsize_t ver_string_dim(ver_string.size());
+    H5::DataSpace ver_string_dspace(1,&ver_string_dim);
+    H5::DataSet ver_string_dset = _file->createDataSet
+                    ("/Info/Inovesa_build", H5::PredType::C_S1,ver_string_dspace);
+    ver_string_dset.write(ver_string.c_str(),H5::PredType::C_S1);
+    }
 }
 
 void vfps::HDF5File::addParameterToGroup(std::string groupname,

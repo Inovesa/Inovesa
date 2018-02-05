@@ -58,7 +58,7 @@ const std::string vfps::copyright_notice() noexcept {
     return rv;
 }
 
-const std::string vfps::inovesa_version() {
+const std::string vfps::inovesa_version(const bool verbose) {
     std::stringstream sstream;
     sstream << 'v' << INOVESA_VERSION_MAJOR << '.'
             << INOVESA_VERSION_MINOR;
@@ -79,9 +79,35 @@ const std::string vfps::inovesa_version() {
             && (INOVESA_VERSION_FIX == -1 || INOVESA_VERSION_FIX == -2)) {
         sstream << ", Commit: "<< GIT_COMMIT;
     }
-    #ifdef DEBUG
-    sstream << " (Debug Build)";
-    #endif
+    if (verbose) {
+        sstream << std::endl << "Build options:"
+                #ifdef DEBUG
+                << std::endl << '\t' << "DEBUG"
+                #endif
+                #ifdef INOVESA_ENABLE_INTERRUPT
+                << std::endl << '\t' << "INOVESA_ENABLE_INTERRUPT"
+                #endif
+                #ifdef INOVESA_ENABLE_CLPROFILING
+                << std::endl << '\t' << "INOVESA_ENABLE_CLPROFILING"
+                #endif
+                #ifdef INOVESA_USE_OPENCL
+                << std::endl << '\t' << "INOVESA_USE_OPENCL"
+                #endif
+                #ifdef INOVESA_USE_CLFFT
+                << std::endl << '\t' << "INOVESA_USE_CLFFT"
+                #endif
+                #ifdef INOVESA_USE_OPENGL
+                << std::endl << '\t' << "INOVESA_USE_OPENGL"
+                #endif
+                #ifdef INOVESA_USE_HDF5
+                << std::endl << '\t' << "INOVESA_USE_HDF5"
+                #endif
+                #ifdef INOVESA_USE_PNG
+                << std::endl << '\t' << "INOVESA_USE_PNG"
+                #endif
+                ;
+    }
+
     return sstream.str();
 }
 

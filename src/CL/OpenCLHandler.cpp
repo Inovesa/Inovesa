@@ -18,7 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 
 #include "CL/OpenCLHandler.hpp"
 #include "IO/Display.hpp"
@@ -378,4 +378,4 @@ cl::vector<cl::Event*> OCLH::timingsRead;
 cl::vector<cl::Event*> OCLH::timingsWrite;
 #endif // INOVESA_ENABLE_CLPROFILING
 
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL

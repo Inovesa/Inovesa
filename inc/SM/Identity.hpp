@@ -41,7 +41,7 @@ public:
      */
     void apply() override
     {
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             #ifdef INOVESA_SYNC_CL
             _in->syncCLMem(clCopyDirection::cpu2dev);
@@ -58,7 +58,7 @@ public:
             _out->syncCLMem(clCopyDirection::dev2cpu);
             #endif // INOVESA_SYNC_CL
         } else
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
         {
             meshdata_t* data_in = _in->getData();
             meshdata_t* data_out = _out->getData();

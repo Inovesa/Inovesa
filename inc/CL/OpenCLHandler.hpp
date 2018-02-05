@@ -20,7 +20,7 @@
 
 #ifndef OPENCLHANDLER_HPP
 #define OPENCLHANDLER_HPP
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 
 enum class clCopyDirection {
     cpu2dev,
@@ -111,13 +111,13 @@ private:
 public:
     #ifdef INOVESA_USE_CLFFT
     static inline void
-    bakeClfftPlan(clfftPlanHandle& plHandle)
+    bakeClfftPlan(clfftPlanHandle plHandle)
     {
         clfftBakePlan(plHandle,1,&queue(), nullptr, nullptr);
     }
 
     static inline void
-    enqueueDFT(clfftPlanHandle& plHandle,
+    enqueueDFT(clfftPlanHandle plHandle,
                clfftDirection dir,
                cl::Buffer inputBuffer,
                cl::Buffer outputBuffer)
@@ -298,5 +298,5 @@ private:
     static std::string datatype_aliases();
 };
 
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL
 #endif // OPENCLHANDLER_HPP

@@ -132,7 +132,7 @@ public:
 
     const integral_t& getIntegral()
     {
-        #ifdef INOVESA_USE_CL
+        #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             OCLH::enqueueReadBuffer
                 (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
@@ -143,7 +143,7 @@ public:
                 );
 
         }
-        #endif // INOVESA_USE_CL
+        #endif // INOVESA_USE_OPENCL
 
         return _integral;
     }
@@ -211,7 +211,7 @@ public:
      */
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-    #ifdef INOVESA_USE_CL
+    #ifdef INOVESA_USE_OPENCL
     void syncCLMem(clCopyDirection dir, cl::Event* evt = nullptr);
     #endif
 
@@ -262,7 +262,7 @@ protected:
 
     std::vector<meshdata_t> _ws;
 
-#ifdef INOVESA_USE_CL
+#ifdef INOVESA_USE_OPENCL
 public:
     cl::Buffer data_buf;
 
@@ -290,7 +290,7 @@ private:
     static std::string cl_code_integral;
 
     static std::string cl_code_projection_x;
-#endif // INOVESA_USE_CL
+#endif // INOVESA_USE_OPENCL
 
 public:
     void createFromProjections();
