@@ -26,12 +26,14 @@
 #include <cfloat>
 #include <cmath>
 #include <fstream>
+#ifdef INOVESA_USE_OPENGL
 #include <GL/glew.h>
 #ifndef __APPLE__
 #include <GL/gl.h>
 #else // non-Apple
 #include <OpenGL/gl.h>
 #endif // non-Apple
+#endif // INOVESA_USE_OPENGL
 #include <list>
 #include <memory>
 #include <stdexcept>
