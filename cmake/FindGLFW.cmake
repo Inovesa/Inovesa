@@ -150,7 +150,7 @@ endif (WIN32)
 
 set( GLFW_FOUND "NO" )
 
-if((GLFW_INCLUDE_DIR) and (X11_FOUND) and (X11_Xrandr_FOUND) and (X11_xf86vmode_FOUND))
+if((GLFW_INCLUDE_DIR) AND (X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_FOUND))
 
     if(GLFW_glfw_LIBRARY)
         set( GLFW_LIBRARIES "${GLFW_glfw_LIBRARY}"
