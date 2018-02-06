@@ -28,7 +28,7 @@ vfps::FSPath::FSPath(std::string path)
 
 vfps::FSPath& vfps::FSPath::append(std::string path)
 {
-    _path.append(path);
+    _path /= path;
     checkDirectory(path);
     return *this;
 }
@@ -57,11 +57,7 @@ std::string vfps::FSPath::expand_user(std::string path)
 
 void vfps::FSPath::checkDirectory(std::string path)
 {
-    if (fs::exists(_path)) {
-        if (fs::is_directory(_path) && (path.back()) != '/') {
-            _path.append("/");
-        }
-    } else {
+    if (!fs::exists(_path)) {
         if ((path.back()) == '/') {
             fs::create_directories(_path);
         } else {
