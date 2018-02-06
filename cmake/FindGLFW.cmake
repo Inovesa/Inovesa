@@ -150,7 +150,11 @@ endif (WIN32)
 
 set( GLFW_FOUND "NO" )
 
-if((GLFW_INCLUDE_DIR) AND (X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_FOUND))
+if((GLFW_INCLUDE_DIR) AND
+    ((APPLE) OR (WIN32) OR
+        ((X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_FOUND))
+    )
+)
 
     if(GLFW_glfw_LIBRARY)
         set( GLFW_LIBRARIES "${GLFW_glfw_LIBRARY}"
@@ -198,8 +202,11 @@ if((GLFW_INCLUDE_DIR) AND (X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_
         mark_as_advanced(GLFW_VERSION)
     endif()
     
-endif((GLFW_INCLUDE_DIR) AND (X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_FOUND))
-
+endif((GLFW_INCLUDE_DIR) AND
+        ((APPLE) OR (WIN32) OR
+            ((X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_FOUND))
+        )
+    )
 include(FindPackageHandleStandardArgs)
 
 find_package_handle_standard_args(GLFW
