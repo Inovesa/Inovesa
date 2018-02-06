@@ -198,7 +198,7 @@ if((GLFW_INCLUDE_DIR) AND (X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_
         mark_as_advanced(GLFW_VERSION)
     endif()
     
-endif(GLFW_INCLUDE_DIR)
+endif((GLFW_INCLUDE_DIR) AND (X11_FOUND) AND (X11_Xrandr_FOUND) AND (X11_xf86vmode_FOUND))
 
 include(FindPackageHandleStandardArgs)
 

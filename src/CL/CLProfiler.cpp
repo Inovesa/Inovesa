@@ -18,6 +18,8 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
+#if defined (INOVESA_USE_OPENCL) && defined (INOVESA_ENABLE_CLPROFILING)
+
 #include "CL/CLProfiler.hpp"
 
 vfps::CLTiming::CLTiming(const cl::Event& ev, std::string msg)
@@ -28,3 +30,5 @@ vfps::CLTiming::CLTiming(const cl::Event& ev, std::string msg)
     , finish(ev.getProfilingInfo<CL_PROFILING_COMMAND_END>())
 {
 }
+
+#endif // INOVESA_USE_OPENCL, INOVESA_ENABLE_CLPROFILING
