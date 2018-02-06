@@ -1,26 +1,40 @@
-language: generic
-os: osx
-matrix:
-  include:
-    - os: linux
-      env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
-      addons:
-        apt:
-          packages:
-            - g++-5
-            - cmake-data
-            - cmake
-          sources: &sources
-            - llvm-toolchain-precise-3.8
-            - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
-    - os: linux
-      env: COMPILER_NAME=clang CXX=clang++-3.8 CC=clang-3.8
-      addons:
-        apt:
-          packages:
-            - clang-3.8
-            - cmake-data
-            - cmake
-          sources: *sources
+language: cpp
+
+# blocklist
+branches:
+  only:
+  - master
+addons:
+  apt:
+    sources:
+      - george-edison55-precise-backports
+      - llvm-toolchain-precise-3.8
+      - ubuntu-toolchain-r-test
+    packages:
+      # compilers and build tools
+      - cmake-data
+      - cmake
+      - clang-3.8
+      - g++-5
+      - gcc-5
+      # actual dependencies
+      - libboost-dev # required
+      - libboost-system-dev # required
+      - libboost-filesystem-dev # required
+      - libboost-program-options-dev # required
+      - libclfft-dev # optional
+      - libfftw3-dev # required
+      - libglew-dev # optional
+      - libglfw3-dev # optional
+      - libhdf5-dev # optional
+      - libpng++-dev # optional
+      - libxrandr-dev # optional
+      - opencl-dev # optional
+#compiler: # for "matrix builds" testing various configurations
+#  - clang
+#  - gcc
+install: # set correct compiler versions
+    - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
+    - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
+
 
