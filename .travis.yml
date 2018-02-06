@@ -22,14 +22,14 @@ addons:
       - libboost-system-dev # required
       - libboost-filesystem-dev # required
       - libboost-program-options-dev # required
-      - libclfft-dev # optional
+#      - libclfft-dev # optional
       - libfftw3-dev # required
-      - libglew-dev # optional
-      - libglfw3-dev # optional
+#      - libglew-dev # optional
+#      - libglfw3-dev # optional
       - libhdf5-dev # optional
       - libpng++-dev # optional
-      - libxrandr-dev # optional
-      - opencl-dev # optional
+#      - libxrandr-dev # optional
+#      - opencl-dev # optional
 #compiler: # for "matrix builds" testing various configurations
 #  - clang
 #  - gcc
