@@ -110,14 +110,17 @@ else ()
     else ()
         # (*)NIX
         
-        find_package(X11 REQUIRED)
+        find_package(X11)
+        if(NOT X11_FOUND)
+            message("X11 library not found - required for GLFW")
+        endif()
         
         if(NOT X11_Xrandr_FOUND)
-            message(FATAL_ERROR "Xrandr library not found - required for GLFW")
+            message("Xrandr library not found - required for GLFW")
         endif()
 
         if(NOT X11_xf86vmode_FOUND)
-            message(FATAL_ERROR "xf86vmode library not found - required for GLFW")
+            message("xf86vmode library not found - required for GLFW")
         endif()
 
         list(APPEND GLFW_x11_LIBRARY "${X11_Xrandr_LIB}" "${X11_Xxf86vm_LIB}")
@@ -147,7 +150,7 @@ endif (WIN32)
 
 set( GLFW_FOUND "NO" )
 
-if(GLFW_INCLUDE_DIR)
+if((GLFW_INCLUDE_DIR) and (X11_FOUND) and (X11_Xrandr_FOUND) and (X11_xf86vmode_FOUND))
 
     if(GLFW_glfw_LIBRARY)
         set( GLFW_LIBRARIES "${GLFW_glfw_LIBRARY}"
