@@ -1,9 +1,5 @@
 language: cpp
 
-# blocklist
-branches:
-  only:
-  - master
 addons:
   apt:
     sources:
