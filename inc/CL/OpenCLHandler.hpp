@@ -33,10 +33,7 @@ enum class clCopyDirection {
 #define CL_HPP_MINIMUM_OPENCL_VERSION 110
 #define CL_HPP_TARGET_OPENCL_VERSION 120
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-attributes"
 #include "CL/local_cl.hpp"
-#pragma GCC diagnostic pop
 
 #ifdef INOVESA_ENABLE_CLPROFILING
 #include "CL/CLProfiler.hpp"

@@ -69,7 +69,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
             std::fill_n(_bp_padded,_nmax,0);
             _bp_padded_buf = cl::Buffer(OCLH::context,
                                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                          sizeof(integral_t)*_nmax,_bp_padded);
+                                          sizeof(_bp_padded[0])*_nmax,_bp_padded);
             _formfactor = new impedance_t[_nmax];
             _formfactor_buf = cl::Buffer(OCLH::context,
                                            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
