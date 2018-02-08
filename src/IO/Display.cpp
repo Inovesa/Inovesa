@@ -77,11 +77,12 @@ vfps::Display::Display(uint_fast8_t glversion)
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
     glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 1);
     glfwOpenWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);GLFWwindow
+    glfwOpenWindow( 512, 512,6,5,6,0,0,0, GLFW_WINDOW);
     glfwSetWindowTitle("Inovesa");
     GUIElement::glversion = 2;
     #else // GLFW3
     _window = openWindow(glversion);
+
     if( _window == nullptr ) {
         glfwTerminate();
         throw DisplayException("Failed to initialize GLFW.");
