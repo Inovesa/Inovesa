@@ -333,9 +333,11 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         OCLH::enqueueNDRangeKernel( _clKernWakelosses,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::enqueueBarrier();
+
         OCLH::enqueueDFT(_clfft_wakelosses,CLFFT_BACKWARD,
                          _wakelosses_buf,_wakepotential_padded_buf);
         OCLH::enqueueBarrier();
+
         OCLH::enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
         OCLH::enqueueBarrier();
