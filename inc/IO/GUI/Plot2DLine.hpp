@@ -35,6 +35,8 @@ namespace vfps
 class Plot2DLine : public GUIElement
 {
 public:
+    Plot2DLine() = delete;
+
     Plot2DLine(std::array<float,3> rgb);
 
     ~Plot2DLine() noexcept;
@@ -54,6 +56,8 @@ private:
     size_t _npoints;
 
     std::vector<float> _line;
+
+    float _max;
 
     GLuint vertexbuffer;
     GLuint position;
