@@ -391,6 +391,10 @@ int main(int argc, char** argv)
                                    qmin,qmax,pmin,pmax,
                                    Qb,Ib_unscaled,bl,dE);
 
+            if (grid_t1 == nullptr) {
+                return EXIT_SUCCESS;
+            }
+
             if (ps_size != grid_t1->nMeshCells(0)) {
                 std::cerr << startdistfile
                           << " does not match set GridSize." << std::endl;
