@@ -631,8 +631,8 @@ int main(int argc, char** argv)
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
-            display->takeElement(wpv);
-            wpv.reset();
+            display->takeElement(history);
+            history.reset();
         }
     }
     #endif // INOVESA_USE_OPENGL
