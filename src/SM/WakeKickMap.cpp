@@ -29,7 +29,7 @@ vfps::WakeKickMap::WakeKickMap(std::shared_ptr<PhaseSpace> in,
 {
 }
 
-vfps::WakeKickMap::~WakeKickMap()
+vfps::WakeKickMap::~WakeKickMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
 {
     saveTimings("WakeKickMap");

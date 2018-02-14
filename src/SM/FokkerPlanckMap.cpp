@@ -161,7 +161,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
 #endif
 }
 
-vfps::FokkerPlanckMap::~FokkerPlanckMap()
+vfps::FokkerPlanckMap::~FokkerPlanckMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
 {
     saveTimings("FokkerPlanckMap");

@@ -112,8 +112,9 @@ void OCLH::prepareCLEnvironment( uint32_t device
 
     #ifdef INOVESA_ENABLE_CLPROFILING
     // place initial marker
-    OCLH::queue.enqueueMarker(&init);
+    OCLH::queue.enqueueMarkerWithWaitList(nullptr,&init);
     #endif // INOVESA_ENABLE_CLPROFILING
+
 
     vfps::Display::printText("Initialized \""
                              + OCLH::devices[selecteddevice].getInfo<CL_DEVICE_NAME>()

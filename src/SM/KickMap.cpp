@@ -170,7 +170,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
 #endif // INOVESA_USE_OPENCL
 }
 
-vfps::KickMap::~KickMap()
+vfps::KickMap::~KickMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
 {
     saveTimings("KickMap");

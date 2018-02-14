@@ -36,7 +36,6 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _axis_freq(Ruler<frequency_t>(_nmax,0,
                                   1/(ps->getDelta(0)),
                                   physcons::c/ps->getScale(0))),
-    _f_rev(f_rev),
     // _axis_wake[_bpmeshcells] will be at position 0
     _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
                                  -ps->getDelta(0)*_bpmeshcells,
@@ -241,7 +240,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     fftw_free(zcsrb_fftw);
 }
 
-vfps::ElectricField::~ElectricField()
+vfps::ElectricField::~ElectricField() noexcept
 {
     delete [] _csrspectrum;
     delete [] _isrspectrum;
@@ -286,7 +285,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
         OCLH::enqueueBarrier();
 
         OCLH::enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
-                                      _nmax*sizeof(_formfactor[0]),_formfactor);
+                                _nmax*sizeof(*_formfactor),_formfactor);
     } else
     #elif defined INOVESA_USE_OPENCL
     if (OCLH::active) {

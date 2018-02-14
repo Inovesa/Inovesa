@@ -257,8 +257,6 @@ private:
 
     const Ruler<meshaxis_t> _axis_freq;
 
-    const double _f_rev;
-
     const Ruler<meshaxis_t> _axis_wake;
 
     std::shared_ptr<PhaseSpace> _phasespace;
