@@ -258,22 +258,22 @@ int main(int argc, char** argv)
     const auto use_csr = opts.getUseCSR();
 
     /// RF Phase Noise Amplitude (Rad)
-    const auto s_phase = opts.getPhaseSpread()/1000.0;
+    const auto rf_phase_spread = opts.getRFPhaseSpread();
 
     /// RF Amplitude Noise, relative value
-    const auto s_peak = opts.getPeakSpread()/100.0;
+    const auto rf_amplitude_spread = opts.getRFAmplitudeSpread();
 
     auto RFadd = 0.0;
     auto RFmultiply = 0.0;
 
-    if (s_phase != 0 || s_peak != 0) {
-        if (s_phase > 0) {
+    if (rf_phase_spread != 0 || rf_amplitude_spread != 0) {
+        if (rf_phase_spread > 0) {
             const auto a0 = std::sqrt(revolutionpart)*V/dE*ps_size/pqsize;
-            RFadd = s_phase * a0;
+            RFadd = rf_phase_spread * a0;
         }
-        if (s_peak > 0) {
+        if (rf_amplitude_spread > 0) {
             const auto a1 = std::sqrt(revolutionpart)/2.0;
-            RFmultiply = s_peak * a1;
+            RFmultiply = rf_amplitude_spread * a1;
         }
     }
 
@@ -515,7 +515,7 @@ int main(int argc, char** argv)
         break;
     case 2:
     default:
-        if (s_phase != 0 || s_peak != 0) {
+        if (rf_phase_spread != 0 || rf_amplitude_spread != 0) {
             Display::printText("Building RFKickMap with Noise.");
             rm1.reset(new DynamicRFKickMap(grid_t2, grid_t1, ps_size, ps_size,
                             angle, RFadd, RFmultiply,
@@ -541,8 +541,8 @@ int main(int argc, char** argv)
                            "incompatible with classical rotation.");
     }
 
-    if (rotationtype != 2 && (s_phase != 0.0 || s_peak != 0.0)) {
-        Display::printText("Warning: Nonuniform rotation step"
+    if (rotationtype != 2 && (rf_phase_spread != 0.0 || rf_amplitude_spread != 0.0)) {
+        Display::printText("Warning: RF noise simulation"
                            "incompatible with classical rotation.");
     }
 

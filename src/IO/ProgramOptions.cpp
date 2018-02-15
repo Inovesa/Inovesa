@@ -42,10 +42,6 @@ vfps::ProgramOptions::ProgramOptions() :
             "Quadratic Momentum compaction factor (1)")
         ("alpha2", po::value<double>(&alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
-        ("Phase+-", po::value<double>(&s_phase)->default_value(0),
-            "Absolute RF phase spread per turn (mrad)")
-        ("Amplitude+-", po::value<double>(&s_peak)->default_value(0),
-            "Relative RF amplitude spread per turn (%)")
         ("SynchrotronFrequency,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
             "Synchrotron frequency (Hz), will overwrite alpha0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
@@ -101,6 +97,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("AcceleratingVoltage,V",
             po::value<double>(&V_RF)->default_value(1e6,"1e6"),
             "Accelerating Voltage (V) for one revolution")
+        ("RFPhaseSpread",
+            po::value<double>(&rf_phase_spread)->default_value(0),
+            "Absolute accelerating voltage phase spread per turn (rad)")
+        ("RFAmplitudeSpread",
+            po::value<double>(&rf_amplitude_spread)->default_value(0),
+            "Relative accelerating voltage amplitude spread per turn")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing wake function.")
     ;

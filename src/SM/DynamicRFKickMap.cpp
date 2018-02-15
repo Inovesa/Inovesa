@@ -30,13 +30,12 @@ vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in,
                            const meshaxis_t multiply,
                            const InterpolationType it,
                            const bool interpol_clamp)
-    :
-      RFKickMap(in,out,xsize,ysize,angle,it,interpol_clamp),
-      _add(add),
-      _multiply(multiply),
-      _prng(std::mt19937(std::random_device{}())),
-      _dist(std::normal_distribution<meshaxis_t>(0, 1)),
-      _mean(_offset)
+    :   RFKickMap(in,out,xsize,ysize,angle,it,interpol_clamp)
+    ,  _add(add)
+    ,  _multiply(multiply)
+    ,  _prng(std::mt19937(std::random_device{}()))
+    ,  _dist(std::normal_distribution<meshaxis_t>(0, 1))
+    ,  _mean(_offset)
 {
 }
 
@@ -53,9 +52,9 @@ void vfps::DynamicRFKickMap::reset() {
 
     _offset = _mean;
 
-    std::for_each(_offset.begin(), _offset.end(),
-            [&mul, &add](auto &it) { it = fma(it, 1 + mul, add); }
-            );
+    for (auto it = _offset.begin(); it != _offset.end(); ++it) {
+        *it = fma(*it, 1 + mul, add);
+    }
 
     #ifdef INOVESA_USE_OPENCL
     if (OCLH::active) {

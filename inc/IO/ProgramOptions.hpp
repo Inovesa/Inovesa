@@ -149,12 +149,12 @@ public:
     inline auto getAlpha2() const
         { return alpha2; }
 
-    inline auto getPhaseSpread() const {
-        return s_phase;
+    inline auto getRFPhaseSpread() const {
+        return rf_phase_spread;
     }
 
-    inline auto getPeakSpread() const {
-        return s_peak;
+    inline auto getRFAmplitudeSpread() const {
+        return rf_amplitude_spread;
     }
 
     inline auto getBeamEnergy() const
@@ -258,8 +258,8 @@ private: // phsical parameters
     double alpha1;
     double alpha2;
 
-    double s_phase;
-    double s_peak;
+    double rf_phase_spread;
+    double rf_amplitude_spread;
 
     double E_0;
 
