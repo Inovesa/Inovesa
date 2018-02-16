@@ -55,6 +55,7 @@ set(SRC_LIST
   ./src/SM/FokkerPlanckMap.cpp
   ./src/SM/KickMap.cpp
   ./src/SM/RFKickMap.cpp
+  ./src/SM/DynamicRFKickMap.cpp
   ./src/SM/RotationMap.cpp
   ./src/SM/Identity.cpp
   ./src/SM/SourceMap.cpp
@@ -92,6 +93,7 @@ set(INC_LIST
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
   ./inc/SM/RFKickMap.hpp
+  ./inc/SM/DynamicRFKickMap.hpp
   ./inc/SM/Identity.hpp
   ./inc/SM/RotationMap.hpp
   ./inc/SM/SourceMap.hpp
