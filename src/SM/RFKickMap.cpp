@@ -43,7 +43,7 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in,
     updateSM();
 }
 
-vfps::RFKickMap::~RFKickMap()
+vfps::RFKickMap::~RFKickMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
 {
     saveTimings("RFKickMap");

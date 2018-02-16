@@ -50,7 +50,7 @@ vfps::DriftMap::DriftMap(std::shared_ptr<PhaseSpace> in,
 }
 
 #ifdef INOVESA_ENABLE_CLPROFILING
-vfps::DriftMap::~DriftMap()
+vfps::DriftMap::~DriftMap() noexcept
 {
     saveTimings("DrifMap");
 }

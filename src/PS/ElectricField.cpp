@@ -36,7 +36,6 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     _axis_freq(Ruler<frequency_t>(_nmax,0,
                                   1/(ps->getDelta(0)),
                                   physcons::c/ps->getScale(0))),
-    _f_rev(f_rev),
     // _axis_wake[_bpmeshcells] will be at position 0
     _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
                                  -ps->getDelta(0)*_bpmeshcells,
@@ -69,11 +68,11 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
             std::fill_n(_bp_padded,_nmax,0);
             _bp_padded_buf = cl::Buffer(OCLH::context,
                                           CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                          sizeof(_bp_padded[0])*_nmax,_bp_padded);
+                                          sizeof(*_bp_padded)*_nmax,_bp_padded);
             _formfactor = new impedance_t[_nmax];
             _formfactor_buf = cl::Buffer(OCLH::context,
                                            CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                           sizeof(impedance_t)*_nmax,_formfactor);
+                                           sizeof(*_formfactor)*_nmax,_formfactor);
             clfftCreateDefaultPlan(&_clfft_bunchprofile,
                                    OCLH::context(),CLFFT_1D,&_nmax);
             clfftSetPlanPrecision(_clfft_bunchprofile,CLFFT_SINGLE);
@@ -241,7 +240,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
     fftw_free(zcsrb_fftw);
 }
 
-vfps::ElectricField::~ElectricField()
+vfps::ElectricField::~ElectricField() noexcept
 {
     delete [] _csrspectrum;
     delete [] _isrspectrum;
@@ -286,7 +285,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
         OCLH::enqueueBarrier();
 
         OCLH::enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
-                                      _nmax*sizeof(_formfactor[0]),_formfactor);
+                                _nmax*sizeof(*_formfactor),_formfactor);
     } else
     #elif defined INOVESA_USE_OPENCL
     if (OCLH::active) {
@@ -324,7 +323,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     #ifdef INOVESA_USE_CLFFT
     if (OCLH::active){
         OCLH::enqueueCopyBuffer(_phasespace->projectionX_buf,_bp_padded_buf,
-                                0,0,sizeof(_bp_padded[0])*_bpmeshcells);
+                                0,0,sizeof(*_bp_padded)*_bpmeshcells);
         OCLH::enqueueBarrier();
         OCLH::enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
                          _bp_padded_buf,_formfactor_buf);

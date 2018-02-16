@@ -163,7 +163,7 @@ vfps::PhaseSpace::PhaseSpace(meshRuler_ptr axis0, meshRuler_ptr axis1,
                              const double bunch_current,
                              const double zoom,
                              vfps::meshdata_t *data) :
-    PhaseSpace({axis0,axis1},bunch_charge,bunch_current,zoom,data)
+    PhaseSpace({{axis0,axis1}},bunch_charge,bunch_current,zoom,data)
 {
 }
 
@@ -185,7 +185,7 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
     std::copy_n(other._data1D,nMeshCells(0)*nMeshCells(1),_data1D);
 }
 
-vfps::PhaseSpace::~PhaseSpace()
+vfps::PhaseSpace::~PhaseSpace() noexcept
 {
     #ifdef INOVESA_ENABLE_CLPROFILING
     if (OCLH::active) {

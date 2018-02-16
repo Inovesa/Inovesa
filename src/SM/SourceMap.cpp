@@ -38,7 +38,7 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
     , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
     , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
     #endif // INOVESA_ENABLE_CLPROFILING
-    , _axis(std::array<meshRuler_ptr,2>{in->getAxis(0),in->getAxis(1)})
+    , _axis(std::array<meshRuler_ptr,2>{{in->getAxis(0),in->getAxis(1)}})
     , _in(in)
     , _out(out)
 {
@@ -57,7 +57,7 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 {
 }
 
-vfps::SourceMap::~SourceMap()
+vfps::SourceMap::~SourceMap() noexcept
 {
     delete [] _hinfo;
     #ifdef INOVESA_ENABLE_CLPROFILING

@@ -22,8 +22,9 @@
 
 #include "IO/GUI/Plot2DLine.hpp"
 
-vfps::Plot2DLine::Plot2DLine(std::array<float,3> rgb) :
-    _npoints(0)
+vfps::Plot2DLine::Plot2DLine(std::array<float,3> rgb)
+  : _npoints(0)
+  , _max(0)
 {
     std::stringstream color;
     color << rgb[0] << ',' << rgb[1] << ',' << rgb[2];
@@ -89,18 +90,17 @@ void vfps::Plot2DLine::updateLine(const size_t npoints,
     _npoints=npoints;
     _line.resize(_npoints*2);
     float step = 1.5f/(_npoints-1);
-    float max =0.0f;
     for (size_t n=0; n<_npoints; n++) {
-        max = std::max(max,points[n]);
+        _max = std::max(_max,std::abs(points[n]));
     }
     if (vertical) {
-        max*=2.0f;
+        const float max = 2*_max;
         for (size_t n=0; n<_npoints; n++) {
             _line[2*n  ] = 0.5f+points[n]/max;
             _line[2*n+1] = -0.5f+n*step;
         }
     } else {
-        max*=4.0f;
+        const float max = 4*_max;
         for (size_t n=0; n<_npoints; n++) {
             _line[2*n  ] = -1.0f+n*step;
             _line[2*n+1] = -0.8f+points[n]/max;
