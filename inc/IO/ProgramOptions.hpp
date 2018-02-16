@@ -127,9 +127,6 @@ public:
     inline auto getRenormalizeCharge() const
         { return renormalize; }
 
-    inline auto getRotationType() const
-        { return rotationtype; }
-
     inline auto getDerivationType() const
         { return deriv_type; }
 
@@ -149,12 +146,20 @@ public:
     inline auto getAlpha2() const
         { return alpha2; }
 
+    inline auto getRFAmplitudeSpread() const {
+        return rf_amplitude_spread;
+    }
+
     inline auto getRFPhaseSpread() const {
         return rf_phase_spread;
     }
 
-    inline auto getRFAmplitudeSpread() const {
-        return rf_amplitude_spread;
+    inline auto getRFPhaseModAmplitude() const {
+        return rf_phase_mod_amplitude;
+    }
+
+    inline auto getRFPhaseModFrequency() const {
+        return rf_phase_mod_frequency;
     }
 
     inline auto getBeamEnergy() const
@@ -260,6 +265,10 @@ private: // phsical parameters
 
     double rf_phase_spread;
     double rf_amplitude_spread;
+
+
+    double rf_phase_mod_amplitude;
+    double rf_phase_mod_frequency;
 
     double E_0;
 

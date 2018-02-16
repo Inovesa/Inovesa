@@ -45,8 +45,11 @@ public:
                      std::shared_ptr<PhaseSpace> out,
                      const meshindex_t xsize, const meshindex_t ysize,
                      const meshaxis_t angle,
-                     const meshaxis_t add,
-                     const meshaxis_t multiply,
+                     const meshaxis_t addnoise,
+                     const meshaxis_t mulnoise,
+                     const meshaxis_t modampl,
+                     const double modtimeincrement,
+                     const uint32_t* step,
                      const InterpolationType it,
                      const bool interpol_clamp);
 
@@ -60,7 +63,16 @@ public:
     void apply() override;
 
 private:
-    const meshaxis_t _add, _multiply;
+    const meshaxis_t _addnoise;
+
+    const meshaxis_t _mulnoise;
+
+    const meshaxis_t _modampl;
+
+    const meshaxis_t _modtimedelta;
+
+    const uint32_t* _step;
+
     std::mt19937 _prng;
     std::normal_distribution<meshaxis_t> _dist;
 
