@@ -1,7 +1,8 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2017-2018: Johannes Schestag                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -39,7 +40,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in,
 {
 }
 
-vfps::DynamicRFKickMap::~DynamicRFKickMap()
+vfps::DynamicRFKickMap::~DynamicRFKickMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
     { std::cout << "~DynamicRFKickMap() -> "; }
 #else
@@ -52,8 +53,8 @@ void vfps::DynamicRFKickMap::reset() {
 
     _offset = _mean;
 
-    for (auto it = _offset.begin(); it != _offset.end(); ++it) {
-        *it = fma(*it, 1 + mul, add);
+    for (auto& offs : _offset) {
+        offs = fma(offs, 1 + mul, add);
     }
 
     #ifdef INOVESA_USE_OPENCL

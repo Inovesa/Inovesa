@@ -1,7 +1,8 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2017: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2017: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2017-2018: Johannes Schestag                                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -23,12 +24,13 @@
 
 #include "SM/RFKickMap.hpp"
 
+#include <random>
+
 namespace vfps
 {
 
 /*!
  * @brief Provides the RFKickMap with a random zeroth and first order contribution
- *
  */
 
 class DynamicRFKickMap : public RFKickMap
@@ -39,16 +41,22 @@ public:
      * @param s_phase   width of the additive instability in y units
      * @param s_peak    width of the relative multiplicative instability
      */
-    DynamicRFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
-              const meshindex_t xsize, const meshindex_t ysize,
-              const meshaxis_t angle,
-              const meshaxis_t add,
-              const meshaxis_t multiply,
-              const InterpolationType it,
-              const bool interpol_clamp);
+    DynamicRFKickMap(std::shared_ptr<PhaseSpace> in,
+                     std::shared_ptr<PhaseSpace> out,
+                     const meshindex_t xsize, const meshindex_t ysize,
+                     const meshaxis_t angle,
+                     const meshaxis_t add,
+                     const meshaxis_t multiply,
+                     const InterpolationType it,
+                     const bool interpol_clamp);
 
     ~DynamicRFKickMap() noexcept;
 
+    /**
+     * @brief apply updates RFKickMap before it is actually applied
+     *
+     * @todo Add OpenCL code path
+     */
     void apply() override;
 
 private:
