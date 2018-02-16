@@ -97,6 +97,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("AcceleratingVoltage,V",
             po::value<double>(&V_RF)->default_value(1e6,"1e6"),
             "Accelerating Voltage (V) for one revolution")
+        ("RFPhaseSpread",
+            po::value<double>(&rf_phase_spread)->default_value(0),
+            "Absolute accelerating voltage phase spread per turn (rad)")
+        ("RFAmplitudeSpread",
+            po::value<double>(&rf_amplitude_spread)->default_value(0),
+            "Relative accelerating voltage amplitude spread per turn")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing wake function.")
     ;
