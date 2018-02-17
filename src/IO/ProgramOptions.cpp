@@ -102,10 +102,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Relative accelerating voltage amplitude spread per turn")
         ("RFPhaseSpread",
             po::value<double>(&rf_phase_spread)->default_value(0),
-            "Absolute accelerating voltage phase spread per turn (rad)")
+            "Absolute accelerating voltage phase spread per turn (degree)")
         ("RFPhaseModAmplitude",
             po::value<double>(&rf_phase_mod_amplitude)->default_value(0),
-            "Accelerating voltage phase modulation amplitude (rad)")
+            "Accelerating voltage phase modulation amplitude (degree)")
         ("RFPhaseModFrequency",
             po::value<double>(&rf_phase_mod_frequency)->default_value(0),
             "Accelerating voltage phase modulation frequency (Hz)")

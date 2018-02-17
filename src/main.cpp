@@ -56,6 +56,7 @@
 
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
+using boost::math::constants::two_pi;
 
 using namespace vfps;
 
@@ -266,6 +267,7 @@ int main(int argc, char** argv)
         // RF Phase Noise Amplitude
     const auto rf_noise_add = std::max(0.0,
                                 opts.getRFPhaseSpread()
+                                / 360.0*two_pi<double>()
                                 * std::sqrt(revolutionpart)*V
                                 / dE*ps_size/pqsize);
 
@@ -278,6 +280,7 @@ int main(int argc, char** argv)
     // RF phase modulation amplitude
     const auto rf_mod_ampl = std::max(0.0,
                                       opts.getRFPhaseModAmplitude()
+                                      /360.0*two_pi<double>()
                                       * std::sqrt(revolutionpart)*V
                                       / dE*ps_size/pqsize);
 
