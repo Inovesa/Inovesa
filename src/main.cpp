@@ -918,7 +918,9 @@ int main(int argc, char** argv)
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
                 png_file[ps_size-y-1][x]=
-                        static_cast<png::gray_pixel_16>((*grid_t1)[x][y]/maxval*float(UINT16_MAX));
+                        static_cast<png::gray_pixel_16>(
+                            std::max((*grid_t1)[x][y],meshdata_t(0))
+                            /maxval*float(UINT16_MAX));
             }
         }
         png_file.write(ofname);
