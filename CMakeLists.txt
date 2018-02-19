@@ -22,8 +22,8 @@ endif()
 ## end of user configuration
 
 set (INOVESA_VERSION_MAJOR 1)
-set (INOVESA_VERSION_MINOR 1)
-set (INOVESA_VERSION_FIX -1)
+set (INOVESA_VERSION_MINOR 0)
+set (INOVESA_VERSION_FIX -2)
 # pre release numbers:
 # -1: alpha
 # -2: beta
@@ -55,7 +55,6 @@ set(SRC_LIST
   ./src/SM/FokkerPlanckMap.cpp
   ./src/SM/KickMap.cpp
   ./src/SM/RFKickMap.cpp
-  ./src/SM/DynamicRFKickMap.cpp
   ./src/SM/RotationMap.cpp
   ./src/SM/Identity.cpp
   ./src/SM/SourceMap.cpp
@@ -93,7 +92,6 @@ set(INC_LIST
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
   ./inc/SM/RFKickMap.hpp
-  ./inc/SM/DynamicRFKickMap.hpp
   ./inc/SM/Identity.hpp
   ./inc/SM/RotationMap.hpp
   ./inc/SM/SourceMap.hpp
