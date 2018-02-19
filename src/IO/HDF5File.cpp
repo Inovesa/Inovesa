@@ -653,9 +653,16 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace version_dspace(1,version_dims.data(),version_dims.data());
     H5::DataSet version_dset = _file->createDataSet
                     ("/Info/Inovesa_v", H5::PredType::STD_I32LE,version_dspace);
-    std::array<int32_t,3> version {{INOVESA_VERSION_MAJOR,
-                                    INOVESA_VERSION_MINOR,
-                                    INOVESA_VERSION_FIX}};
+    std::array<int32_t,3> version = {{0,0,0}};
+
+    // do not save version for development or feature branches
+    auto branchstr = std::string(GIT_BRANCH);
+    if (branchstr.empty() || branchstr=="master" || branchstr.front()=='v') {
+        version = {{ INOVESA_VERSION_MAJOR,
+                     INOVESA_VERSION_MINOR,
+                     INOVESA_VERSION_FIX
+                  }};
+    }
     version_dset.write(version.data(),H5::PredType::NATIVE_INT);
     }
 
