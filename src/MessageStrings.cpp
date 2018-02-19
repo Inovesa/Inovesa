@@ -32,10 +32,12 @@ const std::string vfps::copyright_notice() noexcept {
     {
         rv += "Copyright (c) 2007-2009 Peter Schregle (FPML)\n";
     }
-    rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
-        "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
+    rv+="Copyright (c) 2012-2018 Patrik Schönfeldt\n"
+        "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
         "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
+        "Copyright (c) 2017 Julian Gethmann\n"
+        "Copyright (c) 2017 Matthias Blaicher\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
         #ifdef INOVESA_USE_OPENGL
