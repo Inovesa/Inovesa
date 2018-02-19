@@ -34,6 +34,7 @@ const std::string vfps::copyright_notice() noexcept {
     }
     rv+="Copyright (c) 2012-2018 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 2017-2018 Johannes Schestag\n"
         "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 2017 Julian Gethmann\n"
