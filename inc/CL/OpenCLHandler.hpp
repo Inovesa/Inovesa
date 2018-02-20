@@ -169,6 +169,8 @@ public:
         } // INOVESA_ENABLE_CLPROFILING
         #endif
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
+
+        enqueueBarrier();
     }
 
     /**

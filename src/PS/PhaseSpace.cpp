@@ -221,7 +221,6 @@ void vfps::PhaseSpace::integrate()
                                   , integEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
-        OCLH::enqueueBarrier();
     } else
     #endif
     {

@@ -43,7 +43,8 @@ vfps::ProgramOptions::ProgramOptions() :
         ("alpha2", po::value<double>(&alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
         ("SynchrotronFrequency,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
-            "Synchrotron frequency (Hz), will overwrite alpha0")
+            "Synchrotron frequency (Hz), "
+            "will overwrite alpha0 when set to a value different from 0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")
         ("DampingTime,d", po::value<double>(&t_d)->default_value(0.001),
@@ -97,18 +98,6 @@ vfps::ProgramOptions::ProgramOptions() :
         ("AcceleratingVoltage,V",
             po::value<double>(&V_RF)->default_value(1e6,"1e6"),
             "Accelerating Voltage (V) for one revolution")
-        ("RFAmplitudeSpread",
-            po::value<double>(&rf_amplitude_spread)->default_value(0),
-            "Relative accelerating voltage amplitude spread per turn")
-        ("RFPhaseSpread",
-            po::value<double>(&rf_phase_spread)->default_value(0),
-            "Absolute accelerating voltage phase spread per turn (degree)")
-        ("RFPhaseModAmplitude",
-            po::value<double>(&rf_phase_mod_amplitude)->default_value(0),
-            "Accelerating voltage phase modulation amplitude (degree)")
-        ("RFPhaseModFrequency",
-            po::value<double>(&rf_phase_mod_frequency)->default_value(0),
-            "Accelerating voltage phase modulation frequency (Hz)")
         ("WakeFunction,w", po::value<std::string>(&_wakefile),
             "File containing wake function.")
     ;
@@ -185,6 +174,11 @@ vfps::ProgramOptions::ProgramOptions() :
             ">0: renormalize charge every n-th simulation step\n"
             " 0: do just one initial renormalization\n"
             "<0: no renormalization")
+        ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
+            "Used implementation for rotation\n"
+            " 0: Standard rotation without source map\n"
+            " 1: Standard rotation with source map\n"
+            " 2: Manhattan rotation")
         ("GridSize,s", po::value<uint32_t>(&meshsize)->default_value(256),
             "Number of mesh points per dimension")
         ("rotations,T", po::value<double>(&rotations)->default_value(5),
@@ -201,8 +195,6 @@ vfps::ProgramOptions::ProgramOptions() :
             "(currently ignored)")
         ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
-        ("RotationType", po::value<uint32_t>(&rotationtype),
-            "compatibility (ignored)")
         ("RFVoltage",
             po::value<double>(&V_RF),
             "compatibility naming for AcceleratingVoltage")
@@ -291,7 +283,6 @@ void vfps::ProgramOptions::save(std::string fname)
         // currently, the _compatopts are ignored manually
         if(it->first == "HaissinskiIterations"
         || it->first == "InitialDistParam"
-        || it->first == "RotationType"
         || it->first == "SyncFreq"
         || it->first == "RFVoltage"
         || it->first == "run_anyway"
