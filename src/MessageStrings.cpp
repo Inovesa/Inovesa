@@ -32,10 +32,12 @@ const std::string vfps::copyright_notice() noexcept {
     {
         rv += "Copyright (c) 2007-2009 Peter Schregle (FPML)\n";
     }
-    rv+="Copyright (c) 2012-2017 Patrik Schönfeldt\n"
-        "Copyright (c) 2014-2017 Karlsruhe Institute of Technology\n"
+    rv+="Copyright (c) 2012-2018 Patrik Schönfeldt\n"
+        "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
         "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
+        "Copyright (c) 2017 Julian Gethmann\n"
+        "Copyright (c) 2017 Matthias Blaicher\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
         #ifdef INOVESA_USE_OPENGL
@@ -60,24 +62,30 @@ const std::string vfps::copyright_notice() noexcept {
 
 const std::string vfps::inovesa_version(const bool verbose) {
     std::stringstream sstream;
-    sstream << 'v' << INOVESA_VERSION_MAJOR << '.'
-            << INOVESA_VERSION_MINOR;
-    std::string version(sstream.str());
-    if ( INOVESA_VERSION_FIX >= 0 ) {
-        sstream << '.' << INOVESA_VERSION_FIX;
-    } else if ( INOVESA_VERSION_FIX == -1 ) {
-        sstream << " alpha";
-    } else if ( INOVESA_VERSION_FIX == -2 ) {
-        sstream << " beta";
-    } else {
-        sstream << " RC" << std::abs(INOVESA_VERSION_FIX)-2;
-    }
-    if (std::string(GIT_BRANCH) != version) {
-        sstream << ", Branch: "<< GIT_BRANCH;
-    }
-    if (std::string(GIT_BRANCH) != version
-            && (INOVESA_VERSION_FIX == -1 || INOVESA_VERSION_FIX == -2)) {
+    auto branchstr = std::string(GIT_BRANCH);
+    // simple version number for releases
+    if (branchstr.empty() || branchstr == "master" ) {
+        sstream << 'v' << INOVESA_VERSION_MAJOR
+                << '.' << INOVESA_VERSION_MINOR
+                << '.' << INOVESA_VERSION_FIX;
+     // version number plus commit for pre-releases
+     } else if (branchstr.front()=='v') {
+        sstream << 'v' << INOVESA_VERSION_MAJOR
+                << '.' << INOVESA_VERSION_MINOR;
+        if ( INOVESA_VERSION_FIX >= 0 ) {
+            sstream << '.' << INOVESA_VERSION_FIX;
+        } else if ( INOVESA_VERSION_FIX == -1 ) {
+                sstream << " alpha";
+        } else if ( INOVESA_VERSION_FIX == -2 ) {
+            sstream << " beta";
+        } else {
+            sstream << " RC" << std::abs(INOVESA_VERSION_FIX)-2;
+        }
         sstream << ", Commit: "<< GIT_COMMIT;
+     // no version number for development or feature branches
+     } else {
+        sstream << "Branch: "<< GIT_BRANCH
+                << ", Commit: "<< GIT_COMMIT;
     }
     if (verbose) {
         sstream << std::endl << "Build options:"

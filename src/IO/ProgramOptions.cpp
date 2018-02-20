@@ -43,7 +43,8 @@ vfps::ProgramOptions::ProgramOptions() :
         ("alpha2", po::value<double>(&alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
         ("SynchrotronFrequency,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
-            "Synchrotron frequency (Hz), will overwrite alpha0")
+            "Synchrotron frequency (Hz), "
+            "will overwrite alpha0 when set to a value different from 0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")
         ("DampingTime,d", po::value<double>(&t_d)->default_value(0.001),
