@@ -505,7 +505,7 @@ int main(int argc, char** argv)
         break;
     }
     if (rotationtype != 2 && (alpha1 != 0.0 || alpha2 != 0.0)) {
-        Display::printText("Warning: Nonlinear momentum compaction"
+        Display::printText("Warning: Nonlinear momentum compaction "
                            "incompatible with classical rotation.");
     }
 
