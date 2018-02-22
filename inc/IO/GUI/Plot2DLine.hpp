@@ -27,40 +27,31 @@
 #include <sstream>
 #include <vector>
 
-#include "IO/GUI/GUIElement.hpp"
+#include "IO/GUI/Plot2DPrimitive.hpp"
 
 namespace vfps
 {
 
-class Plot2DLine : public GUIElement
+class Plot2DLine : public Plot2DPrimitive
 {
 public:
     Plot2DLine() = delete;
 
     Plot2DLine(std::array<float,3> rgb);
 
-    ~Plot2DLine() noexcept;
+    virtual ~Plot2DLine() noexcept = default;
 
-    void updateLine(const size_t npoints,
-                    const float* points,
-                    const bool vertical=false);
+    void update(const size_t npoints,
+                const float* points,
+                const bool vertical=false);
 
 
-    void updateLine(const size_t npoints,
-                    const double* points,
-                    const bool vertical=false);
-
-    void draw() override;
+    void update(const size_t npoints,
+                const double* points,
+                const bool vertical=false);
 
 private:
-    size_t _npoints;
-
-    std::vector<float> _line;
-
     float _max;
-
-    GLuint vertexbuffer;
-    GLuint position;
 };
 
 } // namespace vfps

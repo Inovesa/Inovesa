@@ -21,30 +21,28 @@
 #ifndef PLOT2DPOINTS_HPP
 #define PLOT2DPOINTS_HPP
 
-#include "IO/GUI/GUIElement.hpp"
+#include "IO/GUI/Plot2DPrimitive.hpp"
 #include "PS/PhaseSpace.hpp"
 
 namespace vfps
 {
 
-class Plot2DPoints : public GUIElement
+class Plot2DPoints : public Plot2DPrimitive
 {
 public:
     Plot2DPoints() = delete;
 
-    Plot2DPoints(std::array<float,3> rgb);
+    Plot2DPoints(std::array<float,3> rgb,
+                 uint32_t nmeshcellsx,
+                 uint32_t nmeshcellsy);
 
-    ~Plot2DPoints() noexcept;
+    virtual ~Plot2DPoints() noexcept = default;
 
-    void draw() override;
+    void update(const std::vector<PhaseSpace::Position>& points);
 
 private:
-    size_t _npoints;
-
-    float* _points;
-
-    GLuint vertexbuffer;
-    GLuint position;
+    const uint32_t _nmeshcellsx;
+    const uint32_t _nmeshcellsy;
 };
 
 } // namespace vfps
