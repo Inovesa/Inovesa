@@ -24,6 +24,7 @@
 #include "IO/Display.hpp"
 #include "IO/FSPath.hpp"
 #include "IO/GUI/Plot2DLine.hpp"
+#include "IO/GUI/Plot2DPoints.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
@@ -446,6 +447,9 @@ int main(int argc, char** argv)
     // plot of bunch profile
     std::shared_ptr<Plot2DLine> bpv;
 
+    // plot of particle positions
+    std::shared_ptr<Plot2DPoints> ppv;
+
     // plot of phase space
     std::shared_ptr<Plot3DColormap> psv;
 
@@ -616,6 +620,17 @@ int main(int argc, char** argv)
             display->takeElement(bpv);
             bpv.reset();
         }
+        if (!trackme.empty()) {
+            try {
+                ppv.reset(new Plot2DPoints(std::array<float,3>{{1,1,1}},
+                                           ps_size,ps_size));
+                display->addElement(ppv);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                display->takeElement(ppv);
+                ppv.reset();
+            }
+        }
         if (wkm != nullptr) {
             try {
                 wpv.reset(new Plot2DLine(std::array<float,3>{{0,0,1}}));
@@ -785,12 +800,15 @@ int main(int argc, char** argv)
                     psv->createTexture(grid_t1);
                 }
                 if (bpv != nullptr) {
-                    bpv->updateLine(grid_t1->nMeshCells(0),
-                                    grid_t1->getProjection(0));
+                    bpv->update(grid_t1->nMeshCells(0),
+                                grid_t1->getProjection(0));
+                }
+                if (ppv != nullptr) {
+                    ppv->update(trackme);
                 }
                 if (wpv != nullptr) {
-                    wpv->updateLine(grid_t1->nMeshCells(0),
-                                    wkm->getForce());
+                    wpv->update(grid_t1->nMeshCells(0),
+                                wkm->getForce());
                 }
                 if (history != nullptr) {
                     #ifdef INOVESA_USE_HDF5
@@ -800,7 +818,7 @@ int main(int argc, char** argv)
                         rdtn_field.updateCSR(fc);
                     }
                     csrlog[outstepnr] = rdtn_field.getCSRPower();
-                    history->updateLine(csrlog.size(),csrlog.data(),true);
+                    history->update(csrlog.size(),csrlog.data(),true);
                 }
                 display->draw();
                 if (psv != nullptr) {

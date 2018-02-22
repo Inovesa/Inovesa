@@ -18,57 +18,49 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
+#ifndef PLOT2DPRIMITIVE_HPP
+#define PLOT2DPRIMITIVE_HPP
+
 #ifdef INOVESA_USE_OPENGL
 
-#include "IO/GUI/Plot2DLine.hpp"
 
-vfps::Plot2DLine::Plot2DLine(std::array<float,3> rgb)
-  : Plot2DPrimitive(rgb,0,GL_LINE_STRIP)
-  , _max(0)
+#include "IO/GUI/GUIElement.hpp"
+
+#include <array>
+#include <sstream>
+#include <vector>
+
+namespace vfps
 {
-}
 
-void vfps::Plot2DLine::update(const size_t npoints,
-                              const float* points,
-                              const bool vertical)
+class Plot2DPrimitive : public GUIElement
 {
-    _npoints=npoints;
-    _points.resize(npoints*2);
-    float step = 1.5f/(_npoints-1);
-    for (size_t n=0; n<_npoints; n++) {
-        _max = std::max(_max,std::abs(points[n]));
-    }
-    if (vertical) {
-        const float max = 2*_max;
-        for (size_t n=0; n<npoints; n++) {
-            _points[2*n  ] = 0.5f+points[n]/max;
-            _points[2*n+1] = -0.5f+n*step;
-        }
-    } else {
-        const float max = 4*_max;
-        for (size_t n=0; n<_npoints; n++) {
-            _points[2*n  ] = -1.0f+n*step;
-            _points[2*n+1] = -0.8f+points[n]/max;
-        }
-    }
+public:
+    Plot2DPrimitive() = delete;
 
-    // The following commands will talk about our 'vertexbuffer' buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    Plot2DPrimitive(std::array<float,3> rgb,
+                    size_t npoints,
+                    GLenum primitivetype);
 
-    // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, 2*_npoints*sizeof(float),
-                 _points.data(), GL_STATIC_DRAW);
-}
+    virtual ~Plot2DPrimitive() noexcept;
 
-void vfps::Plot2DLine::update(const size_t npoints,
-                              const double* points,
-                              const bool vertical)
-{
-    std::vector<float> fltpoints(npoints);
-    for (size_t i=0; i<npoints; i++) {
-        fltpoints[i] = points[i];
-    }
-    update(npoints,fltpoints.data(),vertical);
-}
+    void draw() override;
+
+protected:
+    std::vector<float> _points;
+
+    size_t _npoints;
+
+    GLuint vertexbuffer;
+    GLuint position;
+
+private:
+    const GLenum _primitivetype;
+
+};
+
+} // namespace vfps
 
 #endif // INOVESA_USE_OPENGL
+
+#endif // PLOT2DPRIMITIVE_HPP

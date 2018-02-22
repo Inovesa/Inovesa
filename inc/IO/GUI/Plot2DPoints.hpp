@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
+ * Copyright (c) 2018: Patrik Schönfeldt                                      *
+ * Copyright (c) 2018: Karlsruhe Institute of Technology                      *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -18,44 +18,33 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PLOT2DLINE_HPP
-#define PLOT2DLINE_HPP
-
-#ifdef INOVESA_USE_OPENGL
-
-#include <array>
-#include <sstream>
-#include <vector>
+#ifndef PLOT2DPOINTS_HPP
+#define PLOT2DPOINTS_HPP
 
 #include "IO/GUI/Plot2DPrimitive.hpp"
+#include "PS/PhaseSpace.hpp"
 
 namespace vfps
 {
 
-class Plot2DLine : public Plot2DPrimitive
+class Plot2DPoints : public Plot2DPrimitive
 {
 public:
-    Plot2DLine() = delete;
+    Plot2DPoints() = delete;
 
-    Plot2DLine(std::array<float,3> rgb);
+    Plot2DPoints(std::array<float,3> rgb,
+                 uint32_t nmeshcellsx,
+                 uint32_t nmeshcellsy);
 
-    virtual ~Plot2DLine() noexcept = default;
+    virtual ~Plot2DPoints() noexcept = default;
 
-    void update(const size_t npoints,
-                const float* points,
-                const bool vertical=false);
-
-
-    void update(const size_t npoints,
-                const double* points,
-                const bool vertical=false);
+    void update(const std::vector<PhaseSpace::Position>& points);
 
 private:
-    float _max;
+    const uint32_t _nmeshcellsx;
+    const uint32_t _nmeshcellsy;
 };
 
 } // namespace vfps
 
-#endif // INOVESA_USE_OPENGL
-
-#endif // PLOT2DLINE_HPP
+#endif // PLOT2DPOINTS_HPP
