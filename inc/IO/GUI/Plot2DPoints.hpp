@@ -21,6 +21,8 @@
 #ifndef PLOT2DPOINTS_HPP
 #define PLOT2DPOINTS_HPP
 
+#ifdef INOVESA_USE_OPENGL
+
 #include "IO/GUI/Plot2DPrimitive.hpp"
 #include "PS/PhaseSpace.hpp"
 
@@ -46,5 +48,7 @@ private:
 };
 
 } // namespace vfps
+
+#endif // INOVESA_USE_OPENGL
 
 #endif // PLOT2DPOINTS_HPP

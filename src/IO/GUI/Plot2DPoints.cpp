@@ -18,6 +18,8 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
+#ifdef INOVESA_USE_OPENGL
+
 #include "IO/GUI/Plot2DPoints.hpp"
 
 
@@ -48,3 +50,5 @@ void vfps::Plot2DPoints::update(const std::vector<PhaseSpace::Position> &points)
     glBufferData(GL_ARRAY_BUFFER, 2*_npoints*sizeof(float),
                  _points.data(), GL_STATIC_DRAW);
 }
+
+#endif // INOVESA_USE_OPENGL
