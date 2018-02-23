@@ -47,8 +47,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "will overwrite alpha0 when set to a value different from 0")
         ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
             "Revolution frequency (Hz)")
-        ("DampingTime,d", po::value<double>(&t_d)->default_value(0.001),
-            "Damping time (s)")
+        ("DampingTime,d", po::value<double>(&t_d)->default_value(-1),
+            "Damping time (s), "
+            "negative: calculate based on other parameters")
         ("HarmonicNumber,H", po::value<double>(&H)->default_value(50),
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),

@@ -177,13 +177,13 @@ int main(int argc, char** argv)
     // relative energy spread
     const auto sE = opts.getEnergySpread();
 
-    // energy of reference particle
+    // energy of reference particle (in eV)
     const auto E0 = opts.getBeamEnergy();
 
-    // absolute energy spread
+    // absolute energy spread (in eV)
     const auto dE = sE*E0;
 
-    // revolution frequency
+    // revolution frequency (in Hz)
     const auto f_rev = opts.getRevolutionFrequency();
 
     /*
@@ -212,19 +212,19 @@ int main(int argc, char** argv)
     const double H_unscaled = opts.getHarmonicNumber();
     const double H = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
-    const double V = opts.getRFVoltage();
+    const double V_RF = opts.getRFVoltage();
 
     double fs_tmp = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
     // non-zero f_s will be used, zero implies usage of alpha0
     if (fs_tmp == 0) {
-        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V/(2*pi<double>()*E0));
+        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V_RF/(2*pi<double>()*E0));
     } else {
         // alpha0 should have same sign as fs
         auto sign = (fs_tmp > 0) ? 1 : -1;
 
-        alpha0_tmp = sign*2*pi<double>()*E0/(H_unscaled*V)*std::pow(fs_tmp/f_rev,2);
+        alpha0_tmp = sign*2*pi<double>()*E0/(H_unscaled*V_RF)*std::pow(fs_tmp/f_rev,2);
     }
 
     // synchrotron frequency (comparable to real storage ring)
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
 
 
     // natural RMS bunch length
-    const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V*fs;
+    const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V_RF*fs;
 
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
@@ -249,7 +249,17 @@ int main(int argc, char** argv)
     const auto steps = std::max(opts.getSteps(),1u);
     const auto outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
-    const double t_d = isoscale*opts.getDampingTime();
+
+    const auto lorentzgamma = E0/physcons::me;
+    const auto W0 = std::pow(physcons::e,2)*std::pow(lorentzgamma,4)
+                  / (3* physcons::epsilon0*R_bend);
+
+    const auto calc_damp = E0*physcons::e/W0/f_rev;
+
+    const auto set_damp = isoscale*opts.getDampingTime();
+
+    const auto t_damp = (set_damp < 0)? calc_damp : set_damp;
+
     const double dt = 1.0/(fs*steps);
     const double revolutionpart = f0*dt;
     const double t_sync_unscaled = 1.0/fs_unscaled;
@@ -269,7 +279,7 @@ int main(int argc, char** argv)
     const auto rf_noise_add = std::max(0.0,
                                 opts.getRFPhaseSpread()
                                 / 360.0*two_pi<double>()
-                                * std::sqrt(revolutionpart)*V
+                                * std::sqrt(revolutionpart)*V_RF
                                 / dE*ps_size/pqsize);
 
         // RF Amplitude Noise
@@ -282,7 +292,7 @@ int main(int argc, char** argv)
     const auto rf_mod_ampl = std::max(0.0,
                                       opts.getRFPhaseModAmplitude()
                                       /360.0*two_pi<double>()
-                                      * std::sqrt(revolutionpart)*V
+                                      * std::sqrt(revolutionpart)*V_RF
                                       / dE*ps_size/pqsize);
 
     // "time step" for RF phase modulation
@@ -320,7 +330,7 @@ int main(int argc, char** argv)
         }
 
         const double Inorm = physcons::IAlfven/physcons::me*2*pi<double>()
-                           * std::pow(dE*fs/f0,2)/V/H
+                           * std::pow(dE*fs/f0,2)/V_RF/H
                            * std::pow(bl/R_bend,1./3.);
 
         Ith = Inorm * (0.5+0.34*shield);
@@ -361,7 +371,7 @@ int main(int argc, char** argv)
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
         sstream.str("");
-        sstream << std::scientific << 1/t_d/fs/(2*pi<double>());
+        sstream << std::scientific << 1/t_damp/fs/(2*pi<double>());
         Display::printText("Damping beta: " +sstream.str());
 
         sstream.str("");
@@ -370,10 +380,19 @@ int main(int argc, char** argv)
                            " simulation steps per revolution period.");
 
         sstream.str("");
-        double rotationoffset = std::tan(angle)*ps_size/2;
-        sstream << std::fixed << rotationoffset;
-        Display::printText("Maximum rotation offset is "
-                           +sstream.str()+" (should be < 1).");
+        auto syncphase = std::asin(W0/(physcons::e*V_RF));
+        sstream << std::scientific << syncphase;
+        Display::printText("Synchronous phase is "+sstream.str()
+                           +" (should be close to 0).");
+
+        sstream.str("");
+        sstream << std::scientific << calc_damp << " s";
+        if (set_damp >= 0) {
+            sstream << " ( set value: "
+                    << std::scientific << set_damp  << " s)";
+        }
+        Display::printText("Damping time calculated on ring parameters is "
+                           +sstream.str() + ".");
 
     }
     } // end of context of information printing
@@ -534,7 +553,7 @@ int main(int argc, char** argv)
                          E0,interpolationtype,interpol_clamp));
 
     // time constant for damping and diffusion
-    const timeaxis_t  e1 = (t_d > 0) ? 2.0/(fs*t_d*steps) : 0;
+    const timeaxis_t  e1 = (t_damp > 0) ? 2.0/(fs*t_damp*steps) : 0;
 
     // SourceMap for damping and diffusion
     SourceMap* fpm;
