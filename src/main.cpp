@@ -275,14 +275,14 @@ int main(int argc, char** argv)
     const auto impedance_file = opts.getImpedanceFile();
     const auto use_csr = opts.getUseCSR();
 
-        // RF Phase Noise Amplitude
+    // RF Phase Noise Amplitude
     const auto rf_noise_add = std::max(0.0,
                                 opts.getRFPhaseSpread()
                                 / 360.0*two_pi<double>()
                                 * std::sqrt(revolutionpart)*V_RF
                                 / dE*ps_size/pqsize);
 
-        // RF Amplitude Noise
+    // RF Amplitude Noise
     const auto rf_noise_mul = std::max(0.0,
                                 opts.getRFAmplitudeSpread()
                                 * std::sqrt(revolutionpart)/2.0);
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
 
         S_csr = Ib_scaled/Inorm;
 
-        if (verbose) {
+        if (verbose && use_csr) {
             sstream.str("");
             sstream << std::fixed << shield;
             Display::printText("Shielding parameter (g=gap):   "
@@ -371,19 +371,15 @@ int main(int argc, char** argv)
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
         sstream.str("");
-        sstream << std::scientific << 1/t_damp/fs/(2*pi<double>());
-        Display::printText("Damping beta: " +sstream.str());
-
-        sstream.str("");
         sstream << std::fixed << 1/revolutionpart;
         Display::printText("Doing " +sstream.str()+
                            " simulation steps per revolution period.");
 
         sstream.str("");
-        auto syncphase = std::asin(W0/(physcons::e*V_RF));
-        sstream << std::scientific << syncphase;
-        Display::printText("Synchronous phase is "+sstream.str()
-                           +" (should be close to 0).");
+        auto syncphase = std::asin(W0/(physcons::e*V_RF))/two_pi<double>()*360;
+        sstream << std::fixed << syncphase;
+        Display::printText("Synchronous phase is at "+sstream.str()
+                           +" degree (should be small).");
 
         sstream.str("");
         sstream << std::scientific << calc_damp << " s";
@@ -391,8 +387,12 @@ int main(int argc, char** argv)
             sstream << " ( set value: "
                     << std::scientific << set_damp  << " s)";
         }
-        Display::printText("Damping time calculated on ring parameters is "
+        Display::printText("Damping time calculated from ring parameters is "
                            +sstream.str() + ".");
+
+        sstream.str("");
+        sstream << std::scientific << 1/t_damp/fs/(2*pi<double>());
+        Display::printText("Damping beta: " +sstream.str());
 
     }
     } // end of context of information printing
