@@ -56,8 +56,8 @@ set(SRC_LIST
   ./src/SM/DriftMap.cpp
   ./src/SM/FokkerPlanckMap.cpp
   ./src/SM/KickMap.cpp
+  ./src/SM/DynamicRFKickMap.cpp
   ./src/SM/RFKickMap.cpp
-  ./src/SM/RotationMap.cpp
   ./src/SM/Identity.cpp
   ./src/SM/SourceMap.cpp
   ./src/SM/WakeKickMap.cpp
@@ -95,9 +95,9 @@ set(INC_LIST
   ./inc/SM/DriftMap.hpp
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
+  ./inc/SM/DynamicRFKickMap.hpp
   ./inc/SM/RFKickMap.hpp
   ./inc/SM/Identity.hpp
-  ./inc/SM/RotationMap.hpp
   ./inc/SM/SourceMap.hpp
   ./inc/SM/WakePotentialMap.hpp
   ./inc/SM/WakeKickMap.hpp
