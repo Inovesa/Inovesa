@@ -256,9 +256,9 @@ int main(int argc, char** argv)
 
     const auto calc_damp = E0*physcons::e/W0/f_rev;
 
-    const auto set_damp = isoscale*opts.getDampingTime();
+    const auto set_damp = opts.getDampingTime();
 
-    const auto t_damp = (set_damp < 0)? calc_damp : set_damp;
+    const auto t_damp = (set_damp < 0)? calc_damp : isoscale*set_damp;
 
     const double dt = 1.0/(fs*steps);
     const double revolutionpart = f0*dt;
