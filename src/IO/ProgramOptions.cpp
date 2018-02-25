@@ -49,7 +49,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Revolution frequency (Hz)")
         ("DampingTime,d", po::value<double>(&t_d)->default_value(-1),
             "Damping time (s), "
-            "negative: calculate based on other parameters")
+            "<0: calculate based on other parameters")
         ("HarmonicNumber,H", po::value<double>(&H)->default_value(50),
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
@@ -187,11 +187,6 @@ vfps::ProgramOptions::ProgramOptions() :
             ">0: renormalize charge every n-th simulation step\n"
             " 0: do just one initial renormalization\n"
             "<0: no renormalization")
-        ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
-            "Used implementation for rotation\n"
-            " 0: Standard rotation without source map\n"
-            " 1: Standard rotation with source map\n"
-            " 2: Manhattan rotation")
         ("GridSize,s", po::value<uint32_t>(&meshsize)->default_value(256),
             "Number of mesh points per dimension")
         ("rotations,T", po::value<double>(&rotations)->default_value(5),

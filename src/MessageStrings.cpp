@@ -127,8 +127,10 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
     std::stringstream status;
     status.precision(5);
     status << std::setw(6) << roatation << '/' << total_rotations;
-    status << "\t1-Q/Q_0=" << 1.0 - ps->getIntegral()
-           << "\ts_p=" << ps->getEnergySpread();
+    status << "\t1-Q/Q_0="
+           << std::setw(10) << 1.0 - ps->getIntegral()
+           << "\ts_p="
+           << std::setw(5) << ps->getEnergySpread();
 
     return status.str();
 }

@@ -384,7 +384,7 @@ int main(int argc, char** argv)
         sstream.str("");
         sstream << std::scientific << calc_damp << " s";
         if (set_damp >= 0) {
-            sstream << " ( set value: "
+            sstream << " (set value: "
                     << std::scientific << set_damp  << " s)";
         }
         Display::printText("Damping time calculated from ring parameters is "
@@ -755,7 +755,7 @@ int main(int argc, char** argv)
     // 2) the energy spread (variance in Y direction)
     grid_t1->updateYProjection();
     grid_t1->variance(1);
-    Display::printText(status_string(grid_t1,0,rotations));
+    Display::printText(status_string(grid_t1,0,rotations),false);
 
     #ifdef INOVESA_ENABLE_INTERRUPT
     //Install signal handler for SIGINT
@@ -865,7 +865,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESSA_USE_GUI
             Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps,
-                               rotations),updatetime);
+                               rotations),false,updatetime);
         }
         wm->apply();
         wm->applyTo(trackme);
