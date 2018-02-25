@@ -168,12 +168,13 @@ void vfps::Display::printText(std::string txt, bool newline, float silentTime)
         if (newline) {
             std::cout << message.str() << std::endl;
         } else {
-            std::cout << message.str() << "\r" << std::flush;
+            std::cout << message.str() << "\r";
         }
-    }
-    if (logfile.is_open()) {
-        logfile << message.str() << std::endl;
-        logfile.flush();
+        std::cout.flush();
+        if (logfile.is_open()) {
+            logfile << message.str() << std::endl;
+            logfile.flush();
+        }
     }
 }
 
