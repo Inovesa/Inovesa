@@ -87,11 +87,10 @@ public:
     void appendSourceMap(const PhaseSpace::Position *allpos);
 
     void append(const std::shared_ptr<PhaseSpace> ps,
+                const timeaxis_t t,
                 const AppendType at=AppendType::Defaults);
 
     void append(const WakeKickMap* wkm);
-
-    void appendTime(const timeaxis_t t);
 
 public:
     static std::unique_ptr<PhaseSpace>
@@ -237,11 +236,15 @@ private: // phase space
 
     H5::DataSet _ps_dataset;
 
+    H5::DataSet _ps_ta_dataset;
+
     H5::DataType _ps_datatype;
 
     std::array<hsize_t,_ps_rank> _ps_dims;
 
     meshindex_t _ps_size;
+
+    hsize_t _ps_ta_dims;
 
 private: // impedance
     static constexpr uint_fast8_t imp_rank = 1;

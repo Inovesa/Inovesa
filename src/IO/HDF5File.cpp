@@ -30,28 +30,29 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const WakeFunctionMap* wfm,
                          const size_t nparticles,
                          const double t_sync,
-                         const double f_rev) :
-    _file( std::make_unique<H5::H5File>(filename,H5F_ACC_TRUNC) ),
-    fname( filename ),
-    ta_dims( 0 ),
-    bc_dims( 0 ),
-    bp_dims( {{ 0, ps->nMeshCells(0) }} ),
-    bl_dims( 0 ),
-    qb_dims( 0 ),
-    ep_dims( {{ 0, ps->nMeshCells(0) }} ),
-    es_dims( 0 ),
-    pt_dims( {{ 0, nparticles, 2 }} ),
-    pt_particles( nparticles ),
-    wp_dims( {{ 0, ps->nMeshCells(0) }} ),
-    maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 ),
-    csr_dims( {{ 0, maxn }} ),
-    csri_dims( 0 ),
-    _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} ),
-    _ps_size( ps->nMeshCells(0) ),
-    imp_size( imp != nullptr ? imp->nFreqs()/2 : 0 ),
-    _sm_dims (_ps_dims ) ,
-    _sm_size( _ps_size ),
-    wf_size( 2*_ps_size )
+                         const double f_rev)
+  : _file( std::make_unique<H5::H5File>(filename,H5F_ACC_TRUNC) )
+  , fname( filename )
+  , ta_dims( 0 )
+  , bc_dims( 0 )
+  , bp_dims( {{ 0, ps->nMeshCells(0) }} )
+  , bl_dims( 0 )
+  , qb_dims( 0 )
+  , ep_dims( {{ 0, ps->nMeshCells(0) }} )
+  , es_dims( 0 )
+  , pt_dims( {{ 0, nparticles, 2 }} )
+  , pt_particles( nparticles )
+  , wp_dims( {{ 0, ps->nMeshCells(0) }} )
+  , maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 )
+  , csr_dims( {{ 0, maxn }} )
+  , csri_dims( 0 )
+  , _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} )
+  , _ps_size( ps->nMeshCells(0) )
+  , _ps_ta_dims( 0 )
+  , imp_size( imp != nullptr ? imp->nFreqs()/2 : 0 )
+  , _sm_dims (_ps_dims )
+  , _sm_size( _ps_size )
+  , wf_size( 2*_ps_size )
 {
     _file->createGroup("Info");
     // save Values of Phase Space Axis
@@ -501,7 +502,34 @@ vfps::HDF5File::HDF5File(const std::string filename,
     // get ready to save PhaseSpace
     {
     _file->createGroup("PhaseSpace");
-    _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/PhaseSpace/axis0" );
+
+    /* The phase space has its own time axis.
+     * It resuses information available through
+     * variables defined in the headerfrom the original time axis.
+     */
+
+    hsize_t ta_maxdims = H5S_UNLIMITED;
+
+    H5::DataSpace ta_dataspace(ta_rank,&_ps_ta_dims,&ta_maxdims);
+
+
+    const hsize_t ta_chunkdims = 256;
+
+    H5::DSetCreatPropList ta_prop;
+    ta_prop.setChunk(ta_rank,&ta_chunkdims);
+    ta_prop.setShuffle();
+    ta_prop.setDeflate(compression);
+
+    _ps_ta_dataset = _file->createDataSet("/PhaseSpace/axis0",ta_datatype,
+                                          ta_dataspace,ta_prop);
+    const double axtimescale = t_sync;
+    _ps_ta_dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axtimescale);
+
+    const double axturnscale = axtimescale*f_rev;
+    _ps_ta_dataset.createAttribute("Turn",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axturnscale);
+
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis1" );
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis2" );
 
@@ -778,6 +806,7 @@ void vfps::HDF5File::appendSourceMap(const PhaseSpace::Position *allpos)
 }
 
 void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
+                            const timeaxis_t t,
                             const AppendType at)
 {
     H5::DataSpace* filespace = nullptr;
@@ -785,6 +814,18 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
 
     if ( at == AppendType::All ||
          at == AppendType::PhaseSpace) {
+        // append to TimeAxis
+        hsize_t ps_ta_offset = _ps_ta_dims;
+        const hsize_t ps_ta_ext = 1;
+        _ps_ta_dims++;
+        _ps_ta_dataset.extend(&_ps_ta_dims);
+        filespace = new H5::DataSpace(_ps_ta_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, &ps_ta_ext, &ps_ta_offset);
+        memspace = new H5::DataSpace(ta_rank,&ps_ta_ext,nullptr);
+        _ps_ta_dataset.write(&t, ta_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
+
         // append PhaseSpace
         std::array<hsize_t,_ps_rank> ps_offset
                 = {{_ps_dims[0],0,0}};
@@ -801,6 +842,18 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
     }
 
     if (at != AppendType::PhaseSpace) {
+        // append to TimeAxis
+        hsize_t ta_offset = ta_dims;
+        const hsize_t ta_ext = 1;
+        ta_dims++;
+        ta_dataset.extend(&ta_dims);
+        filespace = new H5::DataSpace(ta_dataset.getSpace());
+        filespace->selectHyperslab(H5S_SELECT_SET, &ta_ext, &ta_offset);
+        memspace = new H5::DataSpace(ta_rank,&ta_ext,nullptr);
+        ta_dataset.write(&t, ta_datatype,*memspace, *filespace);
+        delete memspace;
+        delete filespace;
+
         // append BunchProfile
         std::array<hsize_t,bp_rank> bp_offset
                         = {{bp_dims[0],0}};
@@ -896,23 +949,6 @@ void vfps::HDF5File::append(const WakeKickMap* wkm)
     filespace->selectHyperslab(H5S_SELECT_SET, wp_ext.data(), wp_offset.data());
     H5::DataSpace* memspace = new H5::DataSpace(wp_rank,wp_ext.data(),nullptr);
     wp_dataset.write(wkm->getForce(), wp_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
-}
-
-void vfps::HDF5File::appendTime(const timeaxis_t t)
-{
-    // append to TimeAxis
-    hsize_t ta_offset = ta_dims;
-    const hsize_t ta_ext = 1;
-    ta_dims++;
-    ta_dataset.extend(&ta_dims);
-    H5::DataSpace* filespace;
-    H5::DataSpace* memspace;
-    filespace = new H5::DataSpace(ta_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, &ta_ext, &ta_offset);
-    memspace = new H5::DataSpace(ta_rank,&ta_ext,nullptr);
-    ta_dataset.write(&t, ta_datatype,*memspace, *filespace);
     delete memspace;
     delete filespace;
 }

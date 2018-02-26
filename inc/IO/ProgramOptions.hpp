@@ -216,7 +216,7 @@ private: // program parameters
 
     std::string _outfile;
 
-    bool _savephasespace;
+    uint32_t _savephasespace;
 
     bool _savesourcemap;
 

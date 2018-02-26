@@ -725,15 +725,13 @@ int main(int argc, char** argv)
     }
 
     #ifdef INOVESA_USE_HDF5
-    const HDF5File::AppendType h5save =
-        opts.getSavePhaseSpace()? HDF5File::AppendType::All:
-                                  HDF5File::AppendType::Defaults;
+    const auto h5save = opts.getSavePhaseSpace();
     // end of preparation to save results
 
 
-    if (hdf_file != nullptr && h5save == HDF5File::AppendType::Defaults) {
+    if (hdf_file != nullptr && h5save == 0) {
         // save initial phase space (if not saved anyways)
-        hdf_file->append(grid_t1,HDF5File::AppendType::PhaseSpace);
+        hdf_file->append(grid_t1,0,HDF5File::AppendType::PhaseSpace);
     }
     #endif
 
@@ -788,7 +786,6 @@ int main(int argc, char** argv)
         }
 
         if (outstep > 0 && simulationstep%outstep == 0) {
-            outstepnr++;
 
             // works on XProjection
             grid_t1->getIntegral();
@@ -805,9 +802,15 @@ int main(int argc, char** argv)
             #endif // INOVESA_USE_OPENCL
             #ifdef INOVESA_USE_HDF5
             if (hdf_file != nullptr) {
-                hdf_file->appendTime(static_cast<double>(simulationstep)
-                                /static_cast<double>(steps));
-                hdf_file->append(grid_t1,h5save);
+                HDF5File::AppendType at =
+                        (h5save > 0 && outstepnr%h5save == 0)
+                        ? HDF5File::AppendType::All
+                        : HDF5File::AppendType::Defaults;
+
+
+                hdf_file->append(grid_t1,
+                        static_cast<double>(simulationstep)
+                        /static_cast<double>(steps), at);
                 rdtn_field.updateCSR(fc);
                 hdf_file->append(&rdtn_field);
                 if (wkm != nullptr) {
@@ -831,6 +834,7 @@ int main(int argc, char** argv)
                     hdf_file->appendSourceMap(allpos.data());
                 }
             }
+            outstepnr++;
             #endif // INOVESA_USE_HDF5
             #ifdef INOVESA_USE_OPENGL
             if (display != nullptr) {
@@ -918,10 +922,11 @@ int main(int argc, char** argv)
             }
         }
         #endif // INOVESA_USE_OPENCL
-        hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
-
-        // for the final result, everything will be saved
-        hdf_file->append(grid_t1,HDF5File::AppendType::All);
+        // for theresult, everything will be saved
+        hdf_file->append(grid_t1,
+                         static_cast<double>(simulationstep)
+                         /static_cast<double>(steps),
+                         HDF5File::AppendType::All);
         rdtn_field.updateCSR(fc);
         hdf_file->append(&rdtn_field);
         if (wkm != nullptr) {

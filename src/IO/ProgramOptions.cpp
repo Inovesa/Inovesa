@@ -124,9 +124,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
+        ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
+            "Save results every n steps.")
         ("SavePhaseSpace",
-            po::value<bool>(&_savephasespace)->default_value(false),
-            "save every outstep's phase space to HDF5 file")
+            po::value<decltype(_savephasespace)>
+                (&_savephasespace)->default_value(0),
+            "save every n's outstep's phase space to HDF5 file")
         ("SaveSourceMap",
             po::value<bool>(&_savesourcemap)->default_value(false),
             "save every outstep's source map to HDF5 file")
@@ -153,9 +156,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("output,o",
             po::value<std::string>(&_outfile),
             "name of file to safe results.")
+        ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
+            "Save results every n steps.")
         ("SavePhaseSpace",
-            po::value<bool>(&_savephasespace)->default_value(false)->implicit_value(true),
-            "save every outstep's phase space to HDF5 file")
+            po::value<decltype(_savephasespace)>
+                (&_savephasespace)->default_value(0),
+            "save every n's outstep's phase space to HDF5 file")
         ("SaveSourceMap",
             po::value<bool>(&_savesourcemap)->default_value(false)->implicit_value(true),
             "save every outstep's source map to HDF5 file")
@@ -171,8 +177,6 @@ vfps::ProgramOptions::ProgramOptions() :
     _simulopts.add_options()
         ("StepsPerTs,N", po::value<uint32_t>(&steps_per_Ts)->default_value(1000),
             "Simulation steps for one synchrotron period")
-        ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
-            "Save results every n steps.")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
             "Factor for zero padding of bunch profile")
         ("RoundPadding", po::value<bool>(&roundpadding)->default_value(true),
