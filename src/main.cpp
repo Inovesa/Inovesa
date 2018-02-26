@@ -246,7 +246,7 @@ int main(int argc, char** argv)
     const double Ib_scaled = Ib_unscaled/isoscale;
     const double Iz = opts.getStartDistZoom();
 
-    const auto steps = std::max(opts.getSteps(),1u);
+    const auto steps = std::max(opts.getStepsPerTsync(),1u);
     const auto outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
 

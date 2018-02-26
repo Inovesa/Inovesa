@@ -109,8 +109,8 @@ public:
     inline auto getRoundPadding() const
         { return roundpadding; }
 
-    inline auto getSteps() const
-        { return steps; }
+    inline auto getStepsPerTsync() const
+        { return steps_per_Ts; }
 
     inline auto getNRotations() const
         { return rotations; }
@@ -146,21 +146,17 @@ public:
     inline auto getAlpha2() const
         { return alpha2; }
 
-    inline auto getRFAmplitudeSpread() const {
-        return rf_amplitude_spread;
-    }
+    inline auto getRFAmplitudeSpread() const
+        { return rf_amplitude_spread; }
 
-    inline auto getRFPhaseSpread() const {
-        return rf_phase_spread;
-    }
+    inline auto getRFPhaseSpread() const
+        { return rf_phase_spread; }
 
-    inline auto getRFPhaseModAmplitude() const {
-        return rf_phase_mod_amplitude;
-    }
+    inline auto getRFPhaseModAmplitude() const
+        { return rf_phase_mod_amplitude; }
 
-    inline auto getRFPhaseModFrequency() const {
-        return rf_phase_mod_frequency;
-    }
+    inline auto getRFPhaseModFrequency() const
+        { return rf_phase_mod_frequency; }
 
     inline auto getBeamEnergy() const
         { return E_0; }
@@ -250,7 +246,7 @@ private: // simulation parameters
     double pq_size;
     double meshshiftx;
     double meshshifty;
-    uint32_t steps;
+    uint32_t steps_per_Ts;
     int32_t renormalize;
     double rotations;
     uint32_t rotationtype;
@@ -311,7 +307,9 @@ private:
     /**
      * @brief _compatopts options from old config files
      */
-    po::options_description _compatopts;
+    po::options_description _compatopts_alias;
+
+    po::options_description _compatopts_ignore;
 
     po::options_description _simulopts;
 

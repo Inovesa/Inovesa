@@ -169,8 +169,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "set to omit consistency check for parameters")
     ;
     _simulopts.add_options()
-        ("steps,N", po::value<uint32_t>(&steps)->default_value(1000),
-            "Steps for one synchrotron period")
+        ("StepsPerTs,N", po::value<uint32_t>(&steps_per_Ts)->default_value(1000),
+            "Simulation steps for one synchrotron period")
         ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
             "Save results every n steps.")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
@@ -198,23 +198,28 @@ vfps::ProgramOptions::ProgramOptions() :
         ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(false),
             "Restrict result of interpolation to the values of the neighboring grid points")
     ;
-    _compatopts.add_options()
+    _compatopts_ignore.add_options()
         ("HaissinskiIterations",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
         ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
             "(currently ignored)")
         ("RotationType", po::value<uint32_t>(&rotationtype),
             "compatibility (ignored)")
+    ;
+    _compatopts_alias.add_options()
         ("RFVoltage",
             po::value<double>(&V_RF),
             "compatibility naming for AcceleratingVoltage")
         ("SyncFreq", po::value<double>(&f_s),
             "(compatibility naming for SynchrotronFrequency)")
+        ("steps", po::value<uint32_t>(&steps_per_Ts),
+            "(compatibility naming for StepsPerTs)")
     ;
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
     _cfgfileopts.add(_simulopts);
-    _cfgfileopts.add(_compatopts);
+    _cfgfileopts.add(_compatopts_alias);
+    _cfgfileopts.add(_compatopts_ignore);
     _commandlineopts.add(_proginfoopts);
     _commandlineopts.add(_programopts_cli);
     _commandlineopts.add(_simulopts);
@@ -295,6 +300,7 @@ void vfps::ProgramOptions::save(std::string fname)
         || it->first == "InitialDistParam"
         || it->first == "RotationType"
         || it->first == "SyncFreq"
+        || it->first == "steps"
         || it->first == "RFVoltage"
         || it->first == "run_anyway"
         ){
