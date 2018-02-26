@@ -177,6 +177,8 @@ vfps::ProgramOptions::ProgramOptions() :
     _simulopts.add_options()
         ("StepsPerTs,N", po::value<uint32_t>(&steps_per_Ts)->default_value(1000),
             "Simulation steps for one synchrotron period")
+        ("StepsPerRevolution", po::value<uint32_t>(&steps_per_Trev)->default_value(0),
+            "Simulation steps for one revolution (overwrites StepsPerTs)")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
             "Factor for zero padding of bunch profile")
         ("RoundPadding", po::value<bool>(&roundpadding)->default_value(true),

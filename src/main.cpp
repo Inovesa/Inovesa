@@ -246,7 +246,9 @@ int main(int argc, char** argv)
     const double Ib_scaled = Ib_unscaled/isoscale;
     const double Iz = opts.getStartDistZoom();
 
-    const auto steps = std::max(opts.getStepsPerTsync(),1u);
+    const double steps = (opts.getStepsPerTrev()>0)
+            ? opts.getStepsPerTrev()*f_rev/fs_unscaled
+            : std::max(opts.getStepsPerTsync(),1u);
     const auto outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
 
@@ -370,10 +372,17 @@ int main(int argc, char** argv)
         sstream << std::scientific << fs_unscaled;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
-        sstream.str("");
-        sstream << std::fixed << 1/revolutionpart;
-        Display::printText("Doing " +sstream.str()+
-                           " simulation steps per revolution period.");
+        if (opts.getStepsPerTrev() == 0) {
+            sstream.str("");
+            sstream << std::fixed << 1/revolutionpart;
+            Display::printText("Doing " +sstream.str()+
+                               " simulation steps per revolution period.");
+        } else {
+            sstream.str("");
+            sstream << std::fixed << f_rev/fs_unscaled/revolutionpart;
+            Display::printText("Doing " +sstream.str()+
+                               " simulation steps per synchrotron period.");
+        }
 
         sstream.str("");
         auto syncphase = std::asin(W0/(physcons::e*V_RF))/two_pi<double>()*360;
@@ -771,7 +780,7 @@ int main(int argc, char** argv)
      * (everything inside this loop will be run a multitude of times)
      */
     uint32_t outstepnr=0;
-    uint32_t laststep=steps*rotations;
+    uint32_t laststep=std::ceil(steps*rotations);
     while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection
@@ -809,8 +818,7 @@ int main(int argc, char** argv)
 
 
                 hdf_file->append(grid_t1,
-                        static_cast<double>(simulationstep)
-                        /static_cast<double>(steps), at);
+                        static_cast<double>(simulationstep)/steps, at);
                 rdtn_field.updateCSR(fc);
                 hdf_file->append(&rdtn_field);
                 if (wkm != nullptr) {
@@ -924,8 +932,7 @@ int main(int argc, char** argv)
         #endif // INOVESA_USE_OPENCL
         // for theresult, everything will be saved
         hdf_file->append(grid_t1,
-                         static_cast<double>(simulationstep)
-                         /static_cast<double>(steps),
+                         static_cast<double>(simulationstep)/steps,
                          HDF5File::AppendType::All);
         rdtn_field.updateCSR(fc);
         hdf_file->append(&rdtn_field);

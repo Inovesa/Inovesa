@@ -112,6 +112,9 @@ public:
     inline auto getStepsPerTsync() const
         { return steps_per_Ts; }
 
+    inline auto getStepsPerTrev() const
+        { return steps_per_Trev; }
+
     inline auto getNRotations() const
         { return rotations; }
 
@@ -247,6 +250,7 @@ private: // simulation parameters
     double meshshiftx;
     double meshshifty;
     uint32_t steps_per_Ts;
+    uint32_t steps_per_Trev;
     int32_t renormalize;
     double rotations;
     uint32_t rotationtype;
