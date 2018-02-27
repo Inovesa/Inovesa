@@ -34,6 +34,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("help,h", "print help message")
         ("copyright", "print copyright information")
         ("version", "print version string")
+        ("buildinfo", "print information on current build")
     ;
     _physopts.add_options()
         ("alpha0", po::value<double>(&alpha0)->default_value(4e-3,"4e-3"),
@@ -247,6 +248,10 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         return false;
     }
     if (_vm.count("version")) {
+        std::cout << vfps::inovesa_version(false) << std::endl;
+        return false;
+    }
+    if (_vm.count("buildinfo")) {
         std::cout << vfps::inovesa_version(true) << std::endl;
         return false;
     }
