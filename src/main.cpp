@@ -679,7 +679,7 @@ int main(int argc, char** argv)
 
     if (hdf_file != nullptr && h5save == HDF5File::AppendType::Defaults) {
         // save initial phase space (if not saved anyways)
-        hdf_file->append(grid_t1,HDF5File::AppendType::PhaseSpace);
+        hdf_file->append(*grid_t1,HDF5File::AppendType::PhaseSpace);
     }
     #endif
 
@@ -754,7 +754,7 @@ int main(int argc, char** argv)
             if (hdf_file != nullptr) {
                 hdf_file->appendTime(static_cast<double>(simulationstep)
                                 /static_cast<double>(steps));
-                hdf_file->append(grid_t1,h5save);
+                hdf_file->append(*grid_t1,h5save);
                 rdtn_field.updateCSR(fc);
                 hdf_file->append(&rdtn_field);
                 if (wkm != nullptr) {
@@ -865,7 +865,7 @@ int main(int argc, char** argv)
         hdf_file->appendTime(static_cast<double>(simulationstep) /static_cast<double>(steps));
 
         // for the final result, everything will be saved
-        hdf_file->append(grid_t1,HDF5File::AppendType::All);
+        hdf_file->append(*grid_t1,HDF5File::AppendType::All);
         rdtn_field.updateCSR(fc);
         hdf_file->append(&rdtn_field);
         if (wkm != nullptr) {

@@ -399,6 +399,13 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
         OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data(),nullptr,evt);
+        OCLH::enqueueReadBuffer
+            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
+            nullptr,evt
+            #ifdef INOVESA_ENABLE_CLPROFILING
+            , syncPSEvents.get()
+            #endif // INOVESA_ENABLE_CLPROFILING
+            );
         break;
     }
     }
