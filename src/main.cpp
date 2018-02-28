@@ -701,7 +701,7 @@ int main(int argc, char** argv)
     // 2) the energy spread (variance in Y direction)
     grid_t1->updateYProjection();
     grid_t1->variance(1);
-    Display::printText(status_string(grid_t1,0,rotations));
+    Display::printText(status_string(grid_t1,0,rotations),false);
 
     #ifdef INOVESA_ENABLE_INTERRUPT
     //Install signal handler for SIGINT
@@ -809,7 +809,7 @@ int main(int argc, char** argv)
             }
             #endif // INOVESSA_USE_GUI
             Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps,
-                               rotations),updatetime);
+                               rotations),false,updatetime);
         }
         wm->apply();
         wm->applyTo(trackme);
@@ -824,7 +824,7 @@ int main(int argc, char** argv)
 
         // udate for next time step
         grid_t1->updateXProjection();
-	
+
         #ifdef INOVESA_USE_OPENCL
         if (OCLH::active) {
             OCLH::flush();
