@@ -123,7 +123,9 @@ public:
 
     void draw();
 
-    static void printText(std::string txt, float silentTime=0.0f);
+    static void printText(std::string txt,
+                          bool newline = true,
+                          float silentTime=0.0f);
 
     #ifdef INOVESA_USE_OPENGL
     void takeElement(std::shared_ptr<GUIElement> item);

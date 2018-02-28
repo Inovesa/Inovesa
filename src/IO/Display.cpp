@@ -153,25 +153,28 @@ void vfps::Display::draw() {
 }
 #endif // INOVESA_USE_OPENGL
 
-void vfps::Display::printText(std::string txt, float silentTime)
+void vfps::Display::printText(std::string txt, bool newline, float silentTime)
 {
     std::stringstream message;
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    if (std::chrono::duration<float>(now-_lastmessage).count() > silentTime) {
+    if (std::chrono::duration<float>(now-_lastmessage).count() >= silentTime) {
         message.setf( std::ios::fixed, std:: ios::floatfield );
         message.precision(2);
         message << "[ " << std::setw(9)
                 << std::chrono::duration<float>(now-start_time).count()
                 << " ]: "
-                << txt
-                << std::endl;
+                << txt;
         _lastmessage = now;
-    }
-    std::cout << message.str();
-    std::cout.flush();
-    if (logfile.is_open()) {
-        logfile << message.str();
-        logfile.flush();
+        if (newline) {
+            std::cout << message.str() << std::endl;
+        } else {
+            std::cout << message.str() << "\r";
+        }
+        std::cout.flush();
+        if (logfile.is_open()) {
+            logfile << message.str() << std::endl;
+            logfile.flush();
+        }
     }
 }
 
