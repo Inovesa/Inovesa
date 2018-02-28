@@ -740,7 +740,7 @@ int main(int argc, char** argv)
 
     if (hdf_file != nullptr && h5save == 0) {
         // save initial phase space (if not saved anyways)
-        hdf_file->append(grid_t1,0,HDF5File::AppendType::PhaseSpace);
+        hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
     }
     #endif
 
@@ -817,7 +817,7 @@ int main(int argc, char** argv)
                         : HDF5File::AppendType::Defaults;
 
 
-                hdf_file->append(grid_t1,
+                hdf_file->append(*grid_t1,
                         static_cast<double>(simulationstep)/steps, at);
                 rdtn_field.updateCSR(fc);
                 hdf_file->append(&rdtn_field);
@@ -931,7 +931,7 @@ int main(int argc, char** argv)
         }
         #endif // INOVESA_USE_OPENCL
         // for theresult, everything will be saved
-        hdf_file->append(grid_t1,
+        hdf_file->append(*grid_t1,
                          static_cast<double>(simulationstep)/steps,
                          HDF5File::AppendType::All);
         rdtn_field.updateCSR(fc);

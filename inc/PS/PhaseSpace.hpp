@@ -132,23 +132,8 @@ public:
      */
     void integrate();
 
-    const integral_t& getIntegral()
-    {
-        #ifdef INOVESA_USE_OPENCL
-        if (OCLH::active) {
-            OCLH::enqueueReadBuffer
-                (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
-                nullptr,nullptr
-                #ifdef INOVESA_ENABLE_CLPROFILING
-                , syncPSEvents.get()
-                #endif // INOVESA_ENABLE_CLPROFILING
-                );
-
-        }
-        #endif // INOVESA_USE_OPENCL
-
-        return _integral;
-    }
+    inline const integral_t& getIntegral() const
+        { return _integral; }
 
     /**
      * @brief variance

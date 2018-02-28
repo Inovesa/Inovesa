@@ -805,7 +805,7 @@ void vfps::HDF5File::appendSourceMap(const PhaseSpace::Position *allpos)
    delete [] data_y;
 }
 
-void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
+void vfps::HDF5File::append(const PhaseSpace& ps,
                             const timeaxis_t t,
                             const AppendType at)
 {
@@ -836,7 +836,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(_ps_dataset.getSpace());
         memspace = new H5::DataSpace(_ps_rank,ps_ext.data(),nullptr);
         filespace->selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());
-        _ps_dataset.write(ps->getData(), _ps_datatype, *memspace, *filespace);
+        _ps_dataset.write(ps.getData(), _ps_datatype, *memspace, *filespace);
         delete memspace;
         delete filespace;
     }
@@ -864,7 +864,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(bp_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
         memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
-        bp_dataset.write(ps->getProjection(0), bp_datatype,*memspace, *filespace);
+        bp_dataset.write(ps.getProjection(0), bp_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
 
@@ -876,7 +876,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(bl_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
         memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
-        meshaxis_t bunchlength = ps->getBunchLength();
+        meshaxis_t bunchlength = ps.getBunchLength();
         bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -889,7 +889,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(qb_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &qb_ext, &qb_offset);
         memspace = new H5::DataSpace(qb_rank,&qb_ext,nullptr);
-        meshaxis_t bunchposition = ps->getMoment(0,0);
+        meshaxis_t bunchposition = ps.getMoment(0,0);
         qb_dataset.write(&bunchposition, qb_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -904,7 +904,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(ep_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, ep_ext.data(), ep_offset.data());
         memspace = new H5::DataSpace(ep_rank,ep_ext.data(),nullptr);
-        ep_dataset.write(ps->getProjection(1), ep_datatype,*memspace, *filespace);
+        ep_dataset.write(ps.getProjection(1), ep_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
 
@@ -916,7 +916,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(es_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
         memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
-        meshaxis_t energyspread = ps->getEnergySpread();
+        meshaxis_t energyspread = ps.getEnergySpread();
         es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -929,7 +929,7 @@ void vfps::HDF5File::append(const std::shared_ptr<PhaseSpace> ps,
         filespace = new H5::DataSpace(bc_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
         memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
-        double bc = ps->getIntegral();
+        double bc = ps.getIntegral();
         bc_dataset.write(&bc, bc_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
