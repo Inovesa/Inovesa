@@ -49,8 +49,8 @@ std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
     auto impedance_changed = false;
 
     if (gap != 0) {
-        impedance_changed = true;
         if (use_csr) {
+            impedance_changed = true;
             Display::printText("... using CSR impedance");
             if (gap>0) {
                 Display::printText("... shielded by parallel plates.");
@@ -62,10 +62,12 @@ std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
         }
         auto radius = std::abs(gap/2);
         if ( s > 0 && xi >= -1 ) {
+            impedance_changed = true;
             Display::printText("... using resistive wall impedance.");
             *rv += ResistiveWall(nfreqs,frev,fmax,physcons::c/frev,s,xi,radius);
         }
         if (0 < inner_coll_radius && inner_coll_radius < radius) {
+            impedance_changed = true;
             Display::printText("... using collimator impedance.");
             *rv += CollimatorImpedance(nfreqs,fmax,radius,inner_coll_radius);
         }
