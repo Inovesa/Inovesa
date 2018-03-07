@@ -210,7 +210,7 @@ int main(int argc, char** argv)
 
     const frequency_t fc = opts.getCutoffFrequency();
     const double H_unscaled = opts.getHarmonicNumber();
-    const double H = isoscale*H_unscaled;
+    const double harmonic_number = isoscale*H_unscaled;
     const double gap = opts.getVacuumChamberGap();
     const double V_RF = opts.getRFVoltage();
 
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
 
 
     // natural RMS bunch length
-    const double bl = physcons::c*dE/H/std::pow(f0,2.0)/V_RF*fs;
+    const double bl = physcons::c*dE/harmonic_number/std::pow(f0,2.0)/V_RF*fs;
 
     const double Ib_unscaled = opts.getBunchCurrent();
     const double Qb = Ib_unscaled/f_rev;
@@ -298,7 +298,7 @@ int main(int argc, char** argv)
                                       / dE*ps_size/pqsize);
 
     // "time step" for RF phase modulation
-    const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt;
+    const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt/isoscale;
 
 
     /*
@@ -332,7 +332,7 @@ int main(int argc, char** argv)
         }
 
         const double Inorm = physcons::IAlfven/physcons::me*2*pi<double>()
-                           * std::pow(dE*fs/f0,2)/V_RF/H
+                           * std::pow(dE*fs/f0,2)/V_RF/harmonic_number
                            * std::pow(bl/R_bend,1./3.);
 
         Ith = Inorm * (0.5+0.34*shield);
@@ -552,7 +552,22 @@ int main(int argc, char** argv)
     std::unique_ptr<SourceMap> rm1;
     std::unique_ptr<SourceMap> rm2;
     if (rf_noise_add != 0 || rf_noise_mul != 0 || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
-        Display::printText("Building dynamic RFKickMap.");
+        Display::printText("Building dynamic RFKickMap...");
+        sstream.str("");
+        sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;
+        if (rf_noise_add != 0) {
+            Display::printText("...including phase noise (spread: "
+                               + sstream.str()+" s)");
+        }
+        if (rf_mod_ampl != 0 && rf_mod_step != 0) {
+            sstream.str("");
+            sstream << "...including phase modulation ("
+                    << opts.getRFPhaseModFrequency()/fs_unscaled
+                    << " fs) of +/-"
+                    << opts.getRFPhaseModAmplitude()/360.0/f_rev/harmonic_number
+                    << " s";
+            Display::printText(sstream.str());
+        }
         rm1.reset(new DynamicRFKickMap(grid_t2, grid_t1, ps_size, ps_size,
                                        angle, rf_noise_add, rf_noise_mul,
                                        rf_mod_ampl,rf_mod_step,
