@@ -341,14 +341,6 @@ int main(int argc, char** argv)
 
         if (verbose && use_csr) {
             sstream.str("");
-            sstream << std::scientific
-                    << bl << " m ("
-                    << bl/physcons::c << " s)"
-                    ;
-            Display::printText("Natural bunch length is "
-                               +sstream.str());
-
-            sstream.str("");
             sstream << std::fixed << shield;
             Display::printText("Shielding parameter (g=gap): "
                                +sstream.str());
@@ -376,6 +368,14 @@ int main(int argc, char** argv)
     }
 
     if (verbose) {
+        sstream.str("");
+        sstream << std::scientific
+                << bl << " m ("
+                << bl/physcons::c << " s)"
+                ;
+        Display::printText("Natural bunch length is "
+                           +sstream.str());
+
         sstream.str("");
         sstream << std::scientific << fs_unscaled;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
