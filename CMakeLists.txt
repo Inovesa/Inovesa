@@ -144,6 +144,7 @@ set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 # turn on automatic optimizations for current architecture when GCC is used
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   add_definitions(-march=native)
+  MESSAGE ("Builing for current architecture. Binary might not work on other CPU.")
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
