@@ -141,6 +141,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # workaround CMake bug (e.g. in MacOS)
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
+# turn on automatic optimizations for current architecture when GCC is used
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  add_definitions(-march=native)
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
