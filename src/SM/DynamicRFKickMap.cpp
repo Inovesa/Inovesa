@@ -66,7 +66,7 @@ void vfps::DynamicRFKickMap::reset() {
     _offset = _mean;
 
     for (auto& offs : _offset) {
-        offs = fma(offs, 1 + mulnoise, addnoise+phasemod);
+        offs = offs * (1 + mulnoise) + addnoise+phasemod;
     }
 
     #ifdef INOVESA_USE_OPENCL
