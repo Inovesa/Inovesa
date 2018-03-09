@@ -43,22 +43,18 @@ OCLH::OCLH( uint32_t device, bool glsharing)
     uint32_t devicescount = 0;
 
     for (auto p : platforms) {
-        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL,properties(p,glsharing).data());
-        cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
-        if (devicescount + tmp_devices.size() <= device) {
+        context = cl::Context(CL_DEVICE_TYPE_ALL,properties(p,glsharing).data());
+        _devices = context.getInfo<CL_CONTEXT_DEVICES>();
+        if (devicescount + _devices.size() <= device) {
             // device is on later platform
-            devicescount += tmp_devices.size();
+            devicescount += _devices.size();
         } else {
             _platform = p;
             // subtract devices on previous platforms
-            _device = tmp_devices[device-devicescount];
+            _device = _devices[device-devicescount];
             break;
         }
     }
-
-    context = cl::Context(CL_DEVICE_TYPE_ALL, properties(_platform,glsharing).data());
-
-    _devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
 
     #ifdef INOVESA_ENABLE_CLPROFILING
     queue = cl::CommandQueue(context,_device,CL_QUEUE_PROFILING_ENABLE);
@@ -350,6 +346,7 @@ std::vector<cl_context_properties> OCLH::properties(cl::Platform& platform,
             0
         };
     }
+    std::cout << "!";
 
     return rv;
 }
