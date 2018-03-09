@@ -29,9 +29,11 @@ namespace vfps
 class FreeSpaceCSR : public Impedance
 {
 public:
-    FreeSpaceCSR(const size_t n,
-                 const frequency_t f_rev,
-                 const frequency_t f_max);
+    FreeSpaceCSR( const size_t n
+                , const frequency_t f_rev
+                , const frequency_t f_max
+                , std::shared_ptr<OCLH> oclh = nullptr
+                );
 
 private:
     static std::vector<vfps::impedance_t>

@@ -31,8 +31,9 @@ class Identity : public SourceMap
 public:
     Identity(std::shared_ptr<PhaseSpace> in,
              std::shared_ptr<PhaseSpace> out,
-             const meshindex_t xsize, const meshindex_t ysize) :
-        SourceMap(in, out, xsize, ysize, 0, 0) {}
+             const meshindex_t xsize, const meshindex_t ysize,
+             std::shared_ptr<OCLH> oclh) :
+        SourceMap(in, out, xsize, ysize, 0, 0,oclh) {}
 
     ~Identity() noexcept;
 
@@ -42,18 +43,18 @@ public:
     void apply() override
     {
         #ifdef INOVESA_USE_OPENCL
-        if (OCLH::active) {
+        if (_oclh) {
             #ifdef INOVESA_SYNC_CL
             _in->syncCLMem(clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
-            OCLH::enqueueCopyBuffer( _in->data_buf, _out->data_buf
+            _oclh->enqueueCopyBuffer( _in->data_buf, _out->data_buf
                                    , 0,0,sizeof(meshdata_t)*_size
                                    #ifdef INOVESA_ENABLE_CLPROFILING
                                    , nullptr,nullptr
                                    , applySMEvents.get()
                                    # endif // INOVESA_ENABLE_CLPROFILING
                                    );
-            OCLH::enqueueBarrier();
+            _oclh->enqueueBarrier();
             #ifdef INOVESA_SYNC_CL
             _out->syncCLMem(clCopyDirection::dev2cpu);
             #endif // INOVESA_SYNC_CL

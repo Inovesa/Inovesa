@@ -63,57 +63,57 @@ public:
      * @param device
      * @param glsharing needs to be implemented
      */
-    static void prepareCLEnvironment( uint32_t device
-                                    #ifdef INOVESA_USE_OPENGL
-                                    , bool glsharing
-                                    #endif
-                                    );
+    OCLH( uint32_t device, bool glsharing=false);
 
-    static cl::Program prepareCLProg(std::string);
+    cl::Program prepareCLProg(std::string);
 
-    static void teardownCLEnvironment();
+    ~OCLH();
 
-    static void teardownCLEnvironment(cl::Error& e);
+    void teardownCLEnvironment(cl::Error& e);
 
-    static void listCLDevices();
+     static void listCLDevices();
 
-    static bool active;
-
-    static cl::Context context;
+    cl::Context context;
 
 private:
-    static cl::vector<cl::Platform> platforms;
+    cl::Platform _platform;
 
-    static cl::vector<cl::Device> devices;
+    cl::vector<cl::Device> _devices;
 
-    static cl_device_type devicetype;
+    cl::Device _device;
+
+    cl_device_type devicetype;
 
     /**
      * @brief command queue for OpenCL
      */
-    static cl::CommandQueue queue;
+    cl::CommandQueue queue;
 
     #ifdef INOVESA_USE_OPENGL
-    static bool ogl_sharing;
+    bool ogl_sharing;
     #endif // INOVESA_USE_OPENGL
 
     #ifdef INOVESA_ENABLE_CLPROFILING
-    static void saveProfilingInfo(std::string fname);
+    void saveProfilingInfo(std::string fname);
 
-    static std::list<vfps::CLTiming> timingInfo;
+    std::list<vfps::CLTiming> timingInfo;
 
-    static cl::Event init;
+    cl::Event init;
     #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
     #ifdef INOVESA_USE_CLFFT
-    static inline void
+    /**
+     * @brief bakeClfftPlan wrapper for clfftBakePlan
+     * @param plHandle
+     */
+    inline void
     bakeClfftPlan(clfftPlanHandle plHandle)
     {
         clfftBakePlan(plHandle,1,&queue(), nullptr, nullptr);
     }
 
-    static inline void
+    inline void
     enqueueDFT(clfftPlanHandle plHandle,
                clfftDirection dir,
                cl::Buffer inputBuffer,
@@ -133,20 +133,20 @@ public:
     }
     #endif // INOVESA_USE_CLFFT
 
-    static inline void
+    inline void
     enqueueBarrier()
     {
         #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
+        queue.enqueueBarrierWithWaitList();
         #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
+        queue.enqueueBarrier();
         #endif // CL_VERSION_1_2
     }
 
     /**
      * This wrapper function allows to centrally controll queuing kernels.
      */
-    static inline void
+    inline void
     enqueueNDRangeKernel(const cl::Kernel& kernel,
                          const cl::NDRange& offset,
                          const cl::NDRange& global,
@@ -176,7 +176,7 @@ public:
     /**
      * This wrapper function allows to centrally controll queuing copyBuffer
      */
-    static inline void
+    inline void
     enqueueCopyBuffer(const cl::Buffer& src,
                       const cl::Buffer& dst,
                       cl::size_type src_offset,
@@ -206,7 +206,7 @@ public:
     /**
      * This wrapper function allows to centrally controll queuing readBuffer
      */
-    static inline void
+    inline void
     enqueueReadBuffer(const cl::Buffer& buffer,
                        cl_bool blocking,
                        cl::size_type src_offset,
@@ -236,7 +236,7 @@ public:
     /**
      * This wrapper function allows to centrally controll queuing writeBuffer
      */
-    static inline void
+    inline void
     enqueueWriteBuffer( const cl::Buffer& buffer
                       , cl_bool blocking
                       , cl::size_type src_offset
@@ -263,36 +263,40 @@ public:
                                 events, event);
     }
 
-    static inline void finish()
+    inline void finish()
     {
-        OCLH::queue.finish();
+        queue.finish();
     }
 
-    static inline void flush()
+    inline void flush()
     {
-        OCLH::queue.flush();
+        queue.flush();
     }
 
     #ifdef INOVESA_ENABLE_CLPROFILING
-    static void saveTimings(cl::vector<cl::Event *> *evts, std::string name);
+    void saveTimings(cl::vector<cl::Event *> *evts, std::string name);
     #endif // INOVESA_ENABLE_CLPROFILING
 
 private:
     #ifdef INOVESA_USE_CLFFT
-    static clfftSetupData fft_setup;
+    clfftSetupData fft_setup;
     #endif // INOVESA_USE_CLFFT
 
     #ifdef INOVESA_ENABLE_CLPROFILING
-    static cl::vector<cl::Event*> timingsCopy;
-    static cl::vector<cl::Event*> timingsDFT;
-    static cl::vector<cl::Event*> timingsExecute;
-    static cl::vector<cl::Event*> timingsRead;
-    static cl::vector<cl::Event*> timingsWrite;
+    cl::vector<cl::Event*> timingsCopy;
+    cl::vector<cl::Event*> timingsDFT;
+    cl::vector<cl::Event*> timingsExecute;
+    cl::vector<cl::Event*> timingsRead;
+    cl::vector<cl::Event*> timingsWrite;
     #endif // INOVESA_ENABLE_CLPROFILING
 
     static const std::string custom_datatypes;
 
+private: // helper functions
     static std::string datatype_aliases();
+
+    static std::vector<cl_context_properties> properties(cl::Platform& platform,
+                                                         bool glsharing);
 };
 
 #endif // INOVESA_USE_OPENCL

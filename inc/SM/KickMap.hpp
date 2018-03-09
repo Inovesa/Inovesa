@@ -45,7 +45,7 @@ public:
     KickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
             const meshindex_t xsize, const meshindex_t ysize,
             const InterpolationType it, const bool interpol_clamp,
-            const Axis kd);
+            const Axis kd, std::shared_ptr<OCLH> oclh);
 
     ~KickMap() noexcept;
 

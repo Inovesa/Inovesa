@@ -22,15 +22,16 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::ResistiveWall::ResistiveWall(const size_t n,
-                                   const frequency_t f0,
-                                   const frequency_t f_max,
-                                   const double L,
-                                   const double s,
-                                   const double xi,
-                                   const double b)
-    :
-      Impedance(__calcImpedance(n,f0,f_max,L,s,xi,b),f_max)
+vfps::ResistiveWall::ResistiveWall( const size_t n
+                                  , const frequency_t f0
+                                  , const frequency_t f_max
+                                  , const double L
+                                  , const double s
+                                  , const double xi
+                                  , const double b
+                                  , std::shared_ptr<OCLH> oclh
+                                  )
+  : Impedance(__calcImpedance(n,f0,f_max,L,s,xi,b),f_max,oclh)
 {
 }
 

@@ -29,23 +29,26 @@
 #include "Z/ParallelPlatesCSR.hpp"
 #include "Z/ResistiveWall.hpp"
 
-std::unique_ptr<vfps::Impedance> vfps::makeImpedance(const size_t nfreqs,
-                                               const frequency_t fmax,
-                                               const double f0,
-                                               const double frev,
-                                               const double gap,
-                                               const bool use_csr,
-                                               const double s,
-                                               const double xi,
-                                               const double inner_coll_radius,
-                                               const std::string impedance_file)
+std::unique_ptr<vfps::Impedance>
+vfps::makeImpedance( const size_t nfreqs
+                   , std::shared_ptr<OCLH> oclh
+                   , const frequency_t fmax
+                   , const double f0
+                   , const double frev
+                   , const double gap
+                   , const bool use_csr
+                   , const double s
+                   , const double xi
+                   , const double inner_coll_radius
+                   , const std::string impedance_file
+                   )
 {
     /*
      * Will create a default (zero) impedance and add different contributions.
      * If the impedance is still zero in the end (tracked by impedance_changed),
      * it will be replaced by a nullprt which is returned instead.
      */
-    auto rv = std::make_unique<Impedance>(nfreqs,fmax);
+    auto rv = std::make_unique<Impedance>(nfreqs,fmax,oclh);
     auto impedance_changed = false;
 
     if (gap != 0) {

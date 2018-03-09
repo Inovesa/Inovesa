@@ -33,12 +33,14 @@ std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
                      vfps::meshaxis_t qmin, vfps::meshaxis_t qmax,
                      vfps::meshaxis_t pmin, vfps::meshaxis_t pmax,
+                     std::shared_ptr<OCLH> oclh,
                      const double bunch_charge, const double bunch_current,
                      double xscale, double yscale)
 {
     try {
-        auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax,
-                                           bunch_charge,bunch_current,
+        auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax
+                                          , oclh
+                                          , bunch_charge,bunch_current,
                                            xscale,yscale,startdiststep);
         #ifdef INOVESA_USE_OPENCL
         ps->syncCLMem(clCopyDirection::cpu2dev);
@@ -63,6 +65,7 @@ std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromPNG(std::string fname,
                     meshaxis_t qmin, meshaxis_t qmax,
                     meshaxis_t pmin, meshaxis_t pmax,
+                    std::shared_ptr<OCLH> oclh,
                     const double bunch_charge,
                     const double bunch_current,
                     double xscale, double yscale)
@@ -92,9 +95,10 @@ vfps::makePSFromPNG(std::string fname,
                 data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
             }
         }
-        auto ps = std::make_unique<PhaseSpace>(ps_size,qmin,qmax,pmin,pmax,
-                                               bunch_charge,bunch_current,
-                                               xscale,yscale,1,data.data());
+        auto ps = std::make_unique<PhaseSpace>( ps_size,qmin,qmax,pmin,pmax
+                                              , oclh
+                                              , bunch_charge,bunch_current
+                                              , xscale,yscale,1,data.data());
         // normalize integral to 1
         ps->updateXProjection();
         ps->normalize();
@@ -118,12 +122,14 @@ std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromTXT(std::string fname, int64_t ps_size,
                     vfps::meshaxis_t qmin, vfps::meshaxis_t qmax,
                     vfps::meshaxis_t pmin, vfps::meshaxis_t pmax,
+                    std::shared_ptr<OCLH> oclh,
                     const double bunch_charge, const double bunch_current,
                     double xscale, double yscale)
 {
-    auto ps = std::make_unique<PhaseSpace>(ps_size,qmin,qmax,pmin,pmax,
-                                              bunch_charge,bunch_current,
-                                              xscale,yscale);
+    auto ps = std::make_unique<PhaseSpace>( ps_size,qmin,qmax,pmin,pmax
+                                          , oclh
+                                          , bunch_charge,bunch_current
+                                          , xscale,yscale);
     std::ifstream ifs;
     try {
         ifs.open(fname);

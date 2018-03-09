@@ -57,6 +57,9 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  #ifdef INOVESA_USE_OPENCL
+                  std::shared_ptr<OCLH> oclh,
+                  #endif // INOVESA_USE_OPENCL
                   const double f_rev,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
@@ -80,12 +83,16 @@ public:
      *   c/ps->getScale(0) (charge/sigma_z -> current)
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
-    ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  std::shared_ptr<Impedance> impedance,
-                  const double f_rev,
-                  const double revolutionpart,
-                  const double Ib, const double E0,
-                  const double sigmaE, const double dt);
+    ElectricField( std::shared_ptr<PhaseSpace> ps
+                 , std::shared_ptr<Impedance> impedance
+                 #ifdef INOVESA_USE_OPENCL
+                 , std::shared_ptr<OCLH> oclh
+                 #endif // INOVESA_USE_OPENCL
+                 , const double f_rev
+                 , const double revolutionpart
+                 , const double Ib, const double E0
+                 , const double sigmaE, const double dt
+                 );
 
     /**
      * @brief ElectricField (unmaintained) constructor for use of wake function
@@ -100,12 +107,16 @@ public:
      * @param fs synchrotron frequency [Hz]
      * @param nmax
      */
-    ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  std::shared_ptr<Impedance> impedance,
-                  const double f_rev,
-                  const double Ib, const double E0,
-                  const double sigmaE, const double dt, const double rbend,
-                  const double fs, const size_t nmax);
+    ElectricField( std::shared_ptr<PhaseSpace> ps
+                 , std::shared_ptr<Impedance> impedance
+                 #ifdef INOVESA_USE_OPENCL
+                 , std::shared_ptr<OCLH> oclh
+                 #endif // INOVESA_USE_OPENCL
+                 , const double f_rev
+                 , const double Ib, const double E0
+                 , const double sigmaE, const double dt, const double rbend
+                 , const double fs, const size_t nmax
+                 );
 
     ~ElectricField() noexcept;
 
@@ -298,6 +309,8 @@ private:
     fft_complex* _formfactor_fft;
 
     #ifdef INOVESA_USE_OPENCL
+    std::shared_ptr<OCLH> _oclh;
+
     cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;

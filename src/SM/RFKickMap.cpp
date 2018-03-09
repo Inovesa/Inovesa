@@ -27,16 +27,17 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in,
                            const meshindex_t ysize,
                            const meshaxis_t angle,
                            const InterpolationType it,
-                           const bool interpol_clamp)
+                           const bool interpol_clamp,
+                           std::shared_ptr<OCLH> oclh)
     :
-      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y)
+      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y,oclh)
 {
     const meshaxis_t xcenter = in->getAxis(0)->zerobin();
     for(meshindex_t x=0; x<_xsize; x++) {
         _offset[x] = std::tan(angle)*(xcenter-x);
     }
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    if (_oclh) {
         syncCLMem(clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_OPENCL

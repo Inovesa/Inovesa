@@ -29,10 +29,12 @@ namespace vfps
 class ParallelPlatesCSR : public Impedance
 {
 public:
-    ParallelPlatesCSR(const size_t n,
-                      const frequency_t f0,
-                      const frequency_t f_max,
-                      const double g);
+    ParallelPlatesCSR( const size_t n
+                     , const frequency_t f0
+                     , const frequency_t f_max
+                     , const double g
+                     , std::shared_ptr<OCLH> oclh = nullptr
+                     );
 
 private:
     static std::vector<vfps::impedance_t>

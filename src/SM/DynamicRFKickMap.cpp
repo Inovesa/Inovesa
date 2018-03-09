@@ -27,18 +27,19 @@
 using boost::math::constants::two_pi;
 
 vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in,
-                           std::shared_ptr<PhaseSpace> out,
-                           const meshindex_t xsize,
-                           const meshindex_t ysize,
-                           const meshaxis_t angle,
-                           const meshaxis_t addnoise,
-                           const meshaxis_t mulnoise,
-                           const meshaxis_t modampl,
-                           const double modtimeincrement,
-                           const uint32_t* step,
-                           const InterpolationType it,
-                           const bool interpol_clamp)
-    : RFKickMap(in,out,xsize,ysize,angle,it,interpol_clamp)
+                                         std::shared_ptr<PhaseSpace> out,
+                                         const meshindex_t xsize,
+                                         const meshindex_t ysize,
+                                         const meshaxis_t angle,
+                                         const meshaxis_t addnoise,
+                                         const meshaxis_t mulnoise,
+                                         const meshaxis_t modampl,
+                                         const double modtimeincrement,
+                                         const uint32_t* step,
+                                         const InterpolationType it,
+                                         const bool interpol_clamp,
+                                         std::shared_ptr<OCLH> oclh)
+    : RFKickMap(in,out,xsize,ysize,angle,it,interpol_clamp,oclh)
     , _addnoise(addnoise)
     , _mulnoise(mulnoise)
     , _modampl(modampl)
@@ -70,7 +71,7 @@ void vfps::DynamicRFKickMap::reset() {
     }
 
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    if (_oclh) {
         syncCLMem(clCopyDirection::cpu2dev);
     } else
     #endif // INOVESA_USE_OPENCL

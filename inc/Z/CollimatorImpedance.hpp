@@ -33,10 +33,12 @@ namespace vfps
 class CollimatorImpedance : public ConstImpedance
 {
 public:
-    CollimatorImpedance(const size_t n,
-                  const frequency_t f_max,
-                  const double outer,
-                  const double inner);
+    CollimatorImpedance( const size_t n
+                       , const frequency_t f_max
+                       , const double outer
+                       , const double inner
+                       , std::shared_ptr<OCLH> oclh = nullptr
+                       );
 };
 
 } // namespace vfps

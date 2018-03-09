@@ -67,21 +67,42 @@ public:
 public:
     PhaseSpace() = delete;
 
-    PhaseSpace(std::array<meshRuler_ptr,2> axis,
-               const double bunch_charge, const double bunch_current,
-               const double zoom=1, meshdata_t *data = nullptr);
+    PhaseSpace( std::array<meshRuler_ptr,2> axis
+              #ifdef INOVESA_USE_OPENCL
+              , std::shared_ptr<OCLH> oclh
+              #endif // #ifdef INOVESA_USE_OPENCL
+              , const double bunch_charge
+              , const double bunch_current
+              , const double zoom=1
+              , meshdata_t* data = nullptr
+              );
 
-    PhaseSpace(meshRuler_ptr axis0,
-               meshRuler_ptr axis1,
-               const double bunch_charge, const double bunch_current,
-               const double zoom=1, meshdata_t *data = nullptr);
+    PhaseSpace(meshRuler_ptr axis0
+              , meshRuler_ptr axis1
+              #ifdef INOVESA_USE_OPENCL
+              , std::shared_ptr<OCLH> oclh
+              #endif // #ifdef INOVESA_USE_OPENCL
+              , const double bunch_charge
+              , const double bunch_current
+              , const double zoom=1
+              , meshdata_t* data = nullptr
+              );
 
-    PhaseSpace(meshindex_t ps_size,
-               meshaxis_t xmin, meshaxis_t xmax,
-               meshaxis_t ymin, meshaxis_t ymax,
-               const double bunch_charge, const double bunch_current,
-               double xscale=0, double yscale=0,
-               const double zoom=1, meshdata_t *data = nullptr);
+    PhaseSpace( meshindex_t ps_size
+              , meshaxis_t xmin
+              , meshaxis_t xmax
+              , meshaxis_t ymin
+              , meshaxis_t ymax
+              #ifdef INOVESA_USE_OPENCL
+              , std::shared_ptr<OCLH> oclh
+              #endif // #ifdef INOVESA_USE_OPENCL
+              , const double bunch_charge
+              , const double bunch_current
+              , double xscale=0
+              , double yscale=0
+              , const double zoom=1
+              , meshdata_t *data = nullptr
+              );
 
     PhaseSpace(const PhaseSpace& other);
 
@@ -258,6 +279,8 @@ public:
     cl::Buffer integral_buf;
 
 private:
+    std::shared_ptr<OCLH> _oclh;
+
     cl::Program _clProgProjX;
 
     cl::Kernel  _clKernProjX;

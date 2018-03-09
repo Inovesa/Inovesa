@@ -32,7 +32,8 @@ public:
     DriftMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
              const meshindex_t xsize, const meshindex_t ysize,
              const std::vector<meshaxis_t> slip, const double E0,
-             const InterpolationType it, const bool interpol_clamp);
+             const InterpolationType it, const bool interpol_clamp,
+             std::shared_ptr<OCLH> oclh);
 
     #ifdef INOVESA_ENABLE_CLPROFILING
     ~DriftMap() noexcept;

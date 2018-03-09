@@ -31,13 +31,17 @@ namespace vfps
 class WakePotentialMap : public WakeKickMap
 {
 public:
-    WakePotentialMap(std::shared_ptr<PhaseSpace> in,
-                     std::shared_ptr<PhaseSpace> out,
-                     const meshindex_t xsize,
-                     const meshindex_t ysize,
-                     ElectricField* field,
-                     const InterpolationType it,
-                     bool interpol_clamp);
+    WakePotentialMap( std::shared_ptr<PhaseSpace> in
+                    , std::shared_ptr<PhaseSpace> out
+                    , const meshindex_t xsize
+                    , const meshindex_t ysize
+                    , ElectricField* field
+                    , const InterpolationType it
+                    , bool interpol_clamp
+                    #ifdef INOVESA_USE_OPENCL
+                    , std::shared_ptr<OCLH> oclh
+                    #endif // INOVESA_USE_OPENCL
+                    );
 
     ~WakePotentialMap() noexcept;
 

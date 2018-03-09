@@ -25,8 +25,9 @@ vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                                        const meshindex_t xsize,
                                        const meshindex_t ysize,
                                        const InterpolationType it,
-                                       bool interpol_clamp) :
-    WakeKickMap(in,out,xsize,ysize,it,interpol_clamp),
+                                       bool interpol_clamp,
+                                       std::shared_ptr<OCLH> oclh) :
+    WakeKickMap(in,out,xsize,ysize,it,interpol_clamp,oclh),
     _xaxis(Ruler<meshaxis_t>(2*xsize,
                              in->getMin(0)-in->size(0)/2,
                              in->getMax(0)+in->size(0)/2,
@@ -46,8 +47,9 @@ vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                                        const double Ib,
                                        const double dt,
                                        const InterpolationType it,
-                                       const bool interpol_clamp) :
-    WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp)
+                                       const bool interpol_clamp,
+                                       std::shared_ptr<OCLH> oclh) :
+    WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp,oclh)
 {
     /*  1e12*Ib*dt: wake file has charge in pC and for one revolution
      *  1/(ps->getDelta(1)*sigmaE*E0): eV -> pixels
@@ -61,8 +63,9 @@ vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                                        const meshindex_t ysize,
                                        const ElectricField* csr,
                                        const InterpolationType it,
-                                       const bool interpol_clamp) :
-    WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp)
+                                       const bool interpol_clamp,
+                                       std::shared_ptr<OCLH> oclh) :
+    WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp, oclh)
 {
     std::copy_n(csr->getWakefunction(),2*xsize,_wakefunction);
 }
@@ -78,7 +81,7 @@ vfps::WakeFunctionMap::~WakeFunctionMap() noexcept
 void vfps::WakeFunctionMap::update()
 {
     #if INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    if (_oclh) {
     _in->syncCLMem(clCopyDirection::dev2cpu);
     }
     #endif

@@ -51,7 +51,7 @@ public:
                      const double modtimeincrement,
                      const uint32_t* step,
                      const InterpolationType it,
-                     const bool interpol_clamp);
+                     const bool interpol_clamp, std::shared_ptr<OCLH> oclh);
 
     ~DynamicRFKickMap() noexcept;
 

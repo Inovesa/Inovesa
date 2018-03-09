@@ -42,13 +42,15 @@ public:
      * @param xi
      * @param b
      */
-    ResistiveWall(const size_t n,
-                  const frequency_t f0,
-                  const frequency_t f_max,
-                  const double L,
-                  const double s,
-                  const double xi,
-                  const double b);
+    ResistiveWall( const size_t n
+                 , const frequency_t f0
+                 , const frequency_t f_max
+                 , const double L
+                 , const double s
+                 , const double xi
+                 , const double b
+                 , std::shared_ptr<OCLH> oclh = nullptr
+                 );
 
 private:
     static std::vector<vfps::impedance_t>

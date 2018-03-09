@@ -25,12 +25,14 @@
 using boost::math::constants::pi;
 using boost::math::constants::pi_sqr;
 
-vfps::ParallelPlatesCSR::ParallelPlatesCSR(const size_t n,
-                                           const frequency_t f0,
-                                           const frequency_t f_max,
-                                           const double g)
+vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t n
+                                          , const frequency_t f0
+                                          , const frequency_t f_max
+                                          , const double g
+                                          , std::shared_ptr<OCLH> oclh
+                                          )
     :
-      Impedance(__calcImpedance(n,f0,f_max,g),f_max)
+      Impedance(__calcImpedance(n,f0,f_max,g),f_max,oclh)
 {
 }
 
