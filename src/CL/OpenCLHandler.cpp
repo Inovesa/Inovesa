@@ -27,6 +27,9 @@
 #endif
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <OpenCL/cl_gl.h>
+#include <OpenCL/cl_gl_ext.h>
+#include <OpenGL/CGLDevice.h>
+#include <OpenGL/CGLCurrent.h>
 #else
 #include <CL/cl_gl.h>
 #endif
@@ -40,7 +43,7 @@ OCLH::OCLH( uint32_t device, bool glsharing)
     uint32_t devicescount = 0;
 
     for (auto p : platforms) {
-        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, properties(p,glsharing).data());
+        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL,properties(p,glsharing).data());
         cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
         if (devicescount + tmp_devices.size() <= device) {
             // device is on later platform
@@ -308,23 +311,45 @@ std::vector<cl_context_properties> OCLH::properties(cl::Platform& platform,
     std::vector<cl_context_properties> rv;
 
     #ifdef INOVESA_USE_OPENGL
-    #ifdef __linux__
     if (glsharing) {
+        #ifdef __linux__
         rv = {
             CL_GL_CONTEXT_KHR,
             reinterpret_cast<cl_context_properties>(glXGetCurrentContext()),
-            CL_GLX_DISPLAY_KHR ,
+            CL_GLX_DISPLAY_KHR,
             reinterpret_cast<cl_context_properties>(glXGetCurrentDisplay()),
             CL_CONTEXT_PLATFORM,
             reinterpret_cast<cl_context_properties>(platform()),
             0
         };
-    }
-    #endif // __linux__
+        #elif defined _WIN32
+        rv = {
+            CL_GL_CONTEXT_KHR,
+            reinterpret_cast<cl_context_properties>(wglGetCurrentContext()),
+            CL_WGL_HDC_KHR,
+            reinterpret_cast<cl_context_properties>(wglGetCurrentDC()),
+            CL_CONTEXT_PLATFORM,
+            reinterpret_cast<cl_context_properties>(platform()),
+            0
+        };
+        #elif defined TARGET_OS_MAC
+        CGLContextObj glContext = CGLGetCurrentContext();
+        CGLShareGroupObj shareGroup = CGLGetShareGroup(glContext);
+        rv = {
+            CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
+            reinterpret_cast<cl_context_properties>(shareGroup),
+            0
+        };
+        #endif
+    } else
     #endif // INOVESA_USE_OPENGL
-    rv.push_back(CL_CONTEXT_PLATFORM);
-    rv.push_back(reinterpret_cast<cl_context_properties>(platform()));
-    rv.push_back(0);
+    {
+        rv = {
+            CL_CONTEXT_PLATFORM,
+            reinterpret_cast<cl_context_properties>(platform()),
+            0
+        };
+    }
 
     return rv;
 }

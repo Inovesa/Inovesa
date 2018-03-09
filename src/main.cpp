@@ -138,7 +138,7 @@ int main(int argc, char** argv)
         try {
             oclh = std::make_shared<OCLH>( opts.getCLDevice()-1
                                          #ifdef INOVESA_USE_OPENGL
-                                         //, opts.showPhaseSpace()
+                                         , opts.showPhaseSpace()
                                          #endif // INOVESA_USE_OPENGL
                                          );
         } catch (cl::Error& e) {
