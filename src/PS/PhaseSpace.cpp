@@ -487,3 +487,4 @@ std::string vfps::PhaseSpace::cl_code_projection_x = R"(
      }
      )";
 #endif // INOVESA_USE_OPENCL
+

@@ -1,5 +1,11 @@
 language: cpp
 
+branches:
+  only:
+  - master
+  - develop
+  - v*
+
 addons:
   apt:
     sources:
@@ -26,9 +32,11 @@ addons:
       - libpng++-dev # optional
 #      - libxrandr-dev # optional
 #      - opencl-dev # optional
+
 #compiler: # for "matrix builds" testing various configurations
 #  - clang
 #  - gcc
+
 script: # set correct compiler versions first
     - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
     - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
@@ -36,5 +44,4 @@ script: # set correct compiler versions first
     - cmake --build .
     - ./inovesa --version
     - ./inovesa -T 0.1 -o test.h5
-
 
