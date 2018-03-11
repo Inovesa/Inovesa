@@ -346,7 +346,6 @@ std::vector<cl_context_properties> OCLH::properties(cl::Platform& platform,
             0
         };
     }
-    std::cout << "!";
 
     return rv;
 }

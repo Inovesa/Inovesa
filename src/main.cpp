@@ -23,7 +23,7 @@
 #include "MessageStrings.hpp"
 #include "IO/Display.hpp"
 #include "IO/FSPath.hpp"
-#include "IO/GUI/Plot2DLine.hpp"
+#include "IO/GUI/Plot1DLine.hpp"
 #include "IO/GUI/Plot2DPoints.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
@@ -512,7 +512,7 @@ int main(int argc, char** argv)
      **************************************************************************/
 
     // plot of bunch profile
-    std::shared_ptr<Plot2DLine> bpv;
+    std::shared_ptr<Plot1DLine> bpv;
 
     // plot of particle positions
     std::shared_ptr<Plot2DPoints> ppv;
@@ -521,11 +521,11 @@ int main(int argc, char** argv)
     std::shared_ptr<Plot3DColormap> psv;
 
     // plot of wake potential
-    std::shared_ptr<Plot2DLine> wpv;
+    std::shared_ptr<Plot1DLine> wpv;
 
     // plot of CSR power (over time)
     std::vector<float> csrlog(std::ceil(steps*rotations/outstep)+1,0);
-    std::shared_ptr<Plot2DLine> history;
+    std::shared_ptr<Plot1DLine> history;
 
     /*
      * Plot of phase space is initialized here already,
@@ -686,7 +686,8 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_OPENGL
     if (display != nullptr) {
         try {
-            bpv.reset(new Plot2DLine(std::array<float,3>{{1,0,0}}));
+            bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
+                                    , Plot1DLine::orientation::horizontal));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -706,7 +707,8 @@ int main(int argc, char** argv)
         }
         if (wkm != nullptr) {
             try {
-                wpv.reset(new Plot2DLine(std::array<float,3>{{0,0,1}}));
+                wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
+                                        , Plot1DLine::orientation::horizontal));
                 display->addElement(wpv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -715,7 +717,9 @@ int main(int argc, char** argv)
             }
         }
         try {
-            history.reset(new Plot2DLine(std::array<float,3>{{0,0,0}}));
+            history.reset(new Plot1DLine( std::array<float,3>{{0,0,0}}
+                                        , csrlog.size()
+                                        , Plot1DLine::orientation::vertical));
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -893,7 +897,7 @@ int main(int argc, char** argv)
                         rdtn_field.updateCSR(fc);
                     }
                     csrlog[outstepnr] = rdtn_field.getCSRPower();
-                    history->update(csrlog.size(),csrlog.data(),true);
+                    history->update(csrlog.size(),csrlog.data());
                 }
                 display->draw();
                 if (psv != nullptr) {

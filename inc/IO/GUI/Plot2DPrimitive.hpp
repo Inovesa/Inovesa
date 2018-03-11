@@ -46,18 +46,13 @@ public:
 
     void draw() override;
 
-    const cl::BufferGL& getCLBuffer() const
-        { return _clBuffer; }
-
 protected:
-    std::vector<float> _points;
+    std::vector<float> _data;
 
     size_t _npoints;
 
-    GLuint vertexbuffer;
-    GLuint position;
-
-    cl::BufferGL _clBuffer;
+    GLuint databuffer;
+    GLuint dataID;
 
 private:
     const GLenum _primitivetype;

@@ -35,20 +35,20 @@ vfps::Plot2DPoints::Plot2DPoints(std::array<float,3> rgb,
 void vfps::Plot2DPoints::update(const std::vector<PhaseSpace::Position> &points)
 {
     _npoints=points.size();
-    _points.resize(2*points.size());
+    _data.resize(2*points.size());
 
     for (size_t n=0; n<_npoints; n++) {
-        _points[2*n  ] = points[n].x*1.5f/_nmeshcellsx-1.0f;
-        _points[2*n+1] = points[n].y*1.5f/_nmeshcellsy-0.5f;
+        _data[2*n  ] = points[n].x*1.5f/_nmeshcellsx-1.0f;
+        _data[2*n+1] = points[n].y*1.5f/_nmeshcellsy-0.5f;
     }
 
 
     // The following commands will talk about our 'vertexbuffer' buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, databuffer);
 
     // Give our vertices to OpenGL.
     glBufferData(GL_ARRAY_BUFFER, 2*_npoints*sizeof(float),
-                 _points.data(), GL_STATIC_DRAW);
+                 _data.data(), GL_STATIC_DRAW);
 }
 
 #endif // INOVESA_USE_OPENGL
