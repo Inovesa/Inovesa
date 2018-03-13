@@ -52,12 +52,10 @@ public:
 
     void draw() override;
 
-    void update(const size_t npoints,
-                const float* points);
+    void update(const float* points);
 
 
-    void update(const size_t npoints,
-                const double* points);
+    void update(const double* points);
 
 private:
     std::vector<float> _data;

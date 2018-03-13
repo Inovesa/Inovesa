@@ -22,6 +22,7 @@
 
 #include "IO/GUI/Plot1DLine.hpp"
 
+
 vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
                             , size_t npoints
                             , orientation orientation)
@@ -46,13 +47,9 @@ vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
         _vertexshadercode = R"(
             #version 120
 
-            // Input vertex data, different for all executions of this shader.
             attribute float posiX;
             attribute float posiY;
-
             void main(){
-                gl_Position =  vec4(posiX,posiY,-0.1,1);
-            }
             )";
         break;
     case 3:
@@ -68,14 +65,19 @@ vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
         _vertexshadercode = R"(
             #version 330 core
 
-            // Input vertex data, different for all executions of this shader.
             layout(location = 0) in vec posiX;
             layout(location = 1) in vec posiY;
 
             void main(){
-                gl_Position =  vec4(posiX,posiY,-0.1,1);
-            }
             )";
+        break;
+    }
+    switch (_orientation) {
+    case orientation::horizontal:
+        _vertexshadercode += "gl_Position =vec4(posiX,posiY-0.8f,-0.1,1);}";
+        break;
+    case orientation::vertical:
+        _vertexshadercode += "gl_Position =vec4(-0.5*exp(-posiX)+1.0f,posiY,-0.1,1);}";
         break;
     }
     compileShaders();
@@ -125,45 +127,20 @@ void vfps::Plot1DLine::draw()
     glDisableVertexAttribArray(dataID);
 }
 
-void vfps::Plot1DLine::update(const size_t npoints,
-                              const float* points)
+void vfps::Plot1DLine::update(const float* points)
 {
-
-    for (size_t n=0; n<_npoints; n++) {
-        _max = std::max(_max,std::abs(points[n]));
-    }
-    switch (_orientation) {
-    case orientation::horizontal:
-        {
-        const float max = 4*_max;
-        for (size_t n=0; n<_npoints; n++) {
-            _data[n] = -0.8f+points[n]/max;
-        }
-        }
-        break;
-    case orientation::vertical:
-        {
-        const float max = 2*_max;
-        for (size_t n=0; n<npoints; n++) {
-            _data[n] = 0.5f+points[n]/max;
-        }
-        break;
-        }
-    }
-
     glBindBuffer(GL_ARRAY_BUFFER, databuffer);
     glBufferData( GL_ARRAY_BUFFER, _npoints*sizeof(float)
-                , _data.data(), GL_STATIC_DRAW);
+                , points, GL_STATIC_DRAW);
 }
 
-void vfps::Plot1DLine::update(const size_t npoints,
-                              const double* points)
+void vfps::Plot1DLine::update(const double* points)
 {
-    std::vector<float> fltpoints(npoints);
-    for (size_t i=0; i<npoints; i++) {
+    std::vector<float> fltpoints(_npoints);
+    for (size_t i=0; i<_npoints; i++) {
         fltpoints[i] = points[i];
     }
-    update(npoints,fltpoints.data());
+    update(fltpoints.data());
 }
 
 void vfps::Plot1DLine::createPositionBuffer()

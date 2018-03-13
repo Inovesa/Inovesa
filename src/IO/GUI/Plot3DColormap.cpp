@@ -187,14 +187,11 @@ void vfps::Plot3DColormap::delTexture()
 
 void vfps::Plot3DColormap::draw()
 {
-	// Use our shader
-	glUseProgram(programID);
+    glUseProgram(programID);
 
-	// Bind our texture in Texture Unit 0
-	glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
-    // Set "textureSampler3DCM" sampler to user Texture Unit 0
-    glUniform1i(textureSampler, 0);
+    glUniform1i(textureSampler, GL_TEXTURE0);
 
     glEnableVertexAttribArray(position);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
@@ -205,7 +202,7 @@ void vfps::Plot3DColormap::draw()
     glVertexAttribPointer(vertexUV,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
 
-    glDrawArrays(GL_TRIANGLES, 0, 2*3);// 2*3 indices starting at 0
+    glDrawArrays(GL_TRIANGLES, 0, 2*3);
 
     glDisableVertexAttribArray(position);
     glDisableVertexAttribArray(vertexUV);

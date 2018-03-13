@@ -879,15 +879,13 @@ int main(int argc, char** argv)
                     psv->createTexture(grid_t1);
                 }
                 if (bpv != nullptr) {
-                    bpv->update(grid_t1->nMeshCells(0),
-                                grid_t1->getProjection(0));
+                    bpv->update(grid_t1->getProjection(0));
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
                 }
                 if (wpv != nullptr) {
-                    wpv->update(grid_t1->nMeshCells(0),
-                                wkm->getForce());
+                    wpv->update(wkm->getForce());
                 }
                 if (history != nullptr) {
                     #ifdef INOVESA_USE_HDF5
@@ -897,7 +895,7 @@ int main(int argc, char** argv)
                         rdtn_field.updateCSR(fc);
                     }
                     csrlog[outstepnr] = rdtn_field.getCSRPower();
-                    history->update(csrlog.size(),csrlog.data());
+                    history->update(csrlog.data());
                 }
                 display->draw();
                 if (psv != nullptr) {
