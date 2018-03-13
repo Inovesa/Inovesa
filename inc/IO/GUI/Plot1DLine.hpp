@@ -48,14 +48,30 @@ public:
               , orientation orientation
               );
 
+    /**
+     * @brief Plot1DLine
+     * @param rgb
+     * @param npoints
+     * @param orientation
+     * @param databuffer takes ownership
+     */
+    Plot1DLine( std::array<float,3> rgb
+              , size_t npoints
+              , orientation orientation
+              , GLuint databuffer
+              );
+
     virtual ~Plot1DLine() noexcept;
 
     void draw() override;
 
+    /**
+     * @brief update data for line to be renedered (meant for non-OpenCL mode)
+     * @param points array of _npoints to be rendered as line
+     *
+     * not needed when shared buffer is updated from another location
+     */
     void update(const float* points);
-
-
-    void update(const double* points);
 
 private:
     std::vector<float> _data;
@@ -63,10 +79,10 @@ private:
 
     size_t _npoints;
 
-    GLuint databuffer;
+    GLuint _databuffer;
     GLuint dataID;
 
-    GLuint posibuffer;
+    GLuint _posibuffer;
     GLuint posiID;
 
     void createPositionBuffer();

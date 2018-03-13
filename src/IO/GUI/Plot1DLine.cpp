@@ -22,13 +22,23 @@
 
 #include "IO/GUI/Plot1DLine.hpp"
 
-
-vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
+vfps::Plot1DLine::Plot1DLine( std::array<float, 3> rgb
                             , size_t npoints
-                            , orientation orientation)
+                            , Plot1DLine::orientation orientation)
+  : Plot1DLine(rgb, npoints, orientation,0)
+{
+    glGenBuffers(1, &_databuffer);
+}
+
+vfps::Plot1DLine::Plot1DLine( std::array<float,3> rgb
+                            , size_t npoints
+                            , Plot1DLine::orientation orientation
+                            , GLuint databuffer
+                            )
   : _npoints(npoints)
   , _max(0)
   , _orientation(orientation)
+  , _databuffer(databuffer)
 {
     _data.resize(npoints);
     _position.resize(npoints);
@@ -93,17 +103,15 @@ vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
         break;
     }
 
-    glGenBuffers(1, &databuffer);
-    glGenBuffers(1, &posibuffer);
-
+    glGenBuffers(1, &_posibuffer);
     createPositionBuffer();
 }
 
 vfps::Plot1DLine::~Plot1DLine() noexcept
 {
-    glDeleteBuffers(1, &databuffer);
+    glDeleteBuffers(1, &_databuffer);
     glDeleteVertexArrays(1, &dataID);
-    glDeleteBuffers(1, &posibuffer);
+    glDeleteBuffers(1, &_posibuffer);
     glDeleteVertexArrays(1, &posiID);
     glDeleteProgram(programID);
 }
@@ -113,11 +121,11 @@ void vfps::Plot1DLine::draw()
     glUseProgram(programID);
 
     glEnableVertexAttribArray(posiID);
-    glBindBuffer(GL_ARRAY_BUFFER, posibuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _posibuffer);
     glVertexAttribPointer(posiID,1,GL_FLOAT,GL_FALSE,0,nullptr);
 
     glEnableVertexAttribArray(dataID);
-    glBindBuffer(GL_ARRAY_BUFFER, databuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _databuffer);
     glVertexAttribPointer(dataID,1,GL_FLOAT,GL_FALSE,0,nullptr);
 
     // Draw the line
@@ -129,18 +137,9 @@ void vfps::Plot1DLine::draw()
 
 void vfps::Plot1DLine::update(const float* points)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, databuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _databuffer);
     glBufferData( GL_ARRAY_BUFFER, _npoints*sizeof(float)
                 , points, GL_STATIC_DRAW);
-}
-
-void vfps::Plot1DLine::update(const double* points)
-{
-    std::vector<float> fltpoints(_npoints);
-    for (size_t i=0; i<_npoints; i++) {
-        fltpoints[i] = points[i];
-    }
-    update(fltpoints.data());
 }
 
 void vfps::Plot1DLine::createPositionBuffer()
@@ -159,7 +158,7 @@ void vfps::Plot1DLine::createPositionBuffer()
         break;
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, posibuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, _posibuffer);
     glBufferData( GL_ARRAY_BUFFER, _npoints*sizeof(float)
                 , _position.data(), GL_STATIC_DRAW);
 }
