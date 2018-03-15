@@ -43,7 +43,17 @@ OCLH::OCLH( uint32_t device, bool glsharing)
     uint32_t devicescount = 0;
 
     for (auto p : platforms) {
-        context = cl::Context(CL_DEVICE_TYPE_ALL,properties(p,glsharing).data());
+        try {
+            context = cl::Context( CL_DEVICE_TYPE_ALL
+                                 , properties(p,glsharing).data());
+        } catch (cl::Error& e) {
+            if (e.err() == CL_INVALID_PROPERTY) {
+                context = cl::Context( CL_DEVICE_TYPE_ALL
+                                     , properties(p,false).data());
+            } else {
+                throw e;
+            }
+        }
         _devices = context.getInfo<CL_CONTEXT_DEVICES>();
         if (devicescount + _devices.size() <= device) {
             // device is on later platform
