@@ -1,7 +1,7 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2017: Patrik Schönfeldt                                      *
- * Copyright (c) 2017: Karlsruhe Institute of Technology                      *
+ * Copyright (c) 2017-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2017-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
  * Inovesa is free software: you can redistribute it and/or modify            *
@@ -22,9 +22,9 @@
 
 vfps::ConstImpedance::ConstImpedance(const size_t n,
                                      const frequency_t f_max,
-                                     const vfps::impedance_t Z)
-    :
-      Impedance(__calcImpedance(n,Z),f_max)
+                                     const vfps::impedance_t Z,
+                                     std::shared_ptr<OCLH> oclh)
+  : Impedance(__calcImpedance(n,Z),f_max,oclh)
 {
 }
 

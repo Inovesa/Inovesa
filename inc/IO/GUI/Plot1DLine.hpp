@@ -18,57 +18,82 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
+#ifndef PLOT1DLINE_HPP
+#define PLOT1DLINE_HPP
+
 #ifdef INOVESA_USE_OPENGL
 
-#include "IO/GUI/Plot2DLine.hpp"
+#include <array>
+#include <sstream>
+#include <vector>
 
-vfps::Plot2DLine::Plot2DLine(std::array<float,3> rgb)
-  : Plot2DPrimitive(rgb,0,GL_LINE_STRIP)
-  , _max(0)
+#include "IO/GUI/GUIElement.hpp"
+
+namespace vfps
 {
-}
 
-void vfps::Plot2DLine::update(const size_t npoints,
-                              const float* points,
-                              const bool vertical)
+class Plot1DLine : public GUIElement
 {
-    _npoints=npoints;
-    _points.resize(npoints*2);
-    float step = 1.5f/(_npoints-1);
-    for (size_t n=0; n<_npoints; n++) {
-        _max = std::max(_max,std::abs(points[n]));
-    }
-    if (vertical) {
-        const float max = 2*_max;
-        for (size_t n=0; n<npoints; n++) {
-            _points[2*n  ] = 0.5f+points[n]/max;
-            _points[2*n+1] = -0.5f+n*step;
-        }
-    } else {
-        const float max = 4*_max;
-        for (size_t n=0; n<_npoints; n++) {
-            _points[2*n  ] = -1.0f+n*step;
-            _points[2*n+1] = -0.8f+points[n]/max;
-        }
-    }
+public:
+    enum class orientation : uint_fast16_t {
+        horizontal,
+        vertical
+    };
 
-    // The following commands will talk about our 'vertexbuffer' buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+public:
+    Plot1DLine() = delete;
 
-    // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, 2*_npoints*sizeof(float),
-                 _points.data(), GL_STATIC_DRAW);
-}
+    Plot1DLine( std::array<float,3> rgb
+              , size_t npoints
+              , orientation orientation
+              );
 
-void vfps::Plot2DLine::update(const size_t npoints,
-                              const double* points,
-                              const bool vertical)
-{
-    std::vector<float> fltpoints(npoints);
-    for (size_t i=0; i<npoints; i++) {
-        fltpoints[i] = points[i];
-    }
-    update(npoints,fltpoints.data(),vertical);
-}
+    /**
+     * @brief Plot1DLine
+     * @param rgb
+     * @param npoints
+     * @param orientation
+     * @param databuffer takes ownership
+     */
+    Plot1DLine( std::array<float,3> rgb
+              , size_t npoints
+              , orientation orientation
+              , GLuint databuffer
+              );
+
+    virtual ~Plot1DLine() noexcept;
+
+    void draw() override;
+
+    /**
+     * @brief update data for line to be renedered (meant for non-OpenCL mode)
+     * @param points array of _npoints to be rendered as line
+     *
+     * not needed when shared buffer is updated from another location
+     */
+    void update(const float* points);
+
+private:
+    std::vector<float> _data;
+    std::vector<float> _position;
+
+    size_t _npoints;
+
+    GLuint _databuffer;
+    GLuint dataID;
+
+    GLuint _posibuffer;
+    GLuint posiID;
+
+    void createPositionBuffer();
+
+    float _max;
+
+    orientation _orientation;
+};
+
+} // namespace vfps
 
 #endif // INOVESA_USE_OPENGL
+
+#endif // PLOT1DLINE_HPP

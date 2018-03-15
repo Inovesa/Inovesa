@@ -25,9 +25,10 @@ vfps::WakePotentialMap::WakePotentialMap(std::shared_ptr<PhaseSpace> in,
                                          const vfps::meshindex_t xsize,
                                          const vfps::meshindex_t ysize,
                                          ElectricField *field,
-                                         const vfps::SourceMap::InterpolationType it,
-                                         bool interpol_clamp):
-    WakeKickMap(in,out,xsize,ysize,it,interpol_clamp),
+                                         const InterpolationType it,
+                                         bool interpol_clamp,
+                                         std::shared_ptr<OCLH> oclh):
+    WakeKickMap(in,out,xsize,ysize,it,interpol_clamp,oclh),
     _field(field)
 {
 }
@@ -44,9 +45,9 @@ vfps::WakePotentialMap::~WakePotentialMap() noexcept
 void vfps::WakePotentialMap::update()
 {
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    if (_oclh) {
         _field->wakePotential();
-        OCLH::enqueueCopyBuffer(_field->_wakepotential_buf,_offset_buf,
+        _oclh->enqueueCopyBuffer(_field->_wakepotential_buf,_offset_buf,
                                 0,0,sizeof(meshaxis_t)*_xsize);
         #ifdef INOVESA_SYNC_CL
         syncCLMem(clCopyDirection::dev2cpu);

@@ -62,7 +62,8 @@ public:
     FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    FPType fpt, timeaxis_t e1, DerivationType dt);
+                    FPType fpt, timeaxis_t e1, DerivationType dt,
+                    std::shared_ptr<OCLH> oclh);
 
     ~FokkerPlanckMap() noexcept;
 

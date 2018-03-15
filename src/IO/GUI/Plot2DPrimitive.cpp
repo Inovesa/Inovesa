@@ -73,30 +73,31 @@ vfps::Plot2DPrimitive::Plot2DPrimitive(std::array<float,3> rgb,
         break;
     }
     compileShaders();
-    position = glGetAttribLocation(programID, "position2DL");
+    dataID = glGetAttribLocation(programID, "position2DL");
 
-    // Generate 1 buffer, put the resulting identifier in vertexbuffer
-    glGenBuffers(1, &vertexbuffer);
+    // Generate 1 buffer, put the resulting identifier in databuffer
+    glGenBuffers(1, &databuffer);
 }
 
 vfps::Plot2DPrimitive::~Plot2DPrimitive() noexcept
 {
-    glDeleteBuffers(1, &vertexbuffer);
-    glDeleteVertexArrays(1, &position);
+    glDeleteBuffers(1, &databuffer);
+    glDeleteVertexArrays(1, &dataID);
+    glDeleteProgram(programID);
 }
 
 void vfps::Plot2DPrimitive::draw()
 {
     glUseProgram(programID);
 
-    glEnableVertexAttribArray(position);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glVertexAttribPointer(position,2,GL_FLOAT,GL_FALSE,0,nullptr);
+    glEnableVertexAttribArray(dataID);
+    glBindBuffer(GL_ARRAY_BUFFER, databuffer);
+    glVertexAttribPointer(dataID,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
     // Draw the line
     glDrawArrays(_primitivetype, 0, _npoints);
 
-    glDisableVertexAttribArray(position);
+    glDisableVertexAttribArray(dataID);
 }
 
 #endif // INOVESA_USE_OPENGL

@@ -47,12 +47,12 @@ public:
     void draw() override;
 
 protected:
-    std::vector<float> _points;
+    std::vector<float> _data;
 
     size_t _npoints;
 
-    GLuint vertexbuffer;
-    GLuint position;
+    GLuint databuffer;
+    GLuint dataID;
 
 private:
     const GLenum _primitivetype;

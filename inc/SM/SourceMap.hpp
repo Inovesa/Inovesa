@@ -66,8 +66,9 @@ public:
      * @param intertype number of points used for interpolation
      */
     SourceMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
-                meshindex_t xsize, meshindex_t ysize, size_t memsize,
-                uint_fast8_t interpoints, uint_fast8_t intertype);
+              meshindex_t xsize, meshindex_t ysize, size_t memsize,
+              uint_fast8_t interpoints, uint_fast8_t intertype,
+              std::shared_ptr<OCLH> oclh);
 
     /**
      * @brief SourceMap
@@ -79,8 +80,9 @@ public:
      */
     SourceMap(std::shared_ptr<PhaseSpace> in,
               std::shared_ptr<PhaseSpace> out,
-                size_t xsize, size_t ysize,
-                uint_fast8_t interpoints, uint_fast8_t intertype);
+              size_t xsize, size_t ysize,
+              uint_fast8_t interpoints, uint_fast8_t intertype,
+              std::shared_ptr<OCLH> oclh);
 
     virtual ~SourceMap() noexcept;
 
@@ -163,6 +165,8 @@ protected:
     std::shared_ptr<PhaseSpace> _out;
 
     #ifdef INOVESA_USE_OPENCL
+    std::shared_ptr<OCLH> _oclh;
+
     /**
      * @brief genCode4SM1D generates OpenCL code for a generic source map
      */

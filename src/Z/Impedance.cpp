@@ -23,34 +23,45 @@
 #include <fstream>
 
 vfps::Impedance::Impedance(const vfps::Impedance &other) :
-    Impedance(other._axis,other._data)
+    Impedance(other._axis,other._data,other._oclh)
 {
 }
 
-vfps::Impedance::Impedance(Ruler<vfps::frequency_t> axis,
-                           const std::vector<vfps::impedance_t> &z) :
-    _nfreqs(z.size()),
-    _axis(axis),
-    _data(z)
+vfps::Impedance::Impedance( Ruler<vfps::frequency_t> axis
+                          , const std::vector<vfps::impedance_t> &z
+                          , std::shared_ptr<OCLH> oclh
+                          )
+  : _nfreqs(z.size())
+  , _axis(axis)
+  , _data(z)
+  , _oclh(oclh)
 {
     syncCLMem();
 }
 
-vfps::Impedance::Impedance(const std::vector<vfps::impedance_t> &z,
-                           const frequency_t f_max) :
-    Impedance(Ruler<frequency_t>(z.size(),0,f_max,1),z)
+vfps::Impedance::Impedance( const std::vector<vfps::impedance_t> &z
+                          , const frequency_t f_max
+                          , std::shared_ptr<OCLH> oclh
+                          )
+  : Impedance(Ruler<frequency_t>(z.size(),0,f_max,1),z,oclh)
 {
 }
 
-vfps::Impedance::Impedance(const size_t nfreqs,
-                           const vfps::frequency_t f_max) :
-    Impedance(Ruler<frequency_t>(nfreqs,0,f_max,1),
-              std::vector<impedance_t>(nfreqs,0))
+vfps::Impedance::Impedance( const size_t nfreqs
+                          , const vfps::frequency_t f_max
+                          , std::shared_ptr<OCLH> oclh
+                          )
+  : Impedance( Ruler<frequency_t>(nfreqs,0,f_max,1)
+             , std::vector<impedance_t>(nfreqs,0)
+             , oclh )
 {
 }
 
-vfps::Impedance::Impedance(std::string datafile, double f_max) :
-    Impedance(readData(datafile),f_max)
+vfps::Impedance::Impedance( std::string datafile
+                          , double f_max
+                          , std::shared_ptr<OCLH> oclh
+                          )
+  : Impedance(readData(datafile),f_max,oclh)
 {
 }
 
@@ -66,8 +77,8 @@ vfps::Impedance &vfps::Impedance::operator+=(const vfps::Impedance &rhs)
 void vfps::Impedance::syncCLMem()
 {
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
-        data_buf = cl::Buffer(OCLH::context,
+    if (_oclh) {
+        data_buf = cl::Buffer(_oclh->context,
                               CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                              _nfreqs*sizeof(impedance_t),_data.data());
     }

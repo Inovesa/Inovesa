@@ -23,14 +23,17 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::CollimatorImpedance::CollimatorImpedance(const size_t n,
-                                   const frequency_t f_max,
-                                   const double outer,
-                                   const double inner)
-    :
-      ConstImpedance( n,f_max,
-          {static_cast<frequency_t>(Z0/pi<double>()*std::log(outer/inner)),
-           static_cast<frequency_t>(0)}
+vfps::CollimatorImpedance::CollimatorImpedance( const size_t n
+                                              , const frequency_t f_max
+                                              , const double outer
+                                              , const double inner
+                                              , std::shared_ptr<OCLH> oclh
+                                              )
+    : ConstImpedance( n
+                    , f_max
+                    , { static_cast<frequency_t>(Z0/pi<double>()*std::log(outer/inner)),
+                        static_cast<frequency_t>(0)}
+                    , oclh
       )
 {
 }

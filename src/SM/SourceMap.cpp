@@ -27,7 +27,8 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
                            meshindex_t xsize, meshindex_t ysize,
                            size_t memsize,
                            uint_fast8_t interpoints,
-                           uint_fast8_t intertype)
+                           uint_fast8_t intertype,
+                           std::shared_ptr<OCLH> oclh)
     : _ip(interpoints)
     , _it(intertype)
     , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
@@ -41,6 +42,7 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
     , _axis(std::array<meshRuler_ptr,2>{{in->getAxis(0),in->getAxis(1)}})
     , _in(in)
     , _out(out)
+    , _oclh(oclh)
 {
     #ifdef INOVESA_USE_OPENCL
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
@@ -49,11 +51,12 @@ vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
 
 vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
                            std::shared_ptr<PhaseSpace> out,
-                               size_t xsize, size_t ysize,
-                               uint_fast8_t interpoints,
-                               uint_fast8_t intertype) :
+                           size_t xsize, size_t ysize,
+                           uint_fast8_t interpoints,
+                           uint_fast8_t intertype,
+                           std::shared_ptr<OCLH> oclh) :
     SourceMap(in,out,xsize,ysize,xsize*ysize*interpoints,
-                interpoints,intertype)
+              interpoints,intertype,oclh)
 {
 }
 
@@ -73,9 +76,9 @@ vfps::SourceMap::~SourceMap() noexcept
 
 #ifdef INOVESA_ENABLE_CLPROFILING
 void vfps::SourceMap::saveTimings(std::string mapname) {
-    if (OCLH::active) {
-        OCLH::saveTimings(applySMEvents.get(),"Apply"+mapname);
-        OCLH::saveTimings(syncSMEvents.get(),"Sync"+mapname);
+    if (_oclh) {
+        _oclh->saveTimings(applySMEvents.get(),"Apply"+mapname);
+        _oclh->saveTimings(syncSMEvents.get(),"Sync"+mapname);
     }
 }
 #endif // INOVESA_ENABLE_CLPROFILING
@@ -83,11 +86,11 @@ void vfps::SourceMap::saveTimings(std::string mapname) {
 void vfps::SourceMap::apply()
 {
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    if (_oclh) {
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::enqueueNDRangeKernel( applySM
+        _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
                                   , cl::NDRange(_size)
                                   #ifdef INOVESA_ENABLE_CLPROFILING

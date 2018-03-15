@@ -20,11 +20,12 @@
 
 #include "Z/FreeSpaceCSR.hpp"
 
-vfps::FreeSpaceCSR::FreeSpaceCSR(const size_t n,
-                                 const frequency_t f_rev,
-                                 const frequency_t f_max)
-    :
-      Impedance(__calcImpedance(n,f_rev,f_max),f_max)
+vfps::FreeSpaceCSR::FreeSpaceCSR( const size_t n
+                                , const frequency_t f_rev
+                                , const frequency_t f_max
+                                , std::shared_ptr<OCLH> oclh
+                                )
+  : Impedance(__calcImpedance(n,f_rev,f_max),f_max,oclh)
 {
 }
 

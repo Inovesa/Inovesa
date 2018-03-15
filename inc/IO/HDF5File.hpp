@@ -94,12 +94,16 @@ public:
 
 public:
     static std::unique_ptr<PhaseSpace>
-        readPhaseSpace(std::string fname,
-                       meshaxis_t qmin, meshaxis_t qmax,
-                       meshaxis_t pmin, meshaxis_t pmax,
-                       double Qb, double Ib_unscaled,
-                       double bl, double dE,
-                       int64_t use_step=-1l);
+        readPhaseSpace(std::string fname
+                      , meshaxis_t qmin, meshaxis_t qmax
+                      , meshaxis_t pmin, meshaxis_t pmax
+                      #ifdef INOVESA_USE_OPENCL
+                      , std::shared_ptr<OCLH> oclh
+                      #endif // INOVESA_USE_OPENCL
+                      , double Qb, double Ib_unscaled
+                      , double bl, double dE
+                      , int64_t use_step=-1l
+                      );
 
 private:
     std::unique_ptr<H5::H5File> _file;

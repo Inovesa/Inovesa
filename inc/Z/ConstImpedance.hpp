@@ -33,9 +33,11 @@ namespace vfps
 class ConstImpedance : public Impedance
 {
 public:
-    ConstImpedance(const size_t n,
-                  const frequency_t f_max,
-                  const vfps::impedance_t Z);
+    ConstImpedance( const size_t n
+                  , const frequency_t f_max
+                  , const vfps::impedance_t Z
+                  , std::shared_ptr<OCLH> oclh = nullptr
+                  );
 
 private:
     static std::vector<vfps::impedance_t>

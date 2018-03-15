@@ -953,12 +953,15 @@ void vfps::HDF5File::append(const WakeKickMap* wkm)
     delete filespace;
 }
 
-std::unique_ptr<vfps::PhaseSpace> vfps::HDF5File::readPhaseSpace(std::string fname,
-                                                meshaxis_t qmin, meshaxis_t qmax,
-                                                meshaxis_t pmin, meshaxis_t pmax,
-                                                double Qb, double Ib_unscaled,
-                                                double bl, double dE,
-                                                int64_t use_step)
+std::unique_ptr<vfps::PhaseSpace>
+vfps::HDF5File::readPhaseSpace( std::string fname
+                              , meshaxis_t qmin, meshaxis_t qmax
+                              , meshaxis_t pmin, meshaxis_t pmax
+                              #ifdef INOVESA_USE_OPENCL
+                              , std::shared_ptr<OCLH> oclh
+                              #endif // INOVESA_USE_OPENCL
+                              , double Qb, double Ib_unscaled
+                              ,double bl, double dE, int64_t use_step)
 {
     H5::DataType datatype;
     if (std::is_same<vfps::meshdata_t,float>::value) {
@@ -1002,7 +1005,9 @@ std::unique_ptr<vfps::PhaseSpace> vfps::HDF5File::readPhaseSpace(std::string fna
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    std::unique_ptr<PhaseSpace> ps(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,Qb,Ib_unscaled,bl,dE));
+    std::unique_ptr<PhaseSpace> ps(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
+                                                 , oclh,Qb,Ib_unscaled,bl,dE)
+                                  );
     ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
 
     return ps;

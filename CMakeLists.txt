@@ -44,7 +44,7 @@ set(SRC_LIST
   ./src/IO/Display.cpp
   ./src/IO/FSPath.cpp
   ./src/IO/GUI/GUIElement.cpp
-  ./src/IO/GUI/Plot2DLine.cpp
+  ./src/IO/GUI/Plot1DLine.cpp
   ./src/IO/GUI/Plot2DPoints.cpp
   ./src/IO/GUI/Plot2DPrimitive.cpp
   ./src/IO/GUI/Plot3DColormap.cpp
@@ -86,7 +86,7 @@ set(INC_LIST
   ./inc/IO/Display.hpp
   ./inc/IO/FSPath.hpp
   ./inc/IO/GUI/GUIElement.hpp
-  ./inc/IO/GUI/Plot2DLine.hpp
+  ./inc/IO/GUI/Plot1DLine.hpp
   ./inc/IO/GUI/Plot2DPoints.hpp
   ./inc/IO/GUI/Plot2DPrimitive.hpp
   ./inc/IO/GUI/Plot3DColormap.hpp

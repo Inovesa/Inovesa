@@ -37,13 +37,17 @@ public:
                     const std::string fname,
                     const double sigmaE, const double E0,
                     const double Ib, const double dt,
-                    const InterpolationType it, const bool interpol_clamp);
+                    const InterpolationType it,
+                    const bool interpol_clamp,
+                    std::shared_ptr<OCLH> oclh);
 
     WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
                     const ElectricField* csr,
-                    const InterpolationType it, const bool interpol_clamp);
+                    const InterpolationType it,
+                    const bool interpol_clamp,
+                    std::shared_ptr<OCLH> oclh);
 
     ~WakeFunctionMap() noexcept;
 
@@ -70,7 +74,8 @@ private:
     WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    const InterpolationType it, bool interpol_clamp);
+                    const InterpolationType it, bool interpol_clamp,
+                    std::shared_ptr<OCLH> oclh);
 
 
     const Ruler<meshaxis_t> _xaxis;

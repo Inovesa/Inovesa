@@ -23,7 +23,7 @@
 #include "MessageStrings.hpp"
 #include "IO/Display.hpp"
 #include "IO/FSPath.hpp"
-#include "IO/GUI/Plot2DLine.hpp"
+#include "IO/GUI/Plot1DLine.hpp"
 #include "IO/GUI/Plot2DPoints.hpp"
 #include "IO/GUI/Plot3DColormap.hpp"
 #include "PS/PhaseSpace.hpp"
@@ -133,19 +133,18 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    OCLH::active = (cldev > 0);
-    if (OCLH::active) {
+    std::shared_ptr<OCLH> oclh;
+    if ((cldev > 0)) {
         try {
-            OCLH::prepareCLEnvironment( opts.getCLDevice()-1
-                                       #ifdef INOVESA_USE_OPENGL
-                                       , opts.showPhaseSpace()
-                                       #endif // INOVESA_USE_OPENGL
-                                       );
-            std::atexit(OCLH::teardownCLEnvironment);
+            oclh = std::make_shared<OCLH>( opts.getCLDevice()-1
+                                         #ifdef INOVESA_USE_OPENGL
+                                         , opts.showPhaseSpace()
+                                         #endif // INOVESA_USE_OPENGL
+                                         );
         } catch (cl::Error& e) {
             Display::printText(e.what());
             Display::printText("Will fall back to sequential version.");
-            OCLH::active = false;
+            oclh.reset();
         }
     }
     #endif // INOVESA_USE_OPENCL
@@ -441,7 +440,7 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        grid_t1.reset(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,
+        grid_t1.reset(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,oclh,
                                Qb,Ib_unscaled,bl,dE,Iz));
     } else {
         Display::printText("Reading in initial distribution from: \""
@@ -449,7 +448,7 @@ int main(int argc, char** argv)
         #ifdef INOVESA_USE_PNG
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
-            grid_t1 = makePSFromPNG(startdistfile,qmin,qmax,pmin,pmax,
+            grid_t1 = makePSFromPNG(startdistfile,qmin,qmax,pmin,pmax,oclh,
                                 Qb,Ib_unscaled,bl,dE);
         } else
         #endif // INOVESA_USE_PNG
@@ -457,7 +456,7 @@ int main(int argc, char** argv)
         if (  isOfFileType(".h5",startdistfile)
            || isOfFileType(".hdf5",startdistfile) ) {
             grid_t1 = makePSFromHDF5(startdistfile,opts.getStartDistStep(),
-                                   qmin,qmax,pmin,pmax,
+                                   qmin,qmax,pmin,pmax,oclh,
                                    Qb,Ib_unscaled,bl,dE);
 
             if (grid_t1 == nullptr) {
@@ -474,7 +473,7 @@ int main(int argc, char** argv)
         #endif
         if (isOfFileType(".txt",startdistfile)) {
             grid_t1 = makePSFromTXT(startdistfile,opts.getGridSize(),
-                                  qmin,qmax,pmin,pmax,
+                                  qmin,qmax,pmin,pmax,oclh,
                                   Qb,Ib_unscaled,bl,dE);
         } else {
             Display::printText("Unknown format of input file. Will now quit.");
@@ -513,7 +512,7 @@ int main(int argc, char** argv)
      **************************************************************************/
 
     // plot of bunch profile
-    std::shared_ptr<Plot2DLine> bpv;
+    std::shared_ptr<Plot1DLine> bpv;
 
     // plot of particle positions
     std::shared_ptr<Plot2DPoints> ppv;
@@ -522,11 +521,11 @@ int main(int argc, char** argv)
     std::shared_ptr<Plot3DColormap> psv;
 
     // plot of wake potential
-    std::shared_ptr<Plot2DLine> wpv;
+    std::shared_ptr<Plot1DLine> wpv;
 
     // plot of CSR power (over time)
     std::vector<float> csrlog(std::ceil(steps*rotations/outstep)+1,0);
-    std::shared_ptr<Plot2DLine> history;
+    std::shared_ptr<Plot1DLine> history;
 
     /*
      * Plot of phase space is initialized here already,
@@ -568,21 +567,21 @@ int main(int argc, char** argv)
                     << " s";
             Display::printText(sstream.str());
         }
-        rm1.reset(new DynamicRFKickMap(grid_t2, grid_t1, ps_size, ps_size,
+        rm1.reset(new DynamicRFKickMap(grid_t2, grid_t1,ps_size, ps_size,
                                        angle, rf_noise_add, rf_noise_mul,
                                        rf_mod_ampl,rf_mod_step,
                                        &simulationstep,
-                                       interpolationtype,interpol_clamp));
+                                       interpolationtype,interpol_clamp,oclh));
     } else {
         Display::printText("Building static RFKickMap.");
         rm1.reset(new RFKickMap(grid_t2,grid_t1,ps_size,ps_size,angle,
-                                interpolationtype,interpol_clamp));
+                                interpolationtype,interpol_clamp,oclh));
     }
 
     Display::printText("Building DriftMap.");
     rm2.reset(new DriftMap(grid_t1,grid_t3,ps_size,ps_size,
                          {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}},
-                         E0,interpolationtype,interpol_clamp));
+                         E0,interpolationtype,interpol_clamp,oclh));
 
     // time constant for damping and diffusion
     const timeaxis_t  e1 = (t_damp > 0) ? 2.0/(fs*t_damp*steps) : 0;
@@ -593,9 +592,9 @@ int main(int argc, char** argv)
         Display::printText("Building FokkerPlanckMap.");
         fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size,
                                    FokkerPlanckMap::FPType::full,e1,
-                                   derivationtype);
+                                   derivationtype,oclh);
     } else {
-        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size);
+        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size,oclh);
     }
 
 
@@ -607,16 +606,16 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance(nfreqs,fmax,f0,f_rev,gap,use_csr,
+            = vfps::makeImpedance(nfreqs,oclh,fmax,f0,f_rev,gap,use_csr,
                                   s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
-            = vfps::makeImpedance(nfreqs,fmax,f0,f_rev,(gap>0)?gap:-1);
+            = vfps::makeImpedance(nfreqs,oclh,fmax,f0,f_rev,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field(grid_t1,rdtn_impedance,f_rev,revolutionpart);
+    ElectricField rdtn_field(grid_t1,rdtn_impedance,oclh,f_rev,revolutionpart);
 
     /**************************************************************************
      * Part modeling the self-interaction of the electron-bunch.              *
@@ -636,23 +635,26 @@ int main(int argc, char** argv)
         Display::printText("Reading WakeFunction from "+wakefile+".");
         wfm = new WakeFunctionMap(grid_t1,grid_t2,ps_size,ps_size,
                                   wakefile,E0,sE,Ib_scaled,dt,
-                                  interpolationtype,interpol_clamp);
+                                  interpolationtype,interpol_clamp,oclh);
         wkm = wfm;
     } else {
         if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField(grid_t1,wake_impedance,f_rev,
-                                           revolutionpart, Ib_scaled,E0,sE,dt);
+            wake_field = new ElectricField( grid_t1,wake_impedance,oclh,f_rev
+                                          , revolutionpart, Ib_scaled,E0,sE,dt
+                                          );
 
             Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap(grid_t1,grid_t2,ps_size,ps_size,wake_field,
-                                     interpolationtype,interpol_clamp);
+            wkm = new WakePotentialMap( grid_t1,grid_t2,ps_size,ps_size
+                                      , wake_field ,interpolationtype
+                                      , interpol_clamp,oclh
+                                      );
         }
     }
     if (wkm != nullptr) {
         wm = wkm;
     } else {
-        wm = new Identity(grid_t1,grid_t2,ps_size,ps_size);
+        wm = new Identity(grid_t1,grid_t2,ps_size,ps_size,oclh);
     }
 
     /* Load coordinates for particle tracking.
@@ -684,7 +686,8 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_OPENGL
     if (display != nullptr) {
         try {
-            bpv.reset(new Plot2DLine(std::array<float,3>{{1,0,0}}));
+            bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
+                                    , Plot1DLine::orientation::horizontal));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -704,7 +707,8 @@ int main(int argc, char** argv)
         }
         if (wkm != nullptr) {
             try {
-                wpv.reset(new Plot2DLine(std::array<float,3>{{0,0,1}}));
+                wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
+                                        , Plot1DLine::orientation::horizontal));
                 display->addElement(wpv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -713,7 +717,9 @@ int main(int argc, char** argv)
             }
         }
         try {
-            history.reset(new Plot2DLine(std::array<float,3>{{0,0,0}}));
+            history.reset(new Plot1DLine( std::array<float,3>{{0,0,0}}
+                                        , csrlog.size()
+                                        , Plot1DLine::orientation::vertical));
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -793,8 +799,8 @@ int main(int argc, char** argv)
     #endif // INOVESA_ENABLE_INTERRUPT
 
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
-        OCLH::finish();
+    if (oclh) {
+        oclh->finish();
     }
     #endif // INOVESA_USE_OPENCL
 
@@ -825,7 +831,7 @@ int main(int argc, char** argv)
             grid_t1->updateYProjection();
             grid_t1->variance(1);
             #ifdef INOVESA_USE_OPENCL
-            if (OCLH::active) {
+            if (oclh) {
                 grid_t1->syncCLMem(clCopyDirection::dev2cpu);
                 if (wkm != nullptr) {
                     wkm->syncCLMem(clCopyDirection::dev2cpu);
@@ -873,15 +879,13 @@ int main(int argc, char** argv)
                     psv->createTexture(grid_t1);
                 }
                 if (bpv != nullptr) {
-                    bpv->update(grid_t1->nMeshCells(0),
-                                grid_t1->getProjection(0));
+                    bpv->update(grid_t1->getProjection(0));
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
                 }
                 if (wpv != nullptr) {
-                    wpv->update(grid_t1->nMeshCells(0),
-                                wkm->getForce());
+                    wpv->update(wkm->getForce());
                 }
                 if (history != nullptr) {
                     #ifdef INOVESA_USE_HDF5
@@ -891,7 +895,7 @@ int main(int argc, char** argv)
                         rdtn_field.updateCSR(fc);
                     }
                     csrlog[outstepnr] = rdtn_field.getCSRPower();
-                    history->update(csrlog.size(),csrlog.data(),true);
+                    history->update(csrlog.data());
                 }
                 display->draw();
                 if (psv != nullptr) {
@@ -917,8 +921,8 @@ int main(int argc, char** argv)
         grid_t1->updateXProjection();
 
         #ifdef INOVESA_USE_OPENCL
-        if (OCLH::active) {
-            OCLH::flush();
+        if (oclh) {
+            oclh->flush();
         }
         #endif // INOVESA_USE_OPENCL
 
@@ -946,7 +950,7 @@ int main(int argc, char** argv)
         grid_t1->updateYProjection();
         grid_t1->variance(1);
         #ifdef INOVESA_USE_OPENCL
-        if (OCLH::active) {
+        if (oclh) {
             grid_t1->syncCLMem(clCopyDirection::dev2cpu);
             if (wkm != nullptr) {
                 wkm->syncCLMem(clCopyDirection::dev2cpu);

@@ -42,8 +42,10 @@ public:
      * @param axis
      * @param z
      */
-    Impedance(Ruler<frequency_t> axis,
-              const std::vector<impedance_t> &z);
+    Impedance( Ruler<frequency_t> axis
+             , const std::vector<impedance_t> &z
+             , std::shared_ptr<OCLH> oclh = nullptr
+             );
 
     /**
      * @brief Impedance copy constructor
@@ -60,10 +62,16 @@ public:
      * Note that we will use this for DFT,
      * so n>z.size()/2 is defined to be equivalent to n<0.
      */
-    Impedance(const std::vector<impedance_t>& z, const frequency_t f_max);
+    Impedance( const std::vector<impedance_t>& z
+             , const frequency_t f_max
+             , std::shared_ptr<OCLH> oclh = nullptr
+             );
 
 
-    Impedance(const size_t nfreqs, const frequency_t f_max);
+    Impedance( const size_t nfreqs
+             , const frequency_t f_max
+             , std::shared_ptr<OCLH> oclh = nullptr
+             );
 
 
     /**
@@ -71,7 +79,10 @@ public:
      * @param name of datafile in the format "n Re(Z) Im(Z)",
      *        where n=f/f_rev is the revolution harmonic
      */
-    Impedance(std::string datafile, double f_max);
+    Impedance( std::string datafile
+             , double f_max
+             , std::shared_ptr<OCLH> oclh = nullptr
+             );
 
     inline const impedance_t* data() const
         { return _data.data(); }
@@ -119,6 +130,8 @@ protected:
     std::vector<impedance_t> _data;
 
     void syncCLMem();
+
+    std::shared_ptr<OCLH> _oclh;
 
 private:
     static std::vector<impedance_t> readData(std::string fname);

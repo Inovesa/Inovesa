@@ -27,99 +27,74 @@
 #endif
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <OpenCL/cl_gl.h>
+#include <OpenCL/cl_gl_ext.h>
+#include <OpenGL/CGLDevice.h>
+#include <OpenGL/CGLCurrent.h>
 #else
 #include <CL/cl_gl.h>
 #endif
 
-void OCLH::prepareCLEnvironment( uint32_t device
-                               #ifdef INOVESA_USE_OPENGL
-                               , bool glsharing
-                               #endif // INOVESA_USE_OPENGL
-                               )
+OCLH::OCLH( uint32_t device, bool glsharing)
 {
-    cl::Platform::get(&OCLH::platforms);
+    cl::vector<cl::Platform> platforms;
+
+    cl::Platform::get(&platforms);
 
     uint32_t devicescount = 0;
-    uint32_t selectedplatform = 0;
-    uint32_t selecteddevice = 0;
 
-    for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
-        cl_context_properties tmp_properties[] =
-            { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
-        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
-        cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
-        if (devicescount + tmp_devices.size() <= device) {
+    for (auto p : platforms) {
+        try {
+            context = cl::Context( CL_DEVICE_TYPE_ALL
+                                 , properties(p,glsharing).data());
+        } catch (cl::Error& e) {
+            if (e.err() == CL_INVALID_PROPERTY) {
+                context = cl::Context( CL_DEVICE_TYPE_ALL
+                                     , properties(p,false).data());
+            } else {
+                throw e;
+            }
+        }
+        _devices = context.getInfo<CL_CONTEXT_DEVICES>();
+        if (devicescount + _devices.size() <= device) {
             // device is on later platform
-            devicescount += tmp_devices.size();
+            devicescount += _devices.size();
         } else {
-            selectedplatform = p;
+            _platform = p;
             // subtract devices on previous platforms
-            selecteddevice = device-devicescount;
+            _device = _devices[device-devicescount];
             break;
         }
     }
+
+    #ifdef INOVESA_ENABLE_CLPROFILING
+    queue = cl::CommandQueue(context,_device,CL_QUEUE_PROFILING_ENABLE);
+    #else
+    queue = cl::CommandQueue(context,_device);
+    #endif // INOVESA_ENABLE_CLPROFILING
+
+    devicetype = _device.getInfo<CL_DEVICE_TYPE>();
+
+    #ifdef INOVESA_USE_OPENGL
+    // cl_VENDOR_gl_sharing is present, when string contains the substring
+    ogl_sharing = _device.getInfo<CL_DEVICE_EXTENSIONS>().find(
+                            "_gl_sharing") != std::string::npos;
+    #endif // INOVESA_USE_OPENGL
+
     #ifdef INOVESA_USE_CLFFT
     clfftInitSetupData(&fft_setup);
     clfftSetup(&fft_setup);
     #endif // INOVESA_USE_CLFFT
 
-    #ifdef INOVESA_USE_OPENGL
-    glsharing = false; // HACK: does not work ATM
-    if (glsharing) {
-        #ifdef __linux__
-        cl_context_properties properties[] = {
-                        CL_GL_CONTEXT_KHR,
-                        (cl_context_properties)glXGetCurrentContext(),
-                        CL_GLX_DISPLAY_KHR,
-                        (cl_context_properties)glXGetCurrentDisplay(),
-                        CL_CONTEXT_PLATFORM,
-                        (cl_context_properties)(OCLH::platforms[selectedplatform])(),
-                        0
-        };
-        #else
-        cl_context_properties properties[] = {
-        };
-        #endif
-        OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
-    } else
-    #endif // INOVESA_USE_OPENGL
-    {
-        cl_context_properties properties[] = {
-                        CL_CONTEXT_PLATFORM,
-                        (cl_context_properties)(OCLH::platforms[selectedplatform])(),
-                        0
-                     };
-        OCLH::context = cl::Context(CL_DEVICE_TYPE_ALL, properties);
-    }
-
-    OCLH::devices = OCLH::context.getInfo<CL_CONTEXT_DEVICES>();
-
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    OCLH::queue = cl::CommandQueue(OCLH::context,OCLH::devices[selecteddevice],
-                                   CL_QUEUE_PROFILING_ENABLE);
-    #else
-    OCLH::queue = cl::CommandQueue(OCLH::context,OCLH::devices[selecteddevice]);
-    #endif // INOVESA_ENABLE_CLPROFILING
-
-    devicetype = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_TYPE>();
-
-    #ifdef INOVESA_USE_OPENGL
-    // cl_VENDOR_gl_sharing is present, when string contains the substring
-    OCLH::ogl_sharing
-                    = OCLH::devices[selecteddevice].getInfo<CL_DEVICE_EXTENSIONS>().find(
-                            "_gl_sharing") != std::string::npos;
-    #endif // INOVESA_USE_OPENGL
-
     #ifdef INOVESA_ENABLE_CLPROFILING
     // place initial marker
-    OCLH::queue.enqueueMarkerWithWaitList(nullptr,&init);
+    queue.enqueueMarkerWithWaitList(nullptr,&init);
     #endif // INOVESA_ENABLE_CLPROFILING
 
 
     vfps::Display::printText("Initialized \""
-                             + OCLH::devices[selecteddevice].getInfo<CL_DEVICE_NAME>()
+                             + _device.getInfo<CL_DEVICE_NAME>()
                              + "\" (on platform \""
-                             + OCLH::platforms[selectedplatform].getInfo<CL_PLATFORM_NAME>()
+                             + _platform.getInfo<CL_PLATFORM_NAME>()
                              + "\") for use with OpenCL.");
 }
 
@@ -129,12 +104,12 @@ cl::Program OCLH::prepareCLProg(std::string code)
     cl::vector<std::string> codevec;
     codevec.push_back(code);
     cl::Program::Sources source(codevec);
-    cl::Program p(OCLH::context, source);
+    cl::Program p(context, source);
     try {
         // empty for compatibility reasons.
         std::string OCLBuildOpts("");
 
-        p.build(OCLH::devices,OCLBuildOpts.c_str());
+        p.build(_devices,OCLBuildOpts.c_str());
     } catch (cl::Error &e) {
         std::cerr << e.what() << std::endl;
         std::cout << "===== OpenCL Code =====\n"
@@ -143,9 +118,9 @@ cl::Program OCLH::prepareCLProg(std::string code)
         throw e;
     }
     #endif
-        std::cout	<< "===== OpenCL Build Log =====\n"
-                                << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(OCLH::devices[0])
-                                << std::endl;
+        std::cout << "===== OpenCL Build Log =====\n"
+                  << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device)
+                  << std::endl;
     #ifndef DEBUG
         throw e;
     }
@@ -197,7 +172,7 @@ void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
 }
 #endif // INOVESA_ENABLE_CLPROFILING
 
-void OCLH::teardownCLEnvironment()
+OCLH::~OCLH()
 {
     #ifdef INOVESA_ENABLE_CLPROFILING
     saveProfilingInfo("inovesa-timings.txt");
@@ -228,32 +203,23 @@ void OCLH::teardownCLEnvironment()
     #endif // INOVESA_ENABLE_CLPROFILING
 }
 
-void OCLH::teardownCLEnvironment(cl::Error& e)
-{
-    OCLH::active = false;
-    std::cerr << "Error: " << e.what() << std::endl
-              << "Shutting down OpenCL." << std::endl;
-    teardownCLEnvironment();
-}
-
 void OCLH::listCLDevices()
 {
+    cl::vector<cl::Platform> platforms;
     std::cout << "OpenCL device options available on this computer:" << std::endl
               << " 0: (Do not use OpenCL.)" << std::endl;
-    cl::Platform::get(&OCLH::platforms);
+    cl::Platform::get(&platforms);
 
     uint32_t devicescount = 0;
 
-    for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
+    for (auto p : platforms) {
         std::string available_clversion;
-        OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
+        p.getInfo(CL_PLATFORM_VERSION,&available_clversion);
         std::string platformname;
-        OCLH::platforms[p].getInfo(CL_PLATFORM_NAME,&platformname);
+        p.getInfo(CL_PLATFORM_NAME,&platformname);
         std::cout << "On platform " << platformname
                   << " (" << available_clversion << ")" << ":" << std::endl;
-        cl_context_properties tmp_properties[] =
-            { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
-        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
+        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, properties(p,false).data());
         cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
         for (unsigned int d=0; d<tmp_devices.size(); d++) {
             devicescount++;
@@ -276,8 +242,8 @@ void OCLH::listCLDevices()
                       << "(" << tmp_devices[d].getInfo<CL_DEVICE_NAME>() << ")"
                       #ifdef DEBUG
                       << std::endl
-                      << "\ton \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\""
-                      << " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"'
+                      << "\ton \"" <<  p.getInfo<CL_PLATFORM_NAME>() << "\""
+                      << " by \"" <<  p.getInfo<CL_PLATFORM_VENDOR>() << '\"'
                       << std::endl
                       << "\toffering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
                       << " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
@@ -286,32 +252,6 @@ void OCLH::listCLDevices()
         }
     }
 }
-
-bool OCLH::active;
-
-cl::vector<cl::Platform> OCLH::platforms;
-
-cl::Context OCLH::context;
-
-cl::vector<cl::Device> OCLH::devices;
-
-cl_device_type OCLH::devicetype;
-
-cl::CommandQueue OCLH::queue;
-
-#ifdef INOVESA_USE_OPENGL
-bool OCLH::ogl_sharing;
-#endif // INOVESA_USE_OPENGL
-
-#ifdef INOVESA_ENABLE_CLPROFILING
-std::list<vfps::CLTiming> OCLH::timingInfo;
-
-cl::Event OCLH::init;
-#endif // INOVESA_ENABLE_CLPROFILING
-
-#ifdef INOVESA_USE_CLFFT
-clfftSetupData OCLH::fft_setup;
-#endif // INOVESA_USE_CLFFT
 
 const std::string OCLH::custom_datatypes = R"(
         typedef struct { data_t real; data_t imag; } impedance_t;
@@ -371,12 +311,53 @@ std::string OCLH::datatype_aliases()
     return code;
 }
 
-#ifdef INOVESA_ENABLE_CLPROFILING
-cl::vector<cl::Event*> OCLH::timingsCopy;
-cl::vector<cl::Event*> OCLH::timingsDFT;
-cl::vector<cl::Event*> OCLH::timingsExecute;
-cl::vector<cl::Event*> OCLH::timingsRead;
-cl::vector<cl::Event*> OCLH::timingsWrite;
-#endif // INOVESA_ENABLE_CLPROFILING
+std::vector<cl_context_properties> OCLH::properties(cl::Platform& platform,
+                                                    bool glsharing)
+{
+    std::vector<cl_context_properties> rv;
+
+    #ifdef INOVESA_USE_OPENGL
+    if (glsharing) {
+        #ifdef __linux__
+        rv = {
+            CL_GL_CONTEXT_KHR,
+            reinterpret_cast<cl_context_properties>(glXGetCurrentContext()),
+            CL_GLX_DISPLAY_KHR,
+            reinterpret_cast<cl_context_properties>(glXGetCurrentDisplay()),
+            CL_CONTEXT_PLATFORM,
+            reinterpret_cast<cl_context_properties>(platform()),
+            0
+        };
+        #elif defined _WIN32
+        rv = {
+            CL_GL_CONTEXT_KHR,
+            reinterpret_cast<cl_context_properties>(wglGetCurrentContext()),
+            CL_WGL_HDC_KHR,
+            reinterpret_cast<cl_context_properties>(wglGetCurrentDC()),
+            CL_CONTEXT_PLATFORM,
+            reinterpret_cast<cl_context_properties>(platform()),
+            0
+        };
+        #elif defined TARGET_OS_MAC
+        CGLContextObj glContext = CGLGetCurrentContext();
+        CGLShareGroupObj shareGroup = CGLGetShareGroup(glContext);
+        rv = {
+            CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
+            reinterpret_cast<cl_context_properties>(shareGroup),
+            0
+        };
+        #endif
+    } else
+    #endif // INOVESA_USE_OPENGL
+    {
+        rv = {
+            CL_CONTEXT_PLATFORM,
+            reinterpret_cast<cl_context_properties>(platform()),
+            0
+        };
+    }
+
+    return rv;
+}
 
 #endif // INOVESA_USE_OPENCL

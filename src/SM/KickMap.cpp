@@ -24,16 +24,17 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
                         std::shared_ptr<PhaseSpace> out,
                         const meshindex_t xsize, const meshindex_t ysize,
                         const InterpolationType it, const bool interpol_clamp,
-                        const Axis kd) :
+                        const Axis kd,
+                        std::shared_ptr<OCLH> oclh) :
     SourceMap(in,out,kd==Axis::x?1:xsize,
-                     kd==Axis::x?ysize:1,it,it),
+                     kd==Axis::x?ysize:1,it,it,oclh),
     _kickdirection(kd),
     _meshsize_kd(kd==Axis::x?xsize:ysize),
     _meshsize_pd(kd==Axis::x?ysize:xsize)
 {
     if (interpol_clamp
         #ifdef INOVESA_USE_OPENCL
-            && !OCLH::active
+            && !_oclh
         #endif
        ) {
         notClampedMessage();
@@ -50,8 +51,8 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
     }
     #endif
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
-        _offset_buf = cl::Buffer(OCLH::context,CL_MEM_READ_WRITE,
+    if (_oclh) {
+        _offset_buf = cl::Buffer(_oclh->context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
         _cl_code += R"(
         __kernel void apply_xKick(const __global data_t* src,
@@ -155,7 +156,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
             }
         }
         )";
-        _cl_prog  = OCLH::prepareCLProg(_cl_code);
+        _cl_prog  = _oclh->prepareCLProg(_cl_code);
 
         if (_kickdirection == Axis::x) {
             applySM = cl::Kernel(_cl_prog, "apply_xKick");
@@ -182,11 +183,11 @@ vfps::KickMap::~KickMap() noexcept
 void vfps::KickMap::apply()
 {
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    if (_oclh) {
         #ifdef INOVESA_SYNC_CL
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::enqueueNDRangeKernel( applySM
+        _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
                                   , cl::NDRange(_meshsize_pd)
                                   #ifdef INOVESA_ENABLE_CLPROFILING
@@ -196,7 +197,7 @@ void vfps::KickMap::apply()
                                   , applySMEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
-        OCLH::enqueueBarrier();
+        _oclh->enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
@@ -272,7 +273,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 {
     switch (dir) {
     case clCopyDirection::cpu2dev:
-        OCLH::enqueueWriteBuffer( _offset_buf,CL_TRUE,0
+        _oclh->enqueueWriteBuffer( _offset_buf,CL_TRUE,0
                                 , sizeof(meshaxis_t)*_meshsize_pd
                                 , _offset.data()
                                 #ifdef INOVESA_ENABLE_CLPROFILING
@@ -283,7 +284,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 
         break;
     case clCopyDirection::dev2cpu:
-        OCLH::enqueueReadBuffer( _offset_buf,CL_TRUE,0
+        _oclh->enqueueReadBuffer( _offset_buf,CL_TRUE,0
                                , sizeof(meshaxis_t)*_meshsize_pd
                                , _offset.data()
                                #ifdef INOVESA_ENABLE_CLPROFILING
@@ -299,7 +300,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 void vfps::KickMap::updateSM()
 {
     #ifdef INOVESA_USE_OPENCL
-    if (!OCLH::active)
+    if (!_oclh)
     #endif
     {
     // gridpoint matrix used for interpolation
