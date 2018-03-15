@@ -191,7 +191,7 @@ void vfps::Plot3DColormap::draw()
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glUniform1i(textureSampler, GL_TEXTURE0);
+    glUniform1i(textureSampler, 0);
 
     glEnableVertexAttribArray(position);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
