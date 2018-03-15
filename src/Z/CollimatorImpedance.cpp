@@ -27,13 +27,17 @@ vfps::CollimatorImpedance::CollimatorImpedance( const size_t n
                                               , const frequency_t f_max
                                               , const double outer
                                               , const double inner
+                                              #ifdef INOVESA_USE_OPENCL
                                               , std::shared_ptr<OCLH> oclh
+                                              #endif // INOVESA_USE_OPENCL
                                               )
     : ConstImpedance( n
                     , f_max
                     , { static_cast<frequency_t>(Z0/pi<double>()*std::log(outer/inner)),
                         static_cast<frequency_t>(0)}
+                    #ifdef INOVESA_USE_OPENCL
                     , oclh
-      )
+                    #endif // INOVESA_USE_OPENCL
+                    )
 {
 }

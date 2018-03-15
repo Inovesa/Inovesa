@@ -440,24 +440,33 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        grid_t1.reset(new PhaseSpace(ps_size,qmin,qmax,pmin,pmax,oclh,
-                               Qb,Ib_unscaled,bl,dE,Iz));
+        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
+                                    #ifdef INOVESA_USE_OPENCL
+                                    , oclh
+                                    #endif // INOVESA_USE_OPENCL
+                                    , Qb,Ib_unscaled,bl,dE,Iz));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
         #ifdef INOVESA_USE_PNG
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
-            grid_t1 = makePSFromPNG(startdistfile,qmin,qmax,pmin,pmax,oclh,
-                                Qb,Ib_unscaled,bl,dE);
+            grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
+                                   #ifdef INOVESA_USE_OPENCL
+                                   , oclh
+                                   #endif // INOVESA_USE_OPENCL
+                                   , Qb,Ib_unscaled,bl,dE);
         } else
         #endif // INOVESA_USE_PNG
         #ifdef INOVESA_USE_HDF5
         if (  isOfFileType(".h5",startdistfile)
            || isOfFileType(".hdf5",startdistfile) ) {
-            grid_t1 = makePSFromHDF5(startdistfile,opts.getStartDistStep(),
-                                   qmin,qmax,pmin,pmax,oclh,
-                                   Qb,Ib_unscaled,bl,dE);
+            grid_t1 = makePSFromHDF5( startdistfile,opts.getStartDistStep()
+                                    , qmin,qmax,pmin,pmax
+                                    #ifdef INOVESA_USE_OPENCL
+                                    , oclh
+                                    #endif // INOVESA_USE_OPENCL
+                                    , Qb,Ib_unscaled,bl,dE);
 
             if (grid_t1 == nullptr) {
                 return EXIT_SUCCESS;
@@ -472,9 +481,12 @@ int main(int argc, char** argv)
         } else
         #endif
         if (isOfFileType(".txt",startdistfile)) {
-            grid_t1 = makePSFromTXT(startdistfile,opts.getGridSize(),
-                                  qmin,qmax,pmin,pmax,oclh,
-                                  Qb,Ib_unscaled,bl,dE);
+            grid_t1 = makePSFromTXT( startdistfile,opts.getGridSize()
+                                   , qmin,qmax,pmin,pmax
+                                   #ifdef INOVESA_USE_OPENCL
+                                   , oclh
+                                   #endif // INOVESA_USE_OPENCL
+                                   , Qb,Ib_unscaled,bl,dE);
         } else {
             Display::printText("Unknown format of input file. Will now quit.");
             return EXIT_SUCCESS;
@@ -567,21 +579,33 @@ int main(int argc, char** argv)
                     << " s";
             Display::printText(sstream.str());
         }
-        rm1.reset(new DynamicRFKickMap(grid_t2, grid_t1,ps_size, ps_size,
-                                       angle, rf_noise_add, rf_noise_mul,
-                                       rf_mod_ampl,rf_mod_step,
-                                       &simulationstep,
-                                       interpolationtype,interpol_clamp,oclh));
+        rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                      , angle, rf_noise_add, rf_noise_mul
+                                      , rf_mod_ampl,rf_mod_step
+                                      , &simulationstep
+                                      , interpolationtype,interpol_clamp
+                                      #ifdef INOVESA_USE_OPENCL
+                                      , oclh
+                                      #endif // INOVESA_USE_OPENCL
+                                      ));
     } else {
         Display::printText("Building static RFKickMap.");
-        rm1.reset(new RFKickMap(grid_t2,grid_t1,ps_size,ps_size,angle,
-                                interpolationtype,interpol_clamp,oclh));
+        rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size,angle
+                               , interpolationtype,interpol_clamp
+                               #ifdef INOVESA_USE_OPENCL
+                               , oclh
+                               #endif // INOVESA_USE_OPENCL
+                               ));
     }
 
     Display::printText("Building DriftMap.");
-    rm2.reset(new DriftMap(grid_t1,grid_t3,ps_size,ps_size,
-                         {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}},
-                         E0,interpolationtype,interpol_clamp,oclh));
+    rm2.reset(new DriftMap( grid_t1,grid_t3,ps_size,ps_size
+                          , {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}}
+                          , E0,interpolationtype,interpol_clamp
+                          #ifdef INOVESA_USE_OPENCL
+                          , oclh
+                          #endif // INOVESA_USE_OPENCL
+                          ));
 
     // time constant for damping and diffusion
     const timeaxis_t  e1 = (t_damp > 0) ? 2.0/(fs*t_damp*steps) : 0;
@@ -590,11 +614,19 @@ int main(int argc, char** argv)
     SourceMap* fpm;
     if (e1 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size,
-                                   FokkerPlanckMap::FPType::full,e1,
-                                   derivationtype,oclh);
+        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size
+                                 , FokkerPlanckMap::FPType::full,e1
+                                 , derivationtype
+                                 #ifdef INOVESA_USE_OPENCL
+                                 , oclh
+                                 #endif // INOVESA_USE_OPENCL
+                                 );
     } else {
-        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size,oclh);
+        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size
+                          #ifdef INOVESA_USE_OPENCL
+                          , oclh
+                          #endif // INOVESA_USE_OPENCL
+                          );
     }
 
 
@@ -606,16 +638,28 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance(nfreqs,oclh,fmax,f0,f_rev,gap,use_csr,
-                                  s,xi,collimator_radius,impedance_file);
+            = vfps::makeImpedance( nfreqs
+                                 #ifdef INOVESA_USE_OPENCL
+                                 , oclh
+                                 #endif // INOVESA_USE_OPENCL
+                                 , fmax,f0,f_rev,gap,use_csr
+                                 , s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
-            = vfps::makeImpedance(nfreqs,oclh,fmax,f0,f_rev,(gap>0)?gap:-1);
+            = vfps::makeImpedance( nfreqs
+                                 #ifdef INOVESA_USE_OPENCL
+                                 , oclh
+                                 #endif // INOVESA_USE_OPENCL
+                                 , fmax,f0,f_rev,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field(grid_t1,rdtn_impedance,oclh,f_rev,revolutionpart);
+    ElectricField rdtn_field( grid_t1,rdtn_impedance
+                            #ifdef INOVESA_USE_OPENCL
+                            , oclh
+                            #endif // INOVESA_USE_OPENCL
+                            , f_rev,revolutionpart);
 
     /**************************************************************************
      * Part modeling the self-interaction of the electron-bunch.              *
@@ -633,28 +677,43 @@ int main(int argc, char** argv)
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
         Display::printText("Reading WakeFunction from "+wakefile+".");
-        wfm = new WakeFunctionMap(grid_t1,grid_t2,ps_size,ps_size,
-                                  wakefile,E0,sE,Ib_scaled,dt,
-                                  interpolationtype,interpol_clamp,oclh);
+        wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_size,ps_size
+                                 , wakefile,E0,sE,Ib_scaled,dt
+                                 , interpolationtype,interpol_clamp
+                                 #ifdef INOVESA_USE_OPENCL
+                                 , oclh
+                                 #endif // INOVESA_USE_OPENCL
+                                 );
         wkm = wfm;
     } else {
         if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField( grid_t1,wake_impedance,oclh,f_rev
+            wake_field = new ElectricField( grid_t1,wake_impedance
+                                          #ifdef INOVESA_USE_OPENCL
+                                          , oclh
+                                          #endif // INOVESA_USE_OPENCL
+                                          ,f_rev
                                           , revolutionpart, Ib_scaled,E0,sE,dt
                                           );
 
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap( grid_t1,grid_t2,ps_size,ps_size
                                       , wake_field ,interpolationtype
-                                      , interpol_clamp,oclh
+                                      , interpol_clamp
+                                      #ifdef INOVESA_USE_OPENCL
+                                      , oclh
+                                      #endif // INOVESA_USE_OPENCL
                                       );
         }
     }
     if (wkm != nullptr) {
         wm = wkm;
     } else {
-        wm = new Identity(grid_t1,grid_t2,ps_size,ps_size,oclh);
+        wm = new Identity( grid_t1,grid_t2,ps_size,ps_size
+                         #ifdef INOVESA_USE_OPENCL
+                         , oclh
+                         #endif // INOVESA_USE_OPENCL
+                         );
     }
 
     /* Load coordinates for particle tracking.

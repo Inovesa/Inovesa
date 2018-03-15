@@ -144,9 +144,11 @@ vfps::ProgramOptions::ProgramOptions() :
             "set to omit consistency check for parameters")
     ;
     _programopts_cli.add_options()
+            ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
         #ifdef INOVESA_USE_OPENCL
-        ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
+        #else // not INOVESA_USE_OPENCL
+            "(not active in this build)")
         #endif // INOVESA_USE_OPENCL
         ("config,c", po::value<std::string>(&_configfile),
             "name of a file containing a configuration.")

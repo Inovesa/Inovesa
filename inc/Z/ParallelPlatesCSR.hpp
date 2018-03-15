@@ -33,7 +33,9 @@ public:
                      , const frequency_t f0
                      , const frequency_t f_max
                      , const double g
+                     #ifdef INOVESA_USE_OPENCL
                      , std::shared_ptr<OCLH> oclh = nullptr
+                     #endif // INOVESA_USE_OPENCL
                      );
 
 private:

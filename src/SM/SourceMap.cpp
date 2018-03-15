@@ -22,41 +22,54 @@
 
 #include "MessageStrings.hpp"
 
-vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
-                           std::shared_ptr<PhaseSpace> out,
-                           meshindex_t xsize, meshindex_t ysize,
-                           size_t memsize,
-                           uint_fast8_t interpoints,
-                           uint_fast8_t intertype,
-                           std::shared_ptr<OCLH> oclh)
-    : _ip(interpoints)
-    , _it(intertype)
-    , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
-    , _size(xsize*ysize)
-    , _xsize(xsize)
-    , _ysize(ysize)
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
-    , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
-    #endif // INOVESA_ENABLE_CLPROFILING
-    , _axis(std::array<meshRuler_ptr,2>{{in->getAxis(0),in->getAxis(1)}})
-    , _in(in)
-    , _out(out)
-    , _oclh(oclh)
+vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
+                          , std::shared_ptr<PhaseSpace> out
+                          , meshindex_t xsize
+                          , meshindex_t ysize
+                          , size_t memsize
+                          , uint_fast8_t interpoints
+                          , uint_fast8_t intertype
+                          #ifdef INOVESA_USE_OPENCL
+                          , std::shared_ptr<OCLH> oclh
+                          #endif // INOVESA_USE_OPENCL
+                          )
+  : _ip(interpoints)
+  , _it(intertype)
+  , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
+  , _size(xsize*ysize)
+  , _xsize(xsize)
+  , _ysize(ysize)
+  #ifdef INOVESA_ENABLE_CLPROFILING
+  , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
+  , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
+  #endif // INOVESA_ENABLE_CLPROFILING
+  , _axis(std::array<meshRuler_ptr,2>{{in->getAxis(0),in->getAxis(1)}})
+  , _in(in)
+  , _out(out)
+  #ifdef INOVESA_USE_OPENCL
+  , _oclh(oclh)
+  #endif // INOVESA_USE_OPENCL
 {
     #ifdef INOVESA_USE_OPENCL
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
     #endif // INOVESA_USE_OPENCL
 }
 
-vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
-                           std::shared_ptr<PhaseSpace> out,
-                           size_t xsize, size_t ysize,
-                           uint_fast8_t interpoints,
-                           uint_fast8_t intertype,
-                           std::shared_ptr<OCLH> oclh) :
-    SourceMap(in,out,xsize,ysize,xsize*ysize*interpoints,
-              interpoints,intertype,oclh)
+vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
+                          , std::shared_ptr<PhaseSpace> out
+                          , size_t xsize, size_t ysize
+                          , uint_fast8_t interpoints
+                          , uint_fast8_t intertype
+                          #ifdef INOVESA_USE_OPENCL
+                          , std::shared_ptr<OCLH> oclh
+                          #endif // INOVESA_USE_OPENCL
+                          )
+  : SourceMap( in,out,xsize,ysize,xsize*ysize*interpoints
+             , interpoints,intertype
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif // INOVESA_USE_OPENCL
+             )
 {
 }
 

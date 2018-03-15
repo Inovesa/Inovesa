@@ -22,17 +22,24 @@
 
 #include <iostream>
 
-vfps::DriftMap::DriftMap(std::shared_ptr<PhaseSpace> in,
-                         std::shared_ptr<PhaseSpace> out,
-                         const meshindex_t xsize,
-                         const meshindex_t ysize,
-                         const std::vector<meshaxis_t> slip,
-                         const double E0,
-                         const InterpolationType it,
-                         const bool interpol_clamp,
-                         std::shared_ptr<OCLH> oclh)
+vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
+                        , std::shared_ptr<PhaseSpace> out
+                        , const meshindex_t xsize
+                        , const meshindex_t ysize
+                        , const std::vector<meshaxis_t> slip
+                        , const double E0
+                        , const InterpolationType it
+                        , const bool interpol_clamp
+                        #ifdef INOVESA_USE_OPENCL
+                        , std::shared_ptr<OCLH> oclh
+                        #endif // INOVESA_USE_OPENCL
+                        )
     :
-      KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::x,oclh)
+      KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::x
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif
+             )
 {
     for(meshindex_t y=0; y<_ysize; y++) {
         _offset[y] = 0;

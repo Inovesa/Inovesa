@@ -29,9 +29,15 @@ vfps::ResistiveWall::ResistiveWall( const size_t n
                                   , const double s
                                   , const double xi
                                   , const double b
+                                  #ifdef INOVESA_USE_OPENCL
                                   , std::shared_ptr<OCLH> oclh
+                                  #endif // INOVESA_USE_OPENCL
                                   )
-  : Impedance(__calcImpedance(n,f0,f_max,L,s,xi,b),f_max,oclh)
+  : Impedance( __calcImpedance(n,f0,f_max,L,s,xi,b),f_max
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif // INOVESA_USE_OPENCL
+             )
 {
 }
 

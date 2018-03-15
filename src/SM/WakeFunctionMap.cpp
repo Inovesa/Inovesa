@@ -20,36 +20,50 @@
 
 #include "SM/WakeFunctionMap.hpp"
 
-vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
-                                       std::shared_ptr<PhaseSpace> out,
-                                       const meshindex_t xsize,
-                                       const meshindex_t ysize,
-                                       const InterpolationType it,
-                                       bool interpol_clamp,
-                                       std::shared_ptr<OCLH> oclh) :
-    WakeKickMap(in,out,xsize,ysize,it,interpol_clamp,oclh),
-    _xaxis(Ruler<meshaxis_t>(2*xsize,
-                             in->getMin(0)-in->size(0)/2,
-                             in->getMax(0)+in->size(0)/2,
-                             in->getScale(0))),
-    _wakefunction(new meshaxis_t[2*xsize]),
-    _wakesize(2*xsize)
+vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
+                                      , std::shared_ptr<PhaseSpace> out
+                                      , const meshindex_t xsize
+                                      , const meshindex_t ysize
+                                      , const InterpolationType it
+                                      , bool interpol_clamp
+                                      #ifdef INOVESA_USE_OPENCL
+                                      , std::shared_ptr<OCLH> oclh
+                                      #endif // INOVESA_USE_OPENCL
+                                      )
+  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
+               #ifdef INOVESA_USE_OPENCL
+               , oclh
+               #endif // INOVESA_USE_OPENCL
+               )
+  , _xaxis(Ruler<meshaxis_t>( 2*xsize
+                            , in->getMin(0)-in->size(0)/2
+                            , in->getMax(0)+in->size(0)/2
+                            , in->getScale(0)))
+  , _wakefunction(new meshaxis_t[2*xsize])
+  , _wakesize(2*xsize)
 {
 }
 
-vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
-                                       std::shared_ptr<PhaseSpace> out,
-                                       const meshindex_t xsize,
-                                       const meshindex_t ysize,
-                                       const std::string fname,
-                                       const double sigmaE,
-                                       const double E0,
-                                       const double Ib,
-                                       const double dt,
-                                       const InterpolationType it,
-                                       const bool interpol_clamp,
-                                       std::shared_ptr<OCLH> oclh) :
-    WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp,oclh)
+vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
+                                      , std::shared_ptr<PhaseSpace> out
+                                      , const meshindex_t xsize
+                                      , const meshindex_t ysize
+                                      , const std::string fname
+                                      , const double sigmaE
+                                      , const double E0
+                                      , const double Ib
+                                      , const double dt
+                                      , const InterpolationType it
+                                      , const bool interpol_clamp
+                                      #ifdef INOVESA_USE_OPENCL
+                                      , std::shared_ptr<OCLH> oclh
+                                      #endif // INOVESA_USE_OPENCL
+                                      )
+  : WakeFunctionMap( in,out,xsize,ysize,it,interpol_clamp
+                   #ifdef INOVESA_USE_OPENCL
+                   , oclh
+                   #endif // INOVESA_USE_OPENCL
+                   )
 {
     /*  1e12*Ib*dt: wake file has charge in pC and for one revolution
      *  1/(ps->getDelta(1)*sigmaE*E0): eV -> pixels
@@ -57,15 +71,22 @@ vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
     _wakeFromFile(fname,1e12*Ib*dt/(in->getDelta(1)*E0*sigmaE));
 }
 
-vfps::WakeFunctionMap::WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
-                                       std::shared_ptr<PhaseSpace> out,
-                                       const meshindex_t xsize,
-                                       const meshindex_t ysize,
-                                       const ElectricField* csr,
-                                       const InterpolationType it,
-                                       const bool interpol_clamp,
-                                       std::shared_ptr<OCLH> oclh) :
-    WakeFunctionMap(in,out,xsize,ysize,it,interpol_clamp, oclh)
+vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
+                                      , std::shared_ptr<PhaseSpace> out
+                                      , const meshindex_t xsize
+                                      , const meshindex_t ysize
+                                      , const ElectricField* csr
+                                      , const InterpolationType it
+                                      , const bool interpol_clamp
+                                      #ifdef INOVESA_USE_OPENCL
+                                      , std::shared_ptr<OCLH> oclh
+                                      #endif // INOVESA_USE_OPENCL
+                                      )
+  : WakeFunctionMap( in,out,xsize,ysize,it,interpol_clamp
+                   #ifdef INOVESA_USE_OPENCL
+                   , oclh
+                   #endif // INOVESA_USE_OPENCL
+                   )
 {
     std::copy_n(csr->getWakefunction(),2*xsize,_wakefunction);
 }

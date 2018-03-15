@@ -29,10 +29,16 @@ vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t n
                                           , const frequency_t f0
                                           , const frequency_t f_max
                                           , const double g
+                                          # ifdef INOVESA_USE_OPENCL
                                           , std::shared_ptr<OCLH> oclh
+                                          #endif // INOVESA_USE_OPENCL
                                           )
     :
-      Impedance(__calcImpedance(n,f0,f_max,g),f_max,oclh)
+      Impedance(__calcImpedance(n,f0,f_max,g),f_max
+               #ifdef INOVESA_USE_OPENCL
+               , oclh
+               #endif // INOVESA_USE_OPENCL
+               )
 {
 }
 

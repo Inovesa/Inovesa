@@ -65,10 +65,13 @@ public:
      * @param interpoints
      * @param intertype number of points used for interpolation
      */
-    SourceMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
-              meshindex_t xsize, meshindex_t ysize, size_t memsize,
-              uint_fast8_t interpoints, uint_fast8_t intertype,
-              std::shared_ptr<OCLH> oclh);
+    SourceMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
+             , meshindex_t xsize, meshindex_t ysize, size_t memsize
+             , uint_fast8_t interpoints, uint_fast8_t intertype
+             #ifdef INOVESA_USE_OPENCL
+             , std::shared_ptr<OCLH> oclh
+             #endif // INOVESA_USE_OPENCL
+             );
 
     /**
      * @brief SourceMap
@@ -78,11 +81,14 @@ public:
      * @param ysize
      * @param interpoints number of points used for interpolation
      */
-    SourceMap(std::shared_ptr<PhaseSpace> in,
-              std::shared_ptr<PhaseSpace> out,
-              size_t xsize, size_t ysize,
-              uint_fast8_t interpoints, uint_fast8_t intertype,
-              std::shared_ptr<OCLH> oclh);
+    SourceMap( std::shared_ptr<PhaseSpace> in
+             , std::shared_ptr<PhaseSpace> out
+             , size_t xsize, size_t ysize
+             , uint_fast8_t interpoints, uint_fast8_t intertype
+             #ifdef INOVESA_USE_OPENCL
+             , std::shared_ptr<OCLH> oclh
+             #endif // INOVESA_USE_OPENCL
+             );
 
     virtual ~SourceMap() noexcept;
 

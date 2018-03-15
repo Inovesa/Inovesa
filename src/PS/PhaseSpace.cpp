@@ -178,7 +178,11 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , const double zoom
                             , vfps::meshdata_t *data
                             ) :
-    PhaseSpace({{axis0,axis1}},oclh,bunch_charge,bunch_current,zoom,data)
+    PhaseSpace( {{axis0,axis1}}
+              #ifdef INOVESA_USE_OPENCL
+              , oclh
+              #endif // INOVESA_USE_OPENCL
+              , bunch_charge,bunch_current,zoom,data)
 {
 }
 
@@ -195,11 +199,21 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale))
               , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale))
-              , oclh, bunch_charge,bunch_current, zoom, data)
+              #ifdef INOVESA_USE_OPENCL
+              , oclh
+              #endif // INOVESA_USE_OPENCL
+              , bunch_charge,bunch_current, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
-    PhaseSpace(other._axis,other._oclh,other.charge,other.current,-1)
+    PhaseSpace( other._axis
+              #ifdef INOVESA_USE_OPENCL
+              , other._oclh
+              #endif // INOVESA_USE_OPENCL
+              , other.charge
+              , other.current
+              , -1
+              )
 {
     std::copy_n(other._data1D,nMeshCells(0)*nMeshCells(1),_data1D);
 }

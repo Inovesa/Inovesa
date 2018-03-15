@@ -28,17 +28,19 @@ namespace vfps
  * As such, it provides a shortcut to common cases.
  */
 std::unique_ptr<Impedance> makeImpedance( const size_t nfreqs
+                                        #ifdef INOVESA_USE_OPENCL
                                         , std::shared_ptr<OCLH> oclh
-                                        , const frequency_t fmax,
-                                         const double f0,
-                                         const double frev,
-                                         const double gap,
-                                         const bool use_csr = true,
-                                         const double s = 0,
-                                         const double xi = 0,
-                                         const double inner_coll_radius = 0,
-                                         const std::string impedance_file = ""
-                                         );
+                                        #endif // INOVESA_USE_OPENCL
+                                        , const frequency_t fmax
+                                        , const double f0
+                                        , const double frev
+                                        , const double gap
+                                        , const bool use_csr = true
+                                        , const double s = 0
+                                        , const double xi = 0
+                                        , const double inner_coll_radius = 0
+                                        , const std::string impedance_file = ""
+                                        );
 
 } // namespace vfps
 

@@ -1006,7 +1006,11 @@ vfps::HDF5File::readPhaseSpace( std::string fname
     }
 
     std::unique_ptr<PhaseSpace> ps(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
-                                                 , oclh,Qb,Ib_unscaled,bl,dE)
+                                                 #ifdef INOVESA_USE_OPENCL
+                                                 , oclh
+                                                 #endif // INOVESA_USE_OPENCL
+                                                 , Qb,Ib_unscaled,bl,dE
+                                                 )
                                   );
     ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
 

@@ -20,11 +20,18 @@
 
 #include "Z/ConstImpedance.hpp"
 
-vfps::ConstImpedance::ConstImpedance(const size_t n,
-                                     const frequency_t f_max,
-                                     const vfps::impedance_t Z,
-                                     std::shared_ptr<OCLH> oclh)
-  : Impedance(__calcImpedance(n,Z),f_max,oclh)
+vfps::ConstImpedance::ConstImpedance( const size_t n
+                                    , const frequency_t f_max
+                                    , const vfps::impedance_t Z
+                                    #ifdef INOVESA_USE_OPENCL
+                                    , std::shared_ptr<OCLH> oclh
+                                    #endif // INOVESA_USE_OPENCL
+                                    )
+  : Impedance( __calcImpedance(n,Z),f_max
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif // INOVESA_USE_OPENCL
+             )
 {
 }
 
