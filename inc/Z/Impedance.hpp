@@ -44,7 +44,9 @@ public:
      */
     Impedance( Ruler<frequency_t> axis
              , const std::vector<impedance_t> &z
+             #ifdef INOVESA_USE_OPENCL
              , std::shared_ptr<OCLH> oclh = nullptr
+             #endif // INOVESA_USE_OPENCL
              );
 
     /**
@@ -64,13 +66,17 @@ public:
      */
     Impedance( const std::vector<impedance_t>& z
              , const frequency_t f_max
+             #ifdef INOVESA_USE_OPENCL
              , std::shared_ptr<OCLH> oclh = nullptr
+             #endif // INOVESA_USE_OPENCL
              );
 
 
     Impedance( const size_t nfreqs
              , const frequency_t f_max
+             #ifdef INOVESA_USE_OPENCL
              , std::shared_ptr<OCLH> oclh = nullptr
+             #endif // INOVESA_USE_OPENCL
              );
 
 
@@ -81,7 +87,9 @@ public:
      */
     Impedance( std::string datafile
              , double f_max
+             #ifdef INOVESA_USE_OPENCL
              , std::shared_ptr<OCLH> oclh = nullptr
+             #endif // INOVESA_USE_OPENCL
              );
 
     inline const impedance_t* data() const
@@ -131,7 +139,9 @@ protected:
 
     void syncCLMem();
 
+    #ifdef INOVESA_USE_OPENCL
     std::shared_ptr<OCLH> _oclh;
+    #endif
 
 private:
     static std::vector<impedance_t> readData(std::string fname);

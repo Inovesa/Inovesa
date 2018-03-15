@@ -23,9 +23,15 @@
 vfps::FreeSpaceCSR::FreeSpaceCSR( const size_t n
                                 , const frequency_t f_rev
                                 , const frequency_t f_max
+                                #ifdef INOVESA_USE_OPENCL
                                 , std::shared_ptr<OCLH> oclh
+                                #endif // INOVESA_USE_OPENCL
                                 )
-  : Impedance(__calcImpedance(n,f_rev,f_max),f_max,oclh)
+  : Impedance( __calcImpedance(n,f_rev,f_max),f_max
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif // INOVESA_USE_OPENCL
+             )
 {
 }
 

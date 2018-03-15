@@ -20,14 +20,22 @@
 
 #include "SM/KickMap.hpp"
 
-vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in,
-                        std::shared_ptr<PhaseSpace> out,
-                        const meshindex_t xsize, const meshindex_t ysize,
-                        const InterpolationType it, const bool interpol_clamp,
-                        const Axis kd,
-                        std::shared_ptr<OCLH> oclh) :
-    SourceMap(in,out,kd==Axis::x?1:xsize,
-                     kd==Axis::x?ysize:1,it,it,oclh),
+vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
+                      , std::shared_ptr<PhaseSpace> out
+                      , const meshindex_t xsize
+                      , const meshindex_t ysize
+                      , const InterpolationType it
+                      , const bool interpol_clamp
+                      , const Axis kd
+                      #ifdef INOVESA_USE_OPENCL
+                      , std::shared_ptr<OCLH> oclh
+                      #endif // INOVESA_USE_OPENCL
+                      )
+  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1,it,it
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif // INOVESA_USE_OPENCL
+             ),
     _kickdirection(kd),
     _meshsize_kd(kd==Axis::x?xsize:ysize),
     _meshsize_pd(kd==Axis::x?ysize:xsize)

@@ -20,13 +20,21 @@
 
 #include "SM/WakeKickMap.hpp"
 
-vfps::WakeKickMap::WakeKickMap(std::shared_ptr<PhaseSpace> in,
-                               std::shared_ptr<PhaseSpace> out,
-                               const meshindex_t xsize, const meshindex_t ysize,
-                               const InterpolationType it,
-                               const bool interpol_clamp,
-                               std::shared_ptr<OCLH> oclh)  :
-    KickMap(in,out,xsize,ysize,it,interpol_clamp,Axis::y,oclh)
+vfps::WakeKickMap::WakeKickMap( std::shared_ptr<PhaseSpace> in
+                              , std::shared_ptr<PhaseSpace> out
+                              , const meshindex_t xsize
+                              , const meshindex_t ysize
+                              , const InterpolationType it
+                              , const bool interpol_clamp
+                              #ifdef INOVESA_USE_OPENCL
+                              , std::shared_ptr<OCLH> oclh
+                              #endif // INOVESA_USE_OPENCL
+                              )  :
+    KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y
+           #ifdef INOVESA_USE_OPENCL
+           , oclh
+           #endif // INOVESA_USE_OPENCL
+           )
 {
 }
 

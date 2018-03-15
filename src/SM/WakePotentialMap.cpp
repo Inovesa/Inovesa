@@ -20,15 +20,22 @@
 
 #include "SM/WakePotentialMap.hpp"
 
-vfps::WakePotentialMap::WakePotentialMap(std::shared_ptr<PhaseSpace> in,
-                                         std::shared_ptr<PhaseSpace> out,
-                                         const vfps::meshindex_t xsize,
-                                         const vfps::meshindex_t ysize,
-                                         ElectricField *field,
-                                         const InterpolationType it,
-                                         bool interpol_clamp,
-                                         std::shared_ptr<OCLH> oclh):
-    WakeKickMap(in,out,xsize,ysize,it,interpol_clamp,oclh),
+vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
+                                        , std::shared_ptr<PhaseSpace> out
+                                        , const vfps::meshindex_t xsize
+                                        , const vfps::meshindex_t ysize
+                                        , ElectricField *field
+                                        , const InterpolationType it
+                                        , bool interpol_clamp
+                                        #ifdef INOVESA_USE_OPENCL
+                                        , std::shared_ptr<OCLH> oclh
+                                        #endif // INOVESA_USE_OPENCL
+                                        ):
+    WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
+               #ifdef INOVESA_USE_OPENCL
+               , oclh
+               #endif // INOVESA_USE_OPENCL
+               ),
     _field(field)
 {
 }

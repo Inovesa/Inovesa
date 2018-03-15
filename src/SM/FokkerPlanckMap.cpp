@@ -20,15 +20,23 @@
 
 #include "SM/FokkerPlanckMap.hpp"
 
-vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
-                                       std::shared_ptr<PhaseSpace> out,
-                                       const meshindex_t xsize,
-                                       const meshindex_t ysize,
-                                       FPType fpt, timeaxis_t e1,
-                                       DerivationType dt,
-                                       std::shared_ptr<OCLH> oclh)
+vfps::FokkerPlanckMap::FokkerPlanckMap( std::shared_ptr<PhaseSpace> in
+                                      , std::shared_ptr<PhaseSpace> out
+                                      , const meshindex_t xsize
+                                      , const meshindex_t ysize
+                                      , FPType fpt
+                                      , timeaxis_t e1
+                                      , DerivationType dt
+                                      #ifdef INOVESA_USE_OPENCL
+                                      , std::shared_ptr<OCLH> oclh
+                                      #endif // INOVESA_USE_OPENCL
+                                      )
     :
-    SourceMap(in, out, 1, ysize, dt, dt,oclh),
+    SourceMap( in, out, 1, ysize, dt, dt
+             #ifdef INOVESA_USE_OPENCL
+             , oclh
+             #endif // INOVESA_USE_OPENCL
+             ),
     _meshxsize(xsize)
 {
     // the following doubles should be interpol_t

@@ -31,23 +31,29 @@ class WakeFunctionMap : public WakeKickMap
 public:
     WakeFunctionMap() = delete;
 
-    WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
-                    std::shared_ptr<PhaseSpace> out,
-                    const meshindex_t xsize, const meshindex_t ysize,
-                    const std::string fname,
-                    const double sigmaE, const double E0,
-                    const double Ib, const double dt,
-                    const InterpolationType it,
-                    const bool interpol_clamp,
-                    std::shared_ptr<OCLH> oclh);
+    WakeFunctionMap( std::shared_ptr<PhaseSpace> in
+                   , std::shared_ptr<PhaseSpace> out
+                   , const meshindex_t xsize, const meshindex_t ysize
+                   , const std::string fname
+                   , const double sigmaE, const double E0
+                   , const double Ib, const double dt
+                   , const InterpolationType it
+                   , const bool interpol_clamp
+                   #ifdef INOVESA_USE_OPENCL
+                   , std::shared_ptr<OCLH> oclh
+                   #endif // INOVESA_USE_OPENCL
+                   );
 
-    WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
-                    std::shared_ptr<PhaseSpace> out,
-                    const meshindex_t xsize, const meshindex_t ysize,
-                    const ElectricField* csr,
-                    const InterpolationType it,
-                    const bool interpol_clamp,
-                    std::shared_ptr<OCLH> oclh);
+    WakeFunctionMap( std::shared_ptr<PhaseSpace> in
+                   , std::shared_ptr<PhaseSpace> out
+                   , const meshindex_t xsize, const meshindex_t ysize
+                   , const ElectricField* csr
+                   , const InterpolationType it
+                   , const bool interpol_clamp
+                   #ifdef INOVESA_USE_OPENCL
+                   , std::shared_ptr<OCLH> oclh
+                   #endif // INOVESA_USE_OPENCL
+                   );
 
     ~WakeFunctionMap() noexcept;
 
@@ -71,11 +77,14 @@ private:
 
 
 private:
-    WakeFunctionMap(std::shared_ptr<PhaseSpace> in,
-                    std::shared_ptr<PhaseSpace> out,
-                    const meshindex_t xsize, const meshindex_t ysize,
-                    const InterpolationType it, bool interpol_clamp,
-                    std::shared_ptr<OCLH> oclh);
+    WakeFunctionMap( std::shared_ptr<PhaseSpace> in
+                   , std::shared_ptr<PhaseSpace> out
+                   , const meshindex_t xsize, const meshindex_t ysize
+                   , const InterpolationType it, bool interpol_clamp
+                   #ifdef INOVESA_USE_OPENCL
+                   , std::shared_ptr<OCLH> oclh
+                   #endif // #ifdef INOVESA_USE_OPENCL
+                   );
 
 
     const Ruler<meshaxis_t> _xaxis;
