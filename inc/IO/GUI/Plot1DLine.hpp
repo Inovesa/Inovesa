@@ -87,8 +87,6 @@ private:
 
     void createPositionBuffer();
 
-    float _max;
-
     orientation _orientation;
 };
 

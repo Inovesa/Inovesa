@@ -57,9 +57,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
-                  #ifdef INOVESA_USE_OPENCL
-                  std::shared_ptr<OCLH> oclh,
-                  #endif // INOVESA_USE_OPENCL
+                  oclhptr_t oclh,
                   const double f_rev,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
@@ -85,9 +83,7 @@ public:
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
-                 #ifdef INOVESA_USE_OPENCL
-                 , std::shared_ptr<OCLH> oclh
-                 #endif // INOVESA_USE_OPENCL
+                 , oclhptr_t oclh
                  , const double f_rev
                  , const double revolutionpart
                  , const double Ib, const double E0
@@ -109,9 +105,7 @@ public:
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
-                 #ifdef INOVESA_USE_OPENCL
-                 , std::shared_ptr<OCLH> oclh
-                 #endif // INOVESA_USE_OPENCL
+                 , oclhptr_t oclh
                  , const double f_rev
                  , const double Ib, const double E0
                  , const double sigmaE, const double dt, const double rbend
@@ -168,7 +162,7 @@ public:
 
     #ifdef INOVESA_USE_OPENCL
     void syncCLMem(clCopyDirection dir);
-    #endif
+    #endif // INOVESA_USE_OPENCL
 
 public:
     const double volts;
@@ -308,9 +302,9 @@ private:
 
     fft_complex* _formfactor_fft;
 
-    #ifdef INOVESA_USE_OPENCL
-    std::shared_ptr<OCLH> _oclh;
+    oclhptr_t _oclh;
 
+    #ifdef INOVESA_USE_OPENCL
     cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;

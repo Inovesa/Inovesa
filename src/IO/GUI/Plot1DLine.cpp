@@ -36,9 +36,8 @@ vfps::Plot1DLine::Plot1DLine( std::array<float,3> rgb
                             , GLuint databuffer
                             )
   : _npoints(npoints)
-  , _max(0)
-  , _orientation(orientation)
   , _databuffer(databuffer)
+  , _orientation(orientation)
 {
     _data.resize(npoints);
     _position.resize(npoints);

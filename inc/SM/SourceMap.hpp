@@ -68,9 +68,7 @@ public:
     SourceMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , meshindex_t xsize, meshindex_t ysize, size_t memsize
              , uint_fast8_t interpoints, uint_fast8_t intertype
-             #ifdef INOVESA_USE_OPENCL
-             , std::shared_ptr<OCLH> oclh
-             #endif // INOVESA_USE_OPENCL
+             , oclhptr_t oclh
              );
 
     /**
@@ -85,9 +83,7 @@ public:
              , std::shared_ptr<PhaseSpace> out
              , size_t xsize, size_t ysize
              , uint_fast8_t interpoints, uint_fast8_t intertype
-             #ifdef INOVESA_USE_OPENCL
-             , std::shared_ptr<OCLH> oclh
-             #endif // INOVESA_USE_OPENCL
+             , oclhptr_t oclh
              );
 
     virtual ~SourceMap() noexcept;
@@ -114,7 +110,7 @@ protected:
     const cl_uint _ip;
     #else
     const uint_fast8_t _ip;
-    #endif
+    #endif // INOVESA_USE_OPENCL
 
     /**
      * @brief _ip holds the per dimension number
@@ -170,9 +166,9 @@ protected:
     std::shared_ptr<PhaseSpace> _in;
     std::shared_ptr<PhaseSpace> _out;
 
-    #ifdef INOVESA_USE_OPENCL
-    std::shared_ptr<OCLH> _oclh;
+    oclhptr_t _oclh;
 
+    #ifdef INOVESA_USE_OPENCL
     /**
      * @brief genCode4SM1D generates OpenCL code for a generic source map
      */

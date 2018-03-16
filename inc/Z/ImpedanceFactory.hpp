@@ -28,9 +28,7 @@ namespace vfps
  * As such, it provides a shortcut to common cases.
  */
 std::unique_ptr<Impedance> makeImpedance( const size_t nfreqs
-                                        #ifdef INOVESA_USE_OPENCL
-                                        , std::shared_ptr<OCLH> oclh
-                                        #endif // INOVESA_USE_OPENCL
+                                        , oclhptr_t oclh
                                         , const frequency_t fmax
                                         , const double f0
                                         , const double frev

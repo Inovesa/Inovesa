@@ -31,9 +31,7 @@
 
 std::unique_ptr<vfps::Impedance>
 vfps::makeImpedance( const size_t nfreqs
-                   #ifdef INOVESA_USE_OPENCL
-                   , std::shared_ptr<OCLH> oclh
-                   #endif // INOVESA_USE_OPENCL
+                   , oclhptr_t oclh
                    , const frequency_t fmax
                    , const double f0
                    , const double frev
@@ -50,11 +48,7 @@ vfps::makeImpedance( const size_t nfreqs
      * If the impedance is still zero in the end (tracked by impedance_changed),
      * it will be replaced by a nullprt which is returned instead.
      */
-    auto rv = std::make_unique<Impedance>( nfreqs,fmax
-                                         #ifdef INOVESA_USE_OPENCL
-                                         , oclh
-                                         #endif // INOVESA_USE_OPENCL
-                                         );
+    auto rv = std::make_unique<Impedance>( nfreqs,fmax, oclh);
     auto impedance_changed = false;
 
     if (gap != 0) {

@@ -26,15 +26,9 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                                       , const meshindex_t ysize
                                       , const InterpolationType it
                                       , bool interpol_clamp
-                                      #ifdef INOVESA_USE_OPENCL
-                                      , std::shared_ptr<OCLH> oclh
-                                      #endif // INOVESA_USE_OPENCL
+                                      , oclhptr_t oclh
                                       )
-  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
-               #ifdef INOVESA_USE_OPENCL
-               , oclh
-               #endif // INOVESA_USE_OPENCL
-               )
+  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp,oclh)
   , _xaxis(Ruler<meshaxis_t>( 2*xsize
                             , in->getMin(0)-in->size(0)/2
                             , in->getMax(0)+in->size(0)/2
@@ -55,15 +49,9 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                                       , const double dt
                                       , const InterpolationType it
                                       , const bool interpol_clamp
-                                      #ifdef INOVESA_USE_OPENCL
-                                      , std::shared_ptr<OCLH> oclh
-                                      #endif // INOVESA_USE_OPENCL
+                                      , oclhptr_t oclh
                                       )
-  : WakeFunctionMap( in,out,xsize,ysize,it,interpol_clamp
-                   #ifdef INOVESA_USE_OPENCL
-                   , oclh
-                   #endif // INOVESA_USE_OPENCL
-                   )
+  : WakeFunctionMap( in,out,xsize,ysize,it,interpol_clamp,oclh)
 {
     /*  1e12*Ib*dt: wake file has charge in pC and for one revolution
      *  1/(ps->getDelta(1)*sigmaE*E0): eV -> pixels
@@ -78,15 +66,9 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                                       , const ElectricField* csr
                                       , const InterpolationType it
                                       , const bool interpol_clamp
-                                      #ifdef INOVESA_USE_OPENCL
-                                      , std::shared_ptr<OCLH> oclh
-                                      #endif // INOVESA_USE_OPENCL
+                                      , oclhptr_t oclh
                                       )
-  : WakeFunctionMap( in,out,xsize,ysize,it,interpol_clamp
-                   #ifdef INOVESA_USE_OPENCL
-                   , oclh
-                   #endif // INOVESA_USE_OPENCL
-                   )
+  : WakeFunctionMap( in,out,xsize,ysize,it,interpol_clamp, oclh)
 {
     std::copy_n(csr->getWakefunction(),2*xsize,_wakefunction);
 }
@@ -105,7 +87,7 @@ void vfps::WakeFunctionMap::update()
     if (_oclh) {
     _in->syncCLMem(clCopyDirection::dev2cpu);
     }
-    #endif
+    #endif // INOVESA_USE_OPENCL
     _in->integrate();
     integral_t charge = _in->getIntegral();
     const integral_t* density = _in->getProjection(0);

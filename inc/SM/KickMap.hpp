@@ -46,9 +46,7 @@ public:
            , const meshindex_t xsize, const meshindex_t ysize
            , const InterpolationType it, const bool interpol_clamp
            , const Axis kd
-           #ifdef INOVESA_USE_OPENCL
-           , std::shared_ptr<OCLH> oclh
-           #endif // INOVESA_USE_OPENCL
+           , oclhptr_t oclh
            );
 
     ~KickMap() noexcept;

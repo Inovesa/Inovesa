@@ -39,24 +39,18 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const uint32_t steps
                                         , const InterpolationType it
                                         , const bool interpol_clamp
-                                        #ifdef INOVESA_USE_OPENCL
-                                        , std::shared_ptr<OCLH> oclh
-                                        #endif // INOVESA_USE_OPENCL
+                                        , oclhptr_t oclh
                                         )
-    : RFKickMap( in,out,xsize,ysize,angle,it,interpol_clamp
-               #ifdef INOVESA_USE_OPENCL
-               , oclh
-               #endif // INOVESA_USE_OPENCL
-               )
-    , _addnoise(addnoise)
-    , _mulnoise(mulnoise)
-    , _modampl(modampl)
-    , _modtimedelta(two_pi<double>()*modtimeincrement)
-    , _step(step)
-    , _prng(std::mt19937(std::random_device{}()))
-    , _dist(std::normal_distribution<meshaxis_t>(0, 1))
-    , _mean(_offset)
-    , _modulation(__calcModulation(steps))
+  : RFKickMap( in,out,xsize,ysize,angle,it,interpol_clamp, oclh)
+  , _addnoise(addnoise)
+  , _mulnoise(mulnoise)
+  , _modampl(modampl)
+  , _modtimedelta(two_pi<double>()*modtimeincrement)
+  , _step(step)
+  , _prng(std::mt19937(std::random_device{}()))
+  , _dist(std::normal_distribution<meshaxis_t>(0, 1))
+  , _mean(_offset)
+  , _modulation(__calcModulation(steps))
 {
 }
 
@@ -77,7 +71,7 @@ vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
 
         meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(*_step));
 
-        mod = {1+ mulnoise, addnoise+phasemod};
+        mod = {{1+ mulnoise, addnoise+phasemod}};
     }
     return rv;
 }

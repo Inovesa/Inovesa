@@ -27,9 +27,7 @@ using boost::math::constants::pi;
 
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
-                                  #ifdef INOVESA_USE_OPENCL
-                                  , std::shared_ptr<OCLH> oclh
-                                  #endif // INOVESA_USE_OPENCL
+                                  , oclhptr_t oclh
                                   , const double f_rev
                                   , const double revolutionpart
                                   , const meshaxis_t wakescalining
@@ -53,9 +51,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   , _csrspectrum(new csrpower_t[_nmax])
   , _isrspectrum(new csrpower_t[_nmax])
   , _impedance(impedance)
-  #ifdef INOVESA_USE_OPENCL
   , _oclh(oclh)
-  #endif // INOVESA_USE_OPENCL
   , _wakefunction(nullptr)
   , _wakelosses(nullptr)
   , _wakelosses_fft(nullptr)
@@ -112,18 +108,14 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
-                                  #ifdef INOVESA_USE_OPENCL
-                                  , std::shared_ptr<OCLH> oclh
-                                  #endif // INOVESA_USE_OPENCL
+                                  , oclhptr_t oclh
                                   , const double f_rev
                                   , const double revolutionpart
                                   , const double Ib, const double E0
                                   , const double sigmaE, const double dt
                                   )
   : ElectricField( ps,impedance
-                 #ifdef INOVESA_USE_OPENCL
                  , oclh
-                 #endif // INOVESA_USE_OPENCL
                  , f_rev,revolutionpart
                  , Ib*dt*physcons::c/ps->getScale(0)/(ps->getDelta(1)*sigmaE*E0)
                  )
@@ -204,18 +196,14 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
-                                  #ifdef INOVESA_USE_OPENCL
-                                  , std::shared_ptr<OCLH> oclh
-                                  #endif // INOVESA_USE_OPENCL
-                                 , const double f_rev
-                                 , const double Ib, const double E0
-                                 , const double sigmaE, const double dt
-                                 , const double rbend, const double fs
-                                 , const size_t nmax)
+                                  , oclhptr_t oclh
+                                  , const double f_rev
+                                  , const double Ib, const double E0
+                                  , const double sigmaE, const double dt
+                                  , const double rbend, const double fs
+                                  , const size_t nmax)
   : ElectricField( ps,impedance
-                 #ifdef INOVESA_USE_OPENCL
                  , oclh
-                 #endif // INOVESA_USE_OPENCL
                  , f_rev,dt*physcons::c/(2*pi<double>()*rbend))
 {
     _wakefunction = new meshaxis_t[2*_bpmeshcells];

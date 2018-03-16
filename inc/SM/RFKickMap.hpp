@@ -33,9 +33,7 @@ public:
              , const meshindex_t xsize, const meshindex_t ysize
              , const meshaxis_t angle, const InterpolationType it
              , const bool interpol_clamp
-             #ifdef INOVESA_USE_OPENCL
-             , std::shared_ptr<OCLH> oclh
-             #endif // INOVESA_USE_OPENCL
+             , oclhptr_t oclh
              );
 
     ~RFKickMap() noexcept;

@@ -28,15 +28,9 @@ vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
                           , const meshaxis_t angle
                           , const InterpolationType it
                           , const bool interpol_clamp
-                          #ifdef INOVESA_USE_OPENCL
-                          , std::shared_ptr<OCLH> oclh
-                          #endif // INOVESA_USE_OPENCL
+                          , oclhptr_t oclh
                           )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y
-           #ifdef INOVESA_USE_OPENCL
-           , oclh
-           #endif // INOVESA_USE_OPENCL
-           )
+  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
 {
     const meshaxis_t xcenter = in->getAxis(0)->zerobin();
     for(meshindex_t x=0; x<_xsize; x++) {

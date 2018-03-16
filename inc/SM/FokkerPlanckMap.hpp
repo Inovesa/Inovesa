@@ -66,9 +66,7 @@ public:
                    , FPType fpt
                    , timeaxis_t e1
                    , DerivationType dt
-                   #ifdef INOVESA_USE_OPENCL
-                   , std::shared_ptr<OCLH> oclh
-                   #endif // INOVESA_USE_OPENCL
+                   , oclhptr_t oclh
                    );
 
     ~FokkerPlanckMap() noexcept;

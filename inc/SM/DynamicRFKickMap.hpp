@@ -54,9 +54,7 @@ public:
                     , const uint32_t steps
                     , const InterpolationType it
                     , const bool interpol_clamp
-                    #ifdef INOVESA_USE_OPENCL
-                    , std::shared_ptr<OCLH> oclh
-                    #endif // INOVESA_USE_OPENCL
+                    , oclhptr_t oclh
                     );
 
     ~DynamicRFKickMap() noexcept;

@@ -68,9 +68,7 @@ public:
     PhaseSpace() = delete;
 
     PhaseSpace( std::array<meshRuler_ptr,2> axis
-              #ifdef INOVESA_USE_OPENCL
-              , std::shared_ptr<OCLH> oclh
-              #endif // #ifdef INOVESA_USE_OPENCL
+              , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
               , const double zoom=1
@@ -79,9 +77,7 @@ public:
 
     PhaseSpace(meshRuler_ptr axis0
               , meshRuler_ptr axis1
-              #ifdef INOVESA_USE_OPENCL
-              , std::shared_ptr<OCLH> oclh
-              #endif // #ifdef INOVESA_USE_OPENCL
+              , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
               , const double zoom=1
@@ -93,9 +89,7 @@ public:
               , meshaxis_t xmax
               , meshaxis_t ymin
               , meshaxis_t ymax
-              #ifdef INOVESA_USE_OPENCL
-              , std::shared_ptr<OCLH> oclh
-              #endif // #ifdef INOVESA_USE_OPENCL
+              , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
               , double xscale=0
@@ -221,7 +215,7 @@ public:
 
     #ifdef INOVESA_USE_OPENCL
     void syncCLMem(clCopyDirection dir, cl::Event* evt = nullptr);
-    #endif
+    #endif // INOVESA_USE_OPENCL
 
 protected:
     const std::array<meshRuler_ptr,2> _axis;
@@ -270,6 +264,9 @@ protected:
 
     std::vector<meshdata_t> _ws;
 
+private:
+    oclhptr_t _oclh;
+
 #ifdef INOVESA_USE_OPENCL
 public:
     cl::Buffer data_buf;
@@ -279,8 +276,6 @@ public:
     cl::Buffer integral_buf;
 
 private:
-    std::shared_ptr<OCLH> _oclh;
-
     cl::Program _clProgProjX;
 
     cl::Kernel  _clKernProjX;
