@@ -84,7 +84,6 @@ int main(int argc, char** argv)
      */
     uint32_t simulationstep = 0;
 
-
     /*
      * Program options might be such that the program does not have
      * to be run at all. As config files (read in based on the command line
@@ -305,6 +304,8 @@ int main(int argc, char** argv)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
     const meshaxis_t angle = 2*pi<double>()/steps;
+
+    uint32_t laststep=std::ceil(steps*rotations);
 
     std::string startdistfile = opts.getStartDistFile();
 
@@ -582,7 +583,7 @@ int main(int argc, char** argv)
         rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
                                       , angle, rf_noise_add, rf_noise_mul
                                       , rf_mod_ampl,rf_mod_step
-                                      , &simulationstep
+                                      , &simulationstep, laststep
                                       , interpolationtype,interpol_clamp
                                       #ifdef INOVESA_USE_OPENCL
                                       , oclh
@@ -868,7 +869,6 @@ int main(int argc, char** argv)
      * (everything inside this loop will be run a multitude of times)
      */
     uint32_t outstepnr=0;
-    uint32_t laststep=std::ceil(steps*rotations);
     while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection

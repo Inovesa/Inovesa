@@ -51,6 +51,7 @@ public:
                     , const meshaxis_t modampl
                     , const double modtimeincrement
                     , const uint32_t* step
+                    , const uint32_t steps
                     , const InterpolationType it
                     , const bool interpol_clamp
                     #ifdef INOVESA_USE_OPENCL
@@ -83,8 +84,19 @@ private:
 
     std::vector<meshaxis_t> _mean;
 
-    /// set up the KickMap with a new set of random parameters
-    void reset();
+    std::vector<std::array<meshaxis_t,2>> _modulation;
+
+    /**
+     * set up the KickMap with a (new) set of parameters
+     */
+    std::vector<std::array<meshaxis_t,2>> __calcModulation(uint32_t steps);
+
+    /**
+     * @brief update to current time step
+     *
+     * @todo For OpenCL, this should be done on device
+     */
+    void __update();
 };
 
 } // namespace vfps

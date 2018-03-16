@@ -36,6 +36,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const meshaxis_t modampl
                                         , const double modtimeincrement
                                         , const uint32_t* step
+                                        , const uint32_t steps
                                         , const InterpolationType it
                                         , const bool interpol_clamp
                                         #ifdef INOVESA_USE_OPENCL
@@ -55,6 +56,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
     , _prng(std::mt19937(std::random_device{}()))
     , _dist(std::normal_distribution<meshaxis_t>(0, 1))
     , _mean(_offset)
+    , _modulation(__calcModulation(steps))
 {
 }
 
@@ -65,16 +67,27 @@ vfps::DynamicRFKickMap::~DynamicRFKickMap() noexcept
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING
 
-void vfps::DynamicRFKickMap::reset() {
-    meshaxis_t addnoise = _dist(_prng)*_addnoise;
-    meshaxis_t mulnoise = _dist(_prng)*_mulnoise;
+std::vector<std::array<vfps::meshaxis_t,2>>
+vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
+{
+    std::vector<std::array<meshaxis_t,2>> rv(steps);
+    for (auto& mod : rv) {
+        meshaxis_t addnoise = _dist(_prng)*_addnoise;
+        meshaxis_t mulnoise = _dist(_prng)*_mulnoise;
 
-    meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(*_step));
+        meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(*_step));
 
+        mod = {1+ mulnoise, addnoise+phasemod};
+    }
+    return rv;
+}
+
+void vfps::DynamicRFKickMap::__update()
+{
     _offset = _mean;
 
     for (auto& offs : _offset) {
-        offs = offs * (1 + mulnoise) + addnoise+phasemod;
+        offs = offs * (_modulation[*_step][0]) + _modulation[*_step][1];
     }
 
     #ifdef INOVESA_USE_OPENCL
@@ -88,7 +101,7 @@ void vfps::DynamicRFKickMap::reset() {
 }
 
 void vfps::DynamicRFKickMap::apply() {
-    reset();
+    __update();
     KickMap::apply();
 }
 
