@@ -30,13 +30,16 @@ vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
                                         #ifdef INOVESA_USE_OPENCL
                                         , std::shared_ptr<OCLH> oclh
                                         #endif // INOVESA_USE_OPENCL
-                                        ):
-    WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
+                                        )
+  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
                #ifdef INOVESA_USE_OPENCL
                , oclh
+               #ifdef INOVESA_USE_OPENGL
+               , field->wakepotential_glbuf
+               #endif // INOVESA_USE_OPENGL
                #endif // INOVESA_USE_OPENCL
-               ),
-    _field(field)
+               )
+  , _field(field)
 {
 }
 
@@ -54,7 +57,7 @@ void vfps::WakePotentialMap::update()
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         _field->wakePotential();
-        _oclh->enqueueCopyBuffer(_field->_wakepotential_buf,_offset_buf,
+        _oclh->enqueueCopyBuffer(_field->wakepotential_clbuf,_offset_clbuf,
                                 0,0,sizeof(meshaxis_t)*_xsize);
         #ifdef INOVESA_SYNC_CL
         syncCLMem(clCopyDirection::dev2cpu);

@@ -33,6 +33,7 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
   : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
                #ifdef INOVESA_USE_OPENCL
                , oclh
+               , 0
                #endif // INOVESA_USE_OPENCL
                )
   , _xaxis(Ruler<meshaxis_t>( 2*xsize

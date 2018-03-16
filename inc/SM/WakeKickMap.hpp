@@ -44,6 +44,9 @@ public:
                , const InterpolationType it, const bool interpol_clamp
                #ifdef INOVESA_USE_OPENCL
                , std::shared_ptr<OCLH> oclh
+               #ifdef INOVESA_USE_OPENGL
+               , cl_GLuint glbuf
+               #endif // INOVESA_USE_OPENGL
                #endif // INOVESA_USE_OPENCL
                );
 
@@ -51,6 +54,15 @@ public:
 
 public:
     virtual void update()=0;
+
+#if defined INOVESA_USE_OPENCL and defined  INOVESA_USE_OPENGL
+    cl_GLuint getGLBuffer() const
+        { return _offset_glbuf; }
+
+protected:
+    cl_GLuint _offset_glbuf;
+
+#endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
 };
 
 } // namespace VFPS

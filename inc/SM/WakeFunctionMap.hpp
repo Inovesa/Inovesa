@@ -26,6 +26,9 @@
 namespace vfps
 {
 
+/**
+ * @brief The WakeFunctionMap class
+ */
 class WakeFunctionMap : public WakeKickMap
 {
 public:
@@ -77,6 +80,18 @@ private:
 
 
 private:
+    /**
+     * @brief WakeFunctionMap
+     * @param in
+     * @param out
+     * @param xsize
+     * @param ysize
+     * @param it
+     * @param interpol_clamp
+     * @param oclh
+     *
+     * @todo currently broken when used with CL/GL sharing
+     */
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
                    , const meshindex_t xsize, const meshindex_t ysize
