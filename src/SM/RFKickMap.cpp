@@ -32,9 +32,9 @@ vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
                           )
   : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
 {
-    const meshaxis_t xcenter = in->getAxis(0)->zerobin();
     for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = std::tan(angle)*(xcenter-x);
+        _offset[x] = -angle*_axis[0]->at(x);
+        _offset[x] /= _axis[0]->delta();
     }
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
