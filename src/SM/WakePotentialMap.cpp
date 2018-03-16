@@ -24,7 +24,7 @@ vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
                                         , const vfps::meshindex_t xsize
                                         , const vfps::meshindex_t ysize
-                                        , ElectricField *field
+                                        , ElectricField* field
                                         , const InterpolationType it
                                         , bool interpol_clamp
                                         , oclhptr_t oclh

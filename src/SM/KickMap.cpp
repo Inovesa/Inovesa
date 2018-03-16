@@ -242,6 +242,8 @@ void vfps::KickMap::apply()
             }
         }
     }
+    ;
+
     }
 }
 
@@ -297,7 +299,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 
 void vfps::KickMap::updateSM()
 {
-    if (_oclh != nullptr) {
+    if (_oclh == nullptr) {
     // gridpoint matrix used for interpolation
     hi* ph = new hi[_it];
 

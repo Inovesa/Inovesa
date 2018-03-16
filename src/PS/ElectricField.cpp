@@ -127,7 +127,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                         sizeof(*_wakepotential)*_bpmeshcells);
     #ifndef INOVESA_USE_CLFFT
     }
-    #else
+    #else // defined INOVESA_USE_CLFFT
         _wakelosses = new impedance_t[_nmax];
 
         // second half is initialized because it is not touched elsewhere

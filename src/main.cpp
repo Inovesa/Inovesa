@@ -886,9 +886,7 @@ int main(int argc, char** argv)
                     }
                     wm->applyTo(allpos);
                     rm1->applyTo(allpos);
-                    if (rm2 != nullptr) {
-                        rm2->applyTo(allpos);
-                    }
+                    rm2->applyTo(allpos);
                     fpm->applyTo(allpos);
                     hdf_file->appendSourceMap(allpos.data());
                 }
@@ -932,10 +930,8 @@ int main(int argc, char** argv)
         wm->applyTo(trackme);
         rm1->apply();
         rm1->applyTo(trackme);
-        if (rm2 != nullptr) {
-            rm2->apply();
-            rm2->applyTo(trackme);
-        }
+        rm2->apply();
+        rm2->applyTo(trackme);
         fpm->apply();
         fpm->applyTo(trackme);
 
@@ -961,7 +957,7 @@ int main(int argc, char** argv)
          * the last time step might behave slightly different
          * from the ones before.
          */
-        if (renormalize > 0) {
+        if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
             grid_t1->normalize();
         } else {
