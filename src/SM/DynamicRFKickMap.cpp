@@ -56,7 +56,9 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
 
 vfps::DynamicRFKickMap::~DynamicRFKickMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~DynamicRFKickMap() -> "; }
+{
+    saveTimings("DynamicRFKickMap");
+}
 #else
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING
@@ -64,14 +66,15 @@ vfps::DynamicRFKickMap::~DynamicRFKickMap() noexcept
 std::vector<std::array<vfps::meshaxis_t,2>>
 vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
 {
-    std::vector<std::array<meshaxis_t,2>> rv(steps);
-    for (auto& mod : rv) {
+    std::vector<std::array<meshaxis_t,2>> rv;
+    rv.reserve(steps);
+    for (uint32_t i=0; i<steps; i++) {
         meshaxis_t addnoise = _dist(_prng)*_addnoise;
         meshaxis_t mulnoise = _dist(_prng)*_mulnoise;
 
-        meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(*_step));
+        meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(i));
 
-        mod = {{1+ mulnoise, addnoise+phasemod}};
+        rv.push_back({{1+ mulnoise, addnoise+phasemod}});
     }
     return rv;
 }
