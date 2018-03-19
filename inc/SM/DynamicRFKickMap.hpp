@@ -83,8 +83,6 @@ private:
     std::mt19937 _prng;
     std::normal_distribution<meshaxis_t> _dist;
 
-    std::vector<meshaxis_t> _mean;
-
     std::vector<std::array<meshaxis_t,2>> _modulation;
 
     /**
@@ -92,12 +90,13 @@ private:
      */
     std::vector<std::array<meshaxis_t,2>> __calcModulation(uint32_t steps);
 
+protected:
     /**
      * @brief update to current time step
      *
      * @todo For OpenCL, this should be done on device
      */
-    void __update();
+    void _update();
 };
 
 } // namespace vfps

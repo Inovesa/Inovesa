@@ -292,8 +292,7 @@ int main(int argc, char** argv)
     const auto rf_mod_ampl = std::max(0.0,
                                       opts.getRFPhaseModAmplitude()
                                       /360.0*two_pi<double>()
-                                      * std::sqrt(revolutionpart)*V_RF
-                                      / dE*ps_size/pqsize);
+                                      * std::sqrt(revolutionpart));
 
     // "time step" for RF phase modulation
     const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt/isoscale;
@@ -554,7 +553,8 @@ int main(int argc, char** argv)
     // rotation map(s): two, in case of Manhattan rotation
     std::unique_ptr<SourceMap> rm1;
     std::unique_ptr<SourceMap> rm2;
-    if (rf_noise_add != 0 || rf_noise_mul != 0 || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
+    if ( rf_noise_add != 0 || rf_noise_mul != 0
+      || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
         Display::printText("Building dynamic RFKickMap...");
         sstream.str("");
         sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;

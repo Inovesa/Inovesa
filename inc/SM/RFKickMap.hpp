@@ -31,16 +31,31 @@ class RFKickMap : public KickMap
 public:
     RFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const meshindex_t xsize, const meshindex_t ysize
-             , const double dt
-             , const double V_RF
-             , const double f_RF
-             , const double V0
+             , const timeaxis_t dt
+             , const meshaxis_t V_RF
+             , const frequency_t f_RF
+             , const meshaxis_t V0
              , const InterpolationType it
              , const bool interpol_clamp
              , oclhptr_t oclh
              );
 
     ~RFKickMap() noexcept;
+
+protected:
+    virtual void _update(const meshaxis_t V, const meshaxis_t phase);
+
+    const timeaxis_t _dt;
+
+    const meshaxis_t _V_RF;
+
+    const frequency_t _f_RF;
+
+    const meshaxis_t _V0;
+
+    const meshaxis_t _syncphase;
+
+    const timeaxis_t _bl2phase;
 };
 
 } // namespace vfps

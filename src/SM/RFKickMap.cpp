@@ -21,27 +21,35 @@
 #include "SM/RFKickMap.hpp"
 
 #include <boost/math/constants/constants.hpp>
-using boost::math::constants::pi;
+using boost::math::constants::two_pi;
 
 vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
                           , const meshindex_t xsize
                           , const meshindex_t ysize
-                          , const double dt
-                          , const double V_RF
-                          , const double f_RF
-                          , const double V0
+                          , const timeaxis_t dt
+                          , const meshaxis_t V_RF
+                          , const frequency_t f_RF
+                          , const meshaxis_t V0
                           , const InterpolationType it
                           , const bool interpol_clamp
                           , oclhptr_t oclh
                           )
   : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  , _dt(dt)
+  , _V_RF(V_RF)
+  , _f_RF(f_RF)
+  , _V0(V0)
+  , _syncphase(std::asin(_V0/_V_RF))
+  , _bl2phase(_axis[0]->scale()/physcons::c*_f_RF/two_pi<double>())
 {
-    auto syncphase = std::asin(V0/V_RF);
-    auto bl2phase = _axis[0]->scale()/physcons::c*f_RF/pi<double>();
+    _update(_V_RF,_syncphase);
+}
 
+void vfps::RFKickMap::_update(const meshaxis_t V, const meshaxis_t phase)
+{
     for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = dt*(-V_RF*std::sin(_axis[0]->at(x)*bl2phase+syncphase)+V0);
+        _offset[x] = _dt*(- V*std::sin(_axis[0]->at(x)*_bl2phase+phase)+_V0);
         _offset[x] /= _axis[0]->delta()*_axis[0]->scale();
     }
     #ifdef INOVESA_USE_OPENCL

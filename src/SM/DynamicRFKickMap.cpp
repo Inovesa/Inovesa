@@ -52,7 +52,6 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
   , _step(step)
   , _prng(std::mt19937(std::random_device{}()))
   , _dist(std::normal_distribution<meshaxis_t>(0, 1))
-  , _mean(_offset)
   , _modulation(__calcModulation(steps))
 {
 }
@@ -71,37 +70,26 @@ vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
 {
     std::vector<std::array<meshaxis_t,2>> rv;
     rv.reserve(steps);
+
     for (uint32_t i=0; i<steps; i++) {
-        meshaxis_t addnoise = _dist(_prng)*_addnoise;
-        meshaxis_t mulnoise = _dist(_prng)*_mulnoise;
+        meshaxis_t phasenoise = _dist(_prng)*_addnoise;
+        meshaxis_t amplnoise = _dist(_prng)*_mulnoise;
 
         meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(i));
 
-        rv.push_back({{1+ mulnoise, addnoise+phasemod}});
+        rv.push_back({{ _V_RF*(1+ amplnoise)
+                      , _syncphase+phasenoise+phasemod}});
     }
     return rv;
 }
 
-void vfps::DynamicRFKickMap::__update()
+void vfps::DynamicRFKickMap::_update()
 {
-    _offset = _mean;
-
-    for (auto& offs : _offset) {
-        offs = offs * (_modulation[*_step][0]) + _modulation[*_step][1];
-    }
-
-    #ifdef INOVESA_USE_OPENCL
-    if (_oclh) {
-        syncCLMem(clCopyDirection::cpu2dev);
-    } else
-    #endif // INOVESA_USE_OPENCL
-    {
-        updateSM();
-    }
+    RFKickMap::_update(_modulation[*_step][0],_modulation[*_step][1]);
 }
 
 void vfps::DynamicRFKickMap::apply() {
-    __update();
+    _update();
     KickMap::apply();
 }
 
