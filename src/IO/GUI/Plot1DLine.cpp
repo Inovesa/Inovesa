@@ -24,7 +24,7 @@
 
 vfps::Plot1DLine::Plot1DLine( std::array<float, 3> rgb
                             , size_t npoints
-                            , Plot1DLine::orientation orientation)
+                            , Orientation orientation)
   : Plot1DLine(rgb, npoints, orientation,0)
 {
     glGenBuffers(1, &_databuffer);
@@ -145,12 +145,12 @@ void vfps::Plot1DLine::createPositionBuffer()
 {
     float step = 1.5f/(_npoints-1);
     switch (_orientation) {
-    case orientation::horizontal:
+    case Orientation::horizontal:
         for (size_t n=0; n<_npoints; n++) {
             _position[n] = -1.0f+n*step;
         }
         break;
-    case orientation::vertical:
+    case Orientation::vertical:
         for (size_t n=0; n<_npoints; n++) {
             _position[n] = -0.5f+n*step;;
         }

@@ -87,7 +87,7 @@ private:
 
     void createPositionBuffer();
 
-    orientation _orientation;
+    Orientation _orientation;
 };
 
 } // namespace vfps

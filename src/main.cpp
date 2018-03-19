@@ -696,7 +696,7 @@ int main(int argc, char** argv)
     if (display != nullptr) {
         try {
             bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
-                                    , Plot1DLine::orientation::horizontal));
+                                    , Plot1DLine::Orientation::horizontal));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -717,7 +717,7 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             try {
                 wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
-                                        , Plot1DLine::orientation::horizontal));
+                                        , Plot1DLine::Orientation::horizontal));
                 display->addElement(wpv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -728,7 +728,7 @@ int main(int argc, char** argv)
         try {
             history.reset(new Plot1DLine( std::array<float,3>{{0,0,0}}
                                         , csrlog.size()
-                                        , Plot1DLine::orientation::vertical));
+                                        , Plot1DLine::Orientation::vertical));
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
