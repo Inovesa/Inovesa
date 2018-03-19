@@ -54,8 +54,8 @@
 #include <memory>
 #include <sstream>
 
+#include <boost/math/special_functions/sign.hpp>
 #include <boost/math/constants/constants.hpp>
-using boost::math::constants::pi;
 using boost::math::constants::two_pi;
 
 using namespace vfps;
@@ -181,55 +181,44 @@ int main(int argc, char** argv)
     // absolute energy spread (in eV)
     const auto dE = sE*E0;
 
-    // revolution frequency (in Hz)
-    const auto f_rev = opts.getRevolutionFrequency();
-
     /*
      * Only positive benging radii will be used.
      * Otherwise radius will be deduced from revolution frequency
      * (based on iso-magnetic ring model).
      */
     const auto use_set_bend = (opts.getBendingRadius()>0);
+
+    // revolution frequency (in Hz)
+    const auto f_rev = opts.getRevolutionFrequency();
+
     const auto R_bend = use_set_bend
             ? opts.getBendingRadius()
-            : physcons::c/(2*pi<double>()*f_rev);
-
-    /*
-     * Revolution frequency an iso-magnetic ring
-     * with same bending radius would have.
-     * It is used as fundamental frequency for impedances.
-     */
-    const auto f0 = !use_set_bend
-            ? f_rev
-            : physcons::c/(2*pi<double>()*R_bend);
-
-    // scaling for isomagnetic approximation, defined to be <= 1
-    const double isoscale = f_rev/f0;
+            : physcons::c/(two_pi<double>()*f_rev);
 
     const frequency_t fc = opts.getCutoffFrequency();
-    const double H_unscaled = opts.getHarmonicNumber();
-    const double harmonic_number = isoscale*H_unscaled;
+    const auto harmonic_number = opts.getHarmonicNumber();
+    const auto f_RF = f_rev*harmonic_number;
     const double gap = opts.getVacuumChamberGap();
     const double V_RF = opts.getRFVoltage();
 
-    double fs_tmp = opts.getSyncFreq();
+    const auto lorentzgamma = E0/physcons::me;
+    const auto V0 = physcons::e*std::pow(lorentzgamma,4)
+                  / (3* physcons::epsilon0*R_bend);
+
+    const auto W0 = V0*physcons::e;
+
+    const double V_eff = std::sqrt(V_RF*V_RF-V0*V0);
+
+    double fs = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
     // non-zero f_s will be used, zero implies usage of alpha0
-    if (fs_tmp == 0) {
-        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V_RF/(2*pi<double>()*E0));
+    if (fs == 0) {
+        fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_RF/(two_pi<double>()*E0));
     } else {
-        // alpha0 should have same sign as fs
-        auto sign = (fs_tmp > 0) ? 1 : -1;
-
-        alpha0_tmp = sign*2*pi<double>()*E0/(H_unscaled*V_RF)*std::pow(fs_tmp/f_rev,2);
+        alpha0_tmp = boost::math::sign(fs)*two_pi<double>()*E0
+                   / (harmonic_number*V_RF)*std::pow(fs/f_rev,2);
     }
-
-    // synchrotron frequency (comparable to real storage ring)
-    const double fs_unscaled = fs_tmp;
-
-    // synchrotron frequency (isomagnetic ring)
-    const double fs = fs_unscaled/isoscale;
 
     const meshaxis_t alpha0 = alpha0_tmp;
     const meshaxis_t alpha1 = opts.getAlpha1();
@@ -237,32 +226,27 @@ int main(int argc, char** argv)
 
 
     // natural RMS bunch length
-    const double bl = physcons::c*dE/harmonic_number/std::pow(f0,2.0)/V_RF*fs;
+    const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
 
-    const double Ib_unscaled = opts.getBunchCurrent();
-    const double Qb = Ib_unscaled/f_rev;
-    const double Ib_scaled = Ib_unscaled/isoscale;
+    const double Ib = opts.getBunchCurrent();
+    const double Qb = Ib/f_rev;
     const double Iz = opts.getStartDistZoom();
 
     const double steps = (opts.getStepsPerTrev()>0)
-            ? opts.getStepsPerTrev()*f_rev/fs_unscaled
+            ? opts.getStepsPerTrev()*f_rev/fs
             : std::max(opts.getStepsPerTsync(),1u);
     const auto outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
-
-    const auto lorentzgamma = E0/physcons::me;
-    const auto W0 = std::pow(physcons::e,2)*std::pow(lorentzgamma,4)
-                  / (3* physcons::epsilon0*R_bend);
 
     const auto calc_damp = E0*physcons::e/W0/f_rev;
 
     const auto set_damp = opts.getDampingTime();
 
-    const auto t_damp = (set_damp < 0)? calc_damp : isoscale*set_damp;
+    const auto t_damp = (set_damp < 0)? calc_damp : set_damp;
 
     const double dt = 1.0/(fs*steps);
-    const double revolutionpart = f0*dt;
-    const double t_sync_unscaled = 1.0/fs_unscaled;
+    const double revolutionpart = f_rev*dt;
+    const double t_sync = 1.0/fs;
 
     const double padding =std::max(opts.getPadding(),1.0);
     const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
@@ -295,14 +279,14 @@ int main(int argc, char** argv)
                                       * std::sqrt(revolutionpart));
 
     // "time step" for RF phase modulation
-    const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt/isoscale;
+    const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt;
 
 
     /*
      * angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
-    const meshaxis_t angle = 2*pi<double>()/steps;
+    const meshaxis_t angle = two_pi<double>()/steps;
 
     uint32_t laststep=std::ceil(steps*rotations);
 
@@ -330,13 +314,13 @@ int main(int argc, char** argv)
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }
 
-        const double Inorm = physcons::IAlfven/physcons::me*2*pi<double>()
-                           * std::pow(dE*fs/f0,2)/V_RF/harmonic_number
+        const double Inorm = physcons::IAlfven/physcons::me*two_pi<double>()
+                           * std::pow(dE*fs/f_rev,2)/V_eff/harmonic_number
                            * std::pow(bl/R_bend,1./3.);
 
         Ith = Inorm * (0.5+0.34*shield);
 
-        S_csr = Ib_scaled/Inorm;
+        S_csr = Ib/Inorm;
 
         if (verbose && use_csr) {
             sstream.str("");
@@ -352,7 +336,7 @@ int main(int argc, char** argv)
                                +sstream.str());
             sstream.str("");
             sstream << std::fixed << S_csr;
-            if (Ib_scaled > Ith) {
+            if (Ib > Ith) {
                 sstream << " (> " << 0.5+0.12*shield << ')';
             } else {
                 sstream << " (< " << 0.5+0.12*shield << ')';
@@ -360,7 +344,7 @@ int main(int argc, char** argv)
             Display::printText("CSR strength: "
                                +sstream.str());
             sstream.str("");
-            sstream << std::scientific << Ith*isoscale;
+            sstream << std::scientific << Ith;
             Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
         }
@@ -376,7 +360,7 @@ int main(int argc, char** argv)
                            +sstream.str());
 
         sstream.str("");
-        sstream << std::scientific << fs_unscaled;
+        sstream << std::scientific << fs;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
         if (opts.getStepsPerTrev() == 0) {
@@ -386,13 +370,13 @@ int main(int argc, char** argv)
                                " simulation steps per revolution period.");
         } else {
             sstream.str("");
-            sstream << std::fixed << f_rev/fs_unscaled/revolutionpart;
+            sstream << std::fixed << f_rev/fs/revolutionpart;
             Display::printText("Doing " +sstream.str()+
                                " simulation steps per synchrotron period.");
         }
 
         sstream.str("");
-        auto syncphase = std::asin(W0/(physcons::e*V_RF))/two_pi<double>()*360;
+        auto syncphase = std::asin(V0/V_RF)/two_pi<double>()*360;
         sstream << std::fixed << syncphase;
         Display::printText("Synchronous phase is at "+sstream.str()
                            +" degree (should be small).");
@@ -407,7 +391,7 @@ int main(int argc, char** argv)
                            +sstream.str() + ".");
 
         sstream.str("");
-        sstream << std::scientific << 1/t_damp/fs/(2*pi<double>());
+        sstream << std::scientific << 1/t_damp/fs/(two_pi<double>());
         Display::printText("Damping beta: " +sstream.str());
 
     }
@@ -442,7 +426,7 @@ int main(int argc, char** argv)
         }
         grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
                                     , oclh
-                                    , Qb,Ib_unscaled,bl,dE,Iz));
+                                    , Qb,Ib,bl,dE,Iz));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -450,7 +434,7 @@ int main(int argc, char** argv)
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
             grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
-                                   , oclh, Qb,Ib_unscaled,bl,dE);
+                                   , oclh, Qb,Ib,bl,dE);
         } else
         #endif // INOVESA_USE_PNG
         #ifdef INOVESA_USE_HDF5
@@ -459,7 +443,7 @@ int main(int argc, char** argv)
             grid_t1 = makePSFromHDF5( startdistfile,opts.getStartDistStep()
                                     , qmin,qmax,pmin,pmax
                                     , oclh
-                                    , Qb,Ib_unscaled,bl,dE);
+                                    , Qb,Ib,bl,dE);
 
             if (grid_t1 == nullptr) {
                 return EXIT_SUCCESS;
@@ -477,7 +461,7 @@ int main(int argc, char** argv)
             grid_t1 = makePSFromTXT( startdistfile,opts.getGridSize()
                                    , qmin,qmax,pmin,pmax
                                    , oclh
-                                   , Qb,Ib_unscaled,bl,dE);
+                                   , Qb,Ib,bl,dE);
         } else {
             Display::printText("Unknown format of input file. Will now quit.");
             return EXIT_SUCCESS;
@@ -504,7 +488,7 @@ int main(int argc, char** argv)
 
     if (verbose) {
         sstream.str("");
-        sstream << std::scientific << maxval*Ib_scaled/f0/physcons::e;
+        sstream << std::scientific << maxval*Ib/f_rev/physcons::e;
         Display::printText("Maximum particles per grid cell is "
                            +sstream.str()+".");
     }
@@ -565,15 +549,14 @@ int main(int argc, char** argv)
         if (rf_mod_ampl != 0 && rf_mod_step != 0) {
             sstream.str("");
             sstream << "...including phase modulation ("
-                    << opts.getRFPhaseModFrequency()/fs_unscaled
+                    << opts.getRFPhaseModFrequency()/fs
                     << " fs) of +/-"
                     << opts.getRFPhaseModAmplitude()/360.0/f_rev/harmonic_number
                     << " s";
             Display::printText(sstream.str());
         }
         rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                      , dt, V_RF,f_rev*H_unscaled
-                                      , W0/physcons::e
+                                      , revolutionpart, V_eff, f_RF, V0
                                       , rf_noise_add, rf_noise_mul
                                       , rf_mod_ampl,rf_mod_step
                                       , &simulationstep, laststep
@@ -583,7 +566,7 @@ int main(int argc, char** argv)
     } else {
         Display::printText("Building static RFKickMap.");
         rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
-                               , dt, V_RF,f_rev*H_unscaled, W0/physcons::e
+                               , revolutionpart, V_eff, f_RF, V0
                                , interpolationtype,interpol_clamp
                                , oclh
                                ));
@@ -623,14 +606,14 @@ int main(int argc, char** argv)
     std::shared_ptr<Impedance> wake_impedance
             = vfps::makeImpedance( nfreqs
                                  , oclh
-                                 , fmax,f0,f_rev,gap,use_csr
+                                 , fmax,R_bend,f_rev,gap,use_csr
                                  , s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
             = vfps::makeImpedance( nfreqs
                                  , oclh
-                                 , fmax,f0,f_rev,(gap>0)?gap:-1);
+                                 , fmax,R_bend,f_rev,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)
@@ -655,7 +638,7 @@ int main(int argc, char** argv)
     if (wakefile.size() > 4) {
         Display::printText("Reading WakeFunction from "+wakefile+".");
         wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_size,ps_size
-                                 , wakefile,E0,sE,Ib_scaled,dt
+                                 , wakefile,E0,sE,Ib,dt
                                  , interpolationtype,interpol_clamp
                                  , oclh
                                  );
@@ -666,7 +649,7 @@ int main(int argc, char** argv)
             wake_field = new ElectricField( grid_t1,wake_impedance
                                           , oclh
                                           ,f_rev
-                                          , revolutionpart, Ib_scaled,E0,sE,dt
+                                          , revolutionpart, Ib,E0,sE,dt
                                           );
 
             Display::printText("Building WakeKickMap.");
@@ -765,7 +748,7 @@ int main(int argc, char** argv)
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
-                                wfm,trackme.size(), t_sync_unscaled,f_rev);
+                                wfm,trackme.size(), t_sync,f_rev);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",

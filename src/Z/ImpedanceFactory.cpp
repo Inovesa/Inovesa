@@ -29,11 +29,14 @@
 #include "Z/ParallelPlatesCSR.hpp"
 #include "Z/ResistiveWall.hpp"
 
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::two_pi;
+
 std::unique_ptr<vfps::Impedance>
 vfps::makeImpedance( const size_t nfreqs
                    , oclhptr_t oclh
                    , const frequency_t fmax
-                   , const double f0
+                   , const double R_bend
                    , const double frev
                    , const double gap
                    , const bool use_csr
@@ -43,6 +46,8 @@ vfps::makeImpedance( const size_t nfreqs
                    , const std::string impedance_file
                    )
 {
+    auto f0 = physcons::c/(two_pi<double>()*R_bend);
+
     /*
      * Will create a default (zero) impedance and add different contributions.
      * If the impedance is still zero in the end (tracked by impedance_changed),

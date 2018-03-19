@@ -30,7 +30,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
                                         , const meshindex_t xsize
                                         , const meshindex_t ysize
-                                        , const double dt
+                                        , const double revolutionpart
                                         , const double V_RF
                                         , const double f_RF
                                         , const double V0
@@ -44,7 +44,8 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const bool interpol_clamp
                                         , oclhptr_t oclh
                                         )
-  : RFKickMap( in,out,xsize,ysize,dt,V_RF,f_RF,V0,it,interpol_clamp,oclh)
+  : RFKickMap( in,out,xsize,ysize
+             , revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
   , _addnoise(addnoise)
   , _mulnoise(mulnoise)
   , _modampl(modampl)

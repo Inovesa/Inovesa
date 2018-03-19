@@ -40,8 +40,9 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
             _offset[y] += slip[i]*_axis[1]->at(y)
                        *  std::pow(_axis[1]->at(y)*_axis[1]->scale()/E0,i);
         }
-        _offset[y] /= _axis[1]->delta();
+        _offset[y] /= _axis[0]->delta();
     }
+
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         syncCLMem(clCopyDirection::cpu2dev);

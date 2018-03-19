@@ -45,7 +45,7 @@ public:
                     , std::shared_ptr<PhaseSpace> out
                     , const meshindex_t xsize
                     , const meshindex_t ysize
-                    , const double dt
+                    , const double revolutionpart
                     , const double V_RF
                     , const double f_RF
                     , const double V0

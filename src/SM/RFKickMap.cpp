@@ -27,7 +27,7 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
                           , const meshindex_t xsize
                           , const meshindex_t ysize
-                          , const timeaxis_t dt
+                          , const timeaxis_t revolutionpart
                           , const meshaxis_t V_RF
                           , const frequency_t f_RF
                           , const meshaxis_t V0
@@ -36,12 +36,12 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , oclhptr_t oclh
                           )
   : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
-  , _dt(dt)
+  , _revolutionpart(revolutionpart)
   , _V_RF(V_RF)
   , _f_RF(f_RF)
   , _V0(V0)
   , _syncphase(std::asin(_V0/_V_RF))
-  , _bl2phase(_axis[0]->scale()/physcons::c*_f_RF/two_pi<double>())
+  , _bl2phase(_axis[0]->scale()/physcons::c*_f_RF*two_pi<double>())
 {
     _update(_V_RF,_syncphase);
 }
@@ -49,9 +49,10 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
 void vfps::RFKickMap::_update(const meshaxis_t V, const meshaxis_t phase)
 {
     for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = _dt*(- V*std::sin(_axis[0]->at(x)*_bl2phase+phase)+_V0);
-        _offset[x] /= _axis[0]->delta()*_axis[0]->scale();
+        _offset[x] = _revolutionpart*(- V*std::sin(_axis[0]->at(x)*_bl2phase+phase)+_V0);
+        _offset[x] /= _axis[1]->delta()*_axis[1]->scale();
     }
+
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         syncCLMem(clCopyDirection::cpu2dev);

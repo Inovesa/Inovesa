@@ -31,7 +31,7 @@ class RFKickMap : public KickMap
 public:
     RFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const meshindex_t xsize, const meshindex_t ysize
-             , const timeaxis_t dt
+             , const timeaxis_t revolutionpart
              , const meshaxis_t V_RF
              , const frequency_t f_RF
              , const meshaxis_t V0
@@ -45,7 +45,7 @@ public:
 protected:
     virtual void _update(const meshaxis_t V, const meshaxis_t phase);
 
-    const timeaxis_t _dt;
+    const timeaxis_t _revolutionpart;
 
     const meshaxis_t _V_RF;
 
