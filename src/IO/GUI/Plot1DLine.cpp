@@ -30,9 +30,9 @@ vfps::Plot1DLine::Plot1DLine( std::array<float, 3> rgb
     glGenBuffers(1, &_databuffer);
 }
 
-vfps::Plot1DLine::Plot1DLine( std::array<float,3> rgb
+vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
                             , size_t npoints
-                            , Plot1DLine::orientation orientation
+                            , Orientation orientation
                             , GLuint databuffer
                             )
   : _npoints(npoints)
@@ -82,21 +82,21 @@ vfps::Plot1DLine::Plot1DLine( std::array<float,3> rgb
         break;
     }
     switch (_orientation) {
-    case orientation::horizontal:
+    case Orientation::horizontal:
         _vertexshadercode += "gl_Position =vec4(posiX,posiY-0.8f,-0.1,1);}";
         break;
-    case orientation::vertical:
+    case Orientation::vertical:
         _vertexshadercode += "gl_Position =vec4(-0.5*exp(-posiX)+1.0f,posiY,-0.1,1);}";
         break;
     }
     compileShaders();
 
     switch (_orientation) {
-    case orientation::horizontal:
+    case Orientation::horizontal:
         posiID = glGetAttribLocation(programID, "posiX");
         dataID = glGetAttribLocation(programID, "posiY");
         break;
-    case orientation::vertical:
+    case Orientation::vertical:
         posiID = glGetAttribLocation(programID, "posiY");
         dataID = glGetAttribLocation(programID, "posiX");
         break;
