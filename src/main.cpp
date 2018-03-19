@@ -572,7 +572,9 @@ int main(int argc, char** argv)
             Display::printText(sstream.str());
         }
         rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                      , angle, rf_noise_add, rf_noise_mul
+                                      , dt, V_RF,f_rev*H_unscaled
+                                      , W0/physcons::e
+                                      , rf_noise_add, rf_noise_mul
                                       , rf_mod_ampl,rf_mod_step
                                       , &simulationstep, laststep
                                       , interpolationtype,interpol_clamp
@@ -580,7 +582,8 @@ int main(int argc, char** argv)
                                       ));
     } else {
         Display::printText("Building static RFKickMap.");
-        rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size,angle
+        rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+                               , dt, V_RF,f_rev*H_unscaled, W0/physcons::e
                                , interpolationtype,interpol_clamp
                                , oclh
                                ));

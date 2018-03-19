@@ -20,21 +20,29 @@
 
 #include "SM/RFKickMap.hpp"
 
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::pi;
 
-vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
+vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
                           , const meshindex_t xsize
                           , const meshindex_t ysize
-                          , const meshaxis_t angle
+                          , const double dt
+                          , const double V_RF
+                          , const double f_RF
+                          , const double V0
                           , const InterpolationType it
                           , const bool interpol_clamp
                           , oclhptr_t oclh
                           )
   : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
 {
+    auto syncphase = std::asin(V0/V_RF);
+    auto bl2phase = _axis[0]->scale()/physcons::c*f_RF/pi<double>();
+
     for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = -angle*_axis[0]->at(x);
-        _offset[x] /= _axis[0]->delta();
+        _offset[x] = dt*(-V_RF*std::sin(_axis[0]->at(x)*bl2phase+syncphase)+V0);
+        _offset[x] /= _axis[0]->delta()*_axis[0]->scale();
     }
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {

@@ -29,9 +29,13 @@ namespace vfps
 class RFKickMap : public KickMap
 {
 public:
-    RFKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
+    RFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const meshindex_t xsize, const meshindex_t ysize
-             , const meshaxis_t angle, const InterpolationType it
+             , const double dt
+             , const double V_RF
+             , const double f_RF
+             , const double V0
+             , const InterpolationType it
              , const bool interpol_clamp
              , oclhptr_t oclh
              );
