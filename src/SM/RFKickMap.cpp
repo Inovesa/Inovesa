@@ -23,6 +23,28 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::two_pi;
 
+vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
+                          , std::shared_ptr<PhaseSpace> out
+                          , const meshindex_t xsize
+                          , const meshindex_t ysize
+                          , const meshaxis_t angle
+                          , const InterpolationType it
+                          , const bool interpol_clamp
+                          , oclhptr_t oclh
+                          )
+  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  , _linear(true)
+  , _angle(angle)
+  , _revolutionpart(0)
+  , _V_RF(0)
+  , _f_RF(0)
+  , _V0(0)
+  , _syncphase(0)
+  , _bl2phase(0)
+{
+    _calcKick(_syncphase);
+}
+
 vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
                           , const meshindex_t xsize
@@ -36,6 +58,8 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , oclhptr_t oclh
                           )
   : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  , _linear(false)
+  , _angle(0)
   , _revolutionpart(revolutionpart)
   , _V_RF(V_RF)
   , _f_RF(f_RF)
@@ -43,14 +67,25 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
   , _syncphase(std::asin(_V0/_V_RF))
   , _bl2phase(_axis[0]->scale()/physcons::c*_f_RF*two_pi<double>())
 {
-    _update(_V_RF,_syncphase);
+    _calcKick(_syncphase);
 }
 
-void vfps::RFKickMap::_update(const meshaxis_t V, const meshaxis_t phase)
+void vfps::RFKickMap::_calcKick(const meshaxis_t phase, const meshaxis_t ampl)
 {
-    for(meshindex_t x=0; x<_xsize; x++) {
-        _offset[x] = _revolutionpart*(- V*std::sin(_axis[0]->at(x)*_bl2phase+phase)+_V0);
-        _offset[x] /= _axis[1]->delta()*_axis[1]->scale();
+    if (_linear) {
+        meshaxis_t phaseoffs = phase - _syncphase;
+        const meshaxis_t xcenter = _in->getAxis(0)->zerobin();
+        for(meshindex_t x=0; x<_xsize; x++) {
+            _offset[x] = std::tan(_angle)*(xcenter-x);
+            _offset[x] = _offset[x]*ampl+phaseoffs;
+        }
+    } else {
+        for(meshindex_t x=0; x<_xsize; x++) {
+            _offset[x] = _revolutionpart*(-ampl*_V_RF
+                       * std::sin(_axis[0]->at(x)*_bl2phase+phase)
+                       + _V0);
+            _offset[x] /= _axis[1]->delta()*_axis[1]->scale();
+        }
     }
 
     #ifdef INOVESA_USE_OPENCL

@@ -100,6 +100,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("AcceleratingVoltage,V",
             po::value<double>(&V_RF)->default_value(1e6,"1e6"),
             "Accelerating Voltage (V) for one revolution")
+        ("NonlinearRF",
+            po::value<bool>(&nonlinearRF)->default_value(false),
+            "Use linear model for accelerating voltage")
         ("RFAmplitudeSpread",
             po::value<double>(&rf_amplitude_spread)->default_value(0),
             "Relative accelerating voltage amplitude spread per turn")

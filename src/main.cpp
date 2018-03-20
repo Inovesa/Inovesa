@@ -200,6 +200,7 @@ int main(int argc, char** argv)
     const auto f_RF = f_rev*harmonic_number;
     const double gap = opts.getVacuumChamberGap();
     const double V_RF = opts.getRFVoltage();
+    const auto linearRF = opts.getLinearRF();
 
     const auto lorentzgamma = E0/physcons::me;
     const auto V0 = physcons::e*std::pow(lorentzgamma,4)
@@ -539,7 +540,30 @@ int main(int argc, char** argv)
     std::unique_ptr<SourceMap> rm2;
     if ( rf_noise_add != 0 || rf_noise_mul != 0
       || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
-        Display::printText("Building dynamic RFKickMap...");
+        if (linearRF) {
+            Display::printText("Building dynamic, linear RFKickMap...");
+
+            rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                          , angle
+                                          , rf_noise_add, rf_noise_mul
+                                          , rf_mod_ampl,rf_mod_step
+                                          , &simulationstep, laststep
+                                          , interpolationtype,interpol_clamp
+                                          , oclh
+                                          ));
+        } else {
+            Display::printText("Building dynamic, nonlinear RFKickMap...");
+
+            rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                          , revolutionpart, V_eff, f_RF, V0
+                                          , rf_noise_add, rf_noise_mul
+                                          , rf_mod_ampl,rf_mod_step
+                                          , &simulationstep, laststep
+                                          , interpolationtype,interpol_clamp
+                                          , oclh
+                                          ));
+        }
+
         sstream.str("");
         sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;
         if (rf_noise_add != 0) {
@@ -555,21 +579,22 @@ int main(int argc, char** argv)
                     << " s";
             Display::printText(sstream.str());
         }
-        rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                      , revolutionpart, V_eff, f_RF, V0
-                                      , rf_noise_add, rf_noise_mul
-                                      , rf_mod_ampl,rf_mod_step
-                                      , &simulationstep, laststep
-                                      , interpolationtype,interpol_clamp
-                                      , oclh
-                                      ));
     } else {
-        Display::printText("Building static RFKickMap.");
-        rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
-                               , revolutionpart, V_eff, f_RF, V0
-                               , interpolationtype,interpol_clamp
-                               , oclh
-                               ));
+        if (linearRF) {
+            Display::printText("Building static, linear RFKickMap.");
+            rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+                                   , angle
+                                   , interpolationtype,interpol_clamp
+                                   , oclh
+                                   ));
+        } else {
+            Display::printText("Building static, nonlinear RFKickMap.");
+            rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+                                   , revolutionpart, V_eff, f_RF, V0
+                                   , interpolationtype,interpol_clamp
+                                   , oclh
+                                   ));
+        }
     }
 
     Display::printText("Building DriftMap.");

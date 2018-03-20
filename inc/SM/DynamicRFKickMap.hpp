@@ -36,11 +36,27 @@ namespace vfps
 class DynamicRFKickMap : public RFKickMap
 {
 public:
-    /*!
+    /**
      * @param angle     the RFKickMap rotation angle
      * @param s_phase   width of the additive instability in y units
      * @param s_peak    width of the relative multiplicative instability
      */
+    DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+                    , std::shared_ptr<PhaseSpace> out
+                    , const meshindex_t xsize
+                    , const meshindex_t ysize
+                    , const meshaxis_t angle
+                    , const meshaxis_t addnoise
+                    , const meshaxis_t mulnoise
+                    , const meshaxis_t modampl
+                    , const double modtimeincrement
+                    , const uint32_t* step
+                    , const uint32_t steps
+                    , const InterpolationType it
+                    , const bool interpol_clamp
+                    , oclhptr_t oclh
+                    );
+
     DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                     , std::shared_ptr<PhaseSpace> out
                     , const meshindex_t xsize
@@ -96,7 +112,7 @@ protected:
      *
      * @todo For OpenCL, this should be done on device
      */
-    void _update();
+    void _calcKick();
 };
 
 } // namespace vfps

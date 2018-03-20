@@ -30,6 +30,33 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
                                         , const meshindex_t xsize
                                         , const meshindex_t ysize
+                                        , const meshaxis_t angle
+                                        , const meshaxis_t addnoise
+                                        , const meshaxis_t mulnoise
+                                        , const meshaxis_t modampl
+                                        , const double modtimeincrement
+                                        , const uint32_t* step
+                                        , const uint32_t steps
+                                        , const InterpolationType it
+                                        , const bool interpol_clamp
+                                        , oclhptr_t oclh
+                                        )
+    : RFKickMap( in,out,xsize,ysize,angle,it,interpol_clamp, oclh)
+    , _addnoise(addnoise)
+    , _mulnoise(mulnoise)
+    , _modampl(modampl)
+    , _modtimedelta(two_pi<double>()*modtimeincrement)
+    , _step(step)
+    , _prng(std::mt19937(std::random_device{}()))
+    , _dist(std::normal_distribution<meshaxis_t>(0, 1))
+    , _modulation(__calcModulation(steps))
+{
+}
+
+vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+                                        , std::shared_ptr<PhaseSpace> out
+                                        , const meshindex_t xsize
+                                        , const meshindex_t ysize
                                         , const double revolutionpart
                                         , const double V_RF
                                         , const double f_RF
@@ -78,19 +105,18 @@ vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
 
         meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(i));
 
-        rv.push_back({{ _V_RF*(1+ amplnoise)
-                      , _syncphase+phasenoise+phasemod}});
+        rv.push_back({{ _syncphase+phasenoise+phasemod,1+amplnoise}});
     }
     return rv;
 }
 
-void vfps::DynamicRFKickMap::_update()
+void vfps::DynamicRFKickMap::_calcKick()
 {
-    RFKickMap::_update(_modulation[*_step][0],_modulation[*_step][1]);
+    RFKickMap::_calcKick(_modulation[*_step][0],_modulation[*_step][1]);
 }
 
 void vfps::DynamicRFKickMap::apply() {
-    _update();
+    _calcKick();
     KickMap::apply();
 }
 

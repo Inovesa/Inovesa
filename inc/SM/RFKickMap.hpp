@@ -29,7 +29,19 @@ namespace vfps
 class RFKickMap : public KickMap
 {
 public:
-    RFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
+    /**
+     * @brief RFKickMap constructor for linear RF approximation
+     */
+    RFKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
+             , const meshindex_t xsize, const meshindex_t ysize
+             , const meshaxis_t angle
+             , const InterpolationType it
+             , const bool interpol_clamp
+             , oclhptr_t oclh
+             );
+
+
+    RFKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const meshindex_t xsize, const meshindex_t ysize
              , const timeaxis_t revolutionpart
              , const meshaxis_t V_RF
@@ -43,7 +55,9 @@ public:
     ~RFKickMap() noexcept;
 
 protected:
-    virtual void _update(const meshaxis_t V, const meshaxis_t phase);
+    const bool _linear;
+
+    const meshaxis_t _angle;
 
     const timeaxis_t _revolutionpart;
 
@@ -56,6 +70,10 @@ protected:
     const meshaxis_t _syncphase;
 
     const timeaxis_t _bl2phase;
+
+protected:
+    virtual void _calcKick( const meshaxis_t phase=0
+                          , const meshaxis_t ampl=1);
 };
 
 } // namespace vfps
