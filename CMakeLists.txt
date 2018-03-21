@@ -20,8 +20,8 @@ endif()
 ## end of user configuration
 
 set (INOVESA_VERSION_MAJOR 1)
-set (INOVESA_VERSION_MINOR 0)
-set (INOVESA_VERSION_FIX -4)
+set (INOVESA_VERSION_MINOR 1)
+set (INOVESA_VERSION_FIX -1)
 # pre release numbers:
 # -1: alpha
 # -2: beta
