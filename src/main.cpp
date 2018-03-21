@@ -276,8 +276,7 @@ int main(int argc, char** argv)
     // RF phase modulation amplitude
     const auto rf_mod_ampl = std::max(0.0,
                                       opts.getRFPhaseModAmplitude()
-                                      /360.0*two_pi<double>()
-                                      * std::sqrt(revolutionpart));
+                                      /360.0*two_pi<double>());
 
     // "time step" for RF phase modulation
     const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt;
@@ -544,7 +543,7 @@ int main(int argc, char** argv)
             Display::printText("Building dynamic, linear RFKickMap...");
 
             rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                          , angle
+                                          , angle, f_RF
                                           , rf_noise_add, rf_noise_mul
                                           , rf_mod_ampl,rf_mod_step
                                           , &simulationstep, laststep
@@ -583,7 +582,7 @@ int main(int argc, char** argv)
         if (linearRF) {
             Display::printText("Building static, linear RFKickMap.");
             rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
-                                   , angle
+                                   , angle, f_RF
                                    , interpolationtype,interpol_clamp
                                    , oclh
                                    ));

@@ -46,6 +46,7 @@ public:
                     , const meshindex_t xsize
                     , const meshindex_t ysize
                     , const meshaxis_t angle
+                    , const double f_RF
                     , const meshaxis_t addnoise
                     , const meshaxis_t mulnoise
                     , const meshaxis_t modampl

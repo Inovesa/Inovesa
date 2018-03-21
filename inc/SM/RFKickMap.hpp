@@ -35,6 +35,7 @@ public:
     RFKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const meshindex_t xsize, const meshindex_t ysize
              , const meshaxis_t angle
+             , const frequency_t f_RF
              , const InterpolationType it
              , const bool interpol_clamp
              , oclhptr_t oclh
