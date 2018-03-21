@@ -86,7 +86,7 @@ public:
 
     void appendSourceMap(const PhaseSpace::Position *allpos);
 
-    void append(const std::shared_ptr<PhaseSpace> ps,
+    void append(const PhaseSpace& ps,
                 const AppendType at=AppendType::Defaults);
 
     void append(const WakeKickMap* wkm);

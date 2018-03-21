@@ -357,12 +357,9 @@ void vfps::PhaseSpace::updateYProjection() {
 vfps::integral_t vfps::PhaseSpace::normalize()
 {
     integrate();
-    getIntegral();
+
     #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
-        OCLH::enqueueReadBuffer
-            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
-    }
+    syncCLMem(clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
     for (meshindex_t i = 0; i < _nmeshcells; i++) {
         _data1D[i] /= _integral;
@@ -399,6 +396,13 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
         OCLH::enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data(),nullptr,evt);
+        OCLH::enqueueReadBuffer
+            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
+            nullptr,evt
+            #ifdef INOVESA_ENABLE_CLPROFILING
+            , syncPSEvents.get()
+            #endif // INOVESA_ENABLE_CLPROFILING
+            );
         break;
     }
     }
