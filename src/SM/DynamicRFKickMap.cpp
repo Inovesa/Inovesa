@@ -26,14 +26,15 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::two_pi;
 
-vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
                                         , const meshindex_t xsize
                                         , const meshindex_t ysize
                                         , const meshaxis_t angle
+                                        , const double revolutionpart
                                         , const double f_RF
-                                        , const meshaxis_t addnoise
-                                        , const meshaxis_t mulnoise
+                                        , const meshaxis_t phasespread
+                                        , const meshaxis_t amplspread
                                         , const meshaxis_t modampl
                                         , const double modtimeincrement
                                         , const uint32_t* step
@@ -43,8 +44,8 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , oclhptr_t oclh
                                         )
     : RFKickMap( in,out,xsize,ysize,angle,f_RF,it,interpol_clamp, oclh)
-    , _addnoise(addnoise)
-    , _mulnoise(mulnoise)
+    , _phasenoise(phasespread/std::sqrt(revolutionpart))
+    , _amplnoise(amplspread*std::sqrt(revolutionpart))
     , _modampl(modampl)
     , _modtimedelta(two_pi<double>()*modtimeincrement)
     , _step(step)
@@ -62,8 +63,8 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const double V_RF
                                         , const double f_RF
                                         , const double V0
-                                        , const meshaxis_t addnoise
-                                        , const meshaxis_t mulnoise
+                                        , const meshaxis_t phasespread
+                                        , const meshaxis_t amplspread
                                         , const meshaxis_t modampl
                                         , const double modtimeincrement
                                         , const uint32_t* step
@@ -74,8 +75,8 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         )
   : RFKickMap( in,out,xsize,ysize
              , revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
-  , _addnoise(addnoise)
-  , _mulnoise(mulnoise)
+  , _phasenoise(phasespread/std::sqrt(revolutionpart))
+  , _amplnoise(amplspread*std::sqrt(revolutionpart))
   , _modampl(modampl)
   , _modtimedelta(two_pi<double>()*modtimeincrement)
   , _step(step)
@@ -101,8 +102,8 @@ vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
     rv.reserve(steps);
 
     for (uint32_t i=0; i<steps; i++) {
-        meshaxis_t phasenoise = _dist(_prng)*_addnoise;
-        meshaxis_t amplnoise = _dist(_prng)*_mulnoise;
+        meshaxis_t phasenoise = _dist(_prng)*_phasenoise;
+        meshaxis_t amplnoise = _dist(_prng)*_amplnoise;
 
         meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(i));
 

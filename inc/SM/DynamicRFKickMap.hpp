@@ -37,17 +37,19 @@ class DynamicRFKickMap : public RFKickMap
 {
 public:
     /**
-     * @param angle     the RFKickMap rotation angle
-     * @param s_phase   width of the additive instability in y units
-     * @param s_peak    width of the relative multiplicative instability
+     * @brief constructor for linear RF
+     *
+     * @param angle the RFKickMap rotation angle
+     * @param phasespread width of the additive instability in rad
      */
     DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                     , std::shared_ptr<PhaseSpace> out
                     , const meshindex_t xsize
                     , const meshindex_t ysize
                     , const meshaxis_t angle
+                    , const double revolutionpart
                     , const double f_RF
-                    , const meshaxis_t addnoise
+                    , const meshaxis_t phasespread
                     , const meshaxis_t mulnoise
                     , const meshaxis_t modampl
                     , const double modtimeincrement
@@ -57,7 +59,11 @@ public:
                     , const bool interpol_clamp
                     , oclhptr_t oclh
                     );
-
+    /**
+     * @brief constructor for sinusoidal RF
+     *
+     * @param phasespread width of the additive instability in rad
+     */
     DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                     , std::shared_ptr<PhaseSpace> out
                     , const meshindex_t xsize
@@ -66,8 +72,8 @@ public:
                     , const double V_RF
                     , const double f_RF
                     , const double V0
-                    , const meshaxis_t addnoise
-                    , const meshaxis_t mulnoise
+                    , const meshaxis_t phasespread
+                    , const meshaxis_t amplspread
                     , const meshaxis_t modampl
                     , const double modtimeincrement
                     , const uint32_t* step
@@ -87,9 +93,9 @@ public:
     void apply() override;
 
 private:
-    const meshaxis_t _addnoise;
+    const meshaxis_t _phasenoise;
 
-    const meshaxis_t _mulnoise;
+    const meshaxis_t _amplnoise;
 
     const meshaxis_t _modampl;
 

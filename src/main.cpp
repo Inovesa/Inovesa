@@ -261,16 +261,12 @@ int main(int argc, char** argv)
     const auto use_csr = opts.getUseCSR();
 
     // RF Phase Noise Amplitude
-    const auto rf_noise_add = std::max(0.0,
-                                opts.getRFPhaseSpread()
-                                / 360.0*two_pi<double>()
-                                * std::sqrt(revolutionpart)*V_RF
-                                / dE*ps_size/pqsize);
+    const auto rf_phase_noise = std::max(0.0, opts.getRFPhaseSpread()
+                                            / 360.0*two_pi<double>());
 
     // RF Amplitude Noise
-    const auto rf_noise_mul = std::max(0.0,
-                                opts.getRFAmplitudeSpread()
-                                * std::sqrt(revolutionpart)/2.0);
+    const auto rf_ampl_noise  = std::max(0.0,
+                                opts.getRFAmplitudeSpread());
 
 
     // RF phase modulation amplitude
@@ -378,8 +374,12 @@ int main(int argc, char** argv)
         sstream.str("");
         auto syncphase = std::asin(V0/V_RF)/two_pi<double>()*360;
         sstream << std::fixed << syncphase;
-        Display::printText("Synchronous phase is at "+sstream.str()
-                           +" degree (should be small).");
+        if (linearRF) {
+            sstream << " degree (should be small).";
+        } else {
+            sstream << " degree.";
+        }
+        Display::printText("Synchronous phase is at "+sstream.str());
 
         sstream.str("");
         sstream << std::scientific << calc_damp << " s";
@@ -537,14 +537,14 @@ int main(int argc, char** argv)
     // rotation map(s): two, in case of Manhattan rotation
     std::unique_ptr<SourceMap> rm1;
     std::unique_ptr<SourceMap> rm2;
-    if ( rf_noise_add != 0 || rf_noise_mul != 0
+    if ( rf_phase_noise != 0 || rf_ampl_noise != 0
       || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
         if (linearRF) {
             Display::printText("Building dynamic, linear RFKickMap...");
 
             rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                          , angle, f_RF
-                                          , rf_noise_add, rf_noise_mul
+                                          , angle, revolutionpart, f_RF
+                                          , rf_phase_noise, rf_ampl_noise
                                           , rf_mod_ampl,rf_mod_step
                                           , &simulationstep, laststep
                                           , interpolationtype,interpol_clamp
@@ -555,7 +555,7 @@ int main(int argc, char** argv)
 
             rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
                                           , revolutionpart, V_eff, f_RF, V0
-                                          , rf_noise_add, rf_noise_mul
+                                          , rf_phase_noise, rf_ampl_noise
                                           , rf_mod_ampl,rf_mod_step
                                           , &simulationstep, laststep
                                           , interpolationtype,interpol_clamp
@@ -565,7 +565,7 @@ int main(int argc, char** argv)
 
         sstream.str("");
         sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;
-        if (rf_noise_add != 0) {
+        if (rf_phase_noise != 0) {
             Display::printText("...including phase noise (spread: "
                                + sstream.str()+" s)");
         }

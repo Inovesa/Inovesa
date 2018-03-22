@@ -253,7 +253,7 @@ private: // simulation parameters
     double meshshiftx;
     double meshshifty;
     uint32_t steps_per_Ts;
-    uint32_t steps_per_Trev;
+    double steps_per_Trev;
     int32_t renormalize;
     double rotations;
     uint32_t rotationtype;
