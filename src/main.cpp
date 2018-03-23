@@ -117,22 +117,33 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    auto display = (cldev < 0)
-                 ? nullptr
-                 : make_display( ofname
-                               #ifdef INOVESA_USE_OPENGL
-                               , opts.showPhaseSpace()
-                               , opts.getOpenGLVersion()
-                               #endif // INOVESA_USE_OPENGL
-                               );
-
-
-    oclhptr_t oclh;
     #ifdef INOVESA_USE_OPENCL
     if (cldev < 0) {
         OCLH::listCLDevices();
         return EXIT_SUCCESS;
     }
+    #endif // INOVESA_USE_OPENCL
+
+
+    std::unique_ptr<vfps::Display> display;
+    #ifdef INOVESA_USE_OPENGL
+    try {
+        display = make_display( ofname
+                              , opts.showPhaseSpace()
+                              , opts.getOpenGLVersion()
+                              );
+    } catch (DisplayException& e) {
+        Display::printText(e.what());
+        Display::printText("Will fall back to headless version.");
+    #else
+    {
+    #endif // INOVESA_USE_OPENGL
+        display = make_display( ofname );
+    }
+
+    #ifdef INOVESA_USE_OPENCL
+    oclhptr_t oclh;
+
     if (cldev > 0) {
         try {
             oclh = std::make_shared<OCLH>( opts.getCLDevice()-1

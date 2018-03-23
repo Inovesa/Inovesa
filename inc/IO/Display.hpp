@@ -77,7 +77,7 @@ private:
  */
 std::unique_ptr<Display> make_display(std::string ofname
                                       #ifdef INOVESA_USE_OPENGL
-                                      , bool gui
+                                      , bool gui=false
                                       , uint_fast8_t glversion=0
                                       #endif // INOVESA_USE_OPENGL
                                      );
