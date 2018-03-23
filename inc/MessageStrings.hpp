@@ -33,6 +33,19 @@ namespace vfps
 
 const std::string copyright_notice() noexcept;
 
+/**
+ * @brief inovesa_version
+ * @param verbose
+ * @return
+ *
+ * For branches leading to a release and for releases,
+ * external applications rely on the format of the output
+ * to determine the Inovesa feature level.
+ * So, the string will always begin with "v{major}.{minor}"
+ * followed by either ".{fix}" for releases
+ * or " {descriptor}" for pre-releas versions.
+ * Development versions do not have to follow this convention.
+ */
 const std::string inovesa_version(const bool verbose=false);
 
 const std::string status_string(std::shared_ptr<PhaseSpace> ps,
