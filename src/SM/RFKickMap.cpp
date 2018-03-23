@@ -78,7 +78,8 @@ void vfps::RFKickMap::_calcKick(const meshaxis_t phase, const meshaxis_t ampl)
         const meshaxis_t xcenter = _in->getAxis(0)->zerobin();
         for(meshindex_t x=0; x<_xsize; x++) {
             _offset[x] = std::tan(_angle)*(xcenter-x);
-            _offset[x] = _offset[x]*ampl+phaseoffs/_bl2phase*_axis[0]->delta();
+            _offset[x] += std::tan(_angle)*phaseoffs/_bl2phase/_axis[0]->delta();
+            _offset[x] *= ampl;
         }
     } else {
         for(meshindex_t x=0; x<_xsize; x++) {

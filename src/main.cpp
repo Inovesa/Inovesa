@@ -573,7 +573,7 @@ int main(int argc, char** argv)
             sstream.str("");
             sstream << "...including phase modulation ("
                     << opts.getRFPhaseModFrequency()/fs
-                    << " fs) of +/-"
+                    << " f_s) of +/-"
                     << opts.getRFPhaseModAmplitude()/360.0/f_rev/harmonic_number
                     << " s";
             Display::printText(sstream.str());
