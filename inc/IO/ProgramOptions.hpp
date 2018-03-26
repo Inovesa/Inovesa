@@ -204,7 +204,7 @@ public:
         { return use_csr; }
 
     inline auto getLinearRF() const
-        { return !nonlinearRF; }
+        { return linearRF; }
 
     inline auto getCollimatorRadius() const
         { return collimator; }
@@ -293,7 +293,7 @@ private: // phsical parameters
     double r_bend;
     double s_E;
     double V_RF;
-    bool nonlinearRF;
+    bool linearRF;
 
     bool use_csr;
 
