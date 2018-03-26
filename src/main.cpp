@@ -381,30 +381,6 @@ int main(int argc, char** argv)
             Display::printText("Doing " +sstream.str()+
                                " simulation steps per synchrotron period.");
         }
-
-        sstream.str("");
-        auto syncphase = std::asin(V0/V_RF)/two_pi<double>()*360;
-        sstream << std::fixed << syncphase;
-        if (linearRF) {
-            sstream << " degree (should be small).";
-        } else {
-            sstream << " degree.";
-        }
-        Display::printText("Synchronous phase is at "+sstream.str());
-
-        sstream.str("");
-        sstream << std::scientific << calc_damp << " s";
-        if (set_damp >= 0) {
-            sstream << " (set value: "
-                    << std::scientific << set_damp  << " s)";
-        }
-        Display::printText("Damping time calculated from ring parameters is "
-                           +sstream.str() + ".");
-
-        sstream.str("");
-        sstream << std::scientific << 1/t_damp/fs/(two_pi<double>());
-        Display::printText("Damping beta: " +sstream.str());
-
     }
     } // end of context of information printing
 
@@ -606,8 +582,32 @@ int main(int argc, char** argv)
                                    ));
         }
     }
+    { // context of information printing, not needed in the program
+    sstream.str("");
+    auto syncphase = std::asin(V0/V_RF)/two_pi<double>()*360;
+    sstream << std::fixed << syncphase;
+    if (linearRF) {
+        sstream << " degree (should be small).";
+    } else {
+        sstream << " degree.";
+    }
+    Display::printText("... with synchronous phase at "+sstream.str());
+    } // context of information printing
 
-    Display::printText("Building DriftMap.");
+    Display::printText("Building DriftMap with");
+    sstream.str("");
+    sstream << "... alpha0 = " << alpha0;
+    Display::printText(sstream.str());
+    if (alpha1 != 0) {
+        sstream.str("");
+        sstream << "... alpha1 = " << alpha1;
+        Display::printText(sstream.str());
+    }
+    if (alpha2 != 0) {
+        sstream.str("");
+        sstream << "... alpha2 = " << alpha2;
+        Display::printText(sstream.str());
+    }
     rm2.reset(new DriftMap( grid_t1,grid_t3,ps_size,ps_size
                           , {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}}
                           , E0,interpolationtype,interpol_clamp
@@ -626,6 +626,19 @@ int main(int argc, char** argv)
                                  , derivationtype
                                  , oclh
                                  );
+
+        sstream.str("");
+        sstream << std::scientific << calc_damp << " s";
+        if (set_damp >= 0) {
+            sstream << " (set value: "
+                    << std::scientific << set_damp  << " s)";
+        }
+        Display::printText("... damping time calculated from ring parameters "
+                           +sstream.str() + ".");
+
+        sstream.str("");
+        sstream << std::scientific << 1/t_damp/fs/(two_pi<double>());
+        Display::printText("... damping beta: " +sstream.str());
     } else {
         fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size, oclh);
     }

@@ -45,7 +45,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in
                                         )
     : RFKickMap( in,out,xsize,ysize,angle,f_RF,it,interpol_clamp, oclh)
     , _phasenoise(phasespread/std::sqrt(revolutionpart))
-    , _amplnoise(amplspread*std::sqrt(revolutionpart))
+    , _amplnoise(amplspread/std::sqrt(revolutionpart))
     , _modampl(modampl)
     , _modtimedelta(two_pi<double>()*modtimeincrement)
     , _step(step)
@@ -76,7 +76,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
   : RFKickMap( in,out,xsize,ysize
              , revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
   , _phasenoise(phasespread/std::sqrt(revolutionpart))
-  , _amplnoise(amplspread*std::sqrt(revolutionpart))
+  , _amplnoise(amplspread/std::sqrt(revolutionpart))
   , _modampl(modampl)
   , _modtimedelta(two_pi<double>()*modtimeincrement)
   , _step(step)

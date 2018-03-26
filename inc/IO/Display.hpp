@@ -123,6 +123,15 @@ public:
 
     void draw();
 
+    /**
+     * @brief printText to stdout and logfile
+     *
+     * @param txt
+     * @param newline
+     * @param silentTime skip if last printout was less then silentTime s ago
+     *
+     * @todo replace by << operator
+     */
     static void printText(std::string txt,
                           bool newline = true,
                           float silentTime=0.0f);
