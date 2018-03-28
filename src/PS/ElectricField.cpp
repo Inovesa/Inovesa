@@ -56,7 +56,9 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   , _wakelosses(nullptr)
   , _wakelosses_fft(nullptr)
   , _wakepotential_padded(nullptr)
+  #if defined INOVESA_USE_OPENCL and defined  INOVESA_USE_OPENGL
   , wakepotential_glbuf(0)
+  #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
   , _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr)
   , _fft_wakelosses(nullptr)
   #ifdef INOVESA_USE_CLFFT
