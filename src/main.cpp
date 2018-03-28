@@ -141,9 +141,9 @@ int main(int argc, char** argv)
         display = make_display( ofname );
     }
 
-    #ifdef INOVESA_USE_OPENCL
     oclhptr_t oclh;
 
+    #ifdef INOVESA_USE_OPENCL
     if (cldev > 0) {
         try {
             oclh = std::make_shared<OCLH>( opts.getCLDevice()-1
