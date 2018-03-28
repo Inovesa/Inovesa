@@ -44,6 +44,7 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
+#include "Array.h"
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -98,6 +99,9 @@ public:
               , meshdata_t *data = nullptr
               );
 
+    /**
+     * @brief PhaseSpace copy constructor
+     */
     PhaseSpace(const PhaseSpace& other);
 
     ~PhaseSpace() noexcept;
@@ -108,7 +112,7 @@ public:
       * @return pointer to array holding size<0>()*size<1>() data points
       */
     inline meshdata_t* getData() const
-    { return _data1D; }
+    { return _data(); }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
@@ -247,9 +251,7 @@ protected:
 
     const IntegralType _integraltype;
 
-    meshdata_t** _data;
-
-    meshdata_t* _data1D;
+    Array::array2<meshdata_t> _data;
 
     /**
      * @brief _moment: holds the moments for distributions
