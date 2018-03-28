@@ -27,24 +27,14 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
                       , const InterpolationType it
                       , const bool interpol_clamp
                       , const Axis kd
-                      #ifdef INOVESA_USE_OPENCL
-                      , std::shared_ptr<OCLH> oclh
-                      #endif // INOVESA_USE_OPENCL
+                      , oclhptr_t oclh
                       )
-  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1,it,it
-             #ifdef INOVESA_USE_OPENCL
-             , oclh
-             #endif // INOVESA_USE_OPENCL
-             ),
+  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1,it,it,oclh),
     _kickdirection(kd),
     _meshsize_kd(kd==Axis::x?xsize:ysize),
     _meshsize_pd(kd==Axis::x?ysize:xsize)
 {
-    if (interpol_clamp
-        #ifdef INOVESA_USE_OPENCL
-            && !_oclh
-        #endif
-       ) {
+    if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
     _offset.resize(_meshsize_pd,meshaxis_t(0));
@@ -252,6 +242,8 @@ void vfps::KickMap::apply()
             }
         }
     }
+    ;
+
     }
 }
 
@@ -307,10 +299,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
 
 void vfps::KickMap::updateSM()
 {
-    #ifdef INOVESA_USE_OPENCL
-    if (!_oclh)
-    #endif
-    {
+    if (_oclh == nullptr) {
     // gridpoint matrix used for interpolation
     hi* ph = new hi[_it];
 

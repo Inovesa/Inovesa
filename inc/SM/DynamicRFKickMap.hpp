@@ -36,26 +36,51 @@ namespace vfps
 class DynamicRFKickMap : public RFKickMap
 {
 public:
-    /*!
-     * @param angle     the RFKickMap rotation angle
-     * @param s_phase   width of the additive instability in y units
-     * @param s_peak    width of the relative multiplicative instability
+    /**
+     * @brief constructor for linear RF
+     *
+     * @param angle the RFKickMap rotation angle
+     * @param phasespread width of the additive instability in rad
      */
     DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                     , std::shared_ptr<PhaseSpace> out
                     , const meshindex_t xsize
                     , const meshindex_t ysize
                     , const meshaxis_t angle
-                    , const meshaxis_t addnoise
+                    , const double revolutionpart
+                    , const double f_RF
+                    , const meshaxis_t phasespread
                     , const meshaxis_t mulnoise
                     , const meshaxis_t modampl
                     , const double modtimeincrement
                     , const uint32_t* step
+                    , const uint32_t steps
                     , const InterpolationType it
                     , const bool interpol_clamp
-                    #ifdef INOVESA_USE_OPENCL
-                    , std::shared_ptr<OCLH> oclh
-                    #endif // INOVESA_USE_OPENCL
+                    , oclhptr_t oclh
+                    );
+    /**
+     * @brief constructor for sinusoidal RF
+     *
+     * @param phasespread width of the additive instability in rad
+     */
+    DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+                    , std::shared_ptr<PhaseSpace> out
+                    , const meshindex_t xsize
+                    , const meshindex_t ysize
+                    , const double revolutionpart
+                    , const double V_RF
+                    , const double f_RF
+                    , const double V0
+                    , const meshaxis_t phasespread
+                    , const meshaxis_t amplspread
+                    , const meshaxis_t modampl
+                    , const double modtimeincrement
+                    , const uint32_t* step
+                    , const uint32_t steps
+                    , const InterpolationType it
+                    , const bool interpol_clamp
+                    , oclhptr_t oclh
                     );
 
     ~DynamicRFKickMap() noexcept;
@@ -68,9 +93,9 @@ public:
     void apply() override;
 
 private:
-    const meshaxis_t _addnoise;
+    const meshaxis_t _phasenoise;
 
-    const meshaxis_t _mulnoise;
+    const meshaxis_t _amplnoise;
 
     const meshaxis_t _modampl;
 
@@ -81,10 +106,20 @@ private:
     std::mt19937 _prng;
     std::normal_distribution<meshaxis_t> _dist;
 
-    std::vector<meshaxis_t> _mean;
+    std::vector<std::array<meshaxis_t,2>> _modulation;
 
-    /// set up the KickMap with a new set of random parameters
-    void reset();
+    /**
+     * set up the KickMap with a (new) set of parameters
+     */
+    std::vector<std::array<meshaxis_t,2>> __calcModulation(uint32_t steps);
+
+protected:
+    /**
+     * @brief update to current time step
+     *
+     * @todo For OpenCL, this should be done on device
+     */
+    void _calcKick();
 };
 
 } // namespace vfps

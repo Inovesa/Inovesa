@@ -32,15 +32,9 @@ public:
     Identity( std::shared_ptr<PhaseSpace> in
             , std::shared_ptr<PhaseSpace> out
             , const meshindex_t xsize, const meshindex_t ysize
-            #ifdef INOVESA_USE_OPENCL
-            , std::shared_ptr<OCLH> oclh
-            #endif // INOVESA_USE_OPENCL
+            , oclhptr_t oclh
             )
-  : SourceMap( in, out, xsize, ysize, 0, 0
-             #ifdef INOVESA_USE_OPENCL
-             , oclh
-             #endif // INOVESA_USE_OPENCL
-             )
+  : SourceMap( in, out, xsize, ysize, 0, 0, oclh)
 {}
 
     ~Identity() noexcept;

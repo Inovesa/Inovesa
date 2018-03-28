@@ -100,6 +100,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("AcceleratingVoltage,V",
             po::value<double>(&V_RF)->default_value(1e6,"1e6"),
             "Accelerating Voltage (V) for one revolution")
+        ("LinearRF",
+            po::value<bool>(&linearRF)->default_value(true),
+            "Use linear model for accelerating voltage")
         ("RFAmplitudeSpread",
             po::value<double>(&rf_amplitude_spread)->default_value(0),
             "Relative accelerating voltage amplitude spread per turn")
@@ -180,7 +183,7 @@ vfps::ProgramOptions::ProgramOptions() :
     _simulopts.add_options()
         ("StepsPerTs,N", po::value<uint32_t>(&steps_per_Ts)->default_value(1000),
             "Simulation steps for one synchrotron period")
-        ("StepsPerRevolution", po::value<uint32_t>(&steps_per_Trev)->default_value(0),
+        ("StepsPerRevolution", po::value<double>(&steps_per_Trev)->default_value(0),
             "Simulation steps for one revolution (overwrites StepsPerTs)")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
             "Factor for zero padding of bunch profile")

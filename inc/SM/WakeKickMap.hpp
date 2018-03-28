@@ -42,12 +42,10 @@ public:
     WakeKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
                , const meshindex_t xsize, const meshindex_t ysize
                , const InterpolationType it, const bool interpol_clamp
-               #ifdef INOVESA_USE_OPENCL
-               , std::shared_ptr<OCLH> oclh
-               #ifdef INOVESA_USE_OPENGL
+               , oclhptr_t oclh
+               #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
                , cl_GLuint glbuf
-               #endif // INOVESA_USE_OPENGL
-               #endif // INOVESA_USE_OPENCL
+               #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
 
     ~WakeKickMap() noexcept;

@@ -42,9 +42,7 @@ public:
                    , const double Ib, const double dt
                    , const InterpolationType it
                    , const bool interpol_clamp
-                   #ifdef INOVESA_USE_OPENCL
-                   , std::shared_ptr<OCLH> oclh
-                   #endif // INOVESA_USE_OPENCL
+                   , oclhptr_t oclh
                    );
 
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
@@ -53,9 +51,7 @@ public:
                    , const ElectricField* csr
                    , const InterpolationType it
                    , const bool interpol_clamp
-                   #ifdef INOVESA_USE_OPENCL
-                   , std::shared_ptr<OCLH> oclh
-                   #endif // INOVESA_USE_OPENCL
+                   , oclhptr_t oclh
                    );
 
     ~WakeFunctionMap() noexcept;
@@ -96,9 +92,7 @@ private:
                    , std::shared_ptr<PhaseSpace> out
                    , const meshindex_t xsize, const meshindex_t ysize
                    , const InterpolationType it, bool interpol_clamp
-                   #ifdef INOVESA_USE_OPENCL
-                   , std::shared_ptr<OCLH> oclh
-                   #endif // #ifdef INOVESA_USE_OPENCL
+                   , oclhptr_t oclh
                    );
 
 

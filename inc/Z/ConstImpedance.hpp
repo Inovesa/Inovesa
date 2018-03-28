@@ -36,9 +36,7 @@ public:
     ConstImpedance( const size_t n
                   , const frequency_t f_max
                   , const vfps::impedance_t Z
-                  #ifdef INOVESA_USE_OPENCL
-                  , std::shared_ptr<OCLH> oclh = nullptr
-                  #endif // INOVESA_USE_OPENCL
+                  , oclhptr_t oclh = nullptr
                   );
 
 private:

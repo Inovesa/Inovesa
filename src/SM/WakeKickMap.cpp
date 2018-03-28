@@ -26,21 +26,15 @@ vfps::WakeKickMap::WakeKickMap( std::shared_ptr<PhaseSpace> in
                               , const meshindex_t ysize
                               , const InterpolationType it
                               , const bool interpol_clamp
-                              #ifdef INOVESA_USE_OPENCL
-                              , std::shared_ptr<OCLH> oclh
-                              #ifdef INOVESA_USE_OPENGL
+                              , oclhptr_t oclh
+                              #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
                               , cl_GLuint glbuf
-                              #endif // INOVESA_USE_OPENGL
-                              #endif // INOVESA_USE_OPENCL
-                              )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y
-           #ifdef INOVESA_USE_OPENCL
-           , oclh
-           #endif // INOVESA_USE_OPENCL
-           )
-    #ifdef INOVESA_USE_OPENGL
+                              #endif // INOVESA_USE_OPENCL an INOVESA_USE_OPENGL
+                              )  :
+    KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y,oclh)
+    #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
     , _offset_glbuf(glbuf)
-    #endif // INOVESA_USE_OPENGL
+    #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
 {
 }
 

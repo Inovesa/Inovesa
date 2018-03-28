@@ -24,20 +24,15 @@ vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
                                         , const vfps::meshindex_t xsize
                                         , const vfps::meshindex_t ysize
-                                        , ElectricField *field
+                                        , ElectricField* field
                                         , const InterpolationType it
                                         , bool interpol_clamp
-                                        #ifdef INOVESA_USE_OPENCL
-                                        , std::shared_ptr<OCLH> oclh
-                                        #endif // INOVESA_USE_OPENCL
+                                        , oclhptr_t oclh
                                         )
-  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp
-               #ifdef INOVESA_USE_OPENCL
-               , oclh
-               #ifdef INOVESA_USE_OPENGL
+  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp,oclh
+               #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
                , field->wakepotential_glbuf
-               #endif // INOVESA_USE_OPENGL
-               #endif // INOVESA_USE_OPENCL
+               #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                )
   , _field(field)
 {

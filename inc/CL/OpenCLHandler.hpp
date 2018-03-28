@@ -20,7 +20,15 @@
 
 #ifndef OPENCLHANDLER_HPP
 #define OPENCLHANDLER_HPP
-#ifdef INOVESA_USE_OPENCL
+
+#include <memory>
+
+#if not defined INOVESA_USE_OPENCL
+typedef std::nullptr_t oclhptr_t;
+#else // INOVESA_USE_OPENCL
+
+class OCLH;
+typedef std::shared_ptr<OCLH> oclhptr_t;
 
 enum class clCopyDirection {
     cpu2dev,

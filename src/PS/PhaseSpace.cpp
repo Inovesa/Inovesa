@@ -26,9 +26,7 @@
 using boost::math::constants::pi;
 
 vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
-                            #ifdef INOVESA_USE_OPENCL
-                            , std::shared_ptr<OCLH> oclh
-                            #endif // #ifdef INOVESA_USE_OPENCL
+                            , oclhptr_t oclh
                             , const double bunch_charge
                             , const double bunch_current
                             , const double zoom
@@ -43,9 +41,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     _nmeshcells(_nmeshcellsX*_nmeshcellsY),
     _integraltype(IntegralType::simpson),
     _data1D(new meshdata_t[_nmeshcells]())
-  #ifdef INOVESA_USE_OPENCL
   , _oclh(oclh)
-  #endif // INOVESA_USE_OPENCL
   #ifdef INOVESA_ENABLE_CLPROFILING
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
   , integEvents(std::make_unique<cl::vector<cl::Event*>>())
@@ -170,18 +166,14 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
 
 vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , meshRuler_ptr axis1
-                            #ifdef INOVESA_USE_OPENCL
-                            , std::shared_ptr<OCLH> oclh
-                            #endif // #ifdef INOVESA_USE_OPENCL
+                            , oclhptr_t oclh
                             , const double bunch_charge
                             , const double bunch_current
                             , const double zoom
                             , vfps::meshdata_t *data
                             ) :
     PhaseSpace( {{axis0,axis1}}
-              #ifdef INOVESA_USE_OPENCL
               , oclh
-              #endif // INOVESA_USE_OPENCL
               , bunch_charge,bunch_current,zoom,data)
 {
 }
@@ -189,9 +181,7 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
                             , meshaxis_t xmin, meshaxis_t xmax
                             , meshaxis_t ymin, meshaxis_t ymax
-                            #ifdef INOVESA_USE_OPENCL
-                            , std::shared_ptr<OCLH> oclh
-                            #endif // #ifdef INOVESA_USE_OPENCL
+                            , oclhptr_t oclh
                             , const double bunch_charge
                             , const double bunch_current
                             , double xscale, double yscale
@@ -199,17 +189,13 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale))
               , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale))
-              #ifdef INOVESA_USE_OPENCL
               , oclh
-              #endif // INOVESA_USE_OPENCL
               , bunch_charge,bunch_current, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
     PhaseSpace( other._axis
-              #ifdef INOVESA_USE_OPENCL
               , other._oclh
-              #endif // INOVESA_USE_OPENCL
               , other.charge
               , other.current
               , -1

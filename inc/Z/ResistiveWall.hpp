@@ -49,9 +49,7 @@ public:
                  , const double s
                  , const double xi
                  , const double b
-                 #ifdef INOVESA_USE_OPENCL
-                 , std::shared_ptr<OCLH> oclh = nullptr
-                 #endif // INOVESA_USE_OPENCL
+                 , oclhptr_t oclh = nullptr
                  );
 
 private:

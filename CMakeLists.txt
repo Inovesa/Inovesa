@@ -12,8 +12,6 @@ if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
     add_definitions(-Wall -Wextra)
     add_definitions(-g -DDEBUG)
     MESSAGE ("Doing debug compile, including debug symbols.")
-    # Enable OpenCL profiling
-    add_definitions(-DINOVESA_ENABLE_CLPROFILING)
 else()
     add_definitions(-Wall -O3 -w )
     MESSAGE ("Doing release compile, using optimization flags.")
@@ -22,8 +20,8 @@ endif()
 ## end of user configuration
 
 set (INOVESA_VERSION_MAJOR 1)
-set (INOVESA_VERSION_MINOR 0)
-set (INOVESA_VERSION_FIX -4)
+set (INOVESA_VERSION_MINOR 1)
+set (INOVESA_VERSION_FIX -1)
 # pre release numbers:
 # -1: alpha
 # -2: beta
@@ -163,6 +161,10 @@ IF(OPENCL_FOUND)
         MESSAGE ("Found clFFT. Will add support.")
         SET(LIBS ${LIBS} ${CLFFT_LIBRARIES})
         include_directories(${CLFFT_INCLUDE_DIRS})
+    ENDIF()
+    IF((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+        # Enable OpenCL profiling
+        add_definitions(-DINOVESA_ENABLE_CLPROFILING)
     ENDIF()
 ELSE()
     MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")

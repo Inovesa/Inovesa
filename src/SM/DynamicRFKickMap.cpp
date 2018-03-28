@@ -26,69 +26,99 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::two_pi;
 
-vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
                                         , const meshindex_t xsize
                                         , const meshindex_t ysize
                                         , const meshaxis_t angle
-                                        , const meshaxis_t addnoise
-                                        , const meshaxis_t mulnoise
+                                        , const double revolutionpart
+                                        , const double f_RF
+                                        , const meshaxis_t phasespread
+                                        , const meshaxis_t amplspread
                                         , const meshaxis_t modampl
                                         , const double modtimeincrement
                                         , const uint32_t* step
+                                        , const uint32_t steps
                                         , const InterpolationType it
                                         , const bool interpol_clamp
-                                        #ifdef INOVESA_USE_OPENCL
-                                        , std::shared_ptr<OCLH> oclh
-                                        #endif // INOVESA_USE_OPENCL
+                                        , oclhptr_t oclh
                                         )
-    : RFKickMap( in,out,xsize,ysize,angle,it,interpol_clamp
-               #ifdef INOVESA_USE_OPENCL
-               , oclh
-               #endif // INOVESA_USE_OPENCL
-               )
-    , _addnoise(addnoise)
-    , _mulnoise(mulnoise)
+    : RFKickMap( in,out,xsize,ysize,angle,f_RF,it,interpol_clamp, oclh)
+    , _phasenoise(phasespread/std::sqrt(revolutionpart))
+    , _amplnoise(amplspread/std::sqrt(revolutionpart))
     , _modampl(modampl)
     , _modtimedelta(two_pi<double>()*modtimeincrement)
     , _step(step)
     , _prng(std::mt19937(std::random_device{}()))
     , _dist(std::normal_distribution<meshaxis_t>(0, 1))
-    , _mean(_offset)
+    , _modulation(__calcModulation(steps))
+{
+}
+
+vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+                                        , std::shared_ptr<PhaseSpace> out
+                                        , const meshindex_t xsize
+                                        , const meshindex_t ysize
+                                        , const double revolutionpart
+                                        , const double V_RF
+                                        , const double f_RF
+                                        , const double V0
+                                        , const meshaxis_t phasespread
+                                        , const meshaxis_t amplspread
+                                        , const meshaxis_t modampl
+                                        , const double modtimeincrement
+                                        , const uint32_t* step
+                                        , const uint32_t steps
+                                        , const InterpolationType it
+                                        , const bool interpol_clamp
+                                        , oclhptr_t oclh
+                                        )
+  : RFKickMap( in,out,xsize,ysize
+             , revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
+  , _phasenoise(phasespread/std::sqrt(revolutionpart))
+  , _amplnoise(amplspread/std::sqrt(revolutionpart))
+  , _modampl(modampl)
+  , _modtimedelta(two_pi<double>()*modtimeincrement)
+  , _step(step)
+  , _prng(std::mt19937(std::random_device{}()))
+  , _dist(std::normal_distribution<meshaxis_t>(0, 1))
+  , _modulation(__calcModulation(steps))
 {
 }
 
 vfps::DynamicRFKickMap::~DynamicRFKickMap() noexcept
 #ifdef INOVESA_ENABLE_CLPROFILING
-    { std::cout << "~DynamicRFKickMap() -> "; }
+{
+    saveTimings("DynamicRFKickMap");
+}
 #else
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING
 
-void vfps::DynamicRFKickMap::reset() {
-    meshaxis_t addnoise = _dist(_prng)*_addnoise;
-    meshaxis_t mulnoise = _dist(_prng)*_mulnoise;
+std::vector<std::array<vfps::meshaxis_t,2>>
+vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
+{
+    std::vector<std::array<meshaxis_t,2>> rv;
+    rv.reserve(steps);
 
-    meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(*_step));
+    for (uint32_t i=0; i<steps; i++) {
+        meshaxis_t phasenoise = _dist(_prng)*_phasenoise;
+        meshaxis_t amplnoise = _dist(_prng)*_amplnoise;
 
-    _offset = _mean;
+        meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(i));
 
-    for (auto& offs : _offset) {
-        offs = offs * (1 + mulnoise) + addnoise+phasemod;
+        rv.push_back({{ _syncphase+phasenoise+phasemod,1+amplnoise}});
     }
+    return rv;
+}
 
-    #ifdef INOVESA_USE_OPENCL
-    if (_oclh) {
-        syncCLMem(clCopyDirection::cpu2dev);
-    } else
-    #endif // INOVESA_USE_OPENCL
-    {
-        updateSM();
-    }
+void vfps::DynamicRFKickMap::_calcKick()
+{
+    RFKickMap::_calcKick(_modulation[*_step][0],_modulation[*_step][1]);
 }
 
 void vfps::DynamicRFKickMap::apply() {
-    reset();
+    _calcKick();
     KickMap::apply();
 }
 

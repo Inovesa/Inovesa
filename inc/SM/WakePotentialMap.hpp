@@ -38,9 +38,7 @@ public:
                     , ElectricField* field
                     , const InterpolationType it
                     , bool interpol_clamp
-                    #ifdef INOVESA_USE_OPENCL
-                    , std::shared_ptr<OCLH> oclh
-                    #endif // INOVESA_USE_OPENCL
+                    , oclhptr_t oclh
                     );
 
     ~WakePotentialMap() noexcept;

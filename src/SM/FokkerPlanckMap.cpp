@@ -27,16 +27,10 @@ vfps::FokkerPlanckMap::FokkerPlanckMap( std::shared_ptr<PhaseSpace> in
                                       , FPType fpt
                                       , timeaxis_t e1
                                       , DerivationType dt
-                                      #ifdef INOVESA_USE_OPENCL
-                                      , std::shared_ptr<OCLH> oclh
-                                      #endif // INOVESA_USE_OPENCL
+                                      , oclhptr_t oclh
                                       )
     :
-    SourceMap( in, out, 1, ysize, dt, dt
-             #ifdef INOVESA_USE_OPENCL
-             , oclh
-             #endif // INOVESA_USE_OPENCL
-             ),
+    SourceMap( in, out, 1, ysize, dt, dt, oclh),
     _meshxsize(xsize)
 {
     // the following doubles should be interpol_t

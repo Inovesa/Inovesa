@@ -30,16 +30,9 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
                         , const double E0
                         , const InterpolationType it
                         , const bool interpol_clamp
-                        #ifdef INOVESA_USE_OPENCL
-                        , std::shared_ptr<OCLH> oclh
-                        #endif // INOVESA_USE_OPENCL
+                        , oclhptr_t oclh
                         )
-    :
-      KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::x
-             #ifdef INOVESA_USE_OPENCL
-             , oclh
-             #endif
-             )
+  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::x,oclh)
 {
     for(meshindex_t y=0; y<_ysize; y++) {
         _offset[y] = 0;
@@ -47,8 +40,9 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
             _offset[y] += slip[i]*_axis[1]->at(y)
                        *  std::pow(_axis[1]->at(y)*_axis[1]->scale()/E0,i);
         }
-        _offset[y] /= _axis[1]->delta();
+        _offset[y] /= _axis[0]->delta();
     }
+
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         syncCLMem(clCopyDirection::cpu2dev);

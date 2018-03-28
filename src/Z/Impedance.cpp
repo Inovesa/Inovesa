@@ -23,70 +23,48 @@
 #include <fstream>
 
 vfps::Impedance::Impedance(const vfps::Impedance &other)
-  : Impedance( other._axis,other._data
-             #ifdef INOVESA_USE_OPENCL
-             , other._oclh
-             #endif // INOVESA_USE_OPENCL
-             )
+  : Impedance( other._axis,other._data, other._oclh)
 {
 }
 
 vfps::Impedance::Impedance( Ruler<vfps::frequency_t> axis
                           , const std::vector<vfps::impedance_t> &z
-                          #ifdef INOVESA_USE_OPENCL
-                          , std::shared_ptr<OCLH> oclh
-                          #endif // INOVESA_USE_OPENCL
+                          , oclhptr_t oclh
                           )
   : _nfreqs(z.size())
   , _axis(axis)
   , _data(z)
-  #ifdef INOVESA_USE_OPENCL
   , _oclh(oclh)
-  #endif
 {
     syncCLMem();
 }
 
 vfps::Impedance::Impedance( const std::vector<vfps::impedance_t> &z
                           , const frequency_t f_max
-                          #ifdef INOVESA_USE_OPENCL
-                          , std::shared_ptr<OCLH> oclh
-                          #endif // INOVESA_USE_OPENCL
+                          , oclhptr_t oclh
                           )
   : Impedance( Ruler<frequency_t>(z.size(),0,f_max,1),z
-             #ifdef INOVESA_USE_OPENCL
              , oclh
-             #endif // INOVESA_USE_OPENCL
              )
 {
 }
 
 vfps::Impedance::Impedance( const size_t nfreqs
                           , const vfps::frequency_t f_max
-                          #ifdef INOVESA_USE_OPENCL
-                          , std::shared_ptr<OCLH> oclh
-                          #endif // INOVESA_USE_OPENCL
+                          , oclhptr_t oclh
                           )
   : Impedance( Ruler<frequency_t>(nfreqs,0,f_max,1)
              , std::vector<impedance_t>(nfreqs,0)
-             #ifdef INOVESA_USE_OPENCL
              , oclh
-             #endif // INOVESA_USE_OPENCL
              )
 {
 }
 
 vfps::Impedance::Impedance( std::string datafile
                           , double f_max
-                          #ifdef INOVESA_USE_OPENCL
-                          , std::shared_ptr<OCLH> oclh
-                          #endif // INOVESA_USE_OPENCL
+                          , oclhptr_t oclh
                           )
-  : Impedance( readData(datafile),f_max
-             #ifdef INOVESA_USE_OPENCL
-             , oclh
-             #endif // INOVESA_USE_OPENCL
-             )
+  : Impedance( readData(datafile),f_max, oclh)
 {
 }
 

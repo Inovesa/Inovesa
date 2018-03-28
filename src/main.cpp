@@ -54,8 +54,8 @@
 #include <memory>
 #include <sstream>
 
+#include <boost/math/special_functions/sign.hpp>
 #include <boost/math/constants/constants.hpp>
-using boost::math::constants::pi;
 using boost::math::constants::two_pi;
 
 using namespace vfps;
@@ -83,7 +83,6 @@ int main(int argc, char** argv)
      * but can be used by time dependent variables.
      */
     uint32_t simulationstep = 0;
-
 
     /*
      * Program options might be such that the program does not have
@@ -118,23 +117,34 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    auto display = (cldev < 0)
-                 ? nullptr
-                 : make_display( ofname
-                               #ifdef INOVESA_USE_OPENGL
-                               , opts.showPhaseSpace()
-                               , opts.getOpenGLVersion()
-                               #endif // INOVESA_USE_OPENGL
-                               );
-
     #ifdef INOVESA_USE_OPENCL
     if (cldev < 0) {
         OCLH::listCLDevices();
         return EXIT_SUCCESS;
     }
+    #endif // INOVESA_USE_OPENCL
 
-    std::shared_ptr<OCLH> oclh;
-    if ((cldev > 0)) {
+
+    std::unique_ptr<vfps::Display> display;
+    #ifdef INOVESA_USE_OPENGL
+    try {
+        display = make_display( ofname
+                              , opts.showPhaseSpace()
+                              , opts.getOpenGLVersion()
+                              );
+    } catch (DisplayException& e) {
+        Display::printText(e.what());
+        Display::printText("Will fall back to headless version.");
+    #else
+    {
+    #endif // INOVESA_USE_OPENGL
+        display = make_display( ofname );
+    }
+
+    oclhptr_t oclh;
+
+    #ifdef INOVESA_USE_OPENCL
+    if (cldev > 0) {
         try {
             oclh = std::make_shared<OCLH>( opts.getCLDevice()-1
                                          #ifdef INOVESA_USE_OPENGL
@@ -182,55 +192,45 @@ int main(int argc, char** argv)
     // absolute energy spread (in eV)
     const auto dE = sE*E0;
 
-    // revolution frequency (in Hz)
-    const auto f_rev = opts.getRevolutionFrequency();
-
     /*
      * Only positive benging radii will be used.
      * Otherwise radius will be deduced from revolution frequency
      * (based on iso-magnetic ring model).
      */
     const auto use_set_bend = (opts.getBendingRadius()>0);
+
+    // revolution frequency (in Hz)
+    const auto f_rev = opts.getRevolutionFrequency();
+
     const auto R_bend = use_set_bend
             ? opts.getBendingRadius()
-            : physcons::c/(2*pi<double>()*f_rev);
-
-    /*
-     * Revolution frequency an iso-magnetic ring
-     * with same bending radius would have.
-     * It is used as fundamental frequency for impedances.
-     */
-    const auto f0 = !use_set_bend
-            ? f_rev
-            : physcons::c/(2*pi<double>()*R_bend);
-
-    // scaling for isomagnetic approximation, defined to be <= 1
-    const double isoscale = f_rev/f0;
+            : physcons::c/(two_pi<double>()*f_rev);
 
     const frequency_t fc = opts.getCutoffFrequency();
-    const double H_unscaled = opts.getHarmonicNumber();
-    const double harmonic_number = isoscale*H_unscaled;
+    const auto harmonic_number = opts.getHarmonicNumber();
+    const auto f_RF = f_rev*harmonic_number;
     const double gap = opts.getVacuumChamberGap();
     const double V_RF = opts.getRFVoltage();
+    const auto linearRF = opts.getLinearRF();
 
-    double fs_tmp = opts.getSyncFreq();
+    const auto lorentzgamma = E0/physcons::me;
+    const auto V0 = physcons::e*std::pow(lorentzgamma,4)
+                  / (3* physcons::epsilon0*R_bend);
+
+    const auto W0 = V0*physcons::e;
+
+    const double V_eff = std::sqrt(V_RF*V_RF-V0*V0);
+
+    double fs = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
     // non-zero f_s will be used, zero implies usage of alpha0
-    if (fs_tmp == 0) {
-        fs_tmp = f_rev*std::sqrt(alpha0_tmp*H_unscaled*V_RF/(2*pi<double>()*E0));
+    if (fs == 0) {
+        fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_RF/(two_pi<double>()*E0));
     } else {
-        // alpha0 should have same sign as fs
-        auto sign = (fs_tmp > 0) ? 1 : -1;
-
-        alpha0_tmp = sign*2*pi<double>()*E0/(H_unscaled*V_RF)*std::pow(fs_tmp/f_rev,2);
+        alpha0_tmp = boost::math::sign(fs)*two_pi<double>()*E0
+                   / (harmonic_number*V_RF)*std::pow(fs/f_rev,2);
     }
-
-    // synchrotron frequency (comparable to real storage ring)
-    const double fs_unscaled = fs_tmp;
-
-    // synchrotron frequency (isomagnetic ring)
-    const double fs = fs_unscaled/isoscale;
 
     const meshaxis_t alpha0 = alpha0_tmp;
     const meshaxis_t alpha1 = opts.getAlpha1();
@@ -238,32 +238,27 @@ int main(int argc, char** argv)
 
 
     // natural RMS bunch length
-    const double bl = physcons::c*dE/harmonic_number/std::pow(f0,2.0)/V_RF*fs;
+    const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
 
-    const double Ib_unscaled = opts.getBunchCurrent();
-    const double Qb = Ib_unscaled/f_rev;
-    const double Ib_scaled = Ib_unscaled/isoscale;
+    const double Ib = opts.getBunchCurrent();
+    const double Qb = Ib/f_rev;
     const double Iz = opts.getStartDistZoom();
 
     const double steps = (opts.getStepsPerTrev()>0)
-            ? opts.getStepsPerTrev()*f_rev/fs_unscaled
+            ? opts.getStepsPerTrev()*f_rev/fs
             : std::max(opts.getStepsPerTsync(),1u);
     const auto outstep = opts.getOutSteps();
     const float rotations = opts.getNRotations();
-
-    const auto lorentzgamma = E0/physcons::me;
-    const auto W0 = std::pow(physcons::e,2)*std::pow(lorentzgamma,4)
-                  / (3* physcons::epsilon0*R_bend);
 
     const auto calc_damp = E0*physcons::e/W0/f_rev;
 
     const auto set_damp = opts.getDampingTime();
 
-    const auto t_damp = (set_damp < 0)? calc_damp : isoscale*set_damp;
+    const auto t_damp = (set_damp < 0)? calc_damp : set_damp;
 
     const double dt = 1.0/(fs*steps);
-    const double revolutionpart = f0*dt;
-    const double t_sync_unscaled = 1.0/fs_unscaled;
+    const double revolutionpart = f_rev*dt;
+    const double t_sync = 1.0/fs;
 
     const double padding =std::max(opts.getPadding(),1.0);
     const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
@@ -277,34 +272,30 @@ int main(int argc, char** argv)
     const auto use_csr = opts.getUseCSR();
 
     // RF Phase Noise Amplitude
-    const auto rf_noise_add = std::max(0.0,
-                                opts.getRFPhaseSpread()
-                                / 360.0*two_pi<double>()
-                                * std::sqrt(revolutionpart)*V_RF
-                                / dE*ps_size/pqsize);
+    const auto rf_phase_noise = std::max(0.0, opts.getRFPhaseSpread()
+                                            / 360.0*two_pi<double>());
 
     // RF Amplitude Noise
-    const auto rf_noise_mul = std::max(0.0,
-                                opts.getRFAmplitudeSpread()
-                                * std::sqrt(revolutionpart)/2.0);
+    const auto rf_ampl_noise  = std::max(0.0,
+                                opts.getRFAmplitudeSpread());
 
 
     // RF phase modulation amplitude
     const auto rf_mod_ampl = std::max(0.0,
                                       opts.getRFPhaseModAmplitude()
-                                      /360.0*two_pi<double>()
-                                      * std::sqrt(revolutionpart)*V_RF
-                                      / dE*ps_size/pqsize);
+                                      /360.0*two_pi<double>());
 
     // "time step" for RF phase modulation
-    const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt/isoscale;
+    const auto rf_mod_step = opts.getRFPhaseModFrequency()*dt;
 
 
     /*
      * angle of one rotation step (in rad)
      * (angle = 2*pi corresponds to 1 synchrotron period)
      */
-    const meshaxis_t angle = 2*pi<double>()/steps;
+    const meshaxis_t angle = two_pi<double>()/steps;
+
+    uint32_t laststep=std::ceil(steps*rotations);
 
     std::string startdistfile = opts.getStartDistFile();
 
@@ -330,13 +321,13 @@ int main(int argc, char** argv)
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }
 
-        const double Inorm = physcons::IAlfven/physcons::me*2*pi<double>()
-                           * std::pow(dE*fs/f0,2)/V_RF/harmonic_number
+        const double Inorm = physcons::IAlfven/physcons::me*two_pi<double>()
+                           * std::pow(dE*fs/f_rev,2)/V_eff/harmonic_number
                            * std::pow(bl/R_bend,1./3.);
 
         Ith = Inorm * (0.5+0.34*shield);
 
-        S_csr = Ib_scaled/Inorm;
+        S_csr = Ib/Inorm;
 
         if (verbose && use_csr) {
             sstream.str("");
@@ -352,7 +343,7 @@ int main(int argc, char** argv)
                                +sstream.str());
             sstream.str("");
             sstream << std::fixed << S_csr;
-            if (Ib_scaled > Ith) {
+            if (Ib > Ith) {
                 sstream << " (> " << 0.5+0.12*shield << ')';
             } else {
                 sstream << " (< " << 0.5+0.12*shield << ')';
@@ -360,7 +351,7 @@ int main(int argc, char** argv)
             Display::printText("CSR strength: "
                                +sstream.str());
             sstream.str("");
-            sstream << std::scientific << Ith*isoscale;
+            sstream << std::scientific << Ith;
             Display::printText("BBT (scaling-law) threshold current at "
                                +sstream.str()+" A.");
         }
@@ -376,7 +367,7 @@ int main(int argc, char** argv)
                            +sstream.str());
 
         sstream.str("");
-        sstream << std::scientific << fs_unscaled;
+        sstream << std::scientific << fs;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
         if (opts.getStepsPerTrev() == 0) {
@@ -386,30 +377,10 @@ int main(int argc, char** argv)
                                " simulation steps per revolution period.");
         } else {
             sstream.str("");
-            sstream << std::fixed << f_rev/fs_unscaled/revolutionpart;
+            sstream << std::fixed << f_rev/fs/revolutionpart;
             Display::printText("Doing " +sstream.str()+
                                " simulation steps per synchrotron period.");
         }
-
-        sstream.str("");
-        auto syncphase = std::asin(W0/(physcons::e*V_RF))/two_pi<double>()*360;
-        sstream << std::fixed << syncphase;
-        Display::printText("Synchronous phase is at "+sstream.str()
-                           +" degree (should be small).");
-
-        sstream.str("");
-        sstream << std::scientific << calc_damp << " s";
-        if (set_damp >= 0) {
-            sstream << " (set value: "
-                    << std::scientific << set_damp  << " s)";
-        }
-        Display::printText("Damping time calculated from ring parameters is "
-                           +sstream.str() + ".");
-
-        sstream.str("");
-        sstream << std::scientific << 1/t_damp/fs/(2*pi<double>());
-        Display::printText("Damping beta: " +sstream.str());
-
     }
     } // end of context of information printing
 
@@ -441,10 +412,8 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
-                                    #ifdef INOVESA_USE_OPENCL
                                     , oclh
-                                    #endif // INOVESA_USE_OPENCL
-                                    , Qb,Ib_unscaled,bl,dE,Iz));
+                                    , Qb,Ib,bl,dE,Iz));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -452,10 +421,7 @@ int main(int argc, char** argv)
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
             grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
-                                   #ifdef INOVESA_USE_OPENCL
-                                   , oclh
-                                   #endif // INOVESA_USE_OPENCL
-                                   , Qb,Ib_unscaled,bl,dE);
+                                   , oclh, Qb,Ib,bl,dE);
         } else
         #endif // INOVESA_USE_PNG
         #ifdef INOVESA_USE_HDF5
@@ -463,10 +429,8 @@ int main(int argc, char** argv)
            || isOfFileType(".hdf5",startdistfile) ) {
             grid_t1 = makePSFromHDF5( startdistfile,opts.getStartDistStep()
                                     , qmin,qmax,pmin,pmax
-                                    #ifdef INOVESA_USE_OPENCL
                                     , oclh
-                                    #endif // INOVESA_USE_OPENCL
-                                    , Qb,Ib_unscaled,bl,dE);
+                                    , Qb,Ib,bl,dE);
 
             if (grid_t1 == nullptr) {
                 return EXIT_SUCCESS;
@@ -483,10 +447,8 @@ int main(int argc, char** argv)
         if (isOfFileType(".txt",startdistfile)) {
             grid_t1 = makePSFromTXT( startdistfile,opts.getGridSize()
                                    , qmin,qmax,pmin,pmax
-                                   #ifdef INOVESA_USE_OPENCL
                                    , oclh
-                                   #endif // INOVESA_USE_OPENCL
-                                   , Qb,Ib_unscaled,bl,dE);
+                                   , Qb,Ib,bl,dE);
         } else {
             Display::printText("Unknown format of input file. Will now quit.");
             return EXIT_SUCCESS;
@@ -513,7 +475,7 @@ int main(int argc, char** argv)
 
     if (verbose) {
         sstream.str("");
-        sstream << std::scientific << maxval*Ib_scaled/f0/physcons::e;
+        sstream << std::scientific << maxval*Ib/f_rev/physcons::e;
         Display::printText("Maximum particles per grid cell is "
                            +sstream.str()+".");
     }
@@ -562,49 +524,94 @@ int main(int argc, char** argv)
     // rotation map(s): two, in case of Manhattan rotation
     std::unique_ptr<SourceMap> rm1;
     std::unique_ptr<SourceMap> rm2;
-    if (rf_noise_add != 0 || rf_noise_mul != 0 || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
-        Display::printText("Building dynamic RFKickMap...");
+    if ( rf_phase_noise != 0 || rf_ampl_noise != 0
+      || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
+        if (linearRF) {
+            Display::printText("Building dynamic, linear RFKickMap...");
+
+            rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                          , angle, revolutionpart, f_RF
+                                          , rf_phase_noise, rf_ampl_noise
+                                          , rf_mod_ampl,rf_mod_step
+                                          , &simulationstep, laststep
+                                          , interpolationtype,interpol_clamp
+                                          , oclh
+                                          ));
+        } else {
+            Display::printText("Building dynamic, nonlinear RFKickMap...");
+
+            rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                          , revolutionpart, V_eff, f_RF, V0
+                                          , rf_phase_noise, rf_ampl_noise
+                                          , rf_mod_ampl,rf_mod_step
+                                          , &simulationstep, laststep
+                                          , interpolationtype,interpol_clamp
+                                          , oclh
+                                          ));
+        }
+
         sstream.str("");
         sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;
-        if (rf_noise_add != 0) {
+        if (rf_phase_noise != 0) {
             Display::printText("...including phase noise (spread: "
                                + sstream.str()+" s)");
         }
         if (rf_mod_ampl != 0 && rf_mod_step != 0) {
             sstream.str("");
             sstream << "...including phase modulation ("
-                    << opts.getRFPhaseModFrequency()/fs_unscaled
-                    << " fs) of +/-"
+                    << opts.getRFPhaseModFrequency()/fs
+                    << " f_s) of +/-"
                     << opts.getRFPhaseModAmplitude()/360.0/f_rev/harmonic_number
                     << " s";
             Display::printText(sstream.str());
         }
-        rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                      , angle, rf_noise_add, rf_noise_mul
-                                      , rf_mod_ampl,rf_mod_step
-                                      , &simulationstep
-                                      , interpolationtype,interpol_clamp
-                                      #ifdef INOVESA_USE_OPENCL
-                                      , oclh
-                                      #endif // INOVESA_USE_OPENCL
-                                      ));
     } else {
-        Display::printText("Building static RFKickMap.");
-        rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size,angle
-                               , interpolationtype,interpol_clamp
-                               #ifdef INOVESA_USE_OPENCL
-                               , oclh
-                               #endif // INOVESA_USE_OPENCL
-                               ));
+        if (linearRF) {
+            Display::printText("Building static, linear RFKickMap.");
+            rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+                                   , angle, f_RF
+                                   , interpolationtype,interpol_clamp
+                                   , oclh
+                                   ));
+        } else {
+            Display::printText("Building static, nonlinear RFKickMap.");
+            rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+                                   , revolutionpart, V_eff, f_RF, V0
+                                   , interpolationtype,interpol_clamp
+                                   , oclh
+                                   ));
+        }
     }
+    { // context of information printing, not needed in the program
+    sstream.str("");
+    auto syncphase = std::asin(V0/V_RF)/two_pi<double>()*360;
+    sstream << std::fixed << syncphase;
+    if (linearRF) {
+        sstream << " degree (should be small).";
+    } else {
+        sstream << " degree.";
+    }
+    Display::printText("... with synchronous phase at "+sstream.str());
+    } // context of information printing
 
-    Display::printText("Building DriftMap.");
+    Display::printText("Building DriftMap with");
+    sstream.str("");
+    sstream << "... alpha0 = " << alpha0;
+    Display::printText(sstream.str());
+    if (alpha1 != 0) {
+        sstream.str("");
+        sstream << "... alpha1 = " << alpha1;
+        Display::printText(sstream.str());
+    }
+    if (alpha2 != 0) {
+        sstream.str("");
+        sstream << "... alpha2 = " << alpha2;
+        Display::printText(sstream.str());
+    }
     rm2.reset(new DriftMap( grid_t1,grid_t3,ps_size,ps_size
                           , {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}}
                           , E0,interpolationtype,interpol_clamp
-                          #ifdef INOVESA_USE_OPENCL
                           , oclh
-                          #endif // INOVESA_USE_OPENCL
                           ));
 
     // time constant for damping and diffusion
@@ -617,16 +624,23 @@ int main(int argc, char** argv)
         fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size
                                  , FokkerPlanckMap::FPType::full,e1
                                  , derivationtype
-                                 #ifdef INOVESA_USE_OPENCL
                                  , oclh
-                                 #endif // INOVESA_USE_OPENCL
                                  );
+
+        sstream.str("");
+        sstream << std::scientific << calc_damp << " s";
+        if (set_damp >= 0) {
+            sstream << " (set value: "
+                    << std::scientific << set_damp  << " s)";
+        }
+        Display::printText("... damping time calculated from ring parameters "
+                           +sstream.str() + ".");
+
+        sstream.str("");
+        sstream << std::scientific << 1/t_damp/fs/(two_pi<double>());
+        Display::printText("... damping beta: " +sstream.str());
     } else {
-        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size
-                          #ifdef INOVESA_USE_OPENCL
-                          , oclh
-                          #endif // INOVESA_USE_OPENCL
-                          );
+        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size, oclh);
     }
 
 
@@ -639,26 +653,20 @@ int main(int argc, char** argv)
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
             = vfps::makeImpedance( nfreqs
-                                 #ifdef INOVESA_USE_OPENCL
                                  , oclh
-                                 #endif // INOVESA_USE_OPENCL
-                                 , fmax,f0,f_rev,gap,use_csr
+                                 , fmax,R_bend,f_rev,gap,use_csr
                                  , s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
             = vfps::makeImpedance( nfreqs
-                                 #ifdef INOVESA_USE_OPENCL
                                  , oclh
-                                 #endif // INOVESA_USE_OPENCL
-                                 , fmax,f0,f_rev,(gap>0)?gap:-1);
+                                 , fmax,R_bend,f_rev,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)
     ElectricField rdtn_field( grid_t1,rdtn_impedance
-                            #ifdef INOVESA_USE_OPENCL
                             , oclh
-                            #endif // INOVESA_USE_OPENCL
                             , f_rev,revolutionpart);
 
     /**************************************************************************
@@ -678,42 +686,32 @@ int main(int argc, char** argv)
     if (wakefile.size() > 4) {
         Display::printText("Reading WakeFunction from "+wakefile+".");
         wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_size,ps_size
-                                 , wakefile,E0,sE,Ib_scaled,dt
+                                 , wakefile,E0,sE,Ib,dt
                                  , interpolationtype,interpol_clamp
-                                 #ifdef INOVESA_USE_OPENCL
                                  , oclh
-                                 #endif // INOVESA_USE_OPENCL
                                  );
         wkm = wfm;
     } else {
         if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
             wake_field = new ElectricField( grid_t1,wake_impedance
-                                          #ifdef INOVESA_USE_OPENCL
                                           , oclh
-                                          #endif // INOVESA_USE_OPENCL
                                           ,f_rev
-                                          , revolutionpart, Ib_scaled,E0,sE,dt
+                                          , revolutionpart, Ib,E0,sE,dt
                                           );
 
             Display::printText("Building WakeKickMap.");
             wkm = new WakePotentialMap( grid_t1,grid_t2,ps_size,ps_size
                                       , wake_field ,interpolationtype
                                       , interpol_clamp
-                                      #ifdef INOVESA_USE_OPENCL
                                       , oclh
-                                      #endif // INOVESA_USE_OPENCL
                                       );
         }
     }
     if (wkm != nullptr) {
         wm = wkm;
     } else {
-        wm = new Identity( grid_t1,grid_t2,ps_size,ps_size
-                         #ifdef INOVESA_USE_OPENCL
-                         , oclh
-                         #endif // INOVESA_USE_OPENCL
-                         );
+        wm = new Identity( grid_t1,grid_t2,ps_size,ps_size,oclh);
     }
 
     /* Load coordinates for particle tracking.
@@ -746,7 +744,7 @@ int main(int argc, char** argv)
     if (display != nullptr) {
         try {
             bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
-                                    , Plot1DLine::orientation::horizontal));
+                                    , Plot1DLine::Orientation::horizontal));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -787,7 +785,7 @@ int main(int argc, char** argv)
         try {
             history.reset(new Plot1DLine( std::array<float,3>{{0,0,0}}
                                         , csrlog.size()
-                                        , Plot1DLine::orientation::vertical));
+                                        , Plot1DLine::Orientation::vertical));
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -807,7 +805,7 @@ int main(int argc, char** argv)
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
-                                wfm,trackme.size(), t_sync_unscaled,f_rev);
+                                wfm,trackme.size(), t_sync,f_rev);
         Display::printText("Will save results to \""+ofname+"\".");
         opts.save(hdf_file);
         hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -877,7 +875,6 @@ int main(int argc, char** argv)
      * (everything inside this loop will be run a multitude of times)
      */
     uint32_t outstepnr=0;
-    uint32_t laststep=std::ceil(steps*rotations);
     while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection
@@ -932,9 +929,7 @@ int main(int argc, char** argv)
                     }
                     wm->applyTo(allpos);
                     rm1->applyTo(allpos);
-                    if (rm2 != nullptr) {
-                        rm2->applyTo(allpos);
-                    }
+                    rm2->applyTo(allpos);
                     fpm->applyTo(allpos);
                     hdf_file->appendSourceMap(allpos.data());
                 }
@@ -982,10 +977,8 @@ int main(int argc, char** argv)
         wm->applyTo(trackme);
         rm1->apply();
         rm1->applyTo(trackme);
-        if (rm2 != nullptr) {
-            rm2->apply();
-            rm2->applyTo(trackme);
-        }
+        rm2->apply();
+        rm2->applyTo(trackme);
         fpm->apply();
         fpm->applyTo(trackme);
 
@@ -1011,7 +1004,7 @@ int main(int argc, char** argv)
          * the last time step might behave slightly different
          * from the ones before.
          */
-        if (renormalize > 0) {
+        if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
             grid_t1->normalize();
         } else {

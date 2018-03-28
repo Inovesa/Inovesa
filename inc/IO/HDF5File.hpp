@@ -97,9 +97,7 @@ public:
         readPhaseSpace(std::string fname
                       , meshaxis_t qmin, meshaxis_t qmax
                       , meshaxis_t pmin, meshaxis_t pmax
-                      #ifdef INOVESA_USE_OPENCL
-                      , std::shared_ptr<OCLH> oclh
-                      #endif // INOVESA_USE_OPENCL
+                      , oclhptr_t oclh
                       , double Qb, double Ib_unscaled
                       , double bl, double dE
                       , int64_t use_step=-1l

@@ -77,7 +77,7 @@ private:
  */
 std::unique_ptr<Display> make_display(std::string ofname
                                       #ifdef INOVESA_USE_OPENGL
-                                      , bool gui
+                                      , bool gui=false
                                       , uint_fast8_t glversion=0
                                       #endif // INOVESA_USE_OPENGL
                                      );
@@ -123,6 +123,15 @@ public:
 
     void draw();
 
+    /**
+     * @brief printText to stdout and logfile
+     *
+     * @param txt
+     * @param newline
+     * @param silentTime skip if last printout was less then silentTime s ago
+     *
+     * @todo replace by << operator
+     */
     static void printText(std::string txt,
                           bool newline = true,
                           float silentTime=0.0f);

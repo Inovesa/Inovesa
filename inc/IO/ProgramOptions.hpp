@@ -203,6 +203,9 @@ public:
     inline auto getUseCSR() const
         { return use_csr; }
 
+    inline auto getLinearRF() const
+        { return linearRF; }
+
     inline auto getCollimatorRadius() const
         { return collimator; }
 
@@ -250,7 +253,7 @@ private: // simulation parameters
     double meshshiftx;
     double meshshifty;
     uint32_t steps_per_Ts;
-    uint32_t steps_per_Trev;
+    double steps_per_Trev;
     int32_t renormalize;
     double rotations;
     uint32_t rotationtype;
@@ -290,6 +293,7 @@ private: // phsical parameters
     double r_bend;
     double s_E;
     double V_RF;
+    bool linearRF;
 
     bool use_csr;
 

@@ -35,7 +35,7 @@ namespace vfps
 class Plot1DLine : public GUIElement
 {
 public:
-    enum class orientation : uint_fast16_t {
+    enum class Orientation : uint_fast16_t {
         horizontal,
         vertical
     };
@@ -45,7 +45,7 @@ public:
 
     Plot1DLine( std::array<float,3> rgb
               , size_t npoints
-              , orientation orientation
+              , Orientation orientation
               );
 
     /**
@@ -57,7 +57,7 @@ public:
      */
     Plot1DLine( std::array<float,3> rgb
               , size_t npoints
-              , orientation orientation
+              , Orientation orientation
               , GLuint databuffer
               );
 
@@ -87,9 +87,7 @@ private:
 
     void createPositionBuffer();
 
-    float _max;
-
-    orientation _orientation;
+    Orientation _orientation;
 };
 
 } // namespace vfps

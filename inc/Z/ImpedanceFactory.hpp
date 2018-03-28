@@ -27,12 +27,10 @@ namespace vfps
  * It should be the single point in the program where Impedances are created.
  * As such, it provides a shortcut to common cases.
  */
-std::unique_ptr<Impedance> makeImpedance( const size_t nfreqs
-                                        #ifdef INOVESA_USE_OPENCL
-                                        , std::shared_ptr<OCLH> oclh
-                                        #endif // INOVESA_USE_OPENCL
+std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs
+                                        , oclhptr_t oclh
                                         , const frequency_t fmax
-                                        , const double f0
+                                        , const double R_bend
                                         , const double frev
                                         , const double gap
                                         , const bool use_csr = true
