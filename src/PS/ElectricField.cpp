@@ -123,8 +123,20 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
     _wakepotential = new meshaxis_t[_bpmeshcells];
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
-        _wakepotential_buf = cl::Buffer(_oclh->context, CL_MEM_READ_WRITE,
-                                        sizeof(*_wakepotential)*_bpmeshcells);
+        #ifdef INOVESA_USE_OPENGL
+        if (_oclh->OpenGLSharing()) {
+            glGenBuffers(1, &wakepotential_glbuf);
+            glBindBuffer(GL_ARRAY_BUFFER,wakepotential_glbuf);
+            glBufferData( GL_ARRAY_BUFFER, _bpmeshcells*sizeof(*_wakepotential)
+                        , 0, GL_DYNAMIC_DRAW);
+            wakepotential_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
+                                             , wakepotential_glbuf);
+        } else
+        #endif // INOVESA_USE_OPENGL
+        {
+            wakepotential_clbuf = cl::Buffer( _oclh->context, CL_MEM_READ_WRITE
+                                           , sizeof(*_wakepotential)*_bpmeshcells);
+        }
     #ifndef INOVESA_USE_CLFFT
     }
     #else // defined INOVESA_USE_CLFFT
@@ -389,7 +401,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         #ifdef INOVESA_USE_OPENCL
         #ifndef INOVESA_USE_CLFFT
         if (_oclh) {
-            _oclh->enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
+            _oclh->enqueueWriteBuffer(wakepotential_clbuf,CL_TRUE,0,
                                      sizeof(*_wakepotential)*_bpmeshcells,
                                      _wakepotential);
         }
@@ -416,7 +428,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         _oclh->enqueueWriteBuffer(_wakepotential_padded_buf,CL_TRUE,0,
                                        sizeof(*_wakepotential_padded)*_nmax,
                                        _wakepotential_padded);
-        _oclh->enqueueWriteBuffer(_wakepotential_buf,CL_TRUE,0,
+        _oclh->enqueueWriteBuffer(wakepotential_clbuf,CL_TRUE,0,
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
         break;
@@ -432,7 +444,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
         _oclh->enqueueReadBuffer(_wakepotential_padded_buf,CL_TRUE,0,
                                       sizeof(*_wakepotential_padded)*_nmax,
                                       _wakepotential_padded);
-        _oclh->enqueueReadBuffer(_wakepotential_buf,CL_TRUE,0,
+        _oclh->enqueueReadBuffer(wakepotential_clbuf,CL_TRUE,0,
                                       sizeof(*_wakepotential)*_bpmeshcells,
                                       _wakepotential);
         break;

@@ -43,12 +43,24 @@ public:
                , const meshindex_t xsize, const meshindex_t ysize
                , const InterpolationType it, const bool interpol_clamp
                , oclhptr_t oclh
+               #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
+               , cl_GLuint glbuf
+               #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
 
     ~WakeKickMap() noexcept;
 
 public:
     virtual void update()=0;
+
+#if defined INOVESA_USE_OPENCL and defined  INOVESA_USE_OPENGL
+    cl_GLuint getGLBuffer() const
+        { return _offset_glbuf; }
+
+protected:
+    cl_GLuint _offset_glbuf;
+
+#endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
 };
 
 } // namespace VFPS

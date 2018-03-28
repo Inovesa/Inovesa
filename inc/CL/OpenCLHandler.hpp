@@ -83,6 +83,9 @@ public:
 
     cl::Context context;
 
+    bool OpenGLSharing() const
+        { return ogl_sharing; }
+
 private:
     cl::Platform _platform;
 

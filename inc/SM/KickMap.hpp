@@ -71,7 +71,7 @@ protected:
     std::vector<meshaxis_t> _offset;
 
     #ifdef INOVESA_USE_OPENCL
-    cl::Buffer _offset_buf;
+    cl::Buffer _offset_clbuf;
     #endif // INOVESA_USE_OPENCL
 
     /**

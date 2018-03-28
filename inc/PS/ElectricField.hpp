@@ -337,7 +337,11 @@ private:
 
     #ifdef INOVESA_USE_OPENCL
 public:
-    cl::Buffer _wakepotential_buf;
+    #ifdef INOVESA_USE_OPENGL
+    cl_GLuint wakepotential_glbuf;
+    #endif // INOVESA_USE_OPENGL
+
+    cl::Buffer wakepotential_clbuf;
 
 private:
     // non-interleaved internal data format might be usefull

@@ -35,6 +35,7 @@
 #endif
 
 OCLH::OCLH( uint32_t device, bool glsharing)
+  : ogl_sharing(glsharing)
 {
     cl::vector<cl::Platform> platforms;
 
@@ -45,11 +46,12 @@ OCLH::OCLH( uint32_t device, bool glsharing)
     for (auto p : platforms) {
         try {
             context = cl::Context( CL_DEVICE_TYPE_ALL
-                                 , properties(p,glsharing).data());
+                                 , properties(p,ogl_sharing).data());
         } catch (cl::Error& e) {
+            ogl_sharing = false;
             if (e.err() == CL_INVALID_PROPERTY) {
                 context = cl::Context( CL_DEVICE_TYPE_ALL
-                                     , properties(p,false).data());
+                                     , properties(p,ogl_sharing).data());
             } else {
                 throw e;
             }
@@ -76,8 +78,10 @@ OCLH::OCLH( uint32_t device, bool glsharing)
 
     #ifdef INOVESA_USE_OPENGL
     // cl_VENDOR_gl_sharing is present, when string contains the substring
-    ogl_sharing = _device.getInfo<CL_DEVICE_EXTENSIONS>().find(
-                            "_gl_sharing") != std::string::npos;
+    if (_device.getInfo<CL_DEVICE_EXTENSIONS>().find("_gl_sharing")
+            == std::string::npos) {
+        ogl_sharing = false;
+    }
     #endif // INOVESA_USE_OPENGL
 
     #ifdef INOVESA_USE_CLFFT
@@ -96,6 +100,10 @@ OCLH::OCLH( uint32_t device, bool glsharing)
                              + "\" (on platform \""
                              + _platform.getInfo<CL_PLATFORM_NAME>()
                              + "\") for use with OpenCL.");
+    if (ogl_sharing) {
+        vfps::Display::printText("Sharing between OpenCL "
+                                 "and OpenGL is active.");
+    }
 }
 
 cl::Program OCLH::prepareCLProg(std::string code)
@@ -311,8 +319,8 @@ std::string OCLH::datatype_aliases()
     return code;
 }
 
-std::vector<cl_context_properties> OCLH::properties(cl::Platform& platform,
-                                                    bool glsharing)
+std::vector<cl_context_properties> OCLH::properties( cl::Platform& platform
+                                                   , bool glsharing)
 {
     std::vector<cl_context_properties> rv;
 
