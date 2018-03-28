@@ -56,6 +56,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   , _wakelosses(nullptr)
   , _wakelosses_fft(nullptr)
   , _wakepotential_padded(nullptr)
+  , wakepotential_glbuf(0)
   , _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr)
   , _fft_wakelosses(nullptr)
   #ifdef INOVESA_USE_CLFFT
@@ -188,7 +189,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 
         _clProgScaleWP = _oclh->prepareCLProg(cl_code_wakepotential);
         _clKernScaleWP = cl::Kernel(_clProgScaleWP, "scalewp");
-        _clKernScaleWP.setArg(0, _wakepotential_buf);
+        _clKernScaleWP.setArg(0, wakepotential_clbuf);
         _clKernScaleWP.setArg(1, _wakescaling);
         _clKernScaleWP.setArg(2, _wakepotential_padded_buf);
     } else

@@ -765,15 +765,15 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             try {
                 #if defined INOVESA_USE_OPENCL && defined INOVESA_USE_OPENGL
-                if (oclh->OpenGLSharing()) {
+                if (oclh && oclh->OpenGLSharing()) {
                     wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
-                                            , Plot1DLine::orientation::horizontal
+                                            , Plot1DLine::Orientation::horizontal
                                             , wkm->getGLBuffer()));
                 } else
                 #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                 {
                     wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
-                                            , Plot1DLine::orientation::horizontal));
+                                            , Plot1DLine::Orientation::horizontal));
                 }
                 display->addElement(wpv);
             } catch (std::exception &e) {
@@ -949,7 +949,7 @@ int main(int argc, char** argv)
                 }
                 if (wpv != nullptr
                    #if defined INOVESA_USE_OPENCL && defined INOVESA_USE_OPENGL
-                   && !oclh->OpenGLSharing()
+                   && oclh && !oclh->OpenGLSharing()
                    #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                    ) {
                     wpv->update(wkm->getForce());
