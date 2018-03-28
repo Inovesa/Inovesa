@@ -203,12 +203,13 @@ void vfps::FokkerPlanckMap::apply()
         for (meshindex_t x=0; x< _meshxsize; x++) {
             const meshindex_t offs = x*_ysize;
             for (meshindex_t y=0; y< _ysize; y++) {
-                data_out[offs+y] = 0;
+                meshdata_t value = 0;
                 for (uint_fast8_t j=0; j<_ip; j++) {
                     hi h = _hinfo[y*_ip+j];
-                    data_out[offs+y] += data_in[offs+h.index]
+                    value += data_in[offs+h.index]
                                      *  static_cast<meshdata_t>(h.weight);
                 }
+                data_out[offs+y] = value;
             }
         }
     }

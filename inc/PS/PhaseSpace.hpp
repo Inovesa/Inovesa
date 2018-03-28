@@ -114,6 +114,9 @@ public:
     inline meshdata_t* getData() const
     { return _data(); }
 
+    inline Array::array1<meshdata_t> operator [] (const unsigned int i)
+    { return _data[i]; }
+
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
 
@@ -193,9 +196,6 @@ public:
      * normalize() does neither recompute the integral nor sets it to 1
      */
     integral_t normalize();
-
-    inline meshdata_t* operator[](const meshindex_t i) const
-    { return _data[i]; }
 
     PhaseSpace& operator=(PhaseSpace other);
 
