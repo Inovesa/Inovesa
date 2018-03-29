@@ -43,17 +43,12 @@ public:
 public:
     Plot1DLine() = delete;
 
-    Plot1DLine( std::array<float,3> rgb
-              , size_t npoints
-              , Orientation orientation
-              );
-
     /**
      * @brief Plot1DLine
      * @param rgb
      * @param npoints
      * @param orientation
-     * @param databuffer takes ownership
+     * @param databuffer takes ownership or creates (if 0)
      */
     Plot1DLine( std::array<float,3> rgb
               , size_t npoints
