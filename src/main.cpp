@@ -79,12 +79,6 @@ int main(int argc, char** argv)
     Display::start_time = std::chrono::system_clock::now();
 
     /*
-     * Will count steps in the main simulation loop,
-     * but can be used by time dependent variables.
-     */
-    uint32_t simulationstep = 0;
-
-    /*
      * Program options might be such that the program does not have
      * to be run at all. As config files (read in based on the command line
      * options) might be errorous, propper error handling is important here.
@@ -521,33 +515,31 @@ int main(int argc, char** argv)
     #endif // INOVESSA_USE_GUI
 
 
-    // rotation map(s): two, in case of Manhattan rotation
-    std::unique_ptr<SourceMap> rm1;
-    std::unique_ptr<SourceMap> rm2;
+    // RF map
+    std::shared_ptr<DynamicRFKickMap> drfm;
+    std::shared_ptr<SourceMap> rfm;
     if ( rf_phase_noise != 0 || rf_ampl_noise != 0
       || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
         if (linearRF) {
             Display::printText("Building dynamic, linear RFKickMap...");
 
-            rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                          , angle, revolutionpart, f_RF
-                                          , rf_phase_noise, rf_ampl_noise
-                                          , rf_mod_ampl,rf_mod_step
-                                          , &simulationstep, laststep
-                                          , interpolationtype,interpol_clamp
-                                          , oclh
-                                          ));
+            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                           , angle, revolutionpart, f_RF
+                                           , rf_phase_noise, rf_ampl_noise
+                                           , rf_mod_ampl,rf_mod_step, laststep
+                                           , interpolationtype,interpol_clamp
+                                           , oclh
+                                           ));
         } else {
             Display::printText("Building dynamic, nonlinear RFKickMap...");
 
-            rm1.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                          , revolutionpart, V_eff, f_RF, V0
-                                          , rf_phase_noise, rf_ampl_noise
-                                          , rf_mod_ampl,rf_mod_step
-                                          , &simulationstep, laststep
-                                          , interpolationtype,interpol_clamp
-                                          , oclh
-                                          ));
+            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+                                           , revolutionpart, V_eff, f_RF, V0
+                                           , rf_phase_noise, rf_ampl_noise
+                                           , rf_mod_ampl,rf_mod_step, laststep
+                                           , interpolationtype,interpol_clamp
+                                           , oclh
+                                           ));
         }
 
         sstream.str("");
@@ -565,17 +557,18 @@ int main(int argc, char** argv)
                     << " s";
             Display::printText(sstream.str());
         }
+        rfm = drfm;
     } else {
         if (linearRF) {
             Display::printText("Building static, linear RFKickMap.");
-            rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
                                    , angle, f_RF
                                    , interpolationtype,interpol_clamp
                                    , oclh
                                    ));
         } else {
             Display::printText("Building static, nonlinear RFKickMap.");
-            rm1.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
                                    , revolutionpart, V_eff, f_RF, V0
                                    , interpolationtype,interpol_clamp
                                    , oclh
@@ -608,11 +601,14 @@ int main(int argc, char** argv)
         sstream << "... alpha2 = " << alpha2;
         Display::printText(sstream.str());
     }
-    rm2.reset(new DriftMap( grid_t1,grid_t3,ps_size,ps_size
-                          , {{angle,alpha1/alpha0*angle,alpha2/alpha0*angle}}
-                          , E0,interpolationtype,interpol_clamp
-                          , oclh
-                          ));
+
+
+    const std::vector<meshaxis_t> alpha {{ angle,alpha1/alpha0*angle
+                                          , alpha2/alpha0*angle }};
+
+    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,ps_size,ps_size, alpha
+                                        , E0,interpolationtype,interpol_clamp
+                                        , oclh );
 
     // time constant for damping and diffusion
     const timeaxis_t  e1 = (t_damp > 0) ? 2.0/(fs*t_damp*steps) : 0;
@@ -869,6 +865,13 @@ int main(int argc, char** argv)
      * (everything inside this loop will be run a multitude of times)
      */
     uint32_t outstepnr=0;
+
+    /*
+     * Will count steps in the main simulation loop,
+     * but can be used by time dependent variables.
+     */
+    uint32_t simulationstep = 0;
+
     while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection
@@ -914,6 +917,10 @@ int main(int argc, char** argv)
                 }
                 hdf_file->appendTracks(trackme.data());
 
+                if (drfm) {
+                    hdf_file->appendRFKicks(drfm->getPastModulation());
+                }
+
                 if (save_sourcemap) {
                     std::vector<PhaseSpace::Position> allpos;
                     for (float x=0; x<ps_size; x++) {
@@ -922,8 +929,8 @@ int main(int argc, char** argv)
                         }
                     }
                     wm->applyTo(allpos);
-                    rm1->applyTo(allpos);
-                    rm2->applyTo(allpos);
+                    rfm->applyTo(allpos);
+                    drm->applyTo(allpos);
                     fpm->applyTo(allpos);
                     hdf_file->appendSourceMap(allpos.data());
                 }
@@ -965,10 +972,10 @@ int main(int argc, char** argv)
         }
         wm->apply();
         wm->applyTo(trackme);
-        rm1->apply();
-        rm1->applyTo(trackme);
-        rm2->apply();
-        rm2->applyTo(trackme);
+        rfm->apply();
+        rfm->applyTo(trackme);
+        drm->apply();
+        drm->applyTo(trackme);
         fpm->apply();
         fpm->applyTo(trackme);
 
@@ -1023,6 +1030,10 @@ int main(int argc, char** argv)
         }
         hdf_file->appendTracks(trackme.data());
 
+        if (drfm) {
+            hdf_file->appendRFKicks(drfm->getPastModulation());
+        }
+
         if (save_sourcemap) {
             std::vector<PhaseSpace::Position> allpos;
             for (float x=0; x<ps_size; x++) {
@@ -1031,9 +1042,9 @@ int main(int argc, char** argv)
                 }
             }
             wm->applyTo(allpos);
-            rm1->applyTo(allpos);
-            if (rm2 != nullptr) {
-                rm2->applyTo(allpos);
+            rfm->applyTo(allpos);
+            if (drm != nullptr) {
+                drm->applyTo(allpos);
             }
             fpm->applyTo(allpos);
             hdf_file->appendSourceMap(allpos.data());

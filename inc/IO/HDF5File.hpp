@@ -82,6 +82,8 @@ public:
         All, Defaults, PhaseSpace
     };
 
+    void appendRFKicks(const std::vector<std::array<vfps::meshaxis_t,2>> kicks);
+
     void appendTracks(const PhaseSpace::Position *particles);
 
     void appendSourceMap(const PhaseSpace::Position *allpos);
@@ -203,6 +205,15 @@ private: // particles (tracking)
     std::array<hsize_t,pt_rank> pt_dims;
 
     const size_t pt_particles;
+
+private: // dynamic rf kick
+    static constexpr uint_fast8_t drfk_rank = 2;
+
+    H5::DataSet drfk_dataset;
+
+    H5::DataType drfk_datatype;
+
+    std::array<hsize_t,drfk_rank> drfk_dims;
 
 private: // wake potential
     static constexpr uint_fast8_t wp_rank = 2;
