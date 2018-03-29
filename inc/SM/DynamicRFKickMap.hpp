@@ -24,6 +24,7 @@
 
 #include "SM/RFKickMap.hpp"
 
+#include <queue>
 #include <random>
 
 namespace vfps
@@ -53,7 +54,6 @@ public:
                     , const meshaxis_t mulnoise
                     , const meshaxis_t modampl
                     , const double modtimeincrement
-                    , const uint32_t* step
                     , const uint32_t steps
                     , const InterpolationType it
                     , const bool interpol_clamp
@@ -64,7 +64,7 @@ public:
      *
      * @param phasespread width of the additive instability in rad
      */
-    DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
+    DynamicRFKickMap(std::shared_ptr<PhaseSpace> in
                     , std::shared_ptr<PhaseSpace> out
                     , const meshindex_t xsize
                     , const meshindex_t ysize
@@ -76,7 +76,6 @@ public:
                     , const meshaxis_t amplspread
                     , const meshaxis_t modampl
                     , const double modtimeincrement
-                    , const uint32_t* step
                     , const uint32_t steps
                     , const InterpolationType it
                     , const bool interpol_clamp
@@ -92,6 +91,12 @@ public:
      */
     void apply() override;
 
+    /**
+     * @brief getPastModulation
+     * @return modulations (phase,amplitude) since last call
+     */
+    std::vector<std::array<meshaxis_t,2>> getPastModulation();
+
 private:
     const meshaxis_t _phasenoise;
 
@@ -101,17 +106,17 @@ private:
 
     const meshaxis_t _modtimedelta;
 
-    const uint32_t* _step;
-
     std::mt19937 _prng;
     std::normal_distribution<meshaxis_t> _dist;
 
-    std::vector<std::array<meshaxis_t,2>> _modulation;
+    std::queue<std::array<meshaxis_t,2>> _next_modulation;
+
+    std::vector<std::array<meshaxis_t,2>> _past_modulation;
 
     /**
      * set up the KickMap with a (new) set of parameters
      */
-    std::vector<std::array<meshaxis_t,2>> __calcModulation(uint32_t steps);
+    std::queue<std::array<meshaxis_t,2>> __calcModulation(uint32_t steps);
 
 protected:
     /**
