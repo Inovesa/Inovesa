@@ -22,14 +22,6 @@
 
 #include "IO/GUI/Plot1DLine.hpp"
 
-vfps::Plot1DLine::Plot1DLine( std::array<float, 3> rgb
-                            , size_t npoints
-                            , Orientation orientation)
-  : Plot1DLine(rgb, npoints, orientation,0)
-{
-    glGenBuffers(1, &_databuffer);
-}
-
 vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
                             , size_t npoints
                             , Orientation orientation
@@ -39,6 +31,11 @@ vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
   , _databuffer(databuffer)
   , _orientation(orientation)
 {
+
+    if (_databuffer == 0) {
+        glGenBuffers(1, &_databuffer);
+    }
+
     _data.resize(npoints);
     _position.resize(npoints);
 
