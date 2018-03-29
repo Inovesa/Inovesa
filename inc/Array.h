@@ -129,6 +129,9 @@ inline void deleteAlign(T *v, size_t len)
 
 #endif
 
+/**
+ * @brief array1 1D array class with forced memory alignment
+ */
 template<class T>
 class array1 {
 protected:
@@ -419,6 +422,9 @@ std::istream& operator >> (std::istream& s, const array1<T>& A)
   return A.Input(s);
 }
 
+/**
+ * @brief array2 2D array class with forced memory alignment
+ */
 template<class T>
 class array2 : public array1<T> {
 protected:
@@ -541,6 +547,9 @@ std::istream& operator >> (std::istream& s, const array2<T>& A)
   return A.Input(s);
 }
 
+/**
+ * @brief array3 3D array class with forced memory alignment
+ */
 template<class T>
 class array3 : public array1<T> {
 protected:
@@ -655,6 +664,9 @@ std::istream& operator >> (std::istream& s, const array3<T>& A)
   return A.Input(s);
 }
 
+/**
+ * @brief array4 4D array class with forced memory alignment
+ */
 template<class T>
 class array4 : public array1<T> {
 protected:
@@ -779,6 +791,9 @@ std::istream& operator >> (std::istream& s, const array4<T>& A)
   return A.Input(s);
 }
 
+/**
+ * @brief array5 5D array class with forced memory alignment
+ */
 template<class T>
 class array5 : public array1<T> {
 protected:
@@ -921,6 +936,9 @@ std::istream& operator >> (std::istream& s, const array5<T>& A)
 #define __check(i,n,o,dim,m) this->Check(i-o,n,dim,m,o)
 #endif
 
+/**
+ * @brief Array1 1D array class with forced memory alignment and memory offset
+ */
 template<class T>
 class Array1 : public array1<T> {
 protected:
@@ -1002,6 +1020,9 @@ public:
   int Ox() const {return ox;}
 };
 
+/**
+ * @brief Array2 2D array class with forced memory alignment and memory offset
+ */
 template<class T>
 class Array2 : public array2<T> {
 protected:
@@ -1092,6 +1113,9 @@ public:
   
 };
 
+/**
+ * @brief Array3 3D array class with forced memory alignment and memory offset
+ */
 template<class T>
 class Array3 : public array3<T> {
 protected:
@@ -1183,6 +1207,9 @@ public:
 
 };
 
+/**
+ * @brief Array4 4D array class with forced memory alignment and memory offset
+ */
 template<class T>
 class Array4 : public array4<T> {
 protected:
@@ -1291,6 +1318,9 @@ public:
   int O4() const {return ow;}
 };
 
+/**
+ * @brief Array5 5D array class with forced memory alignment and memory offset
+ */
 template<class T>
 class Array5 : public array5<T> {
 protected:
