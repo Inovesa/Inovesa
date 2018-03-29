@@ -42,6 +42,9 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     _integraltype(IntegralType::simpson),
     _data1D(new meshdata_t[_nmeshcells]())
   , _oclh(oclh)
+  #ifdef INOVESA_USE_OPENGL
+  , projectionX_glbuf(0)
+  #endif // INOVESA_USE_OPENGL
   #ifdef INOVESA_ENABLE_CLPROFILING
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
   , integEvents(std::make_unique<cl::vector<cl::Event*>>())
@@ -130,10 +133,23 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*nMeshCells(0)*nMeshCells(1),
                            _data1D);
-        projectionX_buf = cl::Buffer(_oclh->context,
+        #ifdef INOVESA_USE_OPENGL
+        if (_oclh->OpenGLSharing()) {
+            glGenBuffers(1, &projectionX_glbuf);
+            glBindBuffer(GL_ARRAY_BUFFER,projectionX_glbuf);
+            glBufferData( GL_ARRAY_BUFFER
+                        , nMeshCells(0)*sizeof(*_projection[0].data())
+                        , 0, GL_DYNAMIC_DRAW);
+            projectionX_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
+                                            , projectionX_glbuf);
+        } else
+        #endif // INOVESA_USE_OPENGL
+        {
+            projectionX_clbuf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(projection_t)*_nmeshcellsX,
                                      _projection[0].data());
+        }
         integral_buf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(integral_t),&_integral);
@@ -147,11 +163,11 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         _clKernProjX.setArg(0, data_buf);
         _clKernProjX.setArg(1, ws_buf);
         _clKernProjX.setArg(2, _nmeshcellsY);
-        _clKernProjX.setArg(3, projectionX_buf);
+        _clKernProjX.setArg(3, projectionX_clbuf);
 
         _clProgIntegral = _oclh->prepareCLProg(cl_code_integral);
         _clKernIntegral = cl::Kernel(_clProgIntegral, "integral");
-        _clKernIntegral.setArg(0, projectionX_buf);
+        _clKernIntegral.setArg(0, projectionX_clbuf);
         _clKernIntegral.setArg(1, ws_buf);
         _clKernIntegral.setArg(2, _nmeshcellsX);
         _clKernIntegral.setArg(3, integral_buf);
@@ -265,7 +281,7 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
     if (axis == 0) {
         #ifdef INOVESA_USE_OPENCL
         if (_oclh) {
-        _oclh->enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+        _oclh->enqueueReadBuffer(projectionX_clbuf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data());
         }
@@ -412,7 +428,7 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
     case clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
-        _oclh->enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
+        _oclh->enqueueReadBuffer(projectionX_clbuf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data(),nullptr,evt);
         _oclh->enqueueReadBuffer

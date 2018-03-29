@@ -38,7 +38,8 @@ private:
     std::string _msg;
 };
 
-vfps::GUIElement::GUIElement()
+vfps::GUIElement::GUIElement(bool buffer_shared)
+ : buffer_shared(buffer_shared)
 {
 }
 

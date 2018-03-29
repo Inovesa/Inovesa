@@ -48,7 +48,7 @@ namespace vfps
 class GUIElement
 {
 public:
-    GUIElement();
+    GUIElement() = delete;
 
     virtual ~GUIElement() noexcept;
 
@@ -56,7 +56,12 @@ public:
 
     static uint_fast8_t glversion;
 
+    const inline bool getBufferShared() const
+        { return buffer_shared; }
+
 protected:
+    GUIElement(bool buffer_shared);
+
     void compileShaders();
 
     std::string _fragmentshadercode;
@@ -64,6 +69,9 @@ protected:
     std::string _vertexshadercode;
 
     GLuint programID;
+
+private:
+    const bool buffer_shared;
 };
 
 } // namespace vfps

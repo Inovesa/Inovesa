@@ -27,7 +27,8 @@ vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
                             , Orientation orientation
                             , GLuint databuffer
                             )
-  : _npoints(npoints)
+  : GUIElement(databuffer!=0)
+  , _npoints(npoints)
   , _databuffer(databuffer)
   , _orientation(orientation)
 {

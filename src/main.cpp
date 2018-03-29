@@ -745,7 +745,7 @@ int main(int argc, char** argv)
         try {
             bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
                                     , Plot1DLine::Orientation::horizontal
-                                    , 0));
+                                    , grid_t1->projectionX_glbuf));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -935,17 +935,13 @@ int main(int argc, char** argv)
                 if (psv != nullptr) {
                     psv->createTexture(grid_t1);
                 }
-                if (bpv != nullptr) {
+                if (bpv != nullptr && !bpv->getBufferShared()) {
                     bpv->update(grid_t1->getProjection(0));
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
                 }
-                if (wpv != nullptr
-                   #if defined INOVESA_USE_OPENCL
-                   && (!oclh || !oclh->OpenGLSharing())
-                   #endif // INOVESA_USE_OPENCL
-                   ) {
+                if (wpv != nullptr && !wpv->getBufferShared()) {
                     wpv->update(wkm->getForce());
                 }
                 if (history != nullptr) {
