@@ -11,10 +11,8 @@ class NDarray1 : public array1<T>
 public:
     /**
      * @brief The const_iterator class
-     *
-     * @todo: allow "int + const_iterator"
      */
-    class const_iterator
+    class abstract_iterator
     {
     public:
         /**
@@ -45,85 +43,110 @@ public:
         /**
          * default and initializing constructors
          */
-        const_iterator(T* ptr=nullptr) : _ptr(ptr) {}
+        abstract_iterator(T* ptr=nullptr) : _ptr(ptr) {}
 
-    #if __cplusplus > 199711L
-    public: // explicitly define use of default (for C++11)
-        const_iterator(const const_iterator&) = default;
+        friend void swap(abstract_iterator& lhs, abstract_iterator& rhs)
+        { std::swap(lhs._ptr,rhs._ptr); }
 
-        const_iterator(const_iterator&&) = default;
+        abstract_iterator& operator=(abstract_iterator& other)
+        { swap(*this, other); return *this; }
 
-        const_iterator& operator=(const const_iterator&) = default;
+    #if __cplusplus > 199711L // for C++11, explicitly define use of default
+        abstract_iterator(const abstract_iterator&) = default;
 
-        const_iterator& operator=(const_iterator&&) = default;
+        abstract_iterator(abstract_iterator&&) = default;
+
+        abstract_iterator& operator=(abstract_iterator&&) = default;
     #endif // C++11
 
     public: // arithmetic operators
-        inline const_iterator& operator+=(const std::ptrdiff_t& n)
+        inline abstract_iterator& operator+=(const std::ptrdiff_t& n)
         { _ptr += n; return this; }
 
-        inline const const_iterator operator+(const std::ptrdiff_t& n) const
-        { return const_iterator(*this) += n; }
+        inline const abstract_iterator operator+(const std::ptrdiff_t& n) const
+        { return abstract_iterator(*this) += n; }
 
-        inline const_iterator operator++()
+        inline abstract_iterator operator++()
         { _ptr++; return *this; }
 
-        inline const_iterator operator++(int)
-        { const_iterator i = *this; _ptr++; return i; }
+        inline abstract_iterator operator++(int)
+        { abstract_iterator i = *this; _ptr++; return i; }
 
-        inline const_iterator& operator-=(const std::ptrdiff_t& n)
+        friend inline const abstract_iterator
+        operator+( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
+        { return rhs+lhs; }
+
+        inline abstract_iterator& operator-=(const std::ptrdiff_t& n)
         { _ptr -= n; return this; }
 
-        inline const const_iterator operator-(const std::ptrdiff_t& n) const
-        { return const_iterator(*this) -= n; }
-
-        inline const_iterator operator--()
+        inline abstract_iterator operator--()
         { _ptr--; return *this; }
 
-        inline const_iterator operator--(int)
-        { const_iterator i = *this; _ptr--; return i; }
+        inline abstract_iterator operator--(int)
+        { abstract_iterator i = *this; _ptr--; return i; }
 
-    public: // access operators
-        inline T& operator[](std::ptrdiff_t& n)
-        { return *(_ptr + n); }
+        inline const abstract_iterator operator-(const std::ptrdiff_t& n) const
+        { return abstract_iterator(*this) -= n; }
 
-        inline const T& operator*()
-        { return *_ptr; }
-
-        inline T* operator->()
-        { return _ptr; }
+        friend inline const abstract_iterator
+        operator-( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
+        { return rhs-lhs; }
 
     public: // comparission operators
-        inline bool operator==(const const_iterator& other)
+        inline const bool operator==(const abstract_iterator& other)
         { return _ptr == other._ptr; }
 
-        inline bool operator!=(const const_iterator& other)
+        inline const bool operator!=(const abstract_iterator& other)
         { return !(*this == other); }
 
-        inline bool operator>(const const_iterator& other)
+        inline const bool operator>(const abstract_iterator& other)
         { return _ptr > other._ptr; }
 
-        inline bool operator<(const const_iterator& other)
+        inline const bool operator<(const abstract_iterator& other)
         { return _ptr < other._ptr; }
 
-        inline bool operator>=(const const_iterator& other)
+        inline const bool operator>=(const abstract_iterator& other)
         { return !operator<(other); }
 
-        inline bool operator<=(const const_iterator& other)
+        inline const bool operator<=(const abstract_iterator& other)
         { return !operator>(other); }
 
     protected:
         T* _ptr;
     };
 
-    class iterator : public const_iterator
+    class const_iterator : public abstract_iterator
     {
     public:
         // default and initializing constructors
-        iterator(T* ptr=nullptr) : const_iterator(ptr) {}
+        const_iterator(T* ptr=nullptr) : abstract_iterator(ptr) {}
+
+    public: // access operators
+        inline const T& operator[](std::ptrdiff_t& n)
+        { return *(abstract_iterator::_ptr + n); }
+
+        inline const T& operator*()
+        { return *abstract_iterator::_ptr; }
+
+        inline const T* operator->()
+        { return abstract_iterator::_ptr; }
+    };
+
+    class iterator : public abstract_iterator
+    {
+    public:
+        // default and initializing constructors
+        iterator(T* ptr=nullptr) : abstract_iterator(ptr) {}
+
+    public: // access operators
+        inline T& operator[](std::ptrdiff_t& n)
+        { return *(abstract_iterator::_ptr + n); }
 
         inline T& operator*()
-        { return *const_iterator::_ptr; }
+        { return *abstract_iterator::_ptr; }
+
+        inline T* operator->()
+        { return abstract_iterator::_ptr; }
     };
 
     NDarray1(size_t size)
@@ -139,11 +162,11 @@ public:
     iterator end()
     { return iterator(array1<T>::v + array1<T>::size); }
 
-    const_iterator begin() const
-    { return const_iterator(array1<T>::v); }
+    abstract_iterator begin() const
+    { return abstract_iterator(array1<T>::v); }
 
-    const_iterator end() const
-    { return const_iterator(array1<T>::v + array1<T>::size); }
+    abstract_iterator end() const
+    { return abstract_iterator(array1<T>::v + array1<T>::size); }
 };
 
 } // namespace Array
