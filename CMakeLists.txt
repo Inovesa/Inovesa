@@ -73,6 +73,8 @@ set(SRC_LIST
 )
 
 set(INC_LIST
+  ./inc/arrayclass/Array.h
+  ./inc/arrayclass/NDArray.hpp
   ./inc/CL/CLProfiler.hpp
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp

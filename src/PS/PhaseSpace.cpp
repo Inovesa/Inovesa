@@ -31,16 +31,18 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
                             , const double bunch_current
                             , const double zoom
                             , meshdata_t* data
-                            ) :
-    _axis(axis),
-    charge(bunch_charge),
-    current(bunch_current),
-    _integral(0),
-    _nmeshcellsX(nMeshCells(0)),
-    _nmeshcellsY(nMeshCells(1)),
-    _nmeshcells(_nmeshcellsX*_nmeshcellsY),
-    _integraltype(IntegralType::simpson),
-    _data(_nmeshcellsX,_nmeshcellsY,data)
+                            )
+  : _axis(axis)
+  , charge(bunch_charge)
+  , current(bunch_current)
+  , _integral(0)
+  , _nmeshcellsX(nMeshCells(0))
+  , _nmeshcellsY(nMeshCells(1))
+  , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
+  , _integraltype(IntegralType::simpson)
+  , _projection({{ Array::NDarray1<projection_t>(_nmeshcellsX)
+                 , Array::NDarray1<projection_t>(_nmeshcellsY)}})
+  , _data(_nmeshcellsX,_nmeshcellsY,data)
   , _oclh(oclh)
   #ifdef INOVESA_USE_OPENGL
   , projectionX_glbuf(0)
@@ -51,8 +53,6 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , syncPSEvents(std::make_unique<cl::vector<cl::Event*>>())
   #endif // INOVESA_ENABLE_CLPROFILING
 {
-    _projection[0].resize(nMeshCells(0));
-    _projection[1].resize(nMeshCells(1));
     _ws.resize(nMeshCells(0));
 
     if (data == nullptr) {
@@ -132,7 +132,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
             glGenBuffers(1, &projectionX_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,projectionX_glbuf);
             glBufferData( GL_ARRAY_BUFFER
-                        , nMeshCells(0)*sizeof(*_projection[0].data())
+                        , nMeshCells(0)*sizeof(*_projection[0])
                         , 0, GL_DYNAMIC_DRAW);
             projectionX_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
                                             , projectionX_glbuf);
@@ -142,7 +142,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
             projectionX_clbuf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(projection_t)*_nmeshcellsX,
-                                     _projection[0].data());
+                                     _projection[0]);
         }
         integral_buf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
@@ -275,7 +275,7 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
         if (_oclh) {
         _oclh->enqueueReadBuffer(projectionX_clbuf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
-                                      _projection[0].data());
+                                      _projection[0]);
         }
         #endif
     }
@@ -422,7 +422,7 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data());
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
                                 , sizeof(projection_t)*nMeshCells(0)
-                                , _projection[0].data(),nullptr,evt);
+                                , _projection[0],nullptr,evt);
         _oclh->enqueueReadBuffer
             (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
             nullptr,evt

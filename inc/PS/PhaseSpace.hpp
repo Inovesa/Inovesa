@@ -44,7 +44,7 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
-#include "Array.h"
+#include "arrayclass/NDArray.hpp"
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -176,7 +176,7 @@ public:
         { return _moment[x][m]; }
 
     inline const projection_t* getProjection(const uint_fast8_t x) const
-        { return _projection[x].data(); }
+        { return _projection[x]; }
 
     /**
      * @brief updateXProjection
@@ -241,8 +241,6 @@ protected:
      */
     integral_t _integral;
 
-    std::array<std::vector<projection_t>,2> _projection;
-
     const uint32_t _nmeshcellsX;
 
     const uint32_t _nmeshcellsY;
@@ -250,6 +248,8 @@ protected:
     const size_t _nmeshcells;
 
     const IntegralType _integraltype;
+
+    std::array<Array::NDarray1<projection_t>,2> _projection;
 
     Array::array2<meshdata_t> _data;
 
