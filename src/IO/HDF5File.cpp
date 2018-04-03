@@ -42,6 +42,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
   , es_dims( 0 )
   , pt_dims( {{ 0, nparticles, 2 }} )
   , pt_particles( nparticles )
+  , drfk_dims({{ 0,2 }} )
   , wp_dims( {{ 0, ps->nMeshCells(0) }} )
   , maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 )
   , csr_dims( {{ 0, maxn }} )
@@ -400,6 +401,32 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                       pt_dataspace,pt_prop);
     }
 
+    // get ready to save status of dynamic RF kick
+    {
+    _file->createGroup("RFKicks");
+    if (std::is_same<vfps::meshaxis_t,float>::value) {
+            drfk_datatype = H5::PredType::IEEE_F32LE;
+    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
+            drfk_datatype = H5::PredType::STD_I64LE;
+    } else if (std::is_same<vfps::meshaxis_t,double>::value) {
+            drfk_datatype = H5::PredType::IEEE_F64LE;
+    }
+
+    const std::array<hsize_t,drfk_rank> drfk_maxdims = {{H5S_UNLIMITED,2U}};
+
+    H5::DataSpace drfk_dataspace(drfk_rank,drfk_dims.data(),drfk_maxdims.data());
+
+    const std::array<hsize_t,drfk_rank> drfk_chunkdims = {{64U,2U}};
+
+    H5::DSetCreatPropList drfk_prop;
+    drfk_prop.setChunk(drfk_rank,drfk_chunkdims.data());
+    drfk_prop.setShuffle();
+    drfk_prop.setDeflate(compression);
+
+    drfk_dataset = _file->createDataSet( "/RFKicks/data",drfk_datatype
+                                       , drfk_dataspace,drfk_prop);
+    }
+
     // get ready to save WakePotential
     if (ef != nullptr) {
         _file->createGroup("WakePotential");
@@ -748,6 +775,20 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     csri_dataset.write(&csrpower, csri_datatype,*memspace, *filespace);
     delete memspace;
     delete filespace;
+}
+
+void vfps::HDF5File::appendRFKicks(
+        const std::vector<std::array<vfps::meshaxis_t,2>> kicks)
+{
+    std::array<hsize_t,drfk_rank> drfk_offset = {{drfk_dims[0],0}};
+    const std::array<hsize_t,drfk_rank> drfk_ext = {{kicks.size(),2}};
+    drfk_dims[0] += kicks.size();
+    drfk_dataset.extend(drfk_dims.data());
+    H5::DataSpace filespace(drfk_dataset.getSpace());
+    filespace.selectHyperslab( H5S_SELECT_SET, drfk_ext.data()
+                              , drfk_offset.data());
+    H5::DataSpace memspace( drfk_rank, drfk_ext.data(), nullptr);
+    drfk_dataset.write(kicks.data(), drfk_datatype,memspace, filespace);
 }
 
 void vfps::HDF5File::appendTracks(const PhaseSpace::Position *particles)

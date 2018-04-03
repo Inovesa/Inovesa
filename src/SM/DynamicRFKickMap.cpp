@@ -37,21 +37,19 @@ vfps::DynamicRFKickMap::DynamicRFKickMap(std::shared_ptr<PhaseSpace> in
                                         , const meshaxis_t amplspread
                                         , const meshaxis_t modampl
                                         , const double modtimeincrement
-                                        , const uint32_t* step
                                         , const uint32_t steps
                                         , const InterpolationType it
                                         , const bool interpol_clamp
                                         , oclhptr_t oclh
                                         )
-    : RFKickMap( in,out,xsize,ysize,angle,f_RF,it,interpol_clamp, oclh)
-    , _phasenoise(phasespread/std::sqrt(revolutionpart))
-    , _amplnoise(amplspread/std::sqrt(revolutionpart))
-    , _modampl(modampl)
-    , _modtimedelta(two_pi<double>()*modtimeincrement)
-    , _step(step)
-    , _prng(std::mt19937(std::random_device{}()))
-    , _dist(std::normal_distribution<meshaxis_t>(0, 1))
-    , _modulation(__calcModulation(steps))
+  : RFKickMap( in,out,xsize,ysize,angle,f_RF,it,interpol_clamp, oclh)
+  , _phasenoise(phasespread/std::sqrt(revolutionpart))
+  , _amplnoise(amplspread/std::sqrt(revolutionpart))
+  , _modampl(modampl)
+  , _modtimedelta(two_pi<double>()*modtimeincrement)
+  , _prng(std::mt19937(std::random_device{}()))
+  , _dist(std::normal_distribution<meshaxis_t>(0, 1))
+  , _next_modulation(__calcModulation(steps))
 {
 }
 
@@ -67,7 +65,6 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const meshaxis_t amplspread
                                         , const meshaxis_t modampl
                                         , const double modtimeincrement
-                                        , const uint32_t* step
                                         , const uint32_t steps
                                         , const InterpolationType it
                                         , const bool interpol_clamp
@@ -79,10 +76,9 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
   , _amplnoise(amplspread/std::sqrt(revolutionpart))
   , _modampl(modampl)
   , _modtimedelta(two_pi<double>()*modtimeincrement)
-  , _step(step)
   , _prng(std::mt19937(std::random_device{}()))
   , _dist(std::normal_distribution<meshaxis_t>(0, 1))
-  , _modulation(__calcModulation(steps))
+  , _next_modulation(__calcModulation(steps))
 {
 }
 
@@ -95,11 +91,10 @@ vfps::DynamicRFKickMap::~DynamicRFKickMap() noexcept
 = default;
 #endif // INOVESA_ENABLE_CLPROFILING
 
-std::vector<std::array<vfps::meshaxis_t,2>>
+std::queue<std::array<vfps::meshaxis_t,2>>
 vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
 {
-    std::vector<std::array<meshaxis_t,2>> rv;
-    rv.reserve(steps);
+    std::queue<std::array<meshaxis_t,2>> rv;
 
     for (uint32_t i=0; i<steps; i++) {
         meshaxis_t phasenoise = _dist(_prng)*_phasenoise;
@@ -107,19 +102,32 @@ vfps::DynamicRFKickMap::__calcModulation(uint32_t steps)
 
         meshaxis_t phasemod = _modampl*std::sin(_modtimedelta*(i));
 
-        rv.push_back({{ _syncphase+phasenoise+phasemod,1+amplnoise}});
+        rv.emplace(std::array<meshaxis_t,2>{{ _syncphase+phasenoise+phasemod
+                                            , 1+amplnoise}});
     }
     return rv;
 }
 
 void vfps::DynamicRFKickMap::_calcKick()
 {
-    RFKickMap::_calcKick(_modulation[*_step][0],_modulation[*_step][1]);
+    RFKickMap::_calcKick( _next_modulation.front()[0]
+                        , _next_modulation.front()[1]);
 }
 
 void vfps::DynamicRFKickMap::apply() {
     _calcKick();
     KickMap::apply();
+
+    // move front entry from next to past
+    _past_modulation.emplace_back(std::move(_next_modulation.front()));
+    _next_modulation.pop();
 }
 
+std::vector<std::array<vfps::meshaxis_t,2>>
+vfps::DynamicRFKickMap::getPastModulation()
+{
+    auto rv = std::move(_past_modulation);
+    _past_modulation.clear();
+    return rv;
+}
 
