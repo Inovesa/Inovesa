@@ -1,3 +1,20 @@
+/* NDArray.hpp:  A STL-style wrapper for Array.h
+   Copyright (C) 2018 Patrik Schoenfeldt, Karlsruhe Institute of Technology
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. */
+
 #ifndef ARRAYITERATOR_HPP
 #define ARRAYITERATOR_HPP
 
@@ -100,25 +117,25 @@ private:
         { return rhs-lhs; }
 
     public: // comparission operators
-        inline const bool operator==(const abstract_iterator& other)
+        inline bool operator==(const abstract_iterator& other)
         { return _ptr == other._ptr; }
 
-        inline const bool operator!=(const abstract_iterator& other)
+        inline bool operator!=(const abstract_iterator& other)
         { return !(*this == other); }
 
-        virtual inline const bool operator>(const abstract_iterator& other)
+        virtual inline bool operator>(const abstract_iterator& other)
         { return _ptr > other._ptr; }
 
-        virtual inline const bool operator<(const abstract_iterator& other)
+        virtual inline bool operator<(const abstract_iterator& other)
         { return _ptr < other._ptr; }
 
-        virtual inline const bool operator>=(const abstract_iterator& other)
+        virtual inline bool operator>=(const abstract_iterator& other)
         { return !operator<(other); }
 
-        virtual inline const bool operator<=(const abstract_iterator& other)
+        virtual inline bool operator<=(const abstract_iterator& other)
         { return !operator>(other); }
 
-    protected:
+    public:
         /* access operators (const and non-const iterators use them) */
         inline const T& operator[](std::ptrdiff_t& n) const
         { return *(abstract_iterator::_ptr + n); }
@@ -170,16 +187,16 @@ private:
         { return abstract_iterator::operator+(n); }
 
     public: // comparission operators
-        inline const bool operator>(const abstract_iterator& other) final
+        inline bool operator>(const abstract_iterator& other) final
         { return abstract_iterator::operator<(other); }
 
-        inline const bool operator<(const abstract_iterator& other) final
+        inline bool operator<(const abstract_iterator& other) final
         { return abstract_iterator::operator>(other); }
 
-        inline const bool operator>=(const abstract_iterator& other) final
+        inline bool operator>=(const abstract_iterator& other) final
         { return abstract_iterator::operator<=(other); }
 
-        inline const bool operator<=(const abstract_iterator& other) final
+        inline bool operator<=(const abstract_iterator& other) final
         { return abstract_iterator::operator>=(other); }
     };
 
@@ -280,22 +297,24 @@ public:
      * @param size
      * @param align
      */
-    NDarray1(size_t size, size_t align=0)
+    NDarray1(std::size_t size, std::size_t align=0)
     : array1<T>(size, align)
     {}
 
     /**
      * @brief NDarray1
      * @param il initializer list
-     *
-     * It migth be worth to change this to allow move construction
-     * from non-NDarray data.
      */
     NDarray1(std::initializer_list<T> il)
     : array1<T>(il.size())
     { std::copy(il.begin(),il.end(),array1<T>::v); }
 
-    inline size_t size() const
+    template <typename InputIterator>
+    NDarray1(InputIterator first, InputIterator last)
+    : array1<T>(last-first)
+    { std::copy(first,last,array1<T>::v); }
+
+    inline std::size_t size() const
     { return array1<T>::size; }
 
     iterator begin() noexcept

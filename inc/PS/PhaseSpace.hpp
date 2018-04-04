@@ -264,7 +264,7 @@ protected:
      */
     std::array<std::array<meshdata_t,4>,2> _moment;
 
-    std::vector<meshdata_t> _ws;
+    const Array::NDarray1<meshdata_t> _ws;
 
 private:
     oclhptr_t _oclh;
@@ -306,7 +306,7 @@ private:
     static std::string cl_code_projection_x;
 #endif // INOVESA_USE_OPENCL
 
-public:
+private:
     void createFromProjections();
 
     /**
@@ -315,6 +315,12 @@ public:
      * @param zoom
      */
     void gaus(const uint_fast8_t axis, const double zoom);
+
+    /**
+     * @brief simpsonWeights helper function to allow for const _ws
+     * @return
+     */
+    const Array::NDarray1<meshdata_t> simpsonWeights();
 };
 
 /**

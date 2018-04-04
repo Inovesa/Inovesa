@@ -43,6 +43,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _projection({{ Array::NDarray1<projection_t>(_nmeshcellsX)
                  , Array::NDarray1<projection_t>(_nmeshcellsY)}})
   , _data(_nmeshcellsX,_nmeshcellsY,data)
+  , _ws(simpsonWeights())
   , _oclh(oclh)
   #ifdef INOVESA_USE_OPENGL
   , projectionX_glbuf(0)
@@ -53,8 +54,6 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , syncPSEvents(std::make_unique<cl::vector<cl::Event*>>())
   #endif // INOVESA_ENABLE_CLPROFILING
 {
-    _ws.resize(nMeshCells(0));
-
     if (data == nullptr) {
         gaus(0,zoom); // creates gaussian for x axis
         gaus(1,zoom); // creates gaussian for y axis
@@ -109,17 +108,6 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
             }
         #endif // INOVESA_CHG_BUNCH
 
-    const integral_t ca = 3.;
-    integral_t dc = 1;
-
-    const integral_t h03 = getDelta(0)/integral_t(3);
-    _ws[0] = h03;
-    for (size_t x=1; x< nMeshCells(0)-1; x++){
-        _ws[x] = h03 * (ca+dc);
-        dc = -dc;
-    }
-    _ws[nMeshCells(0)-1] = h03;
-
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
     try {
@@ -150,7 +138,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         ws_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*_nmeshcellsX,
-                            _ws.data());
+                            _ws());
 
         _clProgProjX  = _oclh->prepareCLProg(cl_code_projection_x);
         _clKernProjX = cl::Kernel(_clProgProjX, "projectionX");
@@ -457,6 +445,23 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis, const double zoom)
     for (uint32_t i=0;i<nMeshCells(axis);i++){ // Normalize distribution
         _projection[axis][i]/=charge;
     }
+}
+
+const Array::NDarray1<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
+{
+    Array::NDarray1<vfps::meshdata_t> rv(nMeshCells(0));
+    const integral_t ca = 3.;
+    integral_t dc = 1;
+
+    const integral_t h03 = getDelta(0)/integral_t(3);
+    rv[0] = h03;
+    for (size_t x=1; x< nMeshCells(0)-1; x++){
+        _ws[x] = h03 * (ca+dc);
+        dc = -dc;
+    }
+    rv[nMeshCells(0)-1] = h03;
+
+    return rv;
 }
 
 void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
