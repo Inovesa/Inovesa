@@ -64,33 +64,36 @@ private:
         abstract_iterator(T* ptr=nullptr) : _ptr(ptr) {}
 
     public: // arithmetic operators
-        inline abstract_iterator& operator+=(const std::ptrdiff_t& n)
-        { _ptr += n; return this; }
+        virtual inline abstract_iterator
+        operator+=(const std::ptrdiff_t& n)
+        { _ptr += n; return *this; }
 
-        inline const abstract_iterator operator+(const std::ptrdiff_t& n) const
+        virtual inline const abstract_iterator
+        operator+(const std::ptrdiff_t& n) const
         { return abstract_iterator(*this) += n; }
 
-        inline abstract_iterator operator++()
+        virtual inline abstract_iterator operator++()
         { _ptr++; return *this; }
 
-        inline abstract_iterator operator++(int)
+        virtual inline abstract_iterator operator++(int)
         { abstract_iterator i = *this; _ptr++; return i; }
 
-        friend inline const abstract_iterator
-        operator+( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
-        { return rhs+lhs; }
+        virtual inline abstract_iterator operator-=(const std::ptrdiff_t& n)
+        { _ptr -= n; return *this; }
 
-        inline abstract_iterator& operator-=(const std::ptrdiff_t& n)
-        { _ptr -= n; return this; }
-
-        inline abstract_iterator operator--()
+        virtual inline abstract_iterator operator--()
         { _ptr--; return *this; }
 
-        inline abstract_iterator operator--(int)
+        virtual inline abstract_iterator operator--(int)
         { abstract_iterator i = *this; _ptr--; return i; }
 
-        inline const abstract_iterator operator-(const std::ptrdiff_t& n) const
+        virtual inline const abstract_iterator
+        operator-(const std::ptrdiff_t& n) const
         { return abstract_iterator(*this) -= n; }
+
+        friend inline const abstract_iterator&
+        operator+( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
+        { return rhs+lhs; }
 
         friend inline const abstract_iterator
         operator-( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
@@ -103,16 +106,16 @@ private:
         inline const bool operator!=(const abstract_iterator& other)
         { return !(*this == other); }
 
-        inline const bool operator>(const abstract_iterator& other)
+        virtual inline const bool operator>(const abstract_iterator& other)
         { return _ptr > other._ptr; }
 
-        inline const bool operator<(const abstract_iterator& other)
+        virtual inline const bool operator<(const abstract_iterator& other)
         { return _ptr < other._ptr; }
 
-        inline const bool operator>=(const abstract_iterator& other)
+        virtual inline const bool operator>=(const abstract_iterator& other)
         { return !operator<(other); }
 
-        inline const bool operator<=(const abstract_iterator& other)
+        virtual inline const bool operator<=(const abstract_iterator& other)
         { return !operator>(other); }
 
     protected:
@@ -130,7 +133,101 @@ private:
         T* _ptr;
     };
 
+    class abstract_reverse_iterator: public abstract_iterator
+    {
+    protected:
+        // default and initializing constructors
+        abstract_reverse_iterator(T* ptr=nullptr)
+            : abstract_iterator((ptr==nullptr)?nullptr:ptr-1) {}
+
+    public:
+        virtual inline abstract_iterator
+        operator+=(const std::ptrdiff_t& n)
+        { return abstract_iterator::operator -=(n); }
+
+        virtual inline const abstract_iterator
+        operator+(const std::ptrdiff_t& n) const final
+        { return abstract_iterator::operator-(n); }
+
+        virtual inline abstract_iterator operator++() final
+        { return abstract_iterator::operator--(); }
+
+        virtual inline abstract_iterator operator++(int) final
+        { return abstract_iterator::operator--(0); }
+
+        virtual inline abstract_iterator
+        operator-=(const std::ptrdiff_t& n) final
+        { return abstract_iterator::operator +=(n); }
+
+        virtual inline abstract_iterator operator--() final
+        { return abstract_iterator::operator ++(); }
+
+        virtual inline abstract_iterator operator--(int) final
+        { return abstract_iterator::operator ++(0); }
+
+        virtual inline const abstract_iterator
+        operator-(const std::ptrdiff_t& n) const final
+        { return abstract_iterator::operator+(n); }
+
+    public: // comparission operators
+        inline const bool operator>(const abstract_iterator& other) final
+        { return abstract_iterator::operator<(other); }
+
+        inline const bool operator<(const abstract_iterator& other) final
+        { return abstract_iterator::operator>(other); }
+
+        inline const bool operator>=(const abstract_iterator& other) final
+        { return abstract_iterator::operator<=(other); }
+
+        inline const bool operator<=(const abstract_iterator& other) final
+        { return abstract_iterator::operator>=(other); }
+    };
+
+
+
 public:
+    /**
+     * @brief The NDarray1::iterator class
+     */
+    class iterator : public abstract_iterator
+    {
+    public:
+        // default and initializing constructors
+        iterator(T* ptr=nullptr)
+        : abstract_iterator(ptr) {}
+
+    public: // access operators
+        inline T& operator[](std::ptrdiff_t n)
+        { return const_cast<T&>(abstract_iterator::operator[](n)); }
+
+        inline T& operator*()
+        { return const_cast<T&>(abstract_iterator::operator*()); }
+
+        inline T* operator->()
+        { return const_cast<T&>(abstract_iterator::operator->()); }
+    };
+
+    /**
+     * @brief The NDarray1::reverse_iterator class
+     */
+    class reverse_iterator : public abstract_reverse_iterator
+    {
+    public:
+        // default and initializing constructors
+        reverse_iterator(T* ptr=nullptr)
+        : abstract_reverse_iterator(ptr) {}
+
+    public: // access operators
+        inline T& operator[](std::ptrdiff_t n)
+        { return const_cast<T&>(abstract_iterator::operator[](-n)); }
+
+        inline T& operator*()
+        { return const_cast<T&>(abstract_iterator::operator*()); }
+
+        inline T* operator->()
+        { return const_cast<T&>(abstract_iterator::operator->()); }
+    };
+
     /**
      * @brief The NDarray1::const_iterator class
      */
@@ -138,10 +235,11 @@ public:
     {
     public:
         // default and initializing constructors
-        const_iterator(T* ptr=nullptr) : abstract_iterator(ptr) {}
+        const_iterator(T* ptr=nullptr)
+        : abstract_iterator(ptr) {}
 
     public: // access operators
-        inline const T& operator[](std::ptrdiff_t& n)
+        inline const T& operator[](std::ptrdiff_t n)
         { return (abstract_iterator::operator[](n)); }
 
         inline const T& operator*()
@@ -152,23 +250,24 @@ public:
     };
 
     /**
-     * @brief The NDarray1::iterator class
+     * @brief The NDarray1::const_reverse_iterator class
      */
-    class iterator : public abstract_iterator
+    class const_reverse_iterator: public abstract_reverse_iterator
     {
     public:
         // default and initializing constructors
-        iterator(T* ptr=nullptr) : abstract_iterator(ptr) {}
+        const_reverse_iterator(T* ptr=nullptr)
+        : abstract_reverse_iterator(ptr) {}
 
     public: // access operators
-        inline T& operator[](std::ptrdiff_t& n)
-        { return const_cast<T&>(abstract_iterator::operator[](n)); }
+        inline const T& operator[](std::ptrdiff_t n)
+        { return (abstract_iterator::operator[](-n)); }
 
-        inline T& operator*()
-        { return const_cast<T&>(abstract_iterator::operator*()); }
+        inline const T& operator*()
+        { return (abstract_iterator::operator*()); }
 
-        inline T* operator->()
-        { return const_cast<T&>(abstract_iterator::operator->()); }
+        inline const T* operator->()
+        { return (abstract_iterator::operator->()); }
     };
 
     /**
@@ -199,17 +298,41 @@ public:
     inline size_t size() const
     { return array1<T>::size; }
 
-    iterator begin()
+    iterator begin() noexcept
     { return iterator(array1<T>::v); }
 
-    iterator end()
+    iterator end() noexcept
     { return iterator(array1<T>::v + array1<T>::size); }
 
-    abstract_iterator begin() const
-    { return abstract_iterator(array1<T>::v); }
+    reverse_iterator rbegin() noexcept
+    { return reverse_iterator(array1<T>::v + array1<T>::size); }
 
-    abstract_iterator end() const
-    { return abstract_iterator(array1<T>::v + array1<T>::size); }
+    reverse_iterator rend() noexcept
+    { return reverse_iterator(array1<T>::v); }
+
+    const_iterator begin() const noexcept
+    { return const_iterator(array1<T>::v); }
+
+    const_iterator end() const noexcept
+    { return const_iterator(array1<T>::v + array1<T>::size); }
+
+    const_iterator cbegin() const noexcept
+    { return const_iterator(array1<T>::v); }
+
+    const_iterator cend() const noexcept
+    { return const_iterator(array1<T>::v + array1<T>::size); }
+
+    const_reverse_iterator rbegin() const noexcept
+    { return const_reverse_iterator(array1<T>::v + array1<T>::size); }
+
+    const_reverse_iterator rend() const noexcept
+    { return const_reverse_iterator(array1<T>::v); }
+
+    const_reverse_iterator crbegin() const noexcept
+    { return const_reverse_iterator(array1<T>::v + array1<T>::size); }
+
+    const_reverse_iterator crend() const noexcept
+    { return const_reverse_iterator(array1<T>::v); }
 };
 
 } // namespace Array
