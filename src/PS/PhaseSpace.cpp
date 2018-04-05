@@ -38,11 +38,12 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _integral(0)
   , _nmeshcellsX(nMeshCells(0))
   , _nmeshcellsY(nMeshCells(1))
+  , _nbunches(1U)
   , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
   , _integraltype(IntegralType::simpson)
   , _projection({{ Array::array1<projection_t>(_nmeshcellsX)
                  , Array::array1<projection_t>(_nmeshcellsY)}})
-  , _data(_nmeshcellsX,_nmeshcellsY,data)
+  , _data(_nbunches,_nmeshcellsX,_nmeshcellsY,data)
   , _ws(simpsonWeights())
   , _oclh(oclh)
   #ifdef INOVESA_USE_OPENGL
@@ -113,7 +114,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     try {
         data_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                            sizeof(meshdata_t)*nMeshCells(0)*nMeshCells(1),
+                            sizeof(meshdata_t)*_nbunches*nMeshCells(0)*nMeshCells(1),
                            _data());
         #ifdef INOVESA_USE_OPENGL
         if (_oclh->OpenGLSharing()) {
@@ -320,19 +321,23 @@ void vfps::PhaseSpace::updateXProjection() {
     {
     switch (_integraltype) {
     case IntegralType::sum:
-        for (size_t x=0; x < nMeshCells(0); x++) {
-            _projection[0][x] = 0;
-            for (size_t y=0; y< nMeshCells(1); y++) {
-                _projection[0][x] += _data[x][y];
+        for (size_t n=0; n < _nbunches; n++) {
+            for (size_t x=0; x < nMeshCells(0); x++) {
+                _projection[0][x] = 0;
+                for (size_t y=0; y< nMeshCells(1); y++) {
+                    _projection[0][x] += _data[n][x][y];
+                }
+                _projection[0][x] /= size(1);
             }
-            _projection[0][x] /= size(1);
         }
         break;
     case IntegralType::simpson:
-          for (size_t x=0; x < nMeshCells(0); x++) {
-              _projection[0][x] = 0;
-              for (size_t y=0; y< nMeshCells(1); y++) {
-                _projection[0][x] += _data[x][y]*_ws[y];
+          for (size_t n=0; n < _nbunches; n++) {
+              for (size_t x=0; x < nMeshCells(0); x++) {
+                  _projection[0][x] = 0;
+                  for (size_t y=0; y< nMeshCells(1); y++) {
+                    _projection[0][x] += _data[n][x][y]*_ws[y];
+                  }
               }
           }
           break;
@@ -349,20 +354,24 @@ void vfps::PhaseSpace::updateYProjection() {
     #endif
     switch (_integraltype) {
     case IntegralType::sum:
-        for (size_t y=0; y< nMeshCells(1); y++) {
-            _projection[1][y] = 0;
+        for (size_t n=0; n < _nbunches; n++) {
+            for (size_t y=0; y< nMeshCells(1); y++) {
+                _projection[1][y] = 0;
 
-            for (size_t x=0; x< nMeshCells(0); x++) {
-                _projection[1][y] += _data[x][y];
+                for (size_t x=0; x< nMeshCells(0); x++) {
+                    _projection[1][y] += _data[n][x][y];
+                }
+                _projection[1][y] /= size(0);
             }
-            _projection[1][y] /= size(0);
         }
         break;
     case IntegralType::simpson:
-        for (size_t y=0; y< nMeshCells(1); y++) {
-            _projection[1][y] = 0;
-            for (size_t x=0; x< nMeshCells(0); x++) {
-                _projection[1][y] += _data[x][y]*_ws[x];
+        for (size_t n=0; n < _nbunches; n++) {
+            for (size_t y=0; y< nMeshCells(1); y++) {
+                _projection[1][y] = 0;
+                for (size_t x=0; x< nMeshCells(0); x++) {
+                    _projection[1][y] += _data[n][x][y]*_ws[x];
+                }
             }
         }
         break;
@@ -376,8 +385,10 @@ vfps::integral_t vfps::PhaseSpace::normalize()
     #ifdef INOVESA_USE_OPENCL
     syncCLMem(clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
-    for (meshindex_t i = 0; i < _nmeshcells; i++) {
-        _data /= _integral;
+    for (size_t n=0; n < _nbunches; n++) {
+        for (auto datapoint : _data[n]) {
+            datapoint /= _integral;
+        }
     }
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
@@ -427,9 +438,11 @@ void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
 void vfps::PhaseSpace::createFromProjections()
 {
     _data.Activate();
-    for (meshindex_t x = 0; x < nMeshCells(0); x++) {
-        for (meshindex_t y = 0; y < nMeshCells(1); y++) {
-            _data[x][y] = _projection[0][x]*_projection[1][y];
+    for (size_t n=0; n < _nbunches; n++) {
+        for (meshindex_t x = 0; x < nMeshCells(0); x++) {
+            for (meshindex_t y = 0; y < nMeshCells(1); y++) {
+                _data[n][x][y] = _projection[0][x]*_projection[1][y];
+            }
         }
     }
 }

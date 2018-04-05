@@ -115,7 +115,7 @@ public:
     { return _data(); }
 
     inline Array::array1<meshdata_t> operator [] (const unsigned int i)
-    { return _data[i]; }
+    { return _data[0][i]; }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
@@ -245,13 +245,15 @@ protected:
 
     const uint32_t _nmeshcellsY;
 
+    const uint32_t _nbunches;
+
     const size_t _nmeshcells;
 
     const IntegralType _integraltype;
 
     std::array<Array::array1<projection_t>,2> _projection;
 
-    Array::array2<meshdata_t> _data;
+    Array::array3<meshdata_t> _data;
 
     /**
      * @brief _moment: holds the moments for distributions
