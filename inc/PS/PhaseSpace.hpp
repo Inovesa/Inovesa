@@ -44,7 +44,7 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
-#include "arrayclass/NDArray.hpp"
+#include "arrayclass/Array.h"
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -249,7 +249,7 @@ protected:
 
     const IntegralType _integraltype;
 
-    std::array<Array::NDarray1<projection_t>,2> _projection;
+    std::array<Array::array1<projection_t>,2> _projection;
 
     Array::array2<meshdata_t> _data;
 
@@ -264,7 +264,7 @@ protected:
      */
     std::array<std::array<meshdata_t,4>,2> _moment;
 
-    const Array::NDarray1<meshdata_t> _ws;
+    const Array::array1<meshdata_t> _ws;
 
 private:
     oclhptr_t _oclh;
@@ -320,7 +320,7 @@ private:
      * @brief simpsonWeights helper function to allow for const _ws
      * @return
      */
-    const Array::NDarray1<meshdata_t> simpsonWeights();
+    const Array::array1<meshdata_t> simpsonWeights();
 };
 
 /**

@@ -40,8 +40,8 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _nmeshcellsY(nMeshCells(1))
   , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
   , _integraltype(IntegralType::simpson)
-  , _projection({{ Array::NDarray1<projection_t>(_nmeshcellsX)
-                 , Array::NDarray1<projection_t>(_nmeshcellsY)}})
+  , _projection({{ Array::array1<projection_t>(_nmeshcellsX)
+                 , Array::array1<projection_t>(_nmeshcellsY)}})
   , _data(_nmeshcellsX,_nmeshcellsY,data)
   , _ws(simpsonWeights())
   , _oclh(oclh)
@@ -447,9 +447,9 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis, const double zoom)
     }
 }
 
-const Array::NDarray1<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
+const Array::array1<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
 {
-    Array::NDarray1<vfps::meshdata_t> rv(nMeshCells(0));
+    Array::array1<vfps::meshdata_t> rv(nMeshCells(0));
     const integral_t ca = 3.;
     integral_t dc = 1;
 
