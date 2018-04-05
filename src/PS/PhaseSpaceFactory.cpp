@@ -162,7 +162,7 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
         meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
         meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
         if (x < ps_size && y < ps_size) {
-            (*ps)[x][y] += 1.0/line_count;
+            (*ps)[0][x][y] += 1.0/line_count;
         }
     }
     ifs.close();

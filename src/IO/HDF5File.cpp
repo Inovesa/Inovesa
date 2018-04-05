@@ -917,7 +917,7 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
         filespace = new H5::DataSpace(bl_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
         memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
-        meshaxis_t bunchlength = ps.getBunchLength();
+        auto bunchlength = ps.getBunchLength();
         bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -930,7 +930,7 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
         filespace = new H5::DataSpace(qb_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &qb_ext, &qb_offset);
         memspace = new H5::DataSpace(qb_rank,&qb_ext,nullptr);
-        meshaxis_t bunchposition = ps.getMoment(0,0);
+        auto bunchposition = ps.getMoment(0,0);
         qb_dataset.write(&bunchposition, qb_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;
@@ -957,7 +957,7 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
         filespace = new H5::DataSpace(es_dataset.getSpace());
         filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
         memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
-        meshaxis_t energyspread = ps.getEnergySpread();
+        auto energyspread = ps.getEnergySpread();
         es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
         delete memspace;
         delete filespace;

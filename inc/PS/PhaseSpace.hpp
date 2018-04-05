@@ -44,7 +44,10 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
+#define __NOARRAY2OPT
 #include "arrayclass/Array.h"
+#undef __NOARRAY2OPT
+
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -72,6 +75,7 @@ public:
               , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
+              , const uint32_t nbunches=1
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -114,8 +118,8 @@ public:
     inline meshdata_t* getData() const
     { return _data(); }
 
-    inline Array::array1<meshdata_t> operator [] (const unsigned int i)
-    { return _data[0][i]; }
+    inline auto operator [] (const unsigned int i)
+    { return _data[i]; }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
@@ -140,11 +144,10 @@ public:
     /**
      * @brief average
      * @param axis which axis? (0 -> x or 1 -> y)
-     * @return projection to axis
      *
      * relies on an up-t date _projection[axis]
      */
-    meshdata_t average(const uint_fast8_t axis);
+    void average(const uint_fast8_t axis);
 
     /**
      * @brief integral
@@ -164,16 +167,16 @@ public:
      *
      * relies on an up-to-date _projection[axis]
      */
-    meshdata_t variance(const uint_fast8_t axis);
+    void variance(const uint_fast8_t axis);
 
-    inline meshdata_t getBunchLength() const
-        { return std::sqrt(getMoment(0,1)); }
-
-    inline meshdata_t getEnergySpread() const
-        { return std::sqrt(getMoment(1,1)); }
-
-    inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
+    inline auto getMoment( const uint_fast8_t x
+                         , const uint_fast8_t m) const
         { return _moment[x][m]; }
+
+    Array::array1<meshaxis_t> getBunchLength() const;
+
+    Array::array1<meshaxis_t> getEnergySpread() const;
+
 
     inline const projection_t* getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
@@ -251,7 +254,10 @@ protected:
 
     const IntegralType _integraltype;
 
-    std::array<Array::array1<projection_t>,2> _projection;
+    /**
+     * @brief _projection dimensions are orientation, bunch, x/y grid cell
+     */
+    Array::array3<projection_t> _projection;
 
     Array::array3<meshdata_t> _data;
 
@@ -259,12 +265,17 @@ protected:
      * @brief _moment: holds the moments for distributions
      *            in both axis in mesh coordinates
      *
+     * 0: x-Axis
+     * 1: y-axis
+     *
      * 0: average
      * 1: variance
      * 2: skewness
      * 3: kurtosis
+     *
+     * n: bunch number
      */
-    std::array<std::array<meshdata_t,4>,2> _moment;
+    Array::array3<meshaxis_t> _moment;
 
     const Array::array1<meshdata_t> _ws;
 

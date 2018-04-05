@@ -276,7 +276,7 @@ public:
   array1<T> operator + (int i) const {return array1<T>(_size-i,v+i);}
 
   void Load(T a) const {
-    __checkSize();
+    array1<T>::__checkSize();
     for(unsigned int i=0; i < _size; i++) v[i]=a;
   }
   void Load(const T *a) const {
@@ -401,7 +401,7 @@ protected:
     #endif
   }
 
-  inline void __checkSize() {
+  inline void __checkSize() const {
     #ifndef NDEBUG
     CheckSize();
     #endif

@@ -463,7 +463,7 @@ int main(int argc, char** argv)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
     for (unsigned int x=0; x<ps_size; x++) {
         for (unsigned int y=0; y<ps_size; y++) {
-            maxval = std::max(maxval,(*grid_t1)[x][y]);
+            maxval = std::max(maxval,(*grid_t1)[0][x][y]);
         }
     }
 
@@ -1063,7 +1063,7 @@ int main(int argc, char** argv)
             for (unsigned int y=0; y<ps_size; y++) {
                 png_file[ps_size-y-1][x]=
                         static_cast<png::gray_pixel_16>(
-                            std::max((*grid_t1)[x][y],meshdata_t(0))
+                            std::max((*grid_t1)[0][x][y],meshdata_t(0))
                             /maxval*float(UINT16_MAX));
             }
         }
