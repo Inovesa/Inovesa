@@ -80,7 +80,7 @@ public:
               , meshdata_t* data = nullptr
               );
 
-    PhaseSpace(meshRuler_ptr axis0
+    PhaseSpace( meshRuler_ptr axis0
               , meshRuler_ptr axis1
               , oclhptr_t oclh
               , const double bunch_charge

@@ -43,7 +43,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
   , _integraltype(IntegralType::simpson)
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
-  , _data(_nbunches,_nmeshcellsX,_nmeshcellsY,data)
+  , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
   , _moment(Array::array3<meshdata_t>(2U,4U,_nbunches))
   , _ws(simpsonWeights())
   , _oclh(oclh)
@@ -56,7 +56,9 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , syncPSEvents(std::make_unique<cl::vector<cl::Event*>>())
   #endif // INOVESA_ENABLE_CLPROFILING
 {
-    if (data == nullptr) {
+    if (data != nullptr) {
+        std::copy(data,data+_data.size(),_data());
+    } else {
         gaus(0,zoom); // creates gaussian for x axis
         gaus(1,zoom); // creates gaussian for y axis
 
