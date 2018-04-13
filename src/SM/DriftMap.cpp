@@ -45,7 +45,7 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
 
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
-        syncCLMem(clCopyDirection::cpu2dev);
+        syncCLMem(OCLH::clCopyDirection::cpu2dev);
     }
     #endif // INOVESA_USE_OPENCL
     updateSM();

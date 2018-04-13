@@ -30,11 +30,6 @@ typedef std::nullptr_t oclhptr_t;
 class OCLH;
 typedef std::shared_ptr<OCLH> oclhptr_t;
 
-enum class clCopyDirection {
-    cpu2dev,
-    dev2cpu
-};
-
 #include <GL/glew.h>
 
 #define CL_HPP_ENABLE_EXCEPTIONS
@@ -66,6 +61,11 @@ enum class clCopyDirection {
 class OCLH
 {
 public:
+    enum class clCopyDirection {
+        cpu2dev,
+        dev2cpu
+    };
+
     /**
      * @brief prepareCLEnvironment
      * @param device

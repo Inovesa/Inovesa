@@ -415,11 +415,11 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 }
 
 #ifdef INOVESA_USE_OPENCL
-void vfps::ElectricField::syncCLMem(clCopyDirection dir)
+void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
 {
     if (_oclh) {
     switch (dir) {
-    case clCopyDirection::cpu2dev:
+    case OCLH::clCopyDirection::cpu2dev:
         _oclh->enqueueWriteBuffer(_bp_padded_buf,CL_TRUE,0,
                                        sizeof(*_bp_padded)*_nmax,_bp_padded);
         _oclh->enqueueWriteBuffer(_formfactor_buf,CL_TRUE,0,
@@ -435,7 +435,7 @@ void vfps::ElectricField::syncCLMem(clCopyDirection dir)
                                        sizeof(*_wakepotential)*_bpmeshcells,
                                        _wakepotential);
         break;
-    case clCopyDirection::dev2cpu:
+    case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
         _oclh->enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,

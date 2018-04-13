@@ -45,7 +45,7 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                                           , bunch_charge,bunch_current,
                                            xscale,yscale,startdiststep);
         #ifdef INOVESA_USE_OPENCL
-        ps->syncCLMem(clCopyDirection::cpu2dev);
+        ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
         return ps;
     } catch (const std::exception& ex) {
@@ -110,7 +110,7 @@ vfps::makePSFromPNG( std::string fname
         ps->normalize();
 
         #ifdef INOVESA_USE_OPENCL
-        ps->syncCLMem(clCopyDirection::cpu2dev);
+        ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
         std::stringstream imgsize;
         imgsize << ps_size;
@@ -177,7 +177,7 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
     // normalize integral to 1
     ps->normalize();
     #ifdef INOVESA_USE_OPENCL
-    ps->syncCLMem(clCopyDirection::cpu2dev);
+    ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
     #endif // INOVESA_USE_OPENCL
     return ps;
 }

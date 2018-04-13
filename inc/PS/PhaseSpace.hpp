@@ -223,7 +223,7 @@ public:
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
     #ifdef INOVESA_USE_OPENCL
-    void syncCLMem(clCopyDirection dir, cl::Event* evt = nullptr);
+    void syncCLMem(OCLH::clCopyDirection dir, cl::Event* evt = nullptr);
     #endif // INOVESA_USE_OPENCL
 
 protected:
@@ -231,12 +231,12 @@ protected:
 
 public:
     /**
-     * @brief _charge conversion factor _integral -> bunch charge in C
+     * @brief charge conversion factor _integral -> bunch charge in C
      */
     const double charge;
 
     /**
-     * @brief _charge conversion factor _integral -> bunch current in A
+     * @brief current conversion factor _integral -> bunch current in A
      */
     const double current;
 

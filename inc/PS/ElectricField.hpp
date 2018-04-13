@@ -162,7 +162,7 @@ public:
     meshaxis_t* wakePotential();
 
     #ifdef INOVESA_USE_OPENCL
-    void syncCLMem(clCopyDirection dir);
+    void syncCLMem(OCLH::clCopyDirection dir);
     #endif // INOVESA_USE_OPENCL
 
 public:
