@@ -112,9 +112,9 @@ private:
 
     static constexpr uint_fast8_t compression = 6;
 
-    H5::DataType datatype_integral;
+    const H5::DataType datatype_integral;
 
-    H5::DataType datatype_meshdata;
+    const H5::DataType datatype_meshdata;
 
 private: // values for phase space axis
     static constexpr uint_fast8_t axps_rank = 1;
@@ -142,16 +142,16 @@ private: // time axis
     hsize_t ta_dims;
 
 private: // bunch current
-    static constexpr uint_fast8_t bc_rank = 1;
+    static constexpr uint_fast8_t bc_rank = 2;
 
     H5::DataSet bc_dataset;
 
     H5::DataType bc_datatype;
 
-    hsize_t bc_dims;
+    std::array<hsize_t,bc_rank> bc_dims;
 
 private: // bunch profile
-    static constexpr uint_fast8_t bp_rank = 2;
+    static constexpr uint_fast8_t bp_rank = 3;
 
     H5::DataSet bp_dataset;
 
@@ -160,25 +160,25 @@ private: // bunch profile
     std::array<hsize_t,bp_rank> bp_dims;
 
 private: // bunch length
-    static constexpr uint_fast8_t bl_rank = 1;
+    static constexpr uint_fast8_t bl_rank = 2;
 
     H5::DataSet bl_dataset;
 
     H5::DataType bl_datatype;
 
-    hsize_t bl_dims;
+    std::array<hsize_t,bl_rank> bl_dims;
 
 private: // bunch position
-    static constexpr uint_fast8_t qb_rank = 1;
+    static constexpr uint_fast8_t qb_rank = 2;
 
     H5::DataSet qb_dataset;
 
     H5::DataType qb_datatype;
 
-    hsize_t qb_dims;
+    std::array<hsize_t,qb_rank> qb_dims;
 
 private: // energy profile
-    static constexpr uint_fast8_t ep_rank = 2;
+    static constexpr uint_fast8_t ep_rank = 3;
 
     H5::DataSet ep_dataset;
 
@@ -187,13 +187,13 @@ private: // energy profile
     std::array<hsize_t,ep_rank> ep_dims;
 
 private: // energy spread
-    static constexpr uint_fast8_t es_rank = 1;
+    static constexpr uint_fast8_t es_rank = 2;
 
     H5::DataSet es_dataset;
 
     H5::DataType es_datatype;
 
-    hsize_t es_dims;
+    std::array<hsize_t,es_rank> es_dims;
 
 private: // particles (tracking)
     static constexpr uint_fast8_t pt_rank = 3;
@@ -216,7 +216,7 @@ private: // dynamic rf kick
     std::array<hsize_t,drfk_rank> drfk_dims;
 
 private: // wake potential
-    static constexpr uint_fast8_t wp_rank = 2;
+    static constexpr uint_fast8_t wp_rank = 3;
 
     H5::DataSet wp_dataset;
 
@@ -225,7 +225,7 @@ private: // wake potential
     std::array<hsize_t,wp_rank> wp_dims;
 
 private: // csr spectrum
-    static constexpr uint_fast8_t csr_rank = 2;
+    static constexpr uint_fast8_t csr_rank = 3;
 
     H5::DataSet csr_dataset;
 
@@ -236,26 +236,31 @@ private: // csr spectrum
     std::array<hsize_t,csr_rank> csr_dims;
 
 private: // csr intensity
-    static constexpr uint_fast8_t csri_rank = 1;
+    static constexpr uint_fast8_t csri_rank = 2;
 
     H5::DataSet csri_dataset;
 
     H5::DataType csri_datatype;
 
-    hsize_t csri_dims;
+    std::array<hsize_t,csri_rank> csri_dims;
 
 private: // phase space
-    static constexpr uint_fast8_t _ps_rank = 3;
+    static constexpr uint_fast8_t _ps_rank = 4;
 
     H5::DataSet _ps_dataset;
-
-    H5::DataSet _ps_ta_dataset;
 
     H5::DataType _ps_datatype;
 
     std::array<hsize_t,_ps_rank> _ps_dims;
 
-    meshindex_t _ps_size;
+    const meshindex_t _ps_size;
+
+    const meshindex_t _n_bunches;
+
+    /**
+     * @brief _ps_ta_dataset phase space time axis
+     */
+    H5::DataSet _ps_ta_dataset;
 
     hsize_t _ps_ta_dims;
 

@@ -204,12 +204,33 @@ public:
 
     PhaseSpace& operator=(PhaseSpace other);
 
+    /**
+     * @brief nBunches number of RF buckets in simulation
+     * @return
+     */
+    inline uint32_t nBunches() const
+    { return _nbunches; }
+
+    /**
+     * @brief nMeshCells total number of mesh cells
+     * @return
+     */
     inline size_t nMeshCells() const
     { return _axis[0]->steps()*_axis[1]->steps(); }
 
-    inline size_t nMeshCells(const uint_fast8_t x) const
+    /**
+     * @brief nMeshCells number of mes cells in direction
+     * @param x direction (0: x, 1: y)
+     * @return
+     */
+    inline uint32_t nMeshCells(const uint_fast8_t x) const
     { return _axis[x]->steps(); }
 
+    /**
+     * @brief size in reduced coordinates
+     * @param x
+     * @return
+     */
     inline meshaxis_t size(const uint_fast8_t x) const
     { return _axis[x]->size(); }
 
@@ -218,7 +239,8 @@ public:
 
     /**
      * @brief swap
-     * @param other
+     * @param first
+     * @param second
      */
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
@@ -282,6 +304,9 @@ protected:
      */
     Array::array3<meshaxis_t> _moment;
 
+    /**
+     * @brief _ws weights for Simpson integration
+     */
     const Array::array1<meshdata_t> _ws;
 
 private:

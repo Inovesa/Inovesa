@@ -34,21 +34,22 @@ vfps::HDF5File::HDF5File(const std::string filename,
   : _file( std::make_unique<H5::H5File>(filename,H5F_ACC_TRUNC) )
   , fname( filename )
   , ta_dims( 0 )
-  , bc_dims( 0 )
-  , bp_dims( {{ 0, ps->nMeshCells(0) }} )
-  , bl_dims( 0 )
-  , qb_dims( 0 )
-  , ep_dims( {{ 0, ps->nMeshCells(0) }} )
-  , es_dims( 0 )
+  , bc_dims( {{ 0, ps->nBunches() }} )
+  , bp_dims( {{ 0, ps->nBunches(), ps->nMeshCells(0) }} )
+  , bl_dims( {{ 0, ps->nBunches() }} )
+  , qb_dims( {{ 0, ps->nBunches() }} )
+  , ep_dims( {{ 0, ps->nBunches(), ps->nMeshCells(0) }} )
+  , es_dims( {{ 0, ps->nBunches() }} )
   , pt_dims( {{ 0, nparticles, 2 }} )
   , pt_particles( nparticles )
   , drfk_dims({{ 0,2 }} )
-  , wp_dims( {{ 0, ps->nMeshCells(0) }} )
+  , wp_dims( {{ 0, ps->nBunches(), ps->nMeshCells(0) }} )
   , maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 )
-  , csr_dims( {{ 0, maxn }} )
-  , csri_dims( 0 )
-  , _ps_dims( {{ 0, ps->nMeshCells(0), ps->nMeshCells(1) }} )
+  , csr_dims( {{ 0, ps->nBunches(), maxn }} )
+  , csri_dims( {{ 0, ps->nBunches() }} )
+  , _ps_dims( {{ 0, ps->nBunches(), ps->nMeshCells(0), ps->nMeshCells(1) }} )
   , _ps_size( ps->nMeshCells(0) )
+  , _n_bunches( ps->nBunches() )
   , _ps_ta_dims( 0 )
   , imp_size( imp != nullptr ? imp->nFreqs()/2 : 0 )
   , _sm_dims (_ps_dims )
@@ -180,9 +181,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file->link(H5L_TYPE_SOFT, "/Info/AxisValues_t","/BunchPopulation/axis0");
     bc_datatype = H5::PredType::IEEE_F64LE;
 
-    hsize_t bc_maxdims = H5S_UNLIMITED;
+    const std::array<hsize_t,bc_rank> bc_maxdims{{ H5S_UNLIMITED, _n_bunches }};
 
-     H5::DataSpace bc_dataspace(bc_rank,&bc_dims,&bc_maxdims);
+     H5::DataSpace bc_dataspace(bc_rank,bc_dims.data(),bc_maxdims.data());
 
     const hsize_t bc_chunkdims = 256;
 
@@ -217,7 +218,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace bp_dataspace(bp_rank,bp_dims.data(),bp_maxdims.data());
 
     const std::array<hsize_t,bp_rank> bp_chunkdims
-        = {{64U,std::min(2048U,_ps_size)}};
+        = {{1U,64U,std::min(2048U,_ps_size)}};
 
     H5::DSetCreatPropList bp_prop;
     bp_prop.setChunk(bp_rank,bp_chunkdims.data());
@@ -247,9 +248,9 @@ vfps::HDF5File::HDF5File(const std::string filename,
             bl_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    hsize_t bl_maxdims = H5S_UNLIMITED;
+    const std::array<hsize_t,bl_rank> bl_maxdims{{ H5S_UNLIMITED, _n_bunches }};
 
-    H5::DataSpace bl_dataspace(bl_rank,&bl_dims,&bl_maxdims);
+    H5::DataSpace bl_dataspace(bl_rank, bl_dims.data(),bl_maxdims.data());
 
     const hsize_t bl_chunkdims = 256;
 
@@ -276,14 +277,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
             qb_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    hsize_t qb_maxdims = H5S_UNLIMITED;
+    const std::array<hsize_t,qb_rank> qb_maxdims{{ H5S_UNLIMITED,_n_bunches }};
 
-    H5::DataSpace qb_dataspace(qb_rank,&qb_dims,&qb_maxdims);
+    H5::DataSpace qb_dataspace(qb_rank,qb_dims.data(),qb_maxdims.data());
 
-    const hsize_t qb_chunkdims = 256;
+    const std::array<hsize_t,qb_rank> qb_chunkdims {{256U, 1U}};
 
     H5::DSetCreatPropList qb_prop;
-    qb_prop.setChunk(qb_rank,&qb_chunkdims);
+    qb_prop.setChunk(qb_rank,qb_chunkdims.data());
     qb_prop.setShuffle();
     qb_prop.setDeflate(compression);
 
@@ -316,7 +317,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     H5::DataSpace ep_dataspace(ep_rank,ep_dims.data(),ep_maxdims.data());
 
     const std::array<hsize_t,ep_rank> ep_chunkdims
-        = {{64U,std::min(2048U,_ps_size)}};
+        = {{1U,64U,std::min(2048U,_ps_size)}};
 
     H5::DSetCreatPropList ep_prop;
     ep_prop.setChunk(ep_rank,ep_chunkdims.data());
@@ -350,14 +351,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
             es_datatype = H5::PredType::IEEE_F64LE;
     }
 
-    hsize_t es_maxdims = H5S_UNLIMITED;
+    const std::array<hsize_t,es_rank> es_maxdims {{H5S_UNLIMITED, _n_bunches }};
 
-    H5::DataSpace es_dataspace(es_rank,&es_dims,&es_maxdims);
+    H5::DataSpace es_dataspace(es_rank,es_dims.data(),es_maxdims.data());
 
-    const hsize_t es_chunkdims = 256;
+    const std::array<hsize_t,es_rank> es_chunkdims {{ 256U, 1U }};
 
     H5::DSetCreatPropList es_prop;
-    es_prop.setChunk(es_rank,&es_chunkdims);
+    es_prop.setChunk(es_rank,es_chunkdims.data());
     es_prop.setShuffle();
     es_prop.setDeflate(compression);
 
@@ -504,15 +505,17 @@ vfps::HDF5File::HDF5File(const std::string filename,
             csri_datatype = H5::PredType::IEEE_F64LE;
         }
 
-        const hsize_t csrp_maxdims = H5S_UNLIMITED;
+        const std::array<hsize_t,csri_rank> csri_maxdims {{H5S_UNLIMITED, 1U}};
 
-        H5::DataSpace csrp_dataspace(csri_rank,&csri_dims,&csrp_maxdims);
+        H5::DataSpace csrp_dataspace( csri_rank,csri_dims.data()
+                                    , csri_maxdims.data());
 
 
-        const hsize_t csrp_chunkdims = std::min(2048U,_ps_size);
+        const std::array<hsize_t,csri_rank>
+                csri_chunkdims{{std::min(2048U,_ps_size),1U}};
 
         H5::DSetCreatPropList csri_prop;
-        csri_prop.setChunk(csri_rank,&csrp_chunkdims);
+        csri_prop.setChunk(csri_rank,csri_chunkdims.data());
         csri_prop.setShuffle();
         csri_prop.setDeflate(compression);
 
@@ -764,13 +767,14 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     }
 
     // append CSR Power
-    hsize_t csrp_offset = csri_dims;
-    const hsize_t csrp_ext = 1;
-    csri_dims++;
-    csri_dataset.extend(&csri_dims);
+    auto csri_offset = csri_dims;
+    const std::array<hsize_t,csri_rank> csri_ext
+                         = {{1,csri_dims[1]}};
+    csri_dims[0]++;
+    csri_dataset.extend(csri_dims.data());
     filespace = new H5::DataSpace(csri_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, &csrp_ext, &csrp_offset);
-    memspace = new H5::DataSpace(csri_rank,&csrp_ext,nullptr);
+    filespace->selectHyperslab(H5S_SELECT_SET, csri_ext.data(), csri_offset.data());
+    memspace = new H5::DataSpace(csri_rank,csri_ext.data(),nullptr);
     csrpower_t csrpower = ef->getCSRPower();
     csri_dataset.write(&csrpower, csri_datatype,*memspace, *filespace);
     delete memspace;
@@ -884,96 +888,96 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
 
     if (at != AppendType::PhaseSpace) {
         // append to TimeAxis
+        {
         hsize_t ta_offset = ta_dims;
         const hsize_t ta_ext = 1;
         ta_dims++;
         ta_dataset.extend(&ta_dims);
-        filespace = new H5::DataSpace(ta_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, &ta_ext, &ta_offset);
-        memspace = new H5::DataSpace(ta_rank,&ta_ext,nullptr);
-        ta_dataset.write(&t, ta_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        H5::DataSpace filespace(ta_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, &ta_ext, &ta_offset);
+        H5::DataSpace memspace(ta_rank,&ta_ext,nullptr);
+        ta_dataset.write(&t, ta_datatype,memspace,filespace);
+        }
 
         // append BunchProfile
+        {
         std::array<hsize_t,bp_rank> bp_offset
                         = {{bp_dims[0],0}};
         const std::array<hsize_t,bp_rank> bp_ext
                         = {{1,_ps_size}};
         bp_dims[0]++;
         bp_dataset.extend(bp_dims.data());
-        filespace = new H5::DataSpace(bp_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
-        memspace = new H5::DataSpace(bp_rank,bp_ext.data(),nullptr);
-        bp_dataset.write(ps.getProjection(0), bp_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        H5::DataSpace filespace(bp_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, bp_ext.data(), bp_offset.data());
+        H5::DataSpace memspace(bp_rank,bp_ext.data(),nullptr);
+        bp_dataset.write(ps.getProjection(0), bp_datatype,memspace,filespace);
+        }
 
         // append Length
-        hsize_t bl_offset = bl_dims;
-        const hsize_t bl_ext = 1;
-        bl_dims++;
-        bl_dataset.extend(&bl_dims);
-        filespace = new H5::DataSpace(bl_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, &bl_ext, &bl_offset);
-        memspace = new H5::DataSpace(bl_rank,&bl_ext,nullptr);
+        {
+        auto bl_offset = bl_dims;
+        const std::array<hsize_t,bl_rank> bl_ext{{1,bl_dims[1]}};
+        bl_dims[0]++;
+        bl_dataset.extend(bl_dims.data());
+        H5::DataSpace filespace(bl_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, bl_ext.data(),bl_offset.data());
+        H5::DataSpace memspace(bl_rank,bl_ext.data(),nullptr);
         auto bunchlength = ps.getBunchLength();
-        bl_dataset.write(&bunchlength, bl_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        bl_dataset.write(bunchlength, bl_datatype,memspace,filespace);
+        }
 
         // append Position
-        hsize_t qb_offset = qb_dims;
-        const hsize_t qb_ext = 1;
-        qb_dims++;
-        qb_dataset.extend(&qb_dims);
-        filespace = new H5::DataSpace(qb_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, &qb_ext, &qb_offset);
-        memspace = new H5::DataSpace(qb_rank,&qb_ext,nullptr);
+        {
+        auto qb_offset = qb_dims;
+        const std::array<hsize_t,qb_rank> qb_ext{{1,qb_dims[1]}};
+        qb_dims[0]++;
+        qb_dataset.extend(qb_dims.data());
+        H5::DataSpace filespace(qb_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, qb_ext.data(), qb_offset.data());
+        H5::DataSpace memspace(qb_rank,qb_ext.data(),nullptr);
         auto bunchposition = ps.getMoment(0,0);
-        qb_dataset.write(&bunchposition, qb_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        qb_dataset.write(&bunchposition, qb_datatype,memspace,filespace);
+        }
 
         // append energy profile
+        {
         std::array<hsize_t,ep_rank> ep_offset
                         = {{ep_dims[0],0}};
         const std::array<hsize_t,ep_rank> ep_ext
                         = {{1,_ps_size}};
         ep_dims[0]++;
         ep_dataset.extend(ep_dims.data());
-        filespace = new H5::DataSpace(ep_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, ep_ext.data(), ep_offset.data());
-        memspace = new H5::DataSpace(ep_rank,ep_ext.data(),nullptr);
-        ep_dataset.write(ps.getProjection(1), ep_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        H5::DataSpace filespace(ep_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, ep_ext.data(), ep_offset.data());
+        H5::DataSpace memspace(ep_rank,ep_ext.data(),nullptr);
+        ep_dataset.write(ps.getProjection(1), ep_datatype,memspace,filespace);
+        }
 
         // append energy spread
-        hsize_t es_offset = es_dims;
-        const hsize_t es_ext = 1;
-        es_dims++;
-        es_dataset.extend(&es_dims);
-        filespace = new H5::DataSpace(es_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, &es_ext, &es_offset);
-        memspace = new H5::DataSpace(es_rank,&es_ext,nullptr);
+        {
+        auto es_offset = es_dims;
+        const std::array<hsize_t,es_rank> es_ext{{ 1, es_dims[1] }};
+        es_dims[0]++;
+        es_dataset.extend(es_dims.data());
+        H5::DataSpace filespace(es_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, es_ext.data(), es_offset.data());
+        H5::DataSpace memspace(es_rank,es_ext.data(),nullptr);
         auto energyspread = ps.getEnergySpread();
-        es_dataset.write(&energyspread, es_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        es_dataset.write(&energyspread, es_datatype,memspace, filespace);
+        }
 
         // append BunchPopulation
-        hsize_t bc_offset = bc_dims;
-        const hsize_t bc_ext = 1;
-        bc_dims++;
-        bc_dataset.extend(&bc_dims);
-        filespace = new H5::DataSpace(bc_dataset.getSpace());
-        filespace->selectHyperslab(H5S_SELECT_SET, &bc_ext, &bc_offset);
-        memspace = new H5::DataSpace(bc_rank,&bc_ext,nullptr);
+        {
+        auto bc_offset = bc_dims;
+        const std::array<hsize_t,bc_rank> bc_ext{{ 1,bc_dims[1] }};
+        bc_dims[0]++;
+        bc_dataset.extend(bc_dims.data());
+        H5::DataSpace filespace(bc_dataset.getSpace());
+        filespace.selectHyperslab(H5S_SELECT_SET, bc_ext.data(), bc_offset.data());
+        H5::DataSpace memspace(bc_rank,bc_ext.data(),nullptr);
         double bc = ps.getIntegral();
-        bc_dataset.write(&bc, bc_datatype,*memspace, *filespace);
-        delete memspace;
-        delete filespace;
+        bc_dataset.write(&bc, bc_datatype,memspace, filespace);
+        }
     }
 }
 
