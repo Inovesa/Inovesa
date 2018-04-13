@@ -1000,7 +1000,7 @@ vfps::HDF5File::readPhaseSpace( std::string fname
                               , meshaxis_t pmin, meshaxis_t pmax
                               , oclhptr_t oclh
                               , double Qb, double Ib_unscaled
-                              ,double bl, double dE, int64_t use_step)
+                              , double bl, double dE, int64_t use_step)
 {
     H5::DataType datatype;
     if (std::is_same<vfps::meshdata_t,float>::value) {
@@ -1044,11 +1044,12 @@ vfps::HDF5File::readPhaseSpace( std::string fname
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    std::unique_ptr<PhaseSpace> ps(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
-                                                 , oclh
-                                                 , Qb,Ib_unscaled,bl,dE
-                                                 )
-                                  );
+    auto ps = std::make_unique<PhaseSpace>( ps_size
+                                          , qmin,qmax,bl
+                                          , pmin,pmax,dE
+                                          , oclh
+                                          , Qb,Ib_unscaled,1U,1
+                                          );
     ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
 
     return ps;

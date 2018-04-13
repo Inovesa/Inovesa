@@ -171,28 +171,29 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , oclhptr_t oclh
                             , const double bunch_charge
                             , const double bunch_current
+                            , uint32_t nbunches
                             , const double zoom
                             , vfps::meshdata_t *data
                             ) :
     PhaseSpace( {{axis0,axis1}}
               , oclh
-              , bunch_charge,bunch_current,1,zoom,data)
+              , bunch_charge,bunch_current,nbunches,zoom,data)
 {
 }
 
 vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
-                            , meshaxis_t xmin, meshaxis_t xmax
-                            , meshaxis_t ymin, meshaxis_t ymax
+                            , meshaxis_t qmin, meshaxis_t qmax, double qscale
+                            , meshaxis_t pmin, meshaxis_t pmax, double pscale
                             , oclhptr_t oclh
                             , const double bunch_charge
                             , const double bunch_current
-                            , double xscale, double yscale
+                            , const uint32_t nbunches
                             , const double zoom, meshdata_t *data
                             )
-  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,xmin,xmax,xscale))
-              , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,ymin,ymax,yscale))
+  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,qscale))
+              , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,pscale))
               , oclh
-              , bunch_charge,bunch_current, zoom, data)
+              , bunch_charge,bunch_current, nbunches, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -201,7 +202,7 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
               , other.charge
               , other.current
               , other._nbunches
-              , 0
+              , 1
               , other._data
               )
 {

@@ -236,7 +236,7 @@ int main(int argc, char** argv)
 
     const double Ib = opts.getBunchCurrent();
     const double Qb = Ib/f_rev;
-    const double Iz = opts.getStartDistZoom();
+    const double zoom = opts.getStartDistZoom();
 
     const double steps = (opts.getStepsPerTrev()>0)
             ? opts.getStepsPerTrev()*f_rev/fs
@@ -405,9 +405,8 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
-                                    , oclh
-                                    , Qb,Ib,bl,dE,Iz));
+        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
+                                    , oclh, Qb,Ib,2U,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');

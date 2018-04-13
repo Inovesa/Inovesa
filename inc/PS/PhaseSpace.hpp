@@ -85,20 +85,22 @@ public:
               , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
+              , const uint32_t nbunches=1
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
 
     PhaseSpace( meshindex_t ps_size
-              , meshaxis_t xmin
-              , meshaxis_t xmax
-              , meshaxis_t ymin
-              , meshaxis_t ymax
+              , meshaxis_t qmin
+              , meshaxis_t qmax
+              , double qscale
+              , meshaxis_t pmin
+              , meshaxis_t pmax
+              , double pscale
               , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
-              , double xscale=0
-              , double yscale=0
+              , const uint32_t nbunches=1
               , const double zoom=1
               , meshdata_t *data = nullptr
               );
@@ -259,6 +261,9 @@ protected:
      */
     Array::array3<projection_t> _projection;
 
+    /**
+     * @brief _data dimensions are: bunch, x coordinate, y coordinate
+     */
     Array::array3<meshdata_t> _data;
 
     /**
