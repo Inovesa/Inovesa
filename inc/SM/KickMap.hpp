@@ -61,7 +61,7 @@ public:
     PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
 
     #ifdef INOVESA_USE_OPENCL
-    void syncCLMem(clCopyDirection dir);
+    void syncCLMem(OCLH::clCopyDirection dir);
     #endif // INOVESA_USE_OPENCL
 
 protected:

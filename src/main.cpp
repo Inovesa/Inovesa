@@ -894,9 +894,9 @@ int main(int argc, char** argv)
             grid_t1->variance(1);
             #ifdef INOVESA_USE_OPENCL
             if (oclh) {
-                grid_t1->syncCLMem(clCopyDirection::dev2cpu);
+                grid_t1->syncCLMem(OCLH::clCopyDirection::dev2cpu);
                 if (wkm != nullptr) {
-                    wkm->syncCLMem(clCopyDirection::dev2cpu);
+                    wkm->syncCLMem(OCLH::clCopyDirection::dev2cpu);
                 }
             }
             #endif // INOVESA_USE_OPENCL
@@ -1013,9 +1013,9 @@ int main(int argc, char** argv)
         grid_t1->variance(1);
         #ifdef INOVESA_USE_OPENCL
         if (oclh) {
-            grid_t1->syncCLMem(clCopyDirection::dev2cpu);
+            grid_t1->syncCLMem(OCLH::clCopyDirection::dev2cpu);
             if (wkm != nullptr) {
-                wkm->syncCLMem(clCopyDirection::dev2cpu);
+                wkm->syncCLMem(OCLH::clCopyDirection::dev2cpu);
             }
         }
         #endif // INOVESA_USE_OPENCL
