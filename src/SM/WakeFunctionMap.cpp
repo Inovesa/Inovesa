@@ -85,7 +85,7 @@ void vfps::WakeFunctionMap::update()
 {
     #if INOVESA_USE_OPENCL
     if (_oclh) {
-    _in->syncCLMem(clCopyDirection::dev2cpu);
+        _in->syncCLMem(OCLH::clCopyDirection::dev2cpu);
     }
     #endif // INOVESA_USE_OPENCL
     _in->integrate();

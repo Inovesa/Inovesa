@@ -269,10 +269,10 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
 }
 
 #ifdef INOVESA_USE_OPENCL
-void vfps::KickMap::syncCLMem(clCopyDirection dir)
+void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
 {
     switch (dir) {
-    case clCopyDirection::cpu2dev:
+    case OCLH::clCopyDirection::cpu2dev:
         _oclh->enqueueWriteBuffer( _offset_buf,CL_TRUE,0
                                 , sizeof(meshaxis_t)*_meshsize_pd
                                 , _offset.data()
@@ -283,7 +283,7 @@ void vfps::KickMap::syncCLMem(clCopyDirection dir)
                                 );
 
         break;
-    case clCopyDirection::dev2cpu:
+    case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer( _offset_buf,CL_TRUE,0
                                , sizeof(meshaxis_t)*_meshsize_pd
                                , _offset.data()

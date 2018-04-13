@@ -378,7 +378,7 @@ vfps::integral_t vfps::PhaseSpace::normalize()
     integrate();
 
     #ifdef INOVESA_USE_OPENCL
-    syncCLMem(clCopyDirection::dev2cpu);
+    syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
     for (meshindex_t i = 0; i < _nmeshcells; i++) {
         _data1D[i] /= _integral;
@@ -400,16 +400,16 @@ vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
 }
 
 #ifdef INOVESA_USE_OPENCL
-void vfps::PhaseSpace::syncCLMem(clCopyDirection dir,cl::Event* evt)
+void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
 {
     if (_oclh) {
     switch (dir) {
-    case clCopyDirection::cpu2dev:
+    case OCLH::clCopyDirection::cpu2dev:
         _oclh->enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
              sizeof(meshdata_t)*nMeshCells(),_data1D,nullptr,evt);
         break;
-    case clCopyDirection::dev2cpu:
+    case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data1D);
         _oclh->enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
