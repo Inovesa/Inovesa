@@ -121,11 +121,15 @@ private:
         std::array<hsize_t,N> dims;
     };
 
-    H5::H5File _file;
-
     std::string _fname;
 
-    const meshindex_t _n_bunches;
+    H5::H5File _file;
+
+    const meshindex_t _nBunches;
+
+    const uint32_t _psSizeX;
+
+    const uint32_t _psSizeY;
 
     static constexpr uint_fast8_t compression = 6;
 
@@ -149,20 +153,11 @@ private: // values for frequency axis
 
     H5::DataType axfreq_datatype;
 
-private: // time axis
     DatasetInfo<1> timeaxis;
 
-private: // bunch current
     DatasetInfo<2> bunchpopulation;
 
-private: // bunch profile
-    static constexpr uint_fast8_t bp_rank = 3;
-
-    H5::DataSet bp_dataset;
-
-    H5::DataType bp_datatype;
-
-    std::array<hsize_t,bp_rank> bp_dims;
+    DatasetInfo<3> bunchprofile;
 
 private: // bunch length
     static constexpr uint_fast8_t bl_rank = 2;
@@ -258,8 +253,6 @@ private: // phase space
 
     std::array<hsize_t,_ps_rank> _ps_dims;
 
-    const meshindex_t _ps_size;
-
     /**
      * @brief _ps_ta_dataset phase space time axis
      */
@@ -299,10 +292,17 @@ private: // wake function
     hsize_t wf_size;
 
 private:
+    template <int rank, typename datatype>
+    void _appendData(DatasetInfo<rank>& ds, const datatype* const data);
+
     template<int rank, typename datatype>
-    DatasetInfo<rank> _makeDatasetInfo( std::array<hsize_t,rank> dims
+    DatasetInfo<rank> _makeDatasetInfo( std::string name
+                                      , std::array<hsize_t,rank> dims
                                       , std::array<hsize_t,rank> chunkdims
                                       , std::array<hsize_t,rank> maxdims);
+
+
+    H5::H5File _prepareFile();
 };
 
 } // namespace vfps
