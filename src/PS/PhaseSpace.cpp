@@ -44,7 +44,8 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _integraltype(IntegralType::simpson)
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
   , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
-  , _moment(Array::array3<meshdata_t>(2U,4U,_nbunches))
+  , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
+  , _RMS(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
   , _oclh(oclh)
   #ifdef INOVESA_USE_OPENGL
@@ -300,25 +301,8 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
         var *= getDelta(axis);
 
         _moment[axis][1][n] = var;
+        _RMS[axis][n] = std::sqrt(var);
     }
-}
-
-Array::array1<vfps::meshaxis_t> vfps::PhaseSpace::getBunchLength() const
-{
-    Array::array1<vfps::meshaxis_t> rv(_nbunches);
-    for (uint32_t n=0; n<_nbunches; n++) {
-        rv[n] = std::sqrt(getMoment(0,1)[n]);
-    }
-    return rv;
-}
-
-Array::array1<vfps::meshaxis_t> vfps::PhaseSpace::getEnergySpread() const
-{
-    Array::array1<vfps::meshaxis_t> rv(_nbunches);
-    for (uint32_t n=0; n<_nbunches; n++) {
-        rv[n] = std::sqrt(getMoment(1,1)[n]);
-    }
-    return rv;
 }
 
 void vfps::PhaseSpace::updateXProjection() {

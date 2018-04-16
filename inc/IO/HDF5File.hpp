@@ -159,23 +159,9 @@ private: // values for frequency axis
 
     DatasetInfo<3> bunchprofile;
 
-private: // bunch length
-    static constexpr uint_fast8_t bl_rank = 2;
+    DatasetInfo<2> bunchlength;
 
-    H5::DataSet bl_dataset;
-
-    H5::DataType bl_datatype;
-
-    std::array<hsize_t,bl_rank> bl_dims;
-
-private: // bunch position
-    static constexpr uint_fast8_t qb_rank = 2;
-
-    H5::DataSet qb_dataset;
-
-    H5::DataType qb_datatype;
-
-    std::array<hsize_t,qb_rank> qb_dims;
+    DatasetInfo<2> bunchposition;
 
 private: // energy profile
     static constexpr uint_fast8_t ep_rank = 3;
@@ -279,8 +265,6 @@ private: // source map
     H5::DataType _sm_datatype;
 
     std::array<hsize_t,_sm_rank> _sm_dims;
-
-    meshindex_t _sm_size;
 
 private: // wake function
     static constexpr uint_fast8_t wf_rank = 1;

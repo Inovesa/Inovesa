@@ -175,9 +175,11 @@ public:
                          , const uint_fast8_t m) const
         { return _moment[x][m]; }
 
-    Array::array1<meshaxis_t> getBunchLength() const;
+    inline const meshaxis_t* getBunchLength() const
+        { return _RMS[0](); }
 
-    Array::array1<meshaxis_t> getEnergySpread() const;
+    inline const meshaxis_t* getEnergySpread() const
+        { return _RMS[1](); }
 
 
     inline const projection_t* getProjection(const uint_fast8_t x) const
@@ -303,6 +305,17 @@ protected:
      * n: bunch number
      */
     Array::array3<meshaxis_t> _moment;
+
+
+    /**
+     * @brief _RMS
+     *
+     * 0: x-Axis
+     * 1: y-axis
+     *
+     * n: bunch number
+     */
+    Array::array2<meshaxis_t> _RMS;
 
     /**
      * @brief _ws weights for Simpson integration

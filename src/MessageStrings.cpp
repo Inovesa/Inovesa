@@ -139,7 +139,7 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
            << std::abs(delta)
            << "\ts_p="
            << std::fixed << std::setprecision(4)
-           << ps->getEnergySpread();
+           << *ps->getEnergySpread();
 
     return status.str();
 }
