@@ -96,7 +96,7 @@ public:
 
 public:
     static std::unique_ptr<PhaseSpace>
-        readPhaseSpace(std::string fname
+        readPhaseSpace( std::string fname
                       , meshaxis_t qmin, meshaxis_t qmax
                       , meshaxis_t pmin, meshaxis_t pmax
                       , oclhptr_t oclh
@@ -106,9 +106,26 @@ public:
                       );
 
 private:
-    std::unique_ptr<H5::H5File> _file;
+    template <int N>
+    struct DatasetInfo {
+        DatasetInfo() = delete;
+        DatasetInfo( H5::DataSet dataset
+                   , H5::DataType datatype
+                   , std::array<hsize_t,N> dims)
+        : dataset(dataset), datatype(datatype), dims(dims)
+        {}
 
-    std::string fname;
+        static constexpr int rank = N;
+        const H5::DataSet dataset;
+        const H5::DataType datatype;
+        std::array<hsize_t,N> dims;
+    };
+
+    H5::H5File _file;
+
+    std::string _fname;
+
+    const meshindex_t _n_bunches;
 
     static constexpr uint_fast8_t compression = 6;
 
@@ -133,22 +150,10 @@ private: // values for frequency axis
     H5::DataType axfreq_datatype;
 
 private: // time axis
-    static constexpr uint_fast8_t ta_rank = 1;
-
-    H5::DataSet ta_dataset;
-
-    H5::DataType ta_datatype;
-
-    hsize_t ta_dims;
+    DatasetInfo<1> timeaxis;
 
 private: // bunch current
-    static constexpr uint_fast8_t bc_rank = 2;
-
-    H5::DataSet bc_dataset;
-
-    H5::DataType bc_datatype;
-
-    std::array<hsize_t,bc_rank> bc_dims;
+    DatasetInfo<2> bunchpopulation;
 
 private: // bunch profile
     static constexpr uint_fast8_t bp_rank = 3;
@@ -255,8 +260,6 @@ private: // phase space
 
     const meshindex_t _ps_size;
 
-    const meshindex_t _n_bunches;
-
     /**
      * @brief _ps_ta_dataset phase space time axis
      */
@@ -294,6 +297,12 @@ private: // wake function
     H5::DataType wf_datatype;
 
     hsize_t wf_size;
+
+private:
+    template<int rank, typename datatype>
+    DatasetInfo<rank> _makeDatasetInfo( std::array<hsize_t,rank> dims
+                                      , std::array<hsize_t,rank> chunkdims
+                                      , std::array<hsize_t,rank> maxdims);
 };
 
 } // namespace vfps
