@@ -115,7 +115,7 @@ public:
 
     ~ElectricField() noexcept;
 
-    inline csrpower_t getCSRPower() const
+    inline const csrpower_t& getCSRPower() const
         { return _csrintensity; }
 
     inline csrpower_t* getCSRSpectrum() const

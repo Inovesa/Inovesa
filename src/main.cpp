@@ -165,8 +165,6 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    const auto save_sourcemap = opts.getSaveSourceMap();
-
     const meshindex_t ps_size = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
     const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
@@ -919,20 +917,6 @@ int main(int argc, char** argv)
                 if (drfm) {
                     hdf_file->appendRFKicks(drfm->getPastModulation());
                 }
-
-                if (save_sourcemap) {
-                    std::vector<PhaseSpace::Position> allpos;
-                    for (float x=0; x<ps_size; x++) {
-                        for (float y=0; y<ps_size; y++) {
-                            allpos.push_back({x,y});
-                        }
-                    }
-                    wm->applyTo(allpos);
-                    rfm->applyTo(allpos);
-                    drm->applyTo(allpos);
-                    fpm->applyTo(allpos);
-                    hdf_file->appendSourceMap(allpos.data());
-                }
             }
             outstepnr++;
             #endif // INOVESA_USE_HDF5
@@ -1031,22 +1015,6 @@ int main(int argc, char** argv)
 
         if (drfm) {
             hdf_file->appendRFKicks(drfm->getPastModulation());
-        }
-
-        if (save_sourcemap) {
-            std::vector<PhaseSpace::Position> allpos;
-            for (float x=0; x<ps_size; x++) {
-                for (float y=0; y<ps_size; y++) {
-                    allpos.push_back({x,y});
-                }
-            }
-            wm->applyTo(allpos);
-            rfm->applyTo(allpos);
-            if (drm != nullptr) {
-                drm->applyTo(allpos);
-            }
-            fpm->applyTo(allpos);
-            hdf_file->appendSourceMap(allpos.data());
         }
     }
     #endif // INOVESA_USE_HDF5

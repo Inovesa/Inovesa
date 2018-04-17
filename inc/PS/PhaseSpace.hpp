@@ -176,10 +176,10 @@ public:
         { return _moment[x][m]; }
 
     inline const meshaxis_t* getBunchLength() const
-        { return _RMS[0](); }
+        { return _RMS[0]; }
 
     inline const meshaxis_t* getEnergySpread() const
-        { return _RMS[1](); }
+        { return _RMS[1]; }
 
 
     inline const projection_t* getProjection(const uint_fast8_t x) const
@@ -265,11 +265,6 @@ public:
     const double current;
 
 protected:
-    /**
-     * @brief _integral as we work in normalitzed units, this should be 1
-     */
-    integral_t _integral;
-
     const uint32_t _nmeshcellsX;
 
     const uint32_t _nmeshcellsY;
@@ -279,6 +274,10 @@ protected:
     const size_t _nmeshcells;
 
     const IntegralType _integraltype;
+    /**
+     * @brief _integral as we work in normalitzed units, this should be _nbunches
+     */
+    integral_t _integral;
 
     /**
      * @brief _projection dimensions are orientation, bunch, x/y grid cell

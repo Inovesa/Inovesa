@@ -84,9 +84,7 @@ public:
 
     void appendRFKicks(const std::vector<std::array<vfps::meshaxis_t,2>> kicks);
 
-    void appendTracks(const PhaseSpace::Position *particles);
-
-    void appendSourceMap(const PhaseSpace::Position *allpos);
+    void appendTracks(const PhaseSpace::Position* particles);
 
     void append(const PhaseSpace& ps,
                 const timeaxis_t t,
@@ -121,163 +119,70 @@ private:
         std::array<hsize_t,N> dims;
     };
 
-    std::string _fname;
+    const std::string _fname;
 
     H5::H5File _file;
 
     const meshindex_t _nBunches;
 
+    const uint32_t _nParticles;
+
     const uint32_t _psSizeX;
 
     const uint32_t _psSizeY;
 
+    const uint32_t _maxn;
+
+    const uint32_t _impSize;
+
     static constexpr uint_fast8_t compression = 6;
 
-    const H5::DataType datatype_integral;
-
-    const H5::DataType datatype_meshdata;
-
 private: // values for phase space axis
-    static constexpr uint_fast8_t axps_rank = 1;
 
-    H5::DataSet ax0ps_dataset;
+    DatasetInfo<1> _positionAxis;
 
-    H5::DataSet ax1ps_dataset;
+    DatasetInfo<1> _energyAxis;
 
-    H5::DataType axps_datatype;
+    DatasetInfo<1> _frequencyAxis;
 
-private: // values for frequency axis
-    static constexpr uint_fast8_t axfreq_rank = 1;
+    DatasetInfo<1> _timeAxis;
 
-    H5::DataSet axfreq_dataset;
+    DatasetInfo<1> _timeAxisPS;
 
-    H5::DataType axfreq_datatype;
+    DatasetInfo<1> _bunchPopulation;
 
-    DatasetInfo<1> timeaxis;
+    DatasetInfo<3> _bunchProfile;
 
-    DatasetInfo<2> bunchpopulation;
+    DatasetInfo<2> _bunchLength;
 
-    DatasetInfo<3> bunchprofile;
+    DatasetInfo<2> _bunchPosition;
 
-    DatasetInfo<2> bunchlength;
+    DatasetInfo<3> _energyProfile;
 
-    DatasetInfo<2> bunchposition;
+    DatasetInfo<2> _energySpread;
 
-private: // energy profile
-    static constexpr uint_fast8_t ep_rank = 3;
+    DatasetInfo<3> _particles;
 
-    H5::DataSet ep_dataset;
+    DatasetInfo<2> _dynamicRFKick;
 
-    H5::DataType ep_datatype;
+    DatasetInfo<3> _wakePotential;
 
-    std::array<hsize_t,ep_rank> ep_dims;
+    DatasetInfo<3> _csrSpectrum;
 
-private: // energy spread
-    static constexpr uint_fast8_t es_rank = 2;
+    DatasetInfo<2> _csrIntensity;
 
-    H5::DataSet es_dataset;
+    DatasetInfo<4> _phaseSpace;
 
-    H5::DataType es_datatype;
+    DatasetInfo<1> _impedanceReal;
+    DatasetInfo<1> _impedanceImag;
 
-    std::array<hsize_t,es_rank> es_dims;
-
-private: // particles (tracking)
-    static constexpr uint_fast8_t pt_rank = 3;
-
-    H5::DataSet pt_dataset;
-
-    H5::DataType pt_datatype;
-
-    std::array<hsize_t,pt_rank> pt_dims;
-
-    const size_t pt_particles;
-
-private: // dynamic rf kick
-    static constexpr uint_fast8_t drfk_rank = 2;
-
-    H5::DataSet drfk_dataset;
-
-    H5::DataType drfk_datatype;
-
-    std::array<hsize_t,drfk_rank> drfk_dims;
-
-private: // wake potential
-    static constexpr uint_fast8_t wp_rank = 3;
-
-    H5::DataSet wp_dataset;
-
-    H5::DataType wp_datatype;
-
-    std::array<hsize_t,wp_rank> wp_dims;
-
-private: // csr spectrum
-    static constexpr uint_fast8_t csr_rank = 3;
-
-    H5::DataSet csr_dataset;
-
-    H5::DataType csr_datatype;
-
-    size_t maxn;
-
-    std::array<hsize_t,csr_rank> csr_dims;
-
-private: // csr intensity
-    static constexpr uint_fast8_t csri_rank = 2;
-
-    H5::DataSet csri_dataset;
-
-    H5::DataType csri_datatype;
-
-    std::array<hsize_t,csri_rank> csri_dims;
-
-private: // phase space
-    static constexpr uint_fast8_t _ps_rank = 4;
-
-    H5::DataSet _ps_dataset;
-
-    H5::DataType _ps_datatype;
-
-    std::array<hsize_t,_ps_rank> _ps_dims;
-
-    /**
-     * @brief _ps_ta_dataset phase space time axis
-     */
-    H5::DataSet _ps_ta_dataset;
-
-    hsize_t _ps_ta_dims;
-
-private: // impedance
-    static constexpr uint_fast8_t imp_rank = 1;
-
-    H5::DataSet imp_dataset_real;
-    H5::DataSet imp_dataset_imag;
-
-    H5::DataType imp_datatype;
-
-    hsize_t imp_size;
-
-private: // source map
-    static constexpr uint_fast8_t _sm_rank = _ps_rank;
-
-    H5::DataSet _sm_dataset_x;
-    H5::DataSet _sm_dataset_y;
-
-    H5::DataType _sm_datatype;
-
-    std::array<hsize_t,_sm_rank> _sm_dims;
-
-private: // wake function
-    static constexpr uint_fast8_t wf_rank = 1;
-
-    H5::DataSet wf_dataset;
-
-    H5::DataType wf_datatype;
-
-    hsize_t wf_size;
+    DatasetInfo<1> _wakeFunction;
 
 private:
     template <int rank, typename datatype>
-    void _appendData(DatasetInfo<rank>& ds, const datatype* const data);
+    void _appendData( DatasetInfo<rank>& ds
+                    , const datatype* const data
+                    , const size_t size=1);
 
     template<int rank, typename datatype>
     DatasetInfo<rank> _makeDatasetInfo( std::string name

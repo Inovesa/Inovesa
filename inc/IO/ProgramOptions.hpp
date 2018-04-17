@@ -48,6 +48,12 @@ public:
 
     bool parse(int argc, char** argv);
 
+    /**
+     * @brief save
+     * @param fname
+     *
+     * @todo ignore members of _compatopts
+     */
     void save(std::string fname);
 
     #ifdef INOVESA_USE_HDF5
@@ -298,6 +304,8 @@ private: // phsical parameters
     bool use_csr;
 
 private:
+    po::options_description _compatopts;
+
     po::options_description _cfgfileopts;
 
     po::options_description _commandlineopts;
