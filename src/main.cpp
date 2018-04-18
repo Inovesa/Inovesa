@@ -78,6 +78,11 @@ int main(int argc, char** argv)
      */
     Display::start_time = std::chrono::system_clock::now();
 
+    #ifdef INOVESA_ENABLE_INTERRUPT
+    //Install signal handler for SIGINT
+    signal(SIGINT, SIGINT_handler);
+    #endif // INOVESA_ENABLE_INTERRUPT
+
     /*
      * Program options might be such that the program does not have
      * to be run at all. As config files (read in based on the command line
@@ -791,14 +796,19 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
-                                wfm,trackme.size(), t_sync,f_rev);
-        Display::printText("Will save results to \""+ofname+"\".");
-        opts.save(hdf_file);
-        hdf_file->addParameterToGroup("/Info","CSRStrength",
-                                      H5::PredType::IEEE_F64LE,&S_csr);
-        hdf_file->addParameterToGroup("/Info","ShieldingParameter",
-                                      H5::PredType::IEEE_F64LE,&shield);
+        try {
+            hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
+                                    wfm,trackme.size(), t_sync,f_rev);
+            Display::printText("Will save results to \""+ofname+"\".");
+            opts.save(hdf_file);
+            hdf_file->addParameterToGroup("/Info","CSRStrength",
+                                          H5::PredType::IEEE_F64LE,&S_csr);
+            hdf_file->addParameterToGroup("/Info","ShieldingParameter",
+                                          H5::PredType::IEEE_F64LE,&shield);
+        } catch (H5::Exception& e) {
+            e.printErrorStack();
+            Display::abort = true;
+        }
     } else
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
@@ -845,11 +855,6 @@ int main(int argc, char** argv)
     grid_t1->updateYProjection();
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations),false);
-
-    #ifdef INOVESA_ENABLE_INTERRUPT
-    //Install signal handler for SIGINT
-    signal(SIGINT, SIGINT_handler);
-    #endif // INOVESA_ENABLE_INTERRUPT
 
     #ifdef INOVESA_USE_OPENCL
     if (oclh) {

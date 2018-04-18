@@ -96,7 +96,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                   , {{ 0, 2 }}
                                                   , {{ 256, 1 }}
                                                   , {{ H5S_UNLIMITED, 2 }}))
-  , _wakePotential(_makeDatasetInfo<3,meshaxis_t>( "/WakePotenatial/data"
+  , _wakePotential(_makeDatasetInfo<3,meshaxis_t>( "/WakePotential/data"
                                                  , {{ 0, _nBunches, _psSizeX }}
                                                  , {{ 64, 1
                                                     , std::min(256U,_psSizeX) }}
@@ -124,7 +124,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                  , {{_impSize}}
                                                  , {{std::min( 4097U,_impSize)}}
                                                  , {{_impSize}}))
-  , _impedanceImag(_makeDatasetInfo<1,csrpower_t>("/Impedance/data/real"
+  , _impedanceImag(_makeDatasetInfo<1,csrpower_t>("/Impedance/data/imag"
                                                  , {{_impSize}}
                                                  , {{std::min( 4097U,_impSize)}}
                                                  , {{_impSize}}))
@@ -465,6 +465,13 @@ vfps::HDF5File::_makeDatasetInfo( std::string name
                                 , std::array<hsize_t,rank> maxdims
                                 )
 {
+    for (auto& dim : chunkdims) {
+        dim = std::max(dim, static_cast<hsize_t>(1));
+    }
+    for (auto& dim : maxdims) {
+        dim = std::max(dim, static_cast<hsize_t>(1));
+    }
+
     H5::DataType rv_datatype;
     if (std::is_same<datatype,float>::value) {
             rv_datatype = H5::PredType::IEEE_F32LE;
