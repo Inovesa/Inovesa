@@ -47,14 +47,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                               , {{_psSizeY}}
                                               , {{std::min(2048U,_psSizeY)}}
                                               , {{_psSizeY}}))
-  , _timeAxis(_makeDatasetInfo<1,timeaxis_t>( "/Info/AxisValues_t"
-                                           , {{0}},{{256}},{{H5F_UNLIMITED}}))
-  , _timeAxisPS(_makeDatasetInfo<1,timeaxis_t>( "/PhaseSpace/axis0"
-                                           , {{0}},{{256}},{{H5F_UNLIMITED}}))
   , _frequencyAxis(_makeDatasetInfo<1,frequency_t>( "/Info/AxisValues_f"
                                                   , {{_maxn}}
                                                   , {{std::min(2048U,_psSizeY)}}
                                                   , {{_maxn}}))
+  , _timeAxis(_makeDatasetInfo<1,timeaxis_t>( "/Info/AxisValues_t"
+                                             , {{0}},{{256}},{{H5F_UNLIMITED}}))
+  , _timeAxisPS(_makeDatasetInfo<1,timeaxis_t>( "/PhaseSpace/axis0"
+                                           , {{0}},{{256}},{{H5F_UNLIMITED}}))
   , _bunchPopulation(_makeDatasetInfo<1,integral_t>( "/BunchPopulation/data"
                                                   , {{0}}
                                                   , {{256}}
