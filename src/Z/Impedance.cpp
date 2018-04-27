@@ -43,7 +43,7 @@ vfps::Impedance::Impedance( const std::vector<vfps::impedance_t> &z
                           , const frequency_t f_max
                           , oclhptr_t oclh
                           )
-  : Impedance( Ruler<frequency_t>(z.size(),0,f_max,1),z
+  : Impedance( Ruler<frequency_t>(z.size(),0,f_max,{{"Hertz",1}}),z
              , oclh
              )
 {
@@ -53,7 +53,7 @@ vfps::Impedance::Impedance( const size_t nfreqs
                           , const vfps::frequency_t f_max
                           , oclhptr_t oclh
                           )
-  : Impedance( Ruler<frequency_t>(nfreqs,0,f_max,1)
+  : Impedance( Ruler<frequency_t>(nfreqs,0,f_max,{{"Hertz",1}})
              , std::vector<impedance_t>(nfreqs,0)
              , oclh
              )
