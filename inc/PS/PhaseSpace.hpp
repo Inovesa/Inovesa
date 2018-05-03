@@ -45,7 +45,7 @@ namespace vfps {
 }
 
 #define __NOARRAY2OPT
-#include "arrayclass/Array.h"
+#include "fftwpp/Array.h"
 #undef __NOARRAY2OPT
 
 #include "CL/OpenCLHandler.hpp"
