@@ -191,8 +191,8 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
                             , const uint32_t nbunches
                             , const double zoom, meshdata_t *data
                             )
-  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,qscale))
-              , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,pscale))
+  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,{{"Meter",qscale}}))
+              , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,{{"ElectronVolt",pscale}}))
               , oclh
               , bunch_charge,bunch_current, nbunches, zoom, data)
 {}

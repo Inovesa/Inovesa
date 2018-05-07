@@ -22,8 +22,10 @@
 #define RULER_HPP
 
 #include <algorithm>
+#include <map>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #include "defines.hpp"
 
@@ -41,13 +43,14 @@ class Ruler
 public:
     Ruler() = delete;
 
-    Ruler(meshindex_t steps, ruler_t min, ruler_t max, double scale=0) :
-        _steps(steps),
-        _max(max),
-        _min(min),
-        _delta((max-min)/static_cast<ruler_t>(steps-1)),
-        _scale(scale),
-        _zerobin(((min+max)/(min-max)+1)*(steps-1)/2)
+    Ruler(meshindex_t steps, ruler_t min, ruler_t max
+          , std::map<std::string,double> scale)
+      : _steps(steps)
+      , _max(max)
+      , _min(min)
+      , _delta((max-min)/static_cast<ruler_t>(steps-1))
+      , _scale(scale)
+      , _zerobin(((min+max)/(min-max)+1)*(steps-1)/2)
     {
         if (min >= max) {
             throw std::invalid_argument("Tried to set up Ruler with min >= max.");
@@ -91,8 +94,11 @@ public:
     inline const ruler_t min() const
         { return _min; }
 
-    inline double scale() const
+    std::map<std::string,double> scale() const
         { return _scale; }
+
+    inline double scale(std::string unit) const
+        { return _scale.at(unit); }
 
     inline meshindex_t steps() const
         { return _steps; }
@@ -132,9 +138,12 @@ protected:
 
     const ruler_t _min;
 
+    /**
+     * @brief _delta step size
+     */
     const ruler_t _delta;
 
-    const double _scale;
+    const std::map<std::string,double> _scale;
 
     const ruler_t _zerobin;
 };

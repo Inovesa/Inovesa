@@ -41,7 +41,7 @@ vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
   , _f_RF(f_RF)
   , _V0(0)
   , _syncphase(0)
-  , _bl2phase(_axis[0]->scale()/physcons::c*_f_RF*two_pi<double>())
+  , _bl2phase(_axis[0]->scale("Meter")/physcons::c*_f_RF*two_pi<double>())
 {
     _calcKick(_syncphase);
 }
@@ -66,7 +66,7 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
   , _f_RF(f_RF)
   , _V0(V0)
   , _syncphase(std::asin(_V0/_V_RF))
-  , _bl2phase(_axis[0]->scale()/physcons::c*_f_RF*two_pi<double>())
+  , _bl2phase(_axis[0]->scale("Meter")/physcons::c*_f_RF*two_pi<double>())
 {
     _calcKick(_syncphase);
 }
@@ -85,7 +85,7 @@ void vfps::RFKickMap::_calcKick(const meshaxis_t phase, const meshaxis_t ampl)
         for(meshindex_t x=0; x<_xsize; x++) {
             _offset[x] = _revolutionpart*(-ampl*_V_RF
                        * std::sin(_axis[0]->at(x)*_bl2phase+phase)
-                       + _V0)/ _axis[1]->delta()/_axis[1]->scale();
+                       + _V0)/ _axis[1]->delta()/_axis[1]->scale("ElectronVolt");
         }
     }
 

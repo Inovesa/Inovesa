@@ -32,21 +32,22 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const double revolutionpart
                                   , const meshaxis_t wakescalining
                                   )
-  : volts(ps->getAxis(1)->delta()*ps->getScale(1)*revolutionpart)
+  : volts(ps->getAxis(1)->delta()*ps->getScale(1,"ElectronVolt")/revolutionpart)
   , _nmax(impedance->nFreqs())
   , _bpmeshcells(ps->nMeshCells(0))
-  , _axis_freq(Ruler<frequency_t>(_nmax,0,
-                                  1/(ps->getDelta(0)),
-                                  physcons::c/ps->getScale(0)))
+  , _axis_freq(Ruler<frequency_t>( _nmax,0
+                                 , 1/(ps->getDelta(0))
+                                 , {{ "Hertz"
+                                    , physcons::c/ps->getScale(0,"Meter")}}))
   // _axis_wake[_bpmeshcells] will be at position 0
-  , _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells,
-                                 -ps->getDelta(0)*_bpmeshcells,
-                                  ps->getDelta(0)*(_bpmeshcells-1),
-                                 ps->getScale(0)))
+  , _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells
+                                , -ps->getDelta(0)*_bpmeshcells
+                                , ps->getDelta(0)*(_bpmeshcells-1)
+                                , {{"Meter", ps->getScale(0,"Meter")}}))
   , _phasespace(ps)
   , _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0))
   , factor4WattPerHertz(2*impedance->factor4Ohms*ps->current*ps->current/f_rev)
-  , factor4Watts(factor4WattPerHertz*_axis_freq.scale())
+  , factor4Watts(factor4WattPerHertz*_axis_freq.scale("Hertz"))
   , _csrintensity(0)
   , _csrspectrum(new csrpower_t[_nmax])
   , _isrspectrum(new csrpower_t[_nmax])
@@ -120,7 +121,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   : ElectricField( ps,impedance
                  , oclh
                  , f_rev,revolutionpart
-                 , Ib*dt*physcons::c/ps->getScale(0)/(ps->getDelta(1)*sigmaE*E0)
+                 , Ib*dt*physcons::c/ps->getScale(0,"Meter")/(ps->getDelta(1)*sigmaE*E0)
                  )
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
@@ -333,7 +334,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     for (unsigned int i=0; i<_nmax; i++) {
         frequency_t renorm(_formfactorrenorm);
         if (cutoff > 0) {
-            renorm *= (1-std::exp(-std::pow((_axis_freq.scale()*_axis_freq[i]/cutoff),2)));
+            renorm *= (1-std::exp(-std::pow((_axis_freq.scale("Hertz")*_axis_freq[i]/cutoff),2)));
         }
 
         // norm = squared magnitude
