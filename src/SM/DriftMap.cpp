@@ -38,7 +38,7 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
         _offset[y] = 0;
         for (size_t i=0; i<slip.size(); i++) {
             _offset[y] += slip[i]*_axis[1]->at(y)
-                       *  std::pow(_axis[1]->at(y)*_axis[1]->scale()/E0,i);
+                       *  std::pow(_axis[1]->at(y)*_axis[1]->scale("ElectronVolt")/E0,i);
         }
         _offset[y] /= _axis[0]->delta();
     }

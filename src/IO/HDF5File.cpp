@@ -85,7 +85,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     ax0ps_dataset = _file->createDataSet("/Info/AxisValues_z",axps_datatype,
                                          ax0ps_dataspace,axps_prop);
-    const double ax_z_meter = ps->getScale(0);
+    const double ax_z_meter = ps->getScale(0,"Meter");
     ax0ps_dataset.createAttribute("Meter",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_meter);
     const double ax_z_seconds = ax_z_meter/physcons::c;
@@ -94,7 +94,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     ax1ps_dataset = _file->createDataSet("/Info/AxisValues_E",axps_datatype,
                                          ax1ps_dataspace,axps_prop);
-    const double ax1scale = ps->getScale(1);
+    const double ax1scale = ps->getScale(1,"ElectronVolt");
     ax1ps_dataset.createAttribute("ElectronVolt"
                                   ,H5::PredType::IEEE_F64LE,
                                   H5::DataSpace()).write(
@@ -139,7 +139,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
 
     axfreq_dataset = _file->createDataSet("/Info/AxisValues_f",axfreq_datatype,
                                           axfreq_dataspace,axfreq_prop);
-    const double axfreqscale = axfreq->scale();
+    const double axfreqscale = axfreq->scale("Hertz");
     axfreq_dataset.createAttribute("Hertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axfreqscale);
     axfreq_dataset.write(axfreq->data(),axfreq_datatype);
