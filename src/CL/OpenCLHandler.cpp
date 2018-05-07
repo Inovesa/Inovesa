@@ -37,7 +37,6 @@
 OCLH::OCLH( uint32_t device, bool glsharing)
 {
     cl::vector<cl::Platform> platforms;
-
     cl::Platform::get(&platforms);
 
     uint32_t devicescount = 0;
@@ -208,7 +207,12 @@ void OCLH::listCLDevices()
     cl::vector<cl::Platform> platforms;
     std::cout << "OpenCL device options available on this computer:" << std::endl
               << " 0: (Do not use OpenCL.)" << std::endl;
-    cl::Platform::get(&platforms);
+    try {
+        cl::Platform::get(&platforms);
+    } catch (cl::Error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return;
+    }
 
     uint32_t devicescount = 0;
 
@@ -220,6 +224,7 @@ void OCLH::listCLDevices()
         std::cout << "On platform " << platformname
                   << " (" << available_clversion << ")" << ":" << std::endl;
         cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, properties(p,false).data());
+
         cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
         for (unsigned int d=0; d<tmp_devices.size(); d++) {
             devicescount++;
