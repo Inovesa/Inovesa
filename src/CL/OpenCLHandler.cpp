@@ -37,7 +37,14 @@ void OCLH::prepareCLEnvironment( uint32_t device
                                #endif // INOVESA_USE_OPENGL
                                )
 {
-    cl::Platform::get(&OCLH::platforms);
+    try {
+        cl::Platform::get(&OCLH::platforms);
+    } catch (cl::Error& e) {
+        OCLH::active = false;
+        std::cerr << "Error: " << e.what() << std::endl
+                  << "Shutting down OpenCL." << std::endl;
+        return;
+    }
 
     uint32_t devicescount = 0;
     uint32_t selectedplatform = 0;
@@ -240,51 +247,56 @@ void OCLH::listCLDevices()
 {
     std::cout << "OpenCL device options available on this computer:" << std::endl
               << " 0: (Do not use OpenCL.)" << std::endl;
-    if (!OCLH::platforms.empty()) {
+    try {
         cl::Platform::get(&OCLH::platforms);
+    } catch (cl::Error& e) {
+        OCLH::active = false;
+        std::cerr << "Error: " << e.what() << std::endl
+                  << "Shutting down OpenCL." << std::endl;
+        return;
+    }
 
-        uint32_t devicescount = 0;
+    uint32_t devicescount = 0;
 
-        for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
-            std::string available_clversion;
-            OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
-            std::string platformname;
-            OCLH::platforms[p].getInfo(CL_PLATFORM_NAME,&platformname);
-            std::cout << "On platform " << platformname
-                      << " (" << available_clversion << ")" << ":" << std::endl;
-            cl_context_properties tmp_properties[] =
-                { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
-            cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
-            cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
-            for (unsigned int d=0; d<tmp_devices.size(); d++) {
-                devicescount++;
-                std::string tmpdevicetype;
-                switch(tmp_devices[d].getInfo<CL_DEVICE_TYPE>()) {
-                case CL_DEVICE_TYPE_CPU:
-                    tmpdevicetype = "CPU";
-                    break;
-                case CL_DEVICE_TYPE_GPU:
-                    tmpdevicetype = "GPU";
-                    break;
-                default:
-                    tmpdevicetype = "unknown";
-                    break;
-                }
-                std::cout << " " << devicescount << ": "
-                          << tmpdevicetype << ", "
-                          << tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
-                          << tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << "CU "
-                          << "(" << tmp_devices[d].getInfo<CL_DEVICE_NAME>() << ")"
-                          #ifdef DEBUG
-                          << std::endl
-                          << "\ton \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\""
-                          << " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"'
-                          << std::endl
-                          << "\toffering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
-                          << " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
-                          #endif // DEBUG
-                          << std::endl;
+    for (unsigned int p=0; p<OCLH::platforms.size(); p++) {
+        std::string available_clversion;
+        OCLH::platforms[p].getInfo(CL_PLATFORM_VERSION,&available_clversion);
+        std::string platformname;
+        OCLH::platforms[p].getInfo(CL_PLATFORM_NAME,&platformname);
+        std::cout << "On platform " << platformname
+                  << " (" << available_clversion << ")" << ":" << std::endl;
+        cl_context_properties tmp_properties[] =
+            { CL_CONTEXT_PLATFORM, (cl_context_properties)(OCLH::platforms[p])(), 0};
+        cl::Context tmp_context = cl::Context(CL_DEVICE_TYPE_ALL, tmp_properties);
+        cl::vector<cl::Device> tmp_devices = tmp_context.getInfo<CL_CONTEXT_DEVICES>();
+        for (unsigned int d=0; d<tmp_devices.size(); d++) {
+            devicescount++;
+            std::string tmpdevicetype;
+            switch(tmp_devices[d].getInfo<CL_DEVICE_TYPE>()) {
+            case CL_DEVICE_TYPE_CPU:
+                tmpdevicetype = "CPU";
+                break;
+            case CL_DEVICE_TYPE_GPU:
+                tmpdevicetype = "GPU";
+                break;
+            default:
+                tmpdevicetype = "unknown";
+                break;
             }
+            std::cout << " " << devicescount << ": "
+                      << tmpdevicetype << ", "
+                      << tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
+                      << tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << "CU "
+                      << "(" << tmp_devices[d].getInfo<CL_DEVICE_NAME>() << ")"
+                      #ifdef DEBUG
+                      << std::endl
+                      << "\ton \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_NAME>() << "\""
+                      << " by \"" <<  OCLH::platforms[p].getInfo<CL_PLATFORM_VENDOR>() << '\"'
+                      << std::endl
+                      << "\toffering \"" << tmp_devices[d].getInfo<CL_DEVICE_VERSION>() << '\"'
+                      << " with " << tmp_devices[d].getInfo<CL_DEVICE_EXTENSIONS>()
+                      #endif // DEBUG
+                      << std::endl;
         }
     }
 }
