@@ -132,6 +132,9 @@ protected:
 
     const ruler_t _min;
 
+    /**
+     * @brief _delta step size
+     */
     const ruler_t _delta;
 
     const double _scale;

@@ -30,7 +30,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,
                                    const double f_rev,
                                    const double revolutionpart,
                                    const meshaxis_t wakescalining) :
-    volts(ps->getAxis(1)->delta()*ps->getScale(1)*revolutionpart),
+    volts(ps->getAxis(1)->delta()*ps->getScale(1)/revolutionpart),
     _nmax(impedance->nFreqs()),
     _bpmeshcells(ps->nMeshCells(0)),
     _axis_freq(Ruler<frequency_t>(_nmax,0,

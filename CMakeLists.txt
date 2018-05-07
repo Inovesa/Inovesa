@@ -23,7 +23,7 @@ endif()
 
 set (INOVESA_VERSION_MAJOR 1)
 set (INOVESA_VERSION_MINOR 0)
-set (INOVESA_VERSION_FIX 0)
+set (INOVESA_VERSION_FIX 1)
 # pre release numbers:
 # -1: alpha
 # -2: beta
@@ -73,7 +73,6 @@ set(SRC_LIST
 )
 
 set(INC_LIST
-  ./inc/Array.h
   ./inc/CL/CLProfiler.hpp
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
