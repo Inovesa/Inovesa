@@ -52,7 +52,11 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                   << fname << "\":"
                   << ex.what() << std::endl;
     } catch (const H5::Exception& ex) {
+        #if H5_VERS_MAJOR == 1 and H5_VERS_MINOR < 10
         ex.printError();
+        #else
+        ex.printErrorStack();
+        #endif
         H5::Exception::clearErrorStack();
     } catch (...) {
         std::cerr << "Error loading initial distribution from \""
