@@ -251,16 +251,22 @@ vfps::PhaseSpace::Position
 vfps::KickMap::apply(PhaseSpace::Position pos) const
 {
     if (_kickdirection == Axis::x) {
-        meshindex_t yi = std::floor(pos.y);
-        if (yi < static_cast<meshindex_t>(_meshsize_pd)) {
-            pos.x -= _offset[yi];
+        meshindex_t yi;
+        interpol_t yif;
+        interpol_t yf = std::modf(pos.y, &yif);
+        yi = yif;
+        if (yi+1 < static_cast<meshindex_t>(_meshsize_pd)) {
+            pos.x -= (1-yf)*_offset[yi]+yf*_offset[yi+1];
         }
         pos.x = std::max(static_cast<meshaxis_t>(1),
                      std::min(pos.x,static_cast<meshaxis_t>(_meshsize_kd-1)));
     } else {
-        meshindex_t xi = std::floor(pos.x);
-        if (xi < static_cast<meshindex_t>(_meshsize_pd)) {
-            pos.y -= _offset[xi];
+        meshindex_t xi;
+        interpol_t xif;
+        interpol_t xf = std::modf(pos.x, &xif);
+        xi = xif;
+        if (xi+1 < static_cast<meshindex_t>(_meshsize_pd)) {
+            pos.y -= (1-xf)*_offset[xi]+xf*_offset[xi+1];
         }
         pos.y = std::max(static_cast<meshaxis_t>(1),
                      std::min(pos.y,static_cast<meshaxis_t>(_meshsize_kd-1)));
