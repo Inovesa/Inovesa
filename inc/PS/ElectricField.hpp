@@ -26,7 +26,7 @@
 #include <memory>
 #include <sstream>
 
-#include "fftwpp/Array.h"
+#include "Array.h"
 #include "defines.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/Ruler.hpp"

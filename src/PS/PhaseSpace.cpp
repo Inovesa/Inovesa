@@ -45,7 +45,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
   , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
   , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
-  , _RMS(Array::array2<meshaxis_t>(2U,_nbunches))
+  , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
   , _oclh(oclh)
   #ifdef INOVESA_USE_OPENGL
@@ -60,8 +60,10 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     if (data != nullptr) {
         std::copy(data,data+_data.size(),_data());
     } else {
-        gaus(0,zoom); // creates gaussian for x axis
-        gaus(1,zoom); // creates gaussian for y axis
+        for (uint32_t n=0; n<_nbunches; n++) {
+            gaus(0,n,zoom); // creates gaussian for x axis
+            gaus(1,n,zoom); // creates gaussian for y axis
+        }
 
         createFromProjections();
     }
@@ -246,18 +248,19 @@ void vfps::PhaseSpace::integrate()
     } else
     #endif
     {
+    _integral = 0;
     for (uint32_t n=0; n<_nbunches; n++) {
         switch (_integraltype) {
         case IntegralType::sum:
             _integral = std::accumulate(_projection[0][n].begin(),
                                         _projection[0][n].end(),
-                                        static_cast<integral_t>(0));
+                                        _integral);
             break;
         case IntegralType::simpson:
             _integral = std::inner_product(_projection[0][n].begin(),
                                            _projection[0][n].end(),
                                            _ws.begin(),
-                                           static_cast<integral_t>(0));
+                                           _integral);
             break;
         }
     }
@@ -301,7 +304,7 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
         var *= getDelta(axis);
 
         _moment[axis][1][n] = var;
-        _RMS[axis][n] = std::sqrt(var);
+        _rms[axis][n] = std::sqrt(var);
     }
 }
 
@@ -454,20 +457,16 @@ void vfps::PhaseSpace::createFromProjections()
             }
         }
     }
+    normalize();
 }
 
-void vfps::PhaseSpace::gaus(const uint_fast8_t axis, const double zoom)
+void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
+                            const uint32_t bunch,
+                            const double zoom)
 {
-    double charge =0;
     const double zoom2=zoom*zoom;
-    for (size_t n=0; n < _nbunches; n++) {
-        for(uint32_t i=0; i<nMeshCells(axis); i++){
-            _projection[axis][n][i]=std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
-               charge+=_projection[axis][n][i]*getDelta(axis);
-        }
-        for (uint32_t i=0;i<nMeshCells(axis);i++){ // Normalize distribution
-            _projection[axis][n][i]/=charge;
-        }
+    for(uint32_t i=0; i<nMeshCells(axis); i++){
+        _projection[axis][bunch][i]=std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
 }
 

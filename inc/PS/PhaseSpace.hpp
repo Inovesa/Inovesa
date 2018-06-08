@@ -45,7 +45,7 @@ namespace vfps {
 }
 
 #define __NOARRAY2OPT
-#include "fftwpp/Array.h"
+#include "Array.h"
 #undef __NOARRAY2OPT
 
 #include "CL/OpenCLHandler.hpp"
@@ -179,10 +179,10 @@ public:
         { return _moment[x][m]; }
 
     inline const meshaxis_t* getBunchLength() const
-        { return _RMS[0]; }
+        { return _rms[0]; }
 
     inline const meshaxis_t* getEnergySpread() const
-        { return _RMS[1]; }
+        { return _rms[1]; }
 
 
     inline const projection_t* getProjection(const uint_fast8_t x) const
@@ -317,7 +317,7 @@ protected:
      *
      * n: bunch number
      */
-    Array::array2<meshaxis_t> _RMS;
+    Array::array2<meshaxis_t> _rms;
 
     /**
      * @brief _ws weights for Simpson integration
@@ -372,7 +372,7 @@ private:
      * @param axis
      * @param zoom
      */
-    void gaus(const uint_fast8_t axis, const double zoom);
+    void gaus(const uint_fast8_t axis, const uint32_t bunch, const double zoom);
 
     /**
      * @brief simpsonWeights helper function to allow for const _ws
