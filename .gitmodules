@@ -1,3 +1,0 @@
-[submodule "inc/fftwpp"]
-	path = inc/fftwpp
-	url = git@github.com:p-snft/fftwpp.git
