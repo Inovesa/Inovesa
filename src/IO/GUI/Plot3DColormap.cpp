@@ -22,8 +22,9 @@
 
 #include "IO/GUI/Plot3DColormap.hpp"
 
-vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue) :
-    maxValue(maxvalue)
+vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue)
+  : GUIElement(false)
+  , maxValue(maxvalue)
 {
     // Create GLSL code
     switch (glversion) {

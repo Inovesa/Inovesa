@@ -25,7 +25,8 @@
 vfps::Plot2DPrimitive::Plot2DPrimitive(std::array<float,3> rgb,
                                        size_t npoints,
                                        GLenum primitivetype)
-  : _npoints(npoints)
+  : GUIElement(false)
+  , _npoints(npoints)
   , _primitivetype(primitivetype)
 {
     std::stringstream color;

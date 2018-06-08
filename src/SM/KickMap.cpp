@@ -50,7 +50,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
     #endif
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
-        _offset_buf = cl::Buffer(_oclh->context,CL_MEM_READ_WRITE,
+        _offset_clbuf = cl::Buffer(_oclh->context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
         _cl_code += R"(
         __kernel void apply_xKick(const __global data_t* src,
@@ -162,7 +162,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
             applySM = cl::Kernel(_cl_prog, "apply_yKick");
         }
         applySM.setArg(0, _in->data_buf);
-        applySM.setArg(1, _offset_buf);
+        applySM.setArg(1, _offset_clbuf);
         applySM.setArg(2, _meshsize_kd);
         applySM.setArg(3, _out->data_buf);
     }
@@ -273,7 +273,7 @@ void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
 {
     switch (dir) {
     case OCLH::clCopyDirection::cpu2dev:
-        _oclh->enqueueWriteBuffer( _offset_buf,CL_TRUE,0
+        _oclh->enqueueWriteBuffer( _offset_clbuf,CL_TRUE,0
                                 , sizeof(meshaxis_t)*_meshsize_pd
                                 , _offset.data()
                                 #ifdef INOVESA_ENABLE_CLPROFILING
@@ -284,7 +284,7 @@ void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
 
         break;
     case OCLH::clCopyDirection::dev2cpu:
-        _oclh->enqueueReadBuffer( _offset_buf,CL_TRUE,0
+        _oclh->enqueueReadBuffer( _offset_clbuf,CL_TRUE,0
                                , sizeof(meshaxis_t)*_meshsize_pd
                                , _offset.data()
                                #ifdef INOVESA_ENABLE_CLPROFILING

@@ -22,23 +22,21 @@
 
 #include "IO/GUI/Plot1DLine.hpp"
 
-vfps::Plot1DLine::Plot1DLine( std::array<float, 3> rgb
-                            , size_t npoints
-                            , Orientation orientation)
-  : Plot1DLine(rgb, npoints, orientation,0)
-{
-    glGenBuffers(1, &_databuffer);
-}
-
 vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
                             , size_t npoints
                             , Orientation orientation
                             , GLuint databuffer
                             )
-  : _npoints(npoints)
+  : GUIElement(databuffer!=0)
+  , _npoints(npoints)
   , _databuffer(databuffer)
   , _orientation(orientation)
 {
+
+    if (_databuffer == 0) {
+        glGenBuffers(1, &_databuffer);
+    }
+
     _data.resize(npoints);
     _position.resize(npoints);
 
@@ -102,7 +100,6 @@ vfps::Plot1DLine::Plot1DLine(std::array<float,3> rgb
         break;
     }
 
-    glGenBuffers(1, &_posibuffer);
     createPositionBuffer();
 }
 
@@ -137,12 +134,14 @@ void vfps::Plot1DLine::draw()
 void vfps::Plot1DLine::update(const float* points)
 {
     glBindBuffer(GL_ARRAY_BUFFER, _databuffer);
-    glBufferData( GL_ARRAY_BUFFER, _npoints*sizeof(float)
+    glBufferData( GL_ARRAY_BUFFER, _npoints*sizeof(*points)
                 , points, GL_STATIC_DRAW);
 }
 
 void vfps::Plot1DLine::createPositionBuffer()
 {
+    glGenBuffers(1, &_posibuffer);
+
     float step = 1.5f/(_npoints-1);
     switch (_orientation) {
     case Orientation::horizontal:

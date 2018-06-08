@@ -740,7 +740,8 @@ int main(int argc, char** argv)
     if (display != nullptr) {
         try {
             bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
-                                    , Plot1DLine::Orientation::horizontal));
+                                    , Plot1DLine::Orientation::horizontal
+                                    , grid_t1->projectionX_glbuf));
             display->addElement(bpv);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -761,7 +762,8 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             try {
                 wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
-                                        , Plot1DLine::Orientation::horizontal));
+                                        , Plot1DLine::Orientation::horizontal
+                                        , wkm->getGLBuffer()));
                 display->addElement(wpv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -772,7 +774,8 @@ int main(int argc, char** argv)
         try {
             history.reset(new Plot1DLine( std::array<float,3>{{0,0,0}}
                                         , csrlog.size()
-                                        , Plot1DLine::Orientation::vertical));
+                                        , Plot1DLine::Orientation::vertical
+                                        , 0));
             display->addElement(history);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -939,13 +942,13 @@ int main(int argc, char** argv)
                 if (psv != nullptr) {
                     psv->createTexture(grid_t1);
                 }
-                if (bpv != nullptr) {
+                if (bpv != nullptr && !bpv->getBufferShared()) {
                     bpv->update(grid_t1->getProjection(0));
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
                 }
-                if (wpv != nullptr) {
+                if (wpv != nullptr && !wpv->getBufferShared()) {
                     wpv->update(wkm->getForce());
                 }
                 if (history != nullptr) {

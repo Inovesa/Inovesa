@@ -83,6 +83,14 @@ public:
 
     cl::Context context;
 
+    /**
+     * @brief OpenGLSharing
+     * @return status of OpenGL sharing (always false for build w/o OpenGL)
+     *
+     */
+    bool OpenGLSharing() const
+        { return ogl_sharing; }
+
 private:
     cl::Platform _platform;
 
@@ -97,9 +105,7 @@ private:
      */
     cl::CommandQueue queue;
 
-    #ifdef INOVESA_USE_OPENGL
     bool ogl_sharing;
-    #endif // INOVESA_USE_OPENGL
 
     #ifdef INOVESA_ENABLE_CLPROFILING
     void saveProfilingInfo(std::string fname);
