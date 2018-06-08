@@ -183,7 +183,7 @@ void vfps::KickMap::apply()
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         #ifdef INOVESA_SYNC_CL
-        _in->syncCLMem(clCopyDirection::cpu2dev);
+        _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
@@ -197,7 +197,7 @@ void vfps::KickMap::apply()
                                   );
         _oclh->enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
-        _out->syncCLMem(clCopyDirection::dev2cpu);
+        _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #endif // INOVESA_USE_OPENCL
