@@ -368,7 +368,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
                                           cl::NDRange(_nmax));
         _oclh->enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
-        syncCLMem(clCopyDirection::dev2cpu);
+        syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #elif defined INOVESA_USE_OPENCL

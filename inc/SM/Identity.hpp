@@ -47,7 +47,7 @@ public:
         #ifdef INOVESA_USE_OPENCL
         if (_oclh) {
             #ifdef INOVESA_SYNC_CL
-            _in->syncCLMem(clCopyDirection::cpu2dev);
+            _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
             _oclh->enqueueCopyBuffer( _in->data_buf, _out->data_buf
                                    , 0,0,sizeof(meshdata_t)*_size
@@ -58,7 +58,7 @@ public:
                                    );
             _oclh->enqueueBarrier();
             #ifdef INOVESA_SYNC_CL
-            _out->syncCLMem(clCopyDirection::dev2cpu);
+            _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
             #endif // INOVESA_SYNC_CL
         } else
         #endif // INOVESA_USE_OPENCL
