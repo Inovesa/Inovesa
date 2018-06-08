@@ -56,7 +56,7 @@ public:
 
     static uint_fast8_t glversion;
 
-    const inline bool getBufferShared() const
+    inline bool getBufferShared() const
         { return buffer_shared; }
 
 protected:
