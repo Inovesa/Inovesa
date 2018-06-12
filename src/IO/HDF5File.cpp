@@ -85,6 +85,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                  , {{ 256, 1 }}
                                                  , {{ H5S_UNLIMITED
                                                     , _nBunches }}))
+  , _energyAverage( _makeDatasetInfo<2,meshaxis_t>( "/EnergyAverage/data"
+                                                  , {{ 0, _nBunches }}
+                                                  , {{ 256, 1 }}
+                                                  , {{ H5S_UNLIMITED, _nBunches }}))
   , _particles( _makeDatasetInfo<3,meshaxis_t>( "/Particles/data"
                                               , {{ 0, _nParticles, 2 }}
                                               , {{ 256
@@ -204,7 +208,6 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _bunchPosition.dataset.createAttribute("Second",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_seconds);
 
-
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyProfile/axis0" );
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/EnergyProfile/axis1" );
 
@@ -216,6 +219,11 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                    &ps->charge);
 
     _energySpread.dataset.createAttribute("ElectronVolt",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_E_eVolt);
+
+    _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyAverage/axis0" );
+
+    _energyAverage.dataset.createAttribute("ElectronVolt",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_E_eVolt);
 
 
@@ -362,10 +370,14 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
         _appendData(_bunchLength,ps.getBunchLength());
         {
         auto mean_q = ps.getMoment(0,0);
-        _appendData(_bunchPosition,&mean_q);
+        _appendData(_bunchPosition,mean_q());
         }
         _appendData(_energyProfile,ps.getProjection(1));
         _appendData(_energySpread,ps.getEnergySpread());
+        {
+        auto mean_E = ps.getMoment(1,0);
+        _appendData(_energyAverage,mean_E());
+        }
         {
         double bc = ps.getIntegral();
         _appendData(_bunchPopulation,&bc);
@@ -510,6 +522,7 @@ H5::H5File vfps::HDF5File::_prepareFile()
     rv.createGroup("/CSR/Spectrum");
     rv.createGroup("/EnergyProfile");
     rv.createGroup("/EnergySpread");
+    rv.createGroup("/EnergyAverage");
     rv.createGroup("/Particles");
     rv.createGroup("/PhaseSpace");
     rv.createGroup("/RFKicks");

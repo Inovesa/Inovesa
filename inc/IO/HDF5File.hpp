@@ -161,6 +161,8 @@ private: // values for phase space axis
 
     DatasetInfo<2> _energySpread;
 
+    DatasetInfo<2> _energyAverage;
+
     DatasetInfo<3> _particles;
 
     DatasetInfo<2> _dynamicRFKick;
