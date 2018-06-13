@@ -408,7 +408,7 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        const auto nBunches = 2U;
+        const auto nBunches = 1U;
         grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
                                     , oclh, Qb,Ib,nBunches,zoom));
     } else {
