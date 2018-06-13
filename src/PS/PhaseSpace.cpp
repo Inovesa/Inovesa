@@ -398,7 +398,7 @@ vfps::integral_t vfps::PhaseSpace::normalize()
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
     for (size_t n=0; n < _nbunches; n++) {
-        for (auto datapoint : _data[n]) {
+        for (auto& datapoint : _data[n]) {
             datapoint /= _integral;
         }
     }
