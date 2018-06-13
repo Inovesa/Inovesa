@@ -394,7 +394,7 @@ void vfps::HDF5File::append(const vfps::WakeKickMap* wkm)
 
 std::unique_ptr<vfps::PhaseSpace>
 vfps::HDF5File::readPhaseSpace( std::string fname
-                                , meshaxis_t qmin, meshaxis_t qmax
+                              , meshaxis_t qmin, meshaxis_t qmax
                               , meshaxis_t pmin, meshaxis_t pmax
                               , oclhptr_t oclh
                               , double Qb, double Ib_unscaled
@@ -418,15 +418,16 @@ vfps::HDF5File::readPhaseSpace( std::string fname
     H5::DataSet ps_dataset = file.openDataSet("/PhaseSpace/data");
     H5::DataSpace ps_space(ps_dataset.getSpace());
 
-    hsize_t ps_dims[3];
+    hsize_t ps_dims[4];
     ps_space.getSimpleExtentDims( ps_dims, nullptr );
 
-    meshindex_t ps_size = ps_dims[1];
+    meshindex_t ps_size = ps_dims[2];
+    uint32_t nBunches = ps_dims[1];
     use_step = (ps_dims[0]+use_step)%ps_dims[0];
-    const std::array<hsize_t,3> ps_offset =
-        {{static_cast<hsize_t>(use_step),0,0}};
-    const std::array<hsize_t,3> ps_ext = {{1,ps_size,ps_size}};
-    H5::DataSpace memspace(3,ps_ext.data(),nullptr);
+    const std::array<hsize_t,4> ps_offset =
+        {{static_cast<hsize_t>(use_step),0,0,0}};
+    const std::array<hsize_t,4> ps_ext = {{1,nBunches,ps_size,ps_size}};
+    H5::DataSpace memspace(4,ps_ext.data(),nullptr);
     ps_space.selectHyperslab(H5S_SELECT_SET, ps_ext.data(), ps_offset.data());
 
     H5::DataType axistype;
