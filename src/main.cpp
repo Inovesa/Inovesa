@@ -807,7 +807,11 @@ int main(int argc, char** argv)
             hdf_file->addParameterToGroup("/Info","ShieldingParameter",
                                           H5::PredType::IEEE_F64LE,&shield);
         } catch (H5::Exception& e) {
-            e.printErrorStack();
+           #if H5_VERS_MAJOR == 1 and H5_VERS_MINOR < 10
+           e.printError();
+           #else
+           e.printErrorStack();
+           #endif
             Display::abort = true;
         }
     } else
