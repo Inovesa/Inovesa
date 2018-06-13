@@ -190,7 +190,7 @@ public:
       set(allocated);
     }
   }
-  void CheckActivate(int dim, size_t align=0) {
+  void CheckActivate(int, size_t align=0) {
     Deallocate();
     Activate(align);
   }
