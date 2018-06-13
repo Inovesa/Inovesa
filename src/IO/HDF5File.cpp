@@ -370,13 +370,13 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
         _appendData(_bunchLength,ps.getBunchLength());
         {
         auto mean_q = ps.getMoment(0,0);
-        _appendData(_bunchPosition,mean_q());
+        _appendData(_bunchPosition,mean_q.data());
         }
         _appendData(_energyProfile,ps.getProjection(1));
         _appendData(_energySpread,ps.getEnergySpread());
         {
         auto mean_E = ps.getMoment(1,0);
-        _appendData(_energyAverage,mean_E());
+        _appendData(_energyAverage,mean_E.data());
         }
         {
         double bc = ps.getIntegral();

@@ -258,18 +258,15 @@ public:
   }
         
   unsigned int Nx() const {return _size;}
-  
-#ifdef NDEBUG
-  typedef T *opt;
-#else
-  // This optimization might make iterators unavailable for some cases.
-  typedef array1<T> opt;
-#endif
-  
+
+
   T& operator [] (int ix) const {__check(ix,_size,1,1); return v[ix];}
   T& operator () (int ix) const {__check(ix,_size,1,1); return v[ix];}
   T* operator () () const {return v;}
   operator T* () const {return v;}
+
+  T* data() noexcept { return this->v; }
+  const T* data() const noexcept { return this->v; }
         
   array1<T> operator + (int i) const {return array1<T>(_size-i,v+i);}
         
@@ -864,16 +861,10 @@ public:
   unsigned int Ny() const {return ny;}
 
   // This optimization might make iterators unavailable for some cases.
-#ifdef __NOARRAY2OPT
   array1<T> operator [] (const int ix) const {
     array1<T>::__check(ix,nx,2,1);
     return array1<T>(ny,this->v+ix*ny);
   }
-#else
-  T *operator [] (const int ix) const {
-    return this->v+ix*ny;
-  }
-#endif
   T& operator () (int ix, int iy) const {
     array1<T>::__check(ix,nx,2,1);
     array1<T>::__check(iy,ny,2,2);
