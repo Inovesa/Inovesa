@@ -241,7 +241,7 @@ int main(int argc, char** argv)
     std::vector<double> Ibi = opts.getBunchCurrents();
 
     // accumulated beam current
-    const double Ib = std::accumulate(Ibi.begin(),Ibi.back(),0.0);
+    const double Ib = std::accumulate(Ibi.begin(),Ibi.end(),0.0);
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();
 

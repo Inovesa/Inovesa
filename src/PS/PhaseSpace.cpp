@@ -397,11 +397,9 @@ vfps::integral_t vfps::PhaseSpace::normalize()
     #ifdef INOVESA_USE_OPENCL
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
-    for (size_t n=0; n < _nbunches; n++) {
-        for (auto& datapoint : _data[n]) {
-            datapoint /= _integral;
-        }
-    }
+
+    _data /= _integral;
+
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         _oclh->enqueueWriteBuffer
