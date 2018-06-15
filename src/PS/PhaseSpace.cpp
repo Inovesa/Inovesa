@@ -25,23 +25,24 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
+vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
                             , oclhptr_t oclh
-                            , const double bunch_charge
-                            , const double bunch_current
-                            , const uint32_t nbunches
+                            , const double beam_charge
+                            , const double beam_current
+                            , const std::vector<double> filling
                             , const double zoom
                             , meshdata_t* data
                             )
   : _axis(axis)
-  , charge(bunch_charge)
-  , current(bunch_current)
+  , charge(beam_charge)
+  , current(beam_current)
   , _nmeshcellsX(nMeshCells(0))
   , _nmeshcellsY(nMeshCells(1))
-  , _nbunches(nbunches)
+  , _nbunches(filling.size())
   , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
   , _integraltype(IntegralType::simpson)
-  , _integral(0)
+  , _integral(1)
+  , _fillingpattern(filling.begin(),filling.end())
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
   , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
   , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
@@ -172,15 +173,15 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
 vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , meshRuler_ptr axis1
                             , oclhptr_t oclh
-                            , const double bunch_charge
-                            , const double bunch_current
-                            , uint32_t nbunches
+                            , const double beam_charge
+                            , const double beam_current
+                            , const std::vector<double> filling
                             , const double zoom
                             , vfps::meshdata_t *data
                             ) :
     PhaseSpace( {{axis0,axis1}}
               , oclh
-              , bunch_charge,bunch_current,nbunches,zoom,data)
+              , beam_charge,beam_current,filling,zoom,data)
 {
 }
 
@@ -188,15 +189,15 @@ vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
                             , meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , meshaxis_t pmin, meshaxis_t pmax, double pscale
                             , oclhptr_t oclh
-                            , const double bunch_charge
-                            , const double bunch_current
-                            , const uint32_t nbunches
+                            , const double beam_charge
+                            , const double beam_current
+                            , const std::vector<double> filling
                             , const double zoom, meshdata_t *data
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,{{"Meter",qscale}}))
               , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,{{"ElectronVolt",pscale}}))
               , oclh
-              , bunch_charge,bunch_current, nbunches, zoom, data)
+              , beam_charge,beam_current, filling, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :

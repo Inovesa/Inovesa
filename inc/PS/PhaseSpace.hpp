@@ -71,11 +71,11 @@ public:
 public:
     PhaseSpace() = delete;
 
-    PhaseSpace( std::array<meshRuler_ptr,2> axis
+    PhaseSpace(std::array<meshRuler_ptr,2> axis
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<double> filling={{1}}
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -83,14 +83,14 @@ public:
     PhaseSpace( meshRuler_ptr axis0
               , meshRuler_ptr axis1
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<double> filling={{1}}
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
 
-    PhaseSpace( meshindex_t ps_size
+    PhaseSpace(meshindex_t ps_size
               , meshaxis_t qmin
               , meshaxis_t qmax
               , double qscale
@@ -98,9 +98,9 @@ public:
               , meshaxis_t pmax
               , double pscale
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<double> filling={{1}}
               , const double zoom=1
               , meshdata_t *data = nullptr
               );
@@ -278,9 +278,14 @@ protected:
 
     const IntegralType _integraltype;
     /**
-     * @brief _integral as we work in normalitzed units, this should be _nbunches
+     * @brief _integral as we work in normalitzed units, this should be 1
      */
     integral_t _integral;
+
+    /**
+     * @brief _data dimensions are: bunch, x coordinate, y coordinate
+     */
+    Array::array1<integral_t> _fillingpattern;
 
     /**
      * @brief _projection dimensions are orientation, bunch, x/y grid cell

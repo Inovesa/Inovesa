@@ -237,11 +237,16 @@ int main(int argc, char** argv)
     // natural RMS bunch length
     const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
 
-    // individual bunch currents
-    std::vector<double> Ibi = opts.getBunchCurrents();
+    // filling pattern, firts as individual bunch currents, latter normalized
+    std::vector<double> filling = opts.getBunchCurrents();
 
     // accumulated beam current
-    const double Ib = std::accumulate(Ibi.begin(),Ibi.end(),0.0);
+    const double Ib = std::accumulate(filling.begin(),filling.end(),0.0);
+
+    // normalie filling pattern
+    std::transform(filling.begin(), filling.end(), filling.begin(),
+                   std::bind(std::divides<T>(), std::placeholders::_1, Ib));
+
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();
 
@@ -412,9 +417,8 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        const auto nBunches = Ibi.size();
         grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
-                                    , oclh, Qb,Ib,nBunches,zoom));
+                                    , oclh, Qb,Ib,filling,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
