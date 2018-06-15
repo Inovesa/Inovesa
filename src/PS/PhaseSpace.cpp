@@ -40,7 +40,8 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _nmeshcellsY(nMeshCells(1))
   , _nbunches(nbunches)
   , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
-  , _integraltype(IntegralType::simpson)
+  , _integralmethod(IntegralMethod::simpson)
+  , _bunchpopulation(Array::array1<integral_t>(_nbunches))
   , _integral(0)
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
   , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
@@ -141,7 +142,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         }
         integral_buf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                     sizeof(integral_t),&_integral);
+                                     sizeof(integral_t),&_bunchpopulation);
         ws_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*_nmeshcellsX,
@@ -248,22 +249,24 @@ void vfps::PhaseSpace::integrate()
     } else
     #endif
     {
-    _integral = 0;
     for (uint32_t n=0; n<_nbunches; n++) {
-        switch (_integraltype) {
-        case IntegralType::sum:
-            _integral = std::accumulate(_projection[0][n].begin(),
-                                        _projection[0][n].end(),
-                                        _integral);
-            break;
-        case IntegralType::simpson:
-            _integral = std::inner_product(_projection[0][n].begin(),
+        switch (_integralmethod) {
+        case IntegralMethod::sum:
+            _bunchpopulation[n] = std::accumulate(_projection[0][n].begin(),
                                            _projection[0][n].end(),
-                                           _ws.begin(),
-                                           _integral);
+                                           static_cast<integral_t>(0));
+            break;
+        case IntegralMethod::simpson:
+            _bunchpopulation[n] = std::inner_product(_projection[0][n].begin(),
+                                              _projection[0][n].end(),
+                                              _ws.begin(),
+                                              static_cast<integral_t>(0));
             break;
         }
     }
+    _integral = std::accumulate( _bunchpopulation.begin()
+                               , _bunchpopulation.end()
+                               , static_cast<integral_t>(0));
     }
 }
 
@@ -330,8 +333,8 @@ void vfps::PhaseSpace::updateXProjection() {
     } else
     #endif
     {
-    switch (_integraltype) {
-    case IntegralType::sum:
+    switch (_integralmethod) {
+    case IntegralMethod::sum:
         for (size_t n=0; n < _nbunches; n++) {
             for (size_t x=0; x < nMeshCells(0); x++) {
                 _projection[0][n][x]
@@ -342,7 +345,7 @@ void vfps::PhaseSpace::updateXProjection() {
             }
         }
         break;
-    case IntegralType::simpson:
+    case IntegralMethod::simpson:
           for (size_t n=0; n < _nbunches; n++) {
               for (size_t x=0; x < nMeshCells(0); x++) {
                   _projection[0][n][x]
@@ -364,8 +367,8 @@ void vfps::PhaseSpace::updateYProjection() {
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data());
     }
     #endif
-    switch (_integraltype) {
-    case IntegralType::sum:
+    switch (_integralmethod) {
+    case IntegralMethod::sum:
         for (size_t n=0; n < _nbunches; n++) {
             for (size_t y=0; y< nMeshCells(1); y++) {
                 _projection[1][n][y] = 0;
@@ -377,7 +380,7 @@ void vfps::PhaseSpace::updateYProjection() {
             }
         }
         break;
-    case IntegralType::simpson:
+    case IntegralMethod::simpson:
         for (size_t n=0; n < _nbunches; n++) {
             for (size_t y=0; y< nMeshCells(1); y++) {
                 _projection[1][n][y] = 0;
@@ -390,18 +393,16 @@ void vfps::PhaseSpace::updateYProjection() {
     }
 }
 
-vfps::integral_t vfps::PhaseSpace::normalize()
+Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
 {
     integrate();
 
     #ifdef INOVESA_USE_OPENCL
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
-    for (size_t n=0; n < _nbunches; n++) {
-        for (auto& datapoint : _data[n]) {
-            datapoint /= _integral;
-        }
-    }
+
+    _data /= _integral;
+
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         _oclh->enqueueWriteBuffer
@@ -409,7 +410,7 @@ vfps::integral_t vfps::PhaseSpace::normalize()
              sizeof(meshdata_t)*nMeshCells(),_data());
     }
     #endif // INOVESA_USE_OPENCL
-    return _integral;
+    return _bunchpopulation;
 }
 
 vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
@@ -435,7 +436,7 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
                                 , sizeof(projection_t)*nMeshCells(0)
                                 , _projection[0],nullptr,evt);
         _oclh->enqueueReadBuffer
-            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
+            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_bunchpopulation,
             nullptr,evt
             #ifdef INOVESA_ENABLE_CLPROFILING
             , syncPSEvents.get()
