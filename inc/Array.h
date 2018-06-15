@@ -61,13 +61,13 @@ namespace Array {
 inline std::ostream& _newl(std::ostream& s) {s << '\n'; return s;}
 
 inline void ArrayExit(const char *x);
-  
+
 #ifndef __ExternalArrayExit
 inline void ArrayExit(const char *x)
 {
   std::cerr << _newl << "ERROR: " << x << "." << std::endl;
   exit(1);
-} 
+}
 #endif
 
 #ifndef __fftwpp_h__
@@ -99,9 +99,9 @@ inline void newAlign(T *&v, size_t len, size_t align)
   const char *nomem="Memory limits exceeded";
 #ifdef HAVE_POSIX_MEMALIGN
   int rc=posix_memalign(&mem,align,len*sizeof(T));
-#else  
+#else
   int rc=posix_memalign0(&mem,align,len*sizeof(T));
-#endif  
+#endif
   if(rc == EINVAL) Array::ArrayExit(invalid);
   if(rc == ENOMEM) Array::ArrayExit(nomem);
   v=(T *) mem;
@@ -117,7 +117,7 @@ inline void deleteAlign(T *v, size_t len)
   free(v);
 #else
   free0(v);
-#endif  
+#endif
 }
 
 #endif
@@ -165,7 +165,7 @@ public:
 
   void CheckSize() const {
     if(!test(allocated) && _size == 0)
-      ArrayExit("Operation attempted on unallocated array"); 
+      ArrayExit("Operation attempted on unallocated array");
   }
   void CheckEqual(int a, int b, unsigned int dim, unsigned int m) const {
     if(a != b) {
@@ -177,7 +177,7 @@ public:
       ArrayExit(s.c_str());
     }
   }
-        
+
   int test(int flag) const {return state & flag;}
   void clear(int flag) const {state &= ~flag;}
   void set(int flag) const {state |= flag;}
@@ -213,17 +213,17 @@ public:
   void CheckActivate(size_t align=0) {
     __checkActivate(1,align);
   }
-  
+
   void Allocate(unsigned int nx0, size_t align=0) {
     Dimension(nx0);
     CheckActivate(align);
   }
-  
+
   void Reallocate(unsigned int nx0, size_t align=0) {
     Deallocate();
     Allocate(nx0,align);
   }
-  
+
   array1() : v(NULL), _size(0), state(unallocated) {}
   array1(const void *) : _size(0), state(unallocated) {}
   array1(unsigned int nx0, size_t align=0) : state(unallocated) {
@@ -235,11 +235,11 @@ public:
                                state(A.test(temporary)) {}
 
   virtual ~array1() {Deallocate();}
-        
+
   void Freeze() {state=unallocated;}
   void Hold() {if(test(allocated)) {state=temporary;}}
   void Purge() const {if(test(temporary)) {Deallocate(); state=unallocated;}}
-        
+
   void Check(int i, int n, unsigned int dim, unsigned int m, int o=0) const {
     if(i < 0 || i >= n) {
       std::ostringstream buf;
@@ -256,7 +256,7 @@ public:
       ArrayExit(s.c_str());
     }
   }
-        
+
   unsigned int Nx() const {return _size;}
 
 
@@ -267,9 +267,9 @@ public:
 
   T* data() noexcept { return this->v; }
   const T* data() const noexcept { return this->v; }
-        
+
   array1<T> operator + (int i) const {return array1<T>(_size-i,v+i);}
-        
+
   void Load(T a) const {
     array1<T>::__checkSize();
     for(unsigned int i=0; i < _size; i++) v[i]=a;
@@ -283,25 +283,25 @@ public:
   void Set(T *a) {v=a; clear(allocated);}
   T Min() {
     if(_size == 0)
-      ArrayExit("Cannot take minimum of empty array"); 
+      ArrayExit("Cannot take minimum of empty array");
     T min=v[0];
     for(unsigned int i=1; i < _size; i++) if(v[i] < min) min=v[i];
     return min;
   }
   T Max() {
     if(_size == 0)
-      ArrayExit("Cannot take maximum of empty array"); 
+      ArrayExit("Cannot take maximum of empty array");
     T max=v[0];
     for(unsigned int i=1; i < _size; i++) if(v[i] > max) max=v[i];
     return max;
   }
-  
+
   std::istream& Input (std::istream &s) const {
     __checkSize();
     for(unsigned int i=0; i < _size; i++) s >> v[i];
     return s;
   }
-        
+
   array1<T>& operator = (T a) {Load(a); return *this;}
   array1<T>& operator = (const T *a) {Load(a); return *this;}
   array1<T>& operator = (const array1<T>& A) {
@@ -313,7 +313,7 @@ public:
     A.Purge();
     return *this;
   }
-        
+
   array1<T>& operator += (const array1<T>& A) {
     __checkSize();
     for(unsigned int i=0; i < _size; i++) v[i] += A(i);
@@ -334,7 +334,7 @@ public:
     for(unsigned int i=0; i < _size; i++) v[i] /= A(i);
     return *this;
   }
-        
+
   array1<T>& operator += (T a) {
     __checkSize();
     for(unsigned int i=0; i < _size; i++) v[i] += a;
@@ -347,16 +347,16 @@ public:
   }
   array1<T>& operator *= (T a) {
     __checkSize();
-    for(unsigned int i=0; i < _size; i++) v[i] *= a;
+    std::transform(begin(), end(), begin(),
+                   std::bind(std::multiplies<T>(), std::placeholders::_1, a));
     return *this;
   }
   array1<T>& operator /= (T a) {
-    __checkSize();
-    T ainv=1.0/a;
-    for(unsigned int i=0; i < _size; i++) v[i] *= ainv;
+    T ainv=static_cast<T>(1.0)/a;
+    operator *=(ainv);
     return *this;
   }
-        
+
   double L1() const {
     __checkSize();
     double norm=0.0;
@@ -752,7 +752,7 @@ public: // iterator geters
   #if __cplusplus >= 201103L
   const_iterator cbegin() const noexcept
   { return const_iterator(array1<T>::v); }
-  
+
   const_iterator cend() const noexcept
   { return const_iterator(array1<T>::v + array1<T>::_size); }
   #endif
@@ -786,7 +786,7 @@ void swaparray(T& A, T& B)
   A.Dimension(B);
   B.Dimension(C);
 }
-  
+
 template<class T>
 void leftshiftarray(T& A, T& B, T& C)
 {
@@ -796,7 +796,7 @@ void leftshiftarray(T& A, T& B, T& C)
   B.Dimension(C);
   C.Dimension(D);
 }
-  
+
 template<class T>
 void rightshiftarray(T& A, T& B, T& C)
 {
@@ -806,7 +806,7 @@ void rightshiftarray(T& A, T& B, T& C)
   B.Dimension(A);
   A.Dimension(D);
 }
-  
+
 template<class T>
 std::ostream& operator << (std::ostream& s, const array1<T>& A)
 {
@@ -833,7 +833,7 @@ protected:
   unsigned int ny;
 public:
   using array1<T>::Dimension;
-  
+
   inline void Dimension(unsigned int nx0, unsigned int ny0) {
     nx=nx0;
     ny=ny0;
@@ -844,19 +844,19 @@ public:
     array1<T>::v=v0;
     array1<T>::clear(array1<T>::allocated);
     }
-  void Dimension(const array1<T> &A) {ArrayExit("Operation not implemented");} 
-  
+  void Dimension(const array1<T> &A) {ArrayExit("Operation not implemented");}
+
   void Allocate(unsigned int nx0, unsigned int ny0, size_t align=0) {
     Dimension(nx0,ny0);
     array1<T>::__checkActivate(2,align);
   }
-        
+
   array2() : nx(0), ny(0) {}
   array2(unsigned int nx0, unsigned int ny0, size_t align=0) {
     Allocate(nx0,ny0,align);
   }
   array2(unsigned int nx0, unsigned int ny0, T *v0) {Dimension(nx0,ny0,v0);}
-        
+
   unsigned int Nx() const {return nx;}
   unsigned int Ny() const {return ny;}
 
@@ -875,7 +875,7 @@ public:
     return this->v[i];
   }
   T* operator () () const {return this->v;}
-        
+
   array2<T>& operator = (T a) {this->Load(a); return *this;}
   array2<T>& operator = (T *a) {this->Load(a); return *this;}
   array2<T>& operator = (const array2<T>& A) {
@@ -885,7 +885,7 @@ public:
     A.Purge();
     return *this;
   }
-        
+
   array2<T>& operator += (const array2<T>& A) {
     array1<T>::__checkSize();
     for(unsigned int i=0; i < this->_size; i++) this->v[i] += A(i);
@@ -897,7 +897,7 @@ public:
     return *this;
   }
   array2<T>& operator *= (const array2<T>& A);
-        
+
   array2<T>& operator += (T a) {
     array1<T>::__checkSize();
     unsigned int inc=ny+1;
@@ -915,7 +915,7 @@ public:
     for(unsigned int i=0; i < this->_size; i++) this->v[i] *= a;
     return *this;
   }
-  
+
   void Identity() {
     this->Load((T) 0);
     array1<T>::__checkSize();
@@ -956,7 +956,7 @@ protected:
   unsigned int nyz;
 public:
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, unsigned int nz0) {
     nx=nx0; ny=ny0; nz=nz0; nyz=ny*nz;
     this->_size=nx*nyz;
@@ -966,13 +966,13 @@ public:
     this->v=v0;
     this->clear(this->allocated);
   }
-        
+
   void Allocate(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                 size_t align=0) {
     Dimension(nx0,ny0,nz0);
     array1<T>::__checkActivate(3,align);
   }
-  
+
   array3() : nx(0), ny(0), nz(0), nyz(0) {}
   array3(unsigned int nx0, unsigned int ny0, unsigned int nz0,
          size_t align=0) {
@@ -981,7 +981,7 @@ public:
   array3(unsigned int nx0, unsigned int ny0, unsigned int nz0, T *v0) {
     Dimension(nx0,ny0,nz0,v0);
   }
-        
+
   unsigned int Nx() const {return nx;}
   unsigned int Ny() const {return ny;}
   unsigned int Nz() const {return nz;}
@@ -1001,7 +1001,7 @@ public:
     return this->v[i];
   }
   T* operator () () const {return this->v;}
-        
+
   array3<T>& operator = (T a) {this->Load(a); return *this;}
   array3<T>& operator = (T *a) {this->Load(a); return *this;}
   array3<T>& operator = (const array3<T>& A) {
@@ -1009,10 +1009,10 @@ public:
     array1<T>::__checkEqual(ny,A.Ny(),3,2);
     array1<T>::__checkEqual(nz,A.Nz(),3,3);
     this->Load(A());
-    A.Purge(); 
+    A.Purge();
     return *this;
   }
-        
+
   array3<T>& operator += (array3<T>& A) {
     array1<T>::__checkSize();
     for(unsigned int i=0; i < this->_size; i++) this->v[i] += A(i);
@@ -1023,7 +1023,7 @@ public:
     for(unsigned int i=0; i < this->_size; i++) this->v[i] -= A(i);
     return *this;
   }
-        
+
   array3<T>& operator += (T a) {
     array1<T>::__checkSize();
     unsigned int inc=nyz+nz+1;
@@ -1076,7 +1076,7 @@ protected:
   unsigned int nyzw;
 public:
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                  unsigned int nw0) {
     nx=nx0; ny=ny0; nz=nz0; nw=nw0; nzw=nz*nw; nyzw=ny*nzw;
@@ -1088,13 +1088,13 @@ public:
     this->v=v0;
     this->clear(this->allocated);
   }
-        
+
   void Allocate(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                 unsigned int nw0, size_t align=0) {
     Dimension(nx0,ny0,nz0,nw0);
     array1<T>::__checkActivate(4,align);
   }
-  
+
   array4() : nx(0), ny(0), nz(0), nw(0), nyz(0), nzw(0), nyzw(0) {}
   array4(unsigned int nx0, unsigned int ny0, unsigned int nz0,
          unsigned int nw0, size_t align=0) {Allocate(nx0,ny0,nz0,nw0,align);}
@@ -1124,7 +1124,7 @@ public:
     return this->v[i];
   }
   T* operator () () const {return this->v;}
-        
+
   array4<T>& operator = (T a) {this->Load(a); return *this;}
   array4<T>& operator = (T *a) {this->Load(a); return *this;}
   array4<T>& operator = (const array4<T>& A) {
@@ -1136,7 +1136,7 @@ public:
     A.Purge();
     return *this;
   }
-        
+
   array4<T>& operator += (array4<T>& A) {
     array1<T>::__checkSize();
     for(unsigned int i=0; i < this->_size; i++) this->v[i] += A(i);
@@ -1147,7 +1147,7 @@ public:
     for(unsigned int i=0; i < this->_size; i++) this->v[i] -= A(i);
     return *this;
   }
-        
+
   array4<T>& operator += (T a) {
     array1<T>::__checkSize();
     unsigned int inc=nyzw+nzw+nw+1;
@@ -1177,7 +1177,7 @@ std::ostream& operator << (std::ostream& s, const array4<T>& A)
       s << _newl;
     }
     s << _newl;
-  }     
+  }
   s << std::flush;
   return s;
 }
@@ -1204,7 +1204,7 @@ protected:
   unsigned int nyzwv;
 public:
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                  unsigned int nw0, unsigned int nv0) {
     nx=nx0; ny=ny0; nz=nz0; nw=nw0; nv=nv0; nwv=nw*nv; nzwv=nz*nwv;
@@ -1217,13 +1217,13 @@ public:
     this->v=v0;
     this->clear(this->allocated);
   }
-        
+
   void Allocate(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                 unsigned int nw0, unsigned int nv0, size_t align=0) {
     Dimension(nx0,ny0,nz0,nw0,nv0);
     array1<T>::__checkActivate(5,align);
   }
-  
+
   array5() : nx(0), ny(0), nz(0), nw(0), nv(0), nwv(0), nzwv(0), nyzwv(0) {}
   array5(unsigned int nx0, unsigned int ny0, unsigned int nz0,
          unsigned int nw0, unsigned int nv0, size_t align=0) {
@@ -1257,7 +1257,7 @@ public:
     return this->v[i];
   }
   T* operator () () const {return this->v;}
-        
+
   array5<T>& operator = (T a) {this->Load(a); return *this;}
   array5<T>& operator = (T *a) {this->Load(a); return *this;}
   array5<T>& operator = (const array5<T>& A) {
@@ -1270,7 +1270,7 @@ public:
     A.Purge();
     return *this;
   }
-        
+
   array5<T>& operator += (array5<T>& A) {
     array1<T>::__checkSize();
     for(unsigned int i=0; i < this->_size; i++) this->v[i] += A(i);
@@ -1281,7 +1281,7 @@ public:
     for(unsigned int i=0; i < this->_size; i++) this->v[i] -= A(i);
     return *this;
   }
-        
+
   array5<T>& operator += (T a) {
     array1<T>::__checkSize();
     unsigned int inc=nyzwv+nzwv+nwv+nv+1;
@@ -1314,7 +1314,7 @@ std::ostream& operator << (std::ostream& s, const array5<T>& A)
       s << _newl;
     }
     s << _newl;
-  }     
+  }
   s << std::flush;
   return s;
 }
@@ -1338,7 +1338,7 @@ public:
     voff=this->v-ox;
   }
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, int ox0=0) {
     this->_size=nx0;
     ox=ox0;
@@ -1358,7 +1358,7 @@ public:
     array1<T>::__checkActivate(1,align);
     Offsets();
   }
-        
+
   void Reallocate(unsigned int nx0, int ox0=0, size_t align=0) {
     this->Deallocate();
     Allocate(nx0,ox0,align);
@@ -1379,16 +1379,16 @@ public:
   typedef T *opt;
 #else
   typedef Array1<T> opt;
-#endif  
-  
+#endif
+
   T& operator [] (int ix) const {__check(ix,this->_size,ox,1,1); return voff[ix];}
   T& operator () (int i) const {__check(i,this->_size,0,1,1); return this->v[i];}
   T* operator () () const {return this->v;}
   operator T* () const {return this->v;}
-        
+
   Array1<T> operator + (int i) const {return Array1<T>(this->_size-i,this->v+i,ox);}
   void Set(T *a) {this->v=a; Offsets(); this->clear(this->allocated);}
-        
+
   Array1<T>& operator = (T a) {this->Load(a); return *this;}
   Array1<T>& operator = (const T *a) {this->Load(a); return *this;}
   Array1<T>& operator = (const Array1<T>& A) {
@@ -1405,7 +1405,7 @@ public:
     A.Purge();
     return *this;
   }
-  
+
   int Ox() const {return ox;}
 
   private:
@@ -1431,7 +1431,7 @@ public:
     voff=vtemp-oy;
   }
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, int ox0=0, int oy0=0) {
     this->nx=nx0; this->ny=ny0;
     this->_size=this->nx*this->ny;
@@ -1444,7 +1444,7 @@ public:
     Dimension(nx0,ny0,ox0,oy0);
     this->clear(this->allocated);
   }
-  
+
   void Allocate(unsigned int nx0, unsigned int ny0, int ox0=0, int oy0=0,
                 size_t align=0) {
     Dimension(nx0,ny0,ox0,oy0);
@@ -1471,7 +1471,7 @@ public:
     return Array1<T>(this->ny,vtemp+ix*(int) this->ny,oy);
   }
 #endif
-  
+
   T& operator () (int ix, int iy) const {
     Array1<T>::__check(ix,this->nx,ox,2,1);
     Array1<T>::__check(iy,this->ny,oy,2,2);
@@ -1483,7 +1483,7 @@ public:
   }
   T* operator () () const {return this->v;}
   void Set(T *a) {this->v=a; Offsets(); this->clear(this->allocated);}
-        
+
   Array2<T>& operator = (T a) {this->Load(a); return *this;}
   Array2<T>& operator = (T *a) {this->Load(a); return *this;}
   Array2<T>& operator = (const Array2<T>& A) {
@@ -1504,10 +1504,10 @@ public:
     A.Purge();
     return *this;
   }
-        
+
   int Ox() const {return ox;}
   int Oy() const {return oy;}
-  
+
 };
 
 /**
@@ -1524,7 +1524,7 @@ public:
     voff=vtemp-oy*(int) this->nz-oz;
   }
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                  int ox0=0, int oy0=0, int oz0=0) {
     this->nx=nx0; this->ny=ny0; this->nz=nz0; this->nyz=this->ny*this->nz;
@@ -1538,14 +1538,14 @@ public:
     Dimension(nx0,ny0,nz0,ox0,oy0,oz0);
     this->clear(this->allocated);
   }
-  
+
   void Allocate(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                 int ox0=0, int oy0=0, int oz0=0, size_t align=0) {
     Dimension(nx0,ny0,nz0,ox0,oy0,oz0);
     array1<T>::__checkActivate(3,align);
     Offsets();
   }
-        
+
   Array3() : ox(0), oy(0), oz(0) {}
   Array3(unsigned int nx0, unsigned int ny0, unsigned int nz0,
          int ox0=0, int oy0=0, int oz0=0, size_t align=0) {
@@ -1555,7 +1555,7 @@ public:
          int ox0=0, int oy0=0, int oz0=0) {
     Dimension(nx0,ny0,nz0,v0,ox0,oy0,oz0);
   }
-        
+
   Array2<T> operator [] (int ix) const {
     Array1<T>::__check(ix,this->nx,ox,3,1);
     return Array2<T>(this->ny,this->nz,vtemp+ix*(int) this->nyz,oy,oz);
@@ -1572,7 +1572,7 @@ public:
   }
   T* operator () () const {return this->v;}
   void Set(T *a) {this->v=a; Offsets(); this->clear(this->allocated);}
-        
+
   Array3<T>& operator = (T a) {this->Load(a); return *this;}
   Array3<T>& operator = (T *a) {this->Load(a); return *this;}
   Array3<T>& operator = (const Array3<T>& A) {
@@ -1583,7 +1583,7 @@ public:
     array1<T>::__checkEqual(oy,A.Oy(),3,2);
     array1<T>::__checkEqual(oz,A.Oz(),3,3);
     this->Load(A());
-    A.Purge(); 
+    A.Purge();
     return *this;
   }
   Array3<T>& operator = (const array3<T>& A) {
@@ -1594,10 +1594,10 @@ public:
     array1<T>::__checkEqual(oy,0,3,2);
     array1<T>::__checkEqual(oz,0,3,3);
     this->Load(A());
-    A.Purge(); 
+    A.Purge();
     return *this;
   }
-  
+
   int Ox() const {return ox;}
   int Oy() const {return oy;}
   int Oz() const {return oz;}
@@ -1618,9 +1618,9 @@ public:
     voff=vtemp-oy*(int) this->nzw-oz*(int) this->nw-ow;
   }
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, unsigned int nz0,
-                 unsigned int nw0, 
+                 unsigned int nw0,
                  int ox0=0, int oy0=0, int oz0=0, int ow0=0) {
     this->nx=nx0; this->ny=ny0; this->nz=nz0; this->nw=nw0;
     this->nzw=this->nz*this->nw; this->nyzw=this->ny*this->nzw;
@@ -1635,7 +1635,7 @@ public:
     Dimension(nx0,ny0,nz0,nw0,ox0,oy0,oz0,ow0);
     this->clear(this->allocated);
   }
-  
+
   void Allocate(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                 unsigned int nw0,
                 int ox0=0, int oy0=0, int oz0=0, int ow0=0, size_t align=0) {
@@ -1643,7 +1643,7 @@ public:
     array1<T>::__checkActivate(4,align);
     Offsets();
   }
-        
+
   Array4() : ox(0), oy(0), oz(0), ow(0) {}
   Array4(unsigned int nx0, unsigned int ny0, unsigned int nz0,
          unsigned int nw0,
@@ -1674,10 +1674,10 @@ public:
   }
   T* operator () () const {return this->v;}
   void Set(T *a) {this->v=a; Offsets(); this->clear(this->allocated);}
-        
+
   Array4<T>& operator = (T a) {this->Load(a); return *this;}
   Array4<T>& operator = (T *a) {this->Load(a); return *this;}
-  
+
   Array4<T>& operator = (const Array4<T>& A) {
     array1<T>::__checkEqual(this->nx,A.Nx(),4,1);
     array1<T>::__checkEqual(this->ny,A.Ny(),4,2);
@@ -1708,7 +1708,7 @@ public:
     A.Purge();
     return *this;
   }
-  
+
   int Ox() const {return ox;}
   int Oy() const {return oy;}
   int Oz() const {return oz;}
@@ -1729,7 +1729,7 @@ public:
     voff=vtemp-oy*(int) this->nzwv-oz*(int) this->nwv-ow*(int) this->nv-ov;
   }
   using array1<T>::Dimension;
-  
+
   void Dimension(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                  unsigned int nw0,  unsigned int nv0,
                  int ox0=0, int oy0=0, int oz0=0, int ow0=0, int ov0=0) {
@@ -1747,7 +1747,7 @@ public:
     Dimension(nx0,ny0,nz0,nw0,nv0,ox0,oy0,oz0,ow0,ov0);
     this->clear(this->allocated);
   }
-  
+
   void Allocate(unsigned int nx0, unsigned int ny0, unsigned int nz0,
                 unsigned int nw0, unsigned int nv0,
                 int ox0=0, int oy0=0, int oz0=0, int ow0=0, int ov0=0,
@@ -1756,7 +1756,7 @@ public:
     array1<T>::__checkActivate(5,align);
     Offsets();
   }
-        
+
   Array5() : ox(0), oy(0), oz(0), ow(0), ov(0) {}
   Array5(unsigned int nx0, unsigned int ny0, unsigned int nz0,
          unsigned int nw0, unsigned int nv0, int ox0=0, int oy0=0,
@@ -1789,10 +1789,10 @@ public:
   }
   T* operator () () const {return this->v;}
   void Set(T *a) {this->v=a; Offsets(); this->clear(this->allocated);}
-        
+
   Array5<T>& operator = (T a) {this->Load(a); return *this;}
   Array5<T>& operator = (T *a) {this->Load(a); return *this;}
-  
+
   Array5<T>& operator = (const Array5<T>& A) {
     array1<T>::__checkEqual(this->nx,A.Nx(),5,1);
     array1<T>::__checkEqual(this->ny,A.Ny(),5,2);
@@ -1970,13 +1970,13 @@ inline void Allocate(T *&A, unsigned int n, size_t align=0)
 
 template<class T>
 inline void Allocate(array1<T>& A, unsigned int n, size_t align=0)
-{  
+{
   A.Allocate(n,align);
 }
 
 template<class T>
 inline void Allocate(Array1<T>& A, unsigned int n, size_t align=0)
-{  
+{
   A.Allocate(n,align);
 }
 
@@ -1989,7 +1989,7 @@ inline void Allocate(T *&A, unsigned int n, int o, size_t align=0)
 
 template<class T>
 inline void Allocate(Array1<T>& A, unsigned int n, int o, size_t align=0)
-{  
+{
   A.Allocate(n,o,align);
 }
 
@@ -2001,13 +2001,13 @@ inline void Deallocate(T *A)
 
 template<class T>
 inline void Deallocate(array1<T>& A)
-{  
+{
   A.Deallocate();
 }
 
 template<class T>
 inline void Deallocate(Array1<T>& A)
-{  
+{
   A.Deallocate();
 }
 
@@ -2019,32 +2019,32 @@ inline void Deallocate(T *A, int o)
 
 template<class T>
 inline void Deallocate(Array1<T>& A, int)
-{  
+{
   A.Deallocate();
 }
 
 template<class T>
 inline void Reallocate(T *&A, unsigned int n, size_t align=0)
-{  
+{
   if(A) delete [] A;
   Allocate(A,n,align);
 }
 
 template<class T>
 inline void Reallocate(array1<T>& A, unsigned int n)
-{  
+{
   A.Reallocate(n);
 }
 
 template<class T>
 inline void Reallocate(Array1<T>& A, unsigned int n)
-{  
+{
   A.Reallocate(n);
 }
 
 template<class T>
 inline void Reallocate(T *&A, unsigned int n, int o, size_t align=0)
-{  
+{
   if(A) delete [] A;
   Allocate(A,n,align);
   A -= o;
@@ -2052,7 +2052,7 @@ inline void Reallocate(T *&A, unsigned int n, int o, size_t align=0)
 
 template<class T>
 inline void Reallocate(Array1<T>& A, unsigned int n, int o, size_t align=0)
-{  
+{
   A.Reallocate(n,o,align);
 }
 

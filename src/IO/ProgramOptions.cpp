@@ -23,6 +23,7 @@
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
+    I_b({{3e-3}}),
     _configfile("default.cfg"),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
@@ -67,8 +68,8 @@ vfps::ProgramOptions::ProgramOptions() :
             "Select step of HDF5 file for initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
-        ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),
-            "Ring Current due to a single bunch (A)")
+        ("BunchCurrent,I", po::value<std::vector<double>>(&I_b)->multitoken(),
+            "List of bunch currents (A)")
         ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
             "Bending radius of accelerator (m)\n"
             "negative: calculate from RevolutionFrequency")
