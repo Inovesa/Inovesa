@@ -903,7 +903,7 @@ int main(int argc, char** argv)
         if (outstep > 0 && simulationstep%outstep == 0) {
 
             // works on XProjection
-            grid_t1->getIntegral();
+            grid_t1->integrate();
             grid_t1->variance(0);
             grid_t1->updateYProjection();
             grid_t1->variance(1);

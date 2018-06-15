@@ -64,7 +64,7 @@ public:
     };
 
 public:
-    enum class IntegralType : uint_fast8_t {
+    enum class IntegralMethod : uint_fast8_t {
         sum,simpson
     };
 
@@ -162,7 +162,10 @@ public:
      */
     void integrate();
 
-    inline const integral_t& getIntegral() const
+    inline const Array::array1<integral_t> getBunchPopulation() const
+        { return _bunchpopulation; }
+
+    inline const integral_t getIntegral() const
         { return _integral; }
 
     /**
@@ -205,7 +208,7 @@ public:
      *
      * normalize() does neither recompute the integral nor sets it to 1
      */
-    integral_t normalize();
+    Array::array1<integral_t> normalize();
 
     PhaseSpace& operator=(PhaseSpace other);
 
@@ -276,8 +279,16 @@ protected:
 
     const size_t _nmeshcells;
 
-    const IntegralType _integraltype;
+    const IntegralMethod _integralmethod;
+
     /**
+     * @brief _bunchpopulation as we work in normalitzed units,
+     * the sum should be 1
+     */
+    Array::array1<integral_t> _bunchpopulation;
+
+    /**
+
      * @brief _integral as we work in normalitzed units, this should be 1
      */
     integral_t _integral;

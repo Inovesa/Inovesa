@@ -149,7 +149,7 @@ private: // values for phase space axis
 
     DatasetInfo<1> _timeAxisPS;
 
-    DatasetInfo<1> _bunchPopulation;
+    DatasetInfo<2> _bunchPopulation;
 
     DatasetInfo<3> _bunchProfile;
 

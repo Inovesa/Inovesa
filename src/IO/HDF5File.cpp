@@ -55,10 +55,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                              , {{0}},{{256}},{{H5F_UNLIMITED}}))
   , _timeAxisPS(_makeDatasetInfo<1,timeaxis_t>( "/PhaseSpace/axis0"
                                            , {{0}},{{256}},{{H5F_UNLIMITED}}))
-  , _bunchPopulation(_makeDatasetInfo<1,integral_t>( "/BunchPopulation/data"
-                                                  , {{0}}
-                                                  , {{256}}
-                                                  , {{H5S_UNLIMITED}}
+  , _bunchPopulation(_makeDatasetInfo<2,integral_t>( "/BunchPopulation/data"
+                                                  , {{0,_nBunches}}
+                                                  , {{256,_nBunches}}
+                                                  , {{H5S_UNLIMITED,_nBunches}}
                                                   ))
   , _bunchProfile(_makeDatasetInfo<3,integral_t>( "/BunchProfile/data"
                                                , {{ 0, _nBunches, _psSizeX }}
@@ -379,8 +379,7 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
         _appendData(_energyAverage,mean_E.data());
         }
         {
-        double bc = ps.getIntegral();
-        _appendData(_bunchPopulation,&bc);
+        _appendData(_bunchPopulation,ps.getBunchPopulation().data());
         }
     }
 }
