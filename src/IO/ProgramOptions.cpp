@@ -134,9 +134,6 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<decltype(_savephasespace)>
                 (&_savephasespace)->default_value(0),
             "save every n's outstep's phase space to HDF5 file")
-        ("SaveSourceMap",
-            po::value<bool>(&_savesourcemap)->default_value(false),
-            "save every outstep's source map to HDF5 file")
         ("tracking",
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
@@ -168,9 +165,6 @@ vfps::ProgramOptions::ProgramOptions() :
             po::value<decltype(_savephasespace)>
                 (&_savephasespace)->default_value(0),
             "save every n's outstep's phase space to HDF5 file")
-        ("SaveSourceMap",
-            po::value<bool>(&_savesourcemap)->default_value(false)->implicit_value(true),
-            "save every outstep's source map to HDF5 file")
         ("tracking",
             po::value<std::string>(&_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
@@ -217,6 +211,9 @@ vfps::ProgramOptions::ProgramOptions() :
             "(currently ignored)")
         ("RotationType", po::value<uint32_t>(&rotationtype),
             "compatibility (ignored)")
+        ("SaveSourceMap",
+            po::value<bool>(&_savesourcemap),
+            "compatibility (ignored)")
     ;
     _compatopts_alias.add_options()
         ("RFVoltage",
@@ -227,11 +224,12 @@ vfps::ProgramOptions::ProgramOptions() :
         ("steps", po::value<uint32_t>(&steps_per_Ts),
             "(compatibility naming for StepsPerTs)")
     ;
+    _compatopts.add(_compatopts_ignore);
+    _compatopts.add(_compatopts_alias);
     _cfgfileopts.add(_physopts);
     _cfgfileopts.add(_programopts_file);
     _cfgfileopts.add(_simulopts);
-    _cfgfileopts.add(_compatopts_alias);
-    _cfgfileopts.add(_compatopts_ignore);
+    _cfgfileopts.add(_compatopts);
     _commandlineopts.add(_proginfoopts);
     _commandlineopts.add(_programopts_cli);
     _commandlineopts.add(_simulopts);
@@ -310,7 +308,7 @@ void vfps::ProgramOptions::save(std::string fname)
 
     ofs << "# " << vfps::inovesa_version() << std::endl;
 
-    for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
+    for ( auto it=_vm.begin(); it != _vm.end(); it++ ) {
         // currently, the _compatopts are ignored manually
         if(it->first == "HaissinskiIterations"
         || it->first == "InitialDistParam"
@@ -319,6 +317,7 @@ void vfps::ProgramOptions::save(std::string fname)
         || it->first == "steps"
         || it->first == "RFVoltage"
         || it->first == "run_anyway"
+        || it->first == "SaveSourceMap"
         ){
             continue;
         } else

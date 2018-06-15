@@ -44,6 +44,10 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
+#define __NOARRAY2OPT
+#include "Array.h"
+#undef __NOARRAY2OPT
+
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -60,7 +64,7 @@ public:
     };
 
 public:
-    enum class IntegralType : uint_fast8_t {
+    enum class IntegralMethod : uint_fast8_t {
         sum,simpson
     };
 
@@ -71,33 +75,39 @@ public:
               , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
+              , const uint32_t nbunches=1
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
 
-    PhaseSpace(meshRuler_ptr axis0
+    PhaseSpace( meshRuler_ptr axis0
               , meshRuler_ptr axis1
               , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
+              , const uint32_t nbunches=1
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
 
     PhaseSpace( meshindex_t ps_size
-              , meshaxis_t xmin
-              , meshaxis_t xmax
-              , meshaxis_t ymin
-              , meshaxis_t ymax
+              , meshaxis_t qmin
+              , meshaxis_t qmax
+              , double qscale
+              , meshaxis_t pmin
+              , meshaxis_t pmax
+              , double pscale
               , oclhptr_t oclh
               , const double bunch_charge
               , const double bunch_current
-              , double xscale=0
-              , double yscale=0
+              , const uint32_t nbunches=1
               , const double zoom=1
               , meshdata_t *data = nullptr
               );
 
+    /**
+     * @brief PhaseSpace copy constructor
+     */
     PhaseSpace(const PhaseSpace& other);
 
     ~PhaseSpace() noexcept;
@@ -108,7 +118,10 @@ public:
       * @return pointer to array holding size<0>()*size<1>() data points
       */
     inline meshdata_t* getData() const
-    { return _data1D; }
+    { return _data(); }
+
+    inline auto operator [] (const unsigned int i)
+    { return _data[i]; }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
@@ -136,11 +149,10 @@ public:
     /**
      * @brief average
      * @param axis which axis? (0 -> x or 1 -> y)
-     * @return projection to axis
      *
      * relies on an up-t date _projection[axis]
      */
-    meshdata_t average(const uint_fast8_t axis);
+    void average(const uint_fast8_t axis);
 
     /**
      * @brief integral
@@ -150,7 +162,10 @@ public:
      */
     void integrate();
 
-    inline const integral_t& getIntegral() const
+    inline const Array::array1<integral_t> getBunchPopulation() const
+        { return _bunchpopulation; }
+
+    inline const integral_t getIntegral() const
         { return _integral; }
 
     /**
@@ -160,19 +175,21 @@ public:
      *
      * relies on an up-to-date _projection[axis]
      */
-    meshdata_t variance(const uint_fast8_t axis);
+    void variance(const uint_fast8_t axis);
 
-    inline meshdata_t getBunchLength() const
-        { return std::sqrt(getMoment(0,1)); }
-
-    inline meshdata_t getEnergySpread() const
-        { return std::sqrt(getMoment(1,1)); }
-
-    inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
+    inline auto getMoment( const uint_fast8_t x
+                         , const uint_fast8_t m) const
         { return _moment[x][m]; }
 
+    inline const meshaxis_t* getBunchLength() const
+        { return _rms[0]; }
+
+    inline const meshaxis_t* getEnergySpread() const
+        { return _rms[1]; }
+
+
     inline const projection_t* getProjection(const uint_fast8_t x) const
-        { return _projection[x].data(); }
+        { return _projection[x]; }
 
     /**
      * @brief updateXProjection
@@ -191,19 +208,37 @@ public:
      *
      * normalize() does neither recompute the integral nor sets it to 1
      */
-    integral_t normalize();
-
-    inline meshdata_t* operator[](const meshindex_t i) const
-    { return _data[i]; }
+    Array::array1<integral_t> normalize();
 
     PhaseSpace& operator=(PhaseSpace other);
 
+    /**
+     * @brief nBunches number of RF buckets in simulation
+     * @return
+     */
+    inline uint32_t nBunches() const
+    { return _nbunches; }
+
+    /**
+     * @brief nMeshCells total number of mesh cells
+     * @return
+     */
     inline size_t nMeshCells() const
     { return _axis[0]->steps()*_axis[1]->steps(); }
 
-    inline size_t nMeshCells(const uint_fast8_t x) const
+    /**
+     * @brief nMeshCells number of mes cells in direction
+     * @param x direction (0: x, 1: y)
+     * @return
+     */
+    inline uint32_t nMeshCells(const uint_fast8_t x) const
     { return _axis[x]->steps(); }
 
+    /**
+     * @brief size in reduced coordinates
+     * @param x
+     * @return
+     */
     inline meshaxis_t size(const uint_fast8_t x) const
     { return _axis[x]->size(); }
 
@@ -212,7 +247,8 @@ public:
 
     /**
      * @brief swap
-     * @param other
+     * @param first
+     * @param second
      */
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
@@ -235,37 +271,68 @@ public:
     const double current;
 
 protected:
-    /**
-     * @brief _integral as we work in normalitzed units, this should be 1
-     */
-    integral_t _integral;
-
-    std::array<std::vector<projection_t>,2> _projection;
-
     const uint32_t _nmeshcellsX;
 
     const uint32_t _nmeshcellsY;
 
+    const uint32_t _nbunches;
+
     const size_t _nmeshcells;
 
-    const IntegralType _integraltype;
+    const IntegralMethod _integralmethod;
 
-    meshdata_t** _data;
+    /**
+     * @brief _bunchpopulation as we work in normalitzed units,
+     * the sum should be 1
+     */
+    Array::array1<integral_t> _bunchpopulation;
 
-    meshdata_t* _data1D;
+    /**
+     * @brief _integral as we work in normalitzed units, this sum should be 1
+     */
+    integral_t _integral;
+
+    /**
+     * @brief _projection dimensions are orientation, bunch, x/y grid cell
+     */
+    Array::array3<projection_t> _projection;
+
+    /**
+     * @brief _data dimensions are: bunch, x coordinate, y coordinate
+     */
+    Array::array3<meshdata_t> _data;
 
     /**
      * @brief _moment: holds the moments for distributions
      *            in both axis in mesh coordinates
      *
+     * 0: x-Axis
+     * 1: y-axis
+     *
      * 0: average
      * 1: variance
      * 2: skewness
      * 3: kurtosis
+     *
+     * n: bunch number
      */
-    std::array<std::array<meshdata_t,4>,2> _moment;
+    Array::array3<meshaxis_t> _moment;
 
-    std::vector<meshdata_t> _ws;
+
+    /**
+     * @brief _RMS
+     *
+     * 0: x-Axis
+     * 1: y-axis
+     *
+     * n: bunch number
+     */
+    Array::array2<meshaxis_t> _rms;
+
+    /**
+     * @brief _ws weights for Simpson integration
+     */
+    const Array::array1<meshdata_t> _ws;
 
 private:
     oclhptr_t _oclh;
@@ -307,7 +374,7 @@ private:
     static std::string cl_code_projection_x;
 #endif // INOVESA_USE_OPENCL
 
-public:
+private:
     void createFromProjections();
 
     /**
@@ -315,7 +382,13 @@ public:
      * @param axis
      * @param zoom
      */
-    void gaus(const uint_fast8_t axis, const double zoom);
+    void gaus(const uint_fast8_t axis, const uint32_t bunch, const double zoom);
+
+    /**
+     * @brief simpsonWeights helper function to allow for const _ws
+     * @return
+     */
+    const Array::array1<meshdata_t> simpsonWeights();
 };
 
 /**

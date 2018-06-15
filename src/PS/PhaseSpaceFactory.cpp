@@ -34,7 +34,8 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                     , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                     , oclhptr_t oclh
-                    , const double bunch_charge, const double bunch_current
+                    , const double bunch_charge
+                    , const double bunch_current
                     , double xscale, double yscale
                     )
 {
@@ -73,7 +74,7 @@ vfps::makePSFromPNG( std::string fname
                    , oclhptr_t oclh
                    , const double bunch_charge
                    , const double bunch_current
-                   , double xscale, double yscale
+                   , double qscale, double pscale
                    )
 {
     #ifdef INOVESA_USE_PNG
@@ -101,10 +102,13 @@ vfps::makePSFromPNG( std::string fname
                 data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
             }
         }
-        auto ps = std::make_unique<PhaseSpace>( ps_size,qmin,qmax,pmin,pmax
+        auto ps = std::make_unique<PhaseSpace>( ps_size
+                                              , qmin, qmax, qscale
+                                              , pmin, pmax, pscale
                                               , oclh
                                               , bunch_charge,bunch_current
-                                              , xscale,yscale,1,data.data());
+                                              , 1U, 1
+                                              , data.data());
         // normalize integral to 1
         ps->updateXProjection();
         ps->normalize();
@@ -130,12 +134,15 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                    , oclhptr_t oclh
                    , const double bunch_charge, const double bunch_current
-                   , double xscale, double yscale)
+                   , double qscale, double pscale)
 {
-    auto ps = std::make_unique<PhaseSpace>( ps_size,qmin,qmax,pmin,pmax
+    auto ps = std::make_unique<PhaseSpace>( ps_size
+                                          , qmin, qmax, qscale
+                                          , pmin, pmax, pscale
                                           , oclh
                                           , bunch_charge,bunch_current
-                                          , xscale,yscale);
+                                          , 1U
+                                          );
     std::ifstream ifs;
     try {
         ifs.open(fname);
@@ -166,7 +173,7 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
         meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
         meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
         if (x < ps_size && y < ps_size) {
-            (*ps)[x][y] += 1.0/line_count;
+            (*ps)[0][x][y] += 1.0/line_count;
         }
     }
     ifs.close();
