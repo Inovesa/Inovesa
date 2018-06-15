@@ -238,14 +238,14 @@ int main(int argc, char** argv)
     const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
 
     // filling pattern, firts as individual bunch currents, latter normalized
-    std::vector<double> filling = opts.getBunchCurrents();
+    std::vector<integral_t> filling = opts.getBunchCurrents();
 
     // accumulated beam current
     const double Ib = std::accumulate(filling.begin(),filling.end(),0.0);
 
-    // normalie filling pattern
+    // normalize filling pattern
     std::transform(filling.begin(), filling.end(), filling.begin(),
-                   std::bind(std::divides<T>(), std::placeholders::_1, Ib));
+                   std::bind(std::divides<integral_t>(), std::placeholders::_1, Ib));
 
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();

@@ -102,12 +102,14 @@ vfps::makePSFromPNG( std::string fname
                 data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
             }
         }
+
+        std::vector<integral_t> filling = {{ 1.0 }};
         auto ps = std::make_unique<PhaseSpace>( ps_size
                                               , qmin, qmax, qscale
                                               , pmin, pmax, pscale
                                               , oclh
                                               , bunch_charge,bunch_current
-                                              , 1U, 1
+                                              , filling, 1
                                               , data.data());
         // normalize integral to 1
         ps->updateXProjection();
@@ -136,12 +138,13 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
                    , const double bunch_charge, const double bunch_current
                    , double qscale, double pscale)
 {
+    std::vector<integral_t> filling = {{ 1.0 }};
     auto ps = std::make_unique<PhaseSpace>( ps_size
                                           , qmin, qmax, qscale
                                           , pmin, pmax, pscale
                                           , oclh
                                           , bunch_charge,bunch_current
-                                          , 1U
+                                          , filling
                                           );
     std::ifstream ifs;
     try {

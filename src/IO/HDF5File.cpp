@@ -455,11 +455,13 @@ vfps::HDF5File::readPhaseSpace( std::string fname
         axistype = H5::PredType::IEEE_F64LE;
     }
 
+    std::vector<integral_t> filling = {{ 1.0 }};
+
     auto ps = std::make_unique<PhaseSpace>( ps_size
                                           , qmin,qmax,bl
                                           , pmin,pmax,dE
                                           , oclh
-                                          , Qb,Ib_unscaled,1U,1
+                                          , Qb,Ib_unscaled,filling,1
                                           );
     ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
 

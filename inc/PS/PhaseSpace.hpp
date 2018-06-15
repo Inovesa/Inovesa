@@ -75,7 +75,16 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<double> filling={{1}}
+              , const Array::array1<integral_t> filling
+              , const double zoom=1
+              , meshdata_t* data = nullptr
+              );
+
+    PhaseSpace(std::array<meshRuler_ptr,2> axis
+              , oclhptr_t oclh
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -85,7 +94,7 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<double> filling={{1}}
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -100,7 +109,7 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<double> filling={{1}}
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
               , meshdata_t *data = nullptr
               );

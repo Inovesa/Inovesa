@@ -294,7 +294,7 @@ private: // phsical parameters
     double s_c;
     double xi_wall;
     double H;
-    std::vector<double> I_b;
+    std::vector<integral_t> I_b;
     double t_d;
     double r_bend;
     double s_E;
