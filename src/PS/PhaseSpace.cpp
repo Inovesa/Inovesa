@@ -129,7 +129,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
             glGenBuffers(1, &projectionX_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,projectionX_glbuf);
             glBufferData( GL_ARRAY_BUFFER
-                        , nMeshCells(0)*sizeof(*_projection[0])
+                        , nMeshCells(0)*sizeof(decltype(_projection)::value_type)
                         , 0, GL_DYNAMIC_DRAW);
             projectionX_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
                                             , projectionX_glbuf);
@@ -138,16 +138,17 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
         {
             projectionX_clbuf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                     sizeof(projection_t)*_nmeshcellsX,
-                                     _projection[0]);
+                                     nMeshCells(0)*sizeof(decltype(_projection)::value_type),
+                                     _projection[0].data());
         }
         integral_buf = cl::Buffer(_oclh->context,
-                                     CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                     sizeof(integral_t),&_bunchpopulation);
+                                  CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                  sizeof(decltype(_bunchpopulation)::value_type),
+                                  _bunchpopulation.data());
         ws_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                            sizeof(meshdata_t)*_nmeshcellsX,
-                            _ws());
+                            sizeof(decltype(_ws)::value_type)*_nmeshcellsX,
+                            const_cast<decltype(_ws)::value_type*>(_ws.data()));
 
         _clProgProjX  = _oclh->prepareCLProg(cl_code_projection_x);
         _clKernProjX = cl::Kernel(_clProgProjX, "projectionX");

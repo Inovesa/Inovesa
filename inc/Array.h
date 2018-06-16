@@ -132,6 +132,10 @@ protected:
   unsigned int _size;
   mutable int state;
 public:
+  /**
+   * @brief value_type analogue to STL containers
+   */
+  typedef T value_type;
 
 #if __cplusplus >= 201103L
   /**
