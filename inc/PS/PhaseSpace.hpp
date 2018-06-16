@@ -44,9 +44,7 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
-#define __NOARRAY2OPT
 #include "Array.h"
-#undef __NOARRAY2OPT
 
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
