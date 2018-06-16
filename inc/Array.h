@@ -22,7 +22,6 @@
 #define __ARRAY_H_VERSION__ 1.55
 
 // Defining NDEBUG improves optimization but disables argument checking.
-// Defining __NOARRAY2OPT inhibits special optimization of Array2[].
 
 #include <iostream>
 #include <sstream>
@@ -31,10 +30,6 @@
 #include <cerrno>
 #if __cplusplus >= 201103L
 #include <initializer_list>
-#endif
-
-#if not defined NDEBUG and not defined __NOARRAY2OPT
-#define __NOARRAY2OPT
 #endif
 
 #ifndef HAVE_POSIX_MEMALIGN
@@ -1461,16 +1456,10 @@ public:
     Dimension(nx0,ny0,v0,ox0,oy0);
   }
 
-#ifndef __NOARRAY2OPT
-  T *operator [] (int ix) const {
-    return voff+ix*(int) this->ny;
-  }
-#else
   Array1<T> operator [] (int ix) const {
     Array1<T>::__check(ix,this->nx,ox,2,1);
     return Array1<T>(this->ny,vtemp+ix*(int) this->ny,oy);
   }
-#endif
   
   T& operator () (int ix, int iy) const {
     Array1<T>::__check(ix,this->nx,ox,2,1);

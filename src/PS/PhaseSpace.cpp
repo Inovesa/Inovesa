@@ -48,7 +48,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
   , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
-  , _oclh(oclh)
+  , _oclh(nullptr) // OpenCL will be disabled during dirst initialization steps
   #ifdef INOVESA_USE_OPENGL
   , projectionX_glbuf(0)
   #endif // INOVESA_USE_OPENGL
@@ -68,54 +68,56 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
 
         createFromProjections();
     }
-        #ifdef INOVESA_CHG_BUNCH
-            std::random_device seed;
-            std::default_random_engine engine(seed());
 
-            std::uniform_real_distribution<> xdist(0.0,1.0);
-            std::normal_distribution<> ydist(0.0,1.0);
+    #ifdef INOVESA_CHG_BUNCH
+    std::random_device seed;
+    std::default_random_engine engine(seed());
+
+    std::uniform_real_distribution<> xdist(0.0,1.0);
+    std::normal_distribution<> ydist(0.0,1.0);
 
 
-            constexpr meshindex_t nParticles = UINT32_MAX;
-            constexpr float amplitude = 2.0f;
-            constexpr float pulselen = 1.90e-3f;
-            meshindex_t pulsepix = std::ceil(5*pulselen/2.35f/pmax*ps_size);
-            constexpr float wavelen = 6.42e-5f;
+    constexpr meshindex_t nParticles = UINT32_MAX;
+    constexpr float amplitude = 2.0f;
+    constexpr float pulselen = 1.90e-3f;
+    meshindex_t pulsepix = std::ceil(5*pulselen/2.35f/pmax*ps_size);
+    constexpr float wavelen = 6.42e-5f;
 
-            meshindex_t x = 0;
-            while (x < ps_size/2-pulsepix) {
-                for (meshindex_t y = 0; y < ps_size; y++) {
-                    (*mesh)[x][y]
-                        =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
-                        *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
-                }
-                x++;
+    meshindex_t x = 0;
+    while (x < ps_size/2-pulsepix) {
+        for (meshindex_t y = 0; y < ps_size; y++) {
+            (*mesh)[x][y]
+                =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
+                *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+        }
+        x++;
+    }
+    while (x < ps_size/2+pulsepix) {
+        meshdata_t weight = std::sqrt(2*pi<meshdata_t>())*ps_size/pmax/nParticles
+                * std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f);
+        for (size_t i=0; i<nParticles; i++) {
+            float xf = x+xdist(engine);
+            float yf = ydist(engine)
+                            + std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35f),2))
+                            * amplitude * std::sin(2*pi<meshdata_t>()*xf/wavelen);
+            meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
+            if (y < ps_size) {
+                (*mesh)[x][y] += weight;
             }
-            while (x < ps_size/2+pulsepix) {
-                meshdata_t weight = std::sqrt(2*pi<meshdata_t>())*ps_size/pmax/nParticles
-                        * std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f);
-                for (size_t i=0; i<nParticles; i++) {
-                    float xf = x+xdist(engine);
-                    float yf = ydist(engine)
-                                    + std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35f),2))
-                                    * amplitude * std::sin(2*pi<meshdata_t>()*xf/wavelen);
-                    meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
-                    if (y < ps_size) {
-                        (*mesh)[x][y] += weight;
-                    }
-                }
-                x++;
-            }
-            while (x < ps_size) {
-                for (meshindex_t y = 0; y < ps_size; y++) {
-                    (*mesh)[x][y]
-                        =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
-                        *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
-                }
-                x++;
-            }
-        #endif // INOVESA_CHG_BUNCH
+        }
+        x++;
+    }
+    while (x < ps_size) {
+        for (meshindex_t y = 0; y < ps_size; y++) {
+            (*mesh)[x][y]
+                =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
+                *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
+        }
+        x++;
+    }
+    #endif // INOVESA_CHG_BUNCH
 
+    _oclh = oclh; // now, OpenCL can be used
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
     try {

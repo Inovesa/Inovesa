@@ -44,9 +44,7 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
-#define __NOARRAY2OPT
 #include "Array.h"
-#undef __NOARRAY2OPT
 
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
@@ -165,7 +163,7 @@ public:
     inline const Array::array1<integral_t> getBunchPopulation() const
         { return _bunchpopulation; }
 
-    inline const integral_t getIntegral() const
+    inline integral_t getIntegral() const
         { return _integral; }
 
     /**
