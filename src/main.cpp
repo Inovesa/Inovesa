@@ -78,6 +78,11 @@ int main(int argc, char** argv)
      */
     Display::start_time = std::chrono::system_clock::now();
 
+    #ifdef INOVESA_ENABLE_INTERRUPT
+    //Install signal handler for SIGINT
+    signal(SIGINT, SIGINT_handler);
+    #endif // INOVESA_ENABLE_INTERRUPT
+
     /*
      * Program options might be such that the program does not have
      * to be run at all. As config files (read in based on the command line
@@ -165,8 +170,6 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    const auto save_sourcemap = opts.getSaveSourceMap();
-
     const meshindex_t ps_size = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
     const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
@@ -236,7 +239,7 @@ int main(int argc, char** argv)
 
     const double Ib = opts.getBunchCurrent();
     const double Qb = Ib/f_rev;
-    const double Iz = opts.getStartDistZoom();
+    const double zoom = opts.getStartDistZoom();
 
     const double steps = (opts.getStepsPerTrev()>0)
             ? opts.getStepsPerTrev()*f_rev/fs
@@ -405,9 +408,9 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,pmin,pmax
-                                    , oclh
-                                    , Qb,Ib,bl,dE,Iz));
+        const auto nBunches = 1U;
+        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
+                                    , oclh, Qb,Ib,nBunches,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -463,7 +466,7 @@ int main(int argc, char** argv)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
     for (unsigned int x=0; x<ps_size; x++) {
         for (unsigned int y=0; y<ps_size; y++) {
-            maxval = std::max(maxval,(*grid_t1)[x][y]);
+            maxval = std::max(maxval,(*grid_t1)[0][x][y]);
         }
     }
 
@@ -794,14 +797,23 @@ int main(int argc, char** argv)
       || isOfFileType(".hdf5",ofname) ) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
-        hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
-                                wfm,trackme.size(), t_sync,f_rev);
-        Display::printText("Will save results to \""+ofname+"\".");
-        opts.save(hdf_file);
-        hdf_file->addParameterToGroup("/Info","CSRStrength",
-                                      H5::PredType::IEEE_F64LE,&S_csr);
-        hdf_file->addParameterToGroup("/Info","ShieldingParameter",
-                                      H5::PredType::IEEE_F64LE,&shield);
+        try {
+            hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
+                                    wfm,trackme.size(), t_sync,f_rev);
+            Display::printText("Will save results to \""+ofname+"\".");
+            opts.save(hdf_file);
+            hdf_file->addParameterToGroup("/Info","CSRStrength",
+                                          H5::PredType::IEEE_F64LE,&S_csr);
+            hdf_file->addParameterToGroup("/Info","ShieldingParameter",
+                                          H5::PredType::IEEE_F64LE,&shield);
+        } catch (H5::Exception& e) {
+           #if H5_VERS_MAJOR == 1 and H5_VERS_MINOR < 10
+           e.printError();
+           #else
+           e.printErrorStack();
+           #endif
+            Display::abort = true;
+        }
     } else
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
@@ -849,11 +861,6 @@ int main(int argc, char** argv)
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations),false);
 
-    #ifdef INOVESA_ENABLE_INTERRUPT
-    //Install signal handler for SIGINT
-    signal(SIGINT, SIGINT_handler);
-    #endif // INOVESA_ENABLE_INTERRUPT
-
     #ifdef INOVESA_USE_OPENCL
     if (oclh) {
         oclh->finish();
@@ -888,7 +895,7 @@ int main(int argc, char** argv)
         if (outstep > 0 && simulationstep%outstep == 0) {
 
             // works on XProjection
-            grid_t1->getIntegral();
+            grid_t1->integrate();
             grid_t1->variance(0);
             grid_t1->updateYProjection();
             grid_t1->variance(1);
@@ -919,20 +926,6 @@ int main(int argc, char** argv)
 
                 if (drfm) {
                     hdf_file->appendRFKicks(drfm->getPastModulation());
-                }
-
-                if (save_sourcemap) {
-                    std::vector<PhaseSpace::Position> allpos;
-                    for (float x=0; x<ps_size; x++) {
-                        for (float y=0; y<ps_size; y++) {
-                            allpos.push_back({x,y});
-                        }
-                    }
-                    wm->applyTo(allpos);
-                    rfm->applyTo(allpos);
-                    drm->applyTo(allpos);
-                    fpm->applyTo(allpos);
-                    hdf_file->appendSourceMap(allpos.data());
                 }
             }
             outstepnr++;
@@ -1033,22 +1026,6 @@ int main(int argc, char** argv)
         if (drfm) {
             hdf_file->appendRFKicks(drfm->getPastModulation());
         }
-
-        if (save_sourcemap) {
-            std::vector<PhaseSpace::Position> allpos;
-            for (float x=0; x<ps_size; x++) {
-                for (float y=0; y<ps_size; y++) {
-                    allpos.push_back({x,y});
-                }
-            }
-            wm->applyTo(allpos);
-            rfm->applyTo(allpos);
-            if (drm != nullptr) {
-                drm->applyTo(allpos);
-            }
-            fpm->applyTo(allpos);
-            hdf_file->appendSourceMap(allpos.data());
-        }
     }
     #endif // INOVESA_USE_HDF5
     #ifdef INOVESA_USE_PNG
@@ -1063,7 +1040,7 @@ int main(int argc, char** argv)
             for (unsigned int y=0; y<ps_size; y++) {
                 png_file[ps_size-y-1][x]=
                         static_cast<png::gray_pixel_16>(
-                            std::max((*grid_t1)[x][y],meshdata_t(0))
+                            std::max((*grid_t1)[0][x][y],meshdata_t(0))
                             /maxval*float(UINT16_MAX));
             }
         }

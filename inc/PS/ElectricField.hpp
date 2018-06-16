@@ -26,6 +26,7 @@
 #include <memory>
 #include <sstream>
 
+#include "Array.h"
 #include "defines.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/Ruler.hpp"
@@ -114,7 +115,7 @@ public:
 
     ~ElectricField() noexcept;
 
-    inline csrpower_t getCSRPower() const
+    inline const csrpower_t& getCSRPower() const
         { return _csrintensity; }
 
     inline csrpower_t* getCSRSpectrum() const
