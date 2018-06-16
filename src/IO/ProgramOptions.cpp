@@ -23,8 +23,8 @@
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
-    I_b({{3e-3f}}),
     _configfile("default.cfg"),
+    I_b({{3e-3f}}),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),

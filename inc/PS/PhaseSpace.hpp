@@ -174,7 +174,7 @@ public:
     inline const Array::array1<integral_t> getBunchPopulation() const
         { return _bunchpopulation; }
 
-    inline const integral_t getIntegral() const
+    inline integral_t getIntegral() const
         { return _integral; }
 
     /**
