@@ -639,6 +639,7 @@ int main(int argc, char** argv)
         sstream << std::scientific << 1/t_damp/fs/(two_pi<double>());
         Display::printText("... damping beta: " +sstream.str());
     } else {
+        Display::printText("Fokker-Planck-Term is neglected.");
         fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size, oclh);
     }
 

@@ -348,7 +348,7 @@ public:
 
     cl::Buffer projectionX_clbuf;
 
-    cl::Buffer integral_buf;
+    cl::Buffer bunchpop_buf;
 
 private:
     cl::Program _clProgProjX;
