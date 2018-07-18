@@ -123,6 +123,8 @@ protected:
      */
     hi* const _hinfo;
 
+    const uint32_t _nbunches;
+
     /**
      * @brief _size size of the SourceMap (_xsize*_ysize)
      */

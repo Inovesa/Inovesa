@@ -289,21 +289,25 @@ protected:
     const IntegralMethod _integralmethod;
 
     /**
-     * @brief _bunchpopulation as we work in normalitzed units,
-     * the sum should be 1
+     * @brief _fillingpattern: normalized bunch charges as they should be
+     *
+     * as we work in normalitzed units, the sum should be 1, e.g. {0.25,0.75}
+     */
+    const Array::array1<integral_t> _fillingpattern;
+
+    /**
+     * @brief _bunchpopulation: normalized bunch charges as they should are
+     *
+     * ideally, this is the same as _fillingpattern
      */
     Array::array1<integral_t> _bunchpopulation;
 
-    /**
-
-     * @brief _integral as we work in normalitzed units, this should be 1
-     */
-    integral_t _integral;
-
-    /**
-     * @brief _data dimensions are: bunch, x coordinate, y coordinate
-     */
-    Array::array1<integral_t> _fillingpattern;
+   /**
+    * @brief _integral
+    *
+    * as we work in normalitzed units, this should be 1
+    */
+   integral_t _integral;
 
     /**
      * @brief _projection dimensions are orientation, bunch, x/y grid cell

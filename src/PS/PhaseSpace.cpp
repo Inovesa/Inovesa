@@ -41,9 +41,9 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
   , _nbunches(filling.size())
   , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
   , _integralmethod(IntegralMethod::simpson)
+  , _fillingpattern(filling.begin(),filling.end())
   , _bunchpopulation(Array::array1<integral_t>(_nbunches))
   , _integral(1)
-  , _fillingpattern(filling)
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
   , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
   , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
@@ -306,7 +306,7 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
         }
 
         // _projection is normalized in p/q coordinates
-        avg *= getDelta(axis);
+        avg *= getDelta(axis)/_bunchpopulation[n];
 
         _moment[axis][0][n] = avg;
     }
@@ -322,7 +322,7 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
         }
 
         // _projection is normalized in p/q coordinates
-        var *= getDelta(axis);
+        var *= getDelta(axis)/_bunchpopulation[n];
 
         _moment[axis][1][n] = var;
         _rms[axis][n] = std::sqrt(var);
@@ -419,7 +419,9 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
 
-    _data /= _integral;
+    for (uint32_t n=0; n<_nbunches; n++) {
+        _data[n] *= _fillingpattern[n]/_bunchpopulation[n];
+    }
 
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
@@ -485,7 +487,8 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
 {
     const double zoom2=zoom*zoom;
     for(uint32_t i=0; i<nMeshCells(axis); i++){
-        _projection[axis][bunch][i]=std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
+        _projection[axis][bunch][i]=boost::math::constants::one_div_root_two_pi<double>()
+                *std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
 }
 

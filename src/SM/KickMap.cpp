@@ -206,39 +206,45 @@ void vfps::KickMap::apply()
     meshdata_t* data_out = _out->getData();
 
     if (_kickdirection == Axis::x) {
-        for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
-            for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[y*_ip+j];
-                    // the min makes sure not to have out of bounds accesses
-                    // casting is to be sure about overflow behaviour
-                    const meshindex_t xs = std::min(
-                         static_cast<meshindex_t>(_meshsize_pd-1),
-                         static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
-                                                - static_cast<int32_t>(_meshsize_pd/2)));
-                    value += data_in[xs*_meshsize_pd+y]
-                          * static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n < _nbunches; n++) {
+            const meshindex_t offs = n*_meshsize_kd*_meshsize_pd;
+            for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
+                for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
+                    meshdata_t value = 0;
+                    for (uint_fast8_t j=0; j<_ip; j++) {
+                        hi h = _hinfo[y*_ip+j];
+                        // the min makes sure not to have out of bounds accesses
+                        // casting is to be sure about overflow behaviour
+                        const meshindex_t xs = std::min(
+                             static_cast<meshindex_t>(_meshsize_pd-1),
+                             static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
+                                                    - static_cast<int32_t>(_meshsize_pd/2)));
+                        value += data_in[offs+xs*_meshsize_pd+y]
+                              * static_cast<meshdata_t>(h.weight);
+                    }
+                    data_out[offs+x*_meshsize_pd+y] = value;
                 }
-                data_out[x*_meshsize_pd+y] = value;
             }
         }
     } else {
-        for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
-            const meshindex_t offs = x*_meshsize_kd;
-            for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[x*_ip+j];
-                    // the min makes sure not to have out of bounds accesses
-                    // casting is to be sure about overflow behaviour
-                    const meshindex_t ys = std::min(
-                        static_cast<meshindex_t>(_meshsize_kd-1),
-                        static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
-                                               - static_cast<int32_t>(_meshsize_kd/2)));
-                    value += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n < _nbunches; n++) {
+            const meshindex_t offs1 = n*_meshsize_kd*_meshsize_pd;
+            for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
+                const meshindex_t offs = offs1 + x*_meshsize_kd;
+                for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
+                    meshdata_t value = 0;
+                    for (uint_fast8_t j=0; j<_ip; j++) {
+                        hi h = _hinfo[x*_ip+j];
+                        // the min makes sure not to have out of bounds accesses
+                        // casting is to be sure about overflow behaviour
+                        const meshindex_t ys = std::min(
+                            static_cast<meshindex_t>(_meshsize_kd-1),
+                            static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
+                                                   - static_cast<int32_t>(_meshsize_kd/2)));
+                        value += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+                    }
+                    data_out[offs+y] = value;
                 }
-                data_out[offs+y] = value;
             }
         }
     }

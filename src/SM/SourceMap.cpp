@@ -34,6 +34,7 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
   : _ip(interpoints)
   , _it(intertype)
   , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
+  , _nbunches(in->nBunches())
   , _size(xsize*ysize)
   , _xsize(xsize)
   , _ysize(ysize)

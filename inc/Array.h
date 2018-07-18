@@ -499,6 +499,10 @@ private: // abstract iterator prototypes
     operator-(const std::ptrdiff_t& n) const
     { return abstract_iterator(*this) -= n; }
 
+    virtual inline std::ptrdiff_t
+    operator-(const abstract_iterator& n) const
+    { return _ptr - n._ptr; }
+
     friend inline const abstract_iterator&
     operator+( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
     { return rhs+lhs; }
@@ -628,7 +632,7 @@ private: // abstract iterator prototypes
 
 public: // actual iterators
     /**
-     * @brief The NDarray1::iterator class
+     * @brief The NDarray1::abstract_iterator class
      */
     class iterator : public abstract_iterator
     {
