@@ -33,6 +33,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const meshaxis_t wakescalining
                                   )
   : volts(ps->getAxis(1)->delta()*ps->getScale(1,"ElectronVolt")/revolutionpart)
+  , _nbunches(ps->nBunches())
   , _nmax(impedance->nFreqs())
   , _bpmeshcells(ps->nMeshCells(0))
   , _axis_freq(Ruler<frequency_t>( _nmax,0
@@ -48,9 +49,9 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   , _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0))
   , factor4WattPerHertz(2*impedance->factor4Ohms*ps->current*ps->current/f_rev)
   , factor4Watts(factor4WattPerHertz*_axis_freq.scale("Hertz"))
-  , _csrintensity(0)
-  , _csrspectrum(new csrpower_t[_nmax])
-  , _isrspectrum(new csrpower_t[_nmax])
+  , _csrintensity(Array::array1<csrpower_t>(_nbunches))
+  , _csrspectrum(Array::array2<csrpower_t>(_nbunches,_nmax))
+  , _isrspectrum(Array::array2<csrpower_t>(_nbunches,_nmax))
   , _impedance(impedance)
   , _oclh(oclh)
   , _wakefunction(nullptr)
@@ -271,8 +272,6 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 
 vfps::ElectricField::~ElectricField() noexcept
 {
-    delete [] _csrspectrum;
-    delete [] _isrspectrum;
     delete [] _wakefunction;
     delete [] _wakepotential;
 
@@ -315,36 +314,39 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
 
         _oclh->enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                 _nmax*sizeof(*_formfactor),_formfactor);
-    } else
+    }
     #elif defined INOVESA_USE_OPENCL
     if (_oclh) {
         _phasespace->syncCLMem(OCLH::clCopyDirection::dev2cpu);
     }
     #endif // INOVESA_USE_CLTTT
-    {
-        // copy bunch profile so that negative times are at maximum bins
-        const vfps::projection_t* bp= _phasespace->getProjection(0);
-        std::copy_n(bp,_bpmeshcells/2,_bp_padded+_nmax-_bpmeshcells/2);
-        std::copy_n(bp+_bpmeshcells/2,_bpmeshcells/2,_bp_padded);
-        //FFT charge density
-        fft_execute(_fft_bunchprofile);
-    }
-    _csrintensity = 0;
+        for (uint32_t n = 0; n < _nbunches; n++) {
+        if (!_oclh) {
+            // copy bunch profile so that negative times are at maximum bins
+            // copy bunch profile have correct be padding
+            const vfps::projection_t* bp = _phasespace->getProjection(0)[n];
+            std::copy_n(bp,_bpmeshcells,_bp_padded);
 
-    for (unsigned int i=0; i<_nmax; i++) {
-        frequency_t renorm(_formfactorrenorm);
-        if (cutoff > 0) {
-            renorm *= (1-std::exp(-std::pow((_axis_freq.scale("Hertz")*_axis_freq[i]/cutoff),2)));
+            //FFT charge density
+            fft_execute(_fft_bunchprofile);
         }
+        _csrintensity[n] = 0;
 
-        // norm = squared magnitude
-        _csrspectrum[i] = renorm * ((*_impedance)[i]).real()
-                        * std::norm(_formfactor[i]);
+        for (unsigned int i=0; i<_nmax; i++) {
+            frequency_t renorm(_formfactorrenorm);
+            if (cutoff > 0) {
+                renorm *= (1-std::exp(-std::pow((_axis_freq.scale("Hertz")*_axis_freq[i]/cutoff),2)));
+            }
 
-        _csrintensity += _axis_freq.delta()*_csrspectrum[i];
+            // norm = squared magnitude
+            _csrspectrum[n][i] = renorm * ((*_impedance)[i]).real()
+                               * std::norm(_formfactor[i]);
+
+            _csrintensity[n] += _axis_freq.delta()*_csrspectrum[n][i];
+        }
     }
 
-    return _csrspectrum;
+    return _csrspectrum.data();
 }
 
 vfps::meshaxis_t *vfps::ElectricField::wakePotential()
@@ -377,7 +379,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     }
     #endif // INOVESA_USE_OPENCL
     {
-        // copy bunch profile so that negative times are at maximum bins
+        // copy bunch profile have correct be padding
         const vfps::projection_t* bp= _phasespace->getProjection(0);
         std::copy_n(bp,_bpmeshcells,_bp_padded);
 

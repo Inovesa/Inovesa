@@ -340,7 +340,7 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     if (fullspectrum) {
         _appendData(_csrSpectrum,ef->getCSRSpectrum());
     }
-    _appendData(_csrIntensity,&ef->getCSRPower());
+    _appendData(_csrIntensity,ef->getCSRPower());
 }
 
 void vfps::HDF5File::appendRFKicks(
@@ -366,13 +366,13 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
 
     if (at != AppendType::PhaseSpace) {
         _appendData(_timeAxis,&t);
-        _appendData(_bunchProfile,ps.getProjection(0));
+        _appendData(_bunchProfile,ps.getProjection(0).data());
         _appendData(_bunchLength,ps.getBunchLength());
         {
         auto mean_q = ps.getMoment(0,0);
         _appendData(_bunchPosition,mean_q.data());
         }
-        _appendData(_energyProfile,ps.getProjection(1));
+        _appendData(_energyProfile,ps.getProjection(1).data());
         _appendData(_energySpread,ps.getEnergySpread());
         {
         auto mean_E = ps.getMoment(1,0);

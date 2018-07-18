@@ -195,7 +195,8 @@ public:
         { return _rms[1]; }
 
 
-    inline const projection_t* getProjection(const uint_fast8_t x) const
+    inline const Array::array2<projection_t>
+    getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
     /**
@@ -231,7 +232,7 @@ public:
      * @return
      */
     inline size_t nMeshCells() const
-    { return _axis[0]->steps()*_axis[1]->steps(); }
+    { return _nmeshcells; }
 
     /**
      * @brief nMeshCells number of mes cells in direction

@@ -115,14 +115,14 @@ public:
 
     ~ElectricField() noexcept;
 
-    inline const csrpower_t& getCSRPower() const
-        { return _csrintensity; }
+    inline const csrpower_t* getCSRPower() const
+        { return _csrintensity.data(); }
 
-    inline csrpower_t* getCSRSpectrum() const
-        { return _csrspectrum; }
+    inline const csrpower_t* getCSRSpectrum() const
+        { return _csrspectrum.data(); }
 
-    inline csrpower_t* getISRSpectrum() const
-        { return _isrspectrum; }
+    inline const csrpower_t* getISRSpectrum() const
+        { return _isrspectrum.data(); }
 
     inline const std::shared_ptr<Impedance> getImpedance() const
         { return _impedance; }
@@ -257,6 +257,8 @@ private: // wrappers for FFTW
                           fft_direction direction);
 
 private:
+    const uint32_t _nbunches;
+
     const size_t _nmax;
 
     const uint32_t _bpmeshcells;
@@ -283,11 +285,21 @@ public:
 
 private:
 
-    csrpower_t _csrintensity;
 
-    csrpower_t* _csrspectrum;
+    /**
+     * @brief _csrintensity dimensions: bunch
+     */
+    Array::array1<csrpower_t> _csrintensity;
 
-    csrpower_t* _isrspectrum;
+    /**
+     * @brief _csrspectrum dimensions: bunch, frequency
+     */
+    Array::array2<csrpower_t> _csrspectrum;
+
+    /**
+     * @brief _isrspectrum dimensions: bunch, frequency
+     */
+    Array::array2<csrpower_t> _isrspectrum;
 
     const std::shared_ptr<Impedance> _impedance;
 

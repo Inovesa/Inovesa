@@ -959,7 +959,7 @@ int main(int argc, char** argv)
                     {
                         rdtn_field.updateCSR(fc);
                     }
-                    csrlog[outstepnr] = rdtn_field.getCSRPower();
+                    csrlog[outstepnr] = rdtn_field.getCSRPower()[0];
                     history->update(csrlog.data());
                 }
                 display->draw();
