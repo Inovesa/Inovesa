@@ -214,17 +214,26 @@ void vfps::FokkerPlanckMap::apply()
 vfps::PhaseSpace::Position
 vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
 {
-    meshindex_t yi = std::min(static_cast<meshindex_t>(std::floor(pos.y)),_ysize);
+    meshdata_t* data_in = _in->getData();
+
+    std::make_signed<meshindex_t>::type xi
+            = std::min( static_cast<decltype(_in->nMeshCells(0))>(std::floor(pos.x))
+                      , _in->nMeshCells(0)-1);
+    std::make_signed<meshindex_t>::type yi
+            = std::min( static_cast<decltype(_ysize)>(std::floor(pos.y))
+                      , _ysize-1);
+    const meshindex_t offs = xi*_ysize;
     interpol_t offset = 0;
+    meshdata_t charge = 0;
 
     for (uint_fast8_t j=0; j<_ip; j++) {
         hi h = _hinfo[yi*_ip+j];
-        interpol_t dy = static_cast<interpol_t>(yi)
-                      - static_cast<interpol_t>(h.index);
-        offset += dy*h.weight;
+        charge += data_in[offs+h.index]*h.weight;
+        offset += (static_cast<std::make_signed<meshindex_t>::type>(h.index) - yi)*data_in[offs+h.index]*h.weight;
     }
+    offset /= charge;
     pos.y = std::max(static_cast<meshaxis_t>(1),
-                     std::min(pos.y+offset,static_cast<meshaxis_t>(_ysize-1)));
+                     std::min(pos.y+offset,static_cast<meshaxis_t>(_ysize-2)));
     return pos;
 }
 
