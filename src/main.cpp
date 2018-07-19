@@ -398,8 +398,11 @@ int main(int argc, char** argv)
      * f(x,y,t) -> f(x,y,t+dt) with fixed source and destination.
      * When memory usage is crytical, it might be worth to change this
      * to two grids (only).
-     *
-     * This first grid (grid_t1) will be initialized and
+     */
+
+    PhaseSpace::setSize(ps_size,ps_size,filling.size());
+
+     /* This first grid (grid_t1) will be initialized and
      * copied for the other ones.
      */
     std::shared_ptr<PhaseSpace> grid_t1;
@@ -441,7 +444,7 @@ int main(int argc, char** argv)
                 return EXIT_SUCCESS;
             }
 
-            if (ps_size != grid_t1->nMeshCells(0)) {
+            if (ps_size != PhaseSpace::nx ) {
                 std::cerr << startdistfile
                           << " does not match set GridSize." << std::endl;
 
@@ -1040,7 +1043,7 @@ int main(int argc, char** argv)
     if ( isOfFileType(".png",ofname)) {
         meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
         meshdata_t* val = grid_t1->getData();
-        for (meshindex_t i=0; i<grid_t1->nMeshCells(); i++) {
+        for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
             maxval = std::max(val[i],maxval);
         }
         png::image< png::gray_pixel_16 > png_file(ps_size, ps_size);

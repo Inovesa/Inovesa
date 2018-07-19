@@ -221,28 +221,6 @@ public:
     PhaseSpace& operator=(PhaseSpace other);
 
     /**
-     * @brief nBunches number of RF buckets in simulation
-     * @return
-     */
-    inline uint32_t nBunches() const
-    { return _nbunches; }
-
-    /**
-     * @brief nMeshCells total number of mesh cells
-     * @return
-     */
-    inline size_t nMeshCells() const
-    { return _nmeshcells; }
-
-    /**
-     * @brief nMeshCells number of mes cells in direction
-     * @param x direction (0: x, 1: y)
-     * @return
-     */
-    inline uint32_t nMeshCells(const uint_fast8_t x) const
-    { return _axis[x]->steps(); }
-
-    /**
      * @brief size in reduced coordinates
      * @param x
      * @return
@@ -278,15 +256,49 @@ public:
      */
     const double current;
 
+public:
+    /**
+     * @brief nx reference to _nmeshcellsX
+     */
+    static const uint32_t& nx;
+
+    /**
+     * @brief ny reference to _nmeshcellsY
+     */
+    static const uint32_t& ny;
+
+    /**
+     * @brief nb reference to _nbunches
+     */
+    static const uint32_t& nb;
+
+    /**
+     * @brief nxy reference to _nmeshcells
+     */
+    static const size_t& nxy;
+
+    /**
+     * @brief setSize one-time setter for sizes
+     * @param x
+     * @param y
+     * @param b
+     *
+     * As all grids have to have the same size, it is set globally.
+     */
+    static void setSize(const uint32_t x, const uint32_t y, const uint32_t b);
+
 protected:
-    const uint32_t _nmeshcellsX;
+    static bool _firstinit;
 
-    const uint32_t _nmeshcellsY;
+    static uint32_t _nmeshcellsX;
 
-    const uint32_t _nbunches;
+    static uint32_t _nmeshcellsY;
 
-    const size_t _nmeshcells;
+    static uint32_t _nbunches;
 
+    static size_t _nmeshcells;
+
+protected:
     const IntegralMethod _integralmethod;
 
     /**

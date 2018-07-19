@@ -33,9 +33,9 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const meshaxis_t wakescalining
                                   )
   : volts(ps->getAxis(1)->delta()*ps->getScale(1,"ElectronVolt")/revolutionpart)
-  , _nbunches(ps->nBunches())
+  , _nbunches(PhaseSpace::nb)
   , _nmax(impedance->nFreqs())
-  , _bpmeshcells(ps->nMeshCells(0))
+  , _bpmeshcells( PhaseSpace::nx )
   , _axis_freq(Ruler<frequency_t>( _nmax,0
                                  , 1/(ps->getDelta(0))
                                  , {{ "Hertz"

@@ -33,10 +33,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const double f_rev)
   : _fname( filename )
   , _file( _prepareFile() )
-  , _nBunches( ps->nBunches() )
+  , _nBunches( PhaseSpace::nb )
   , _nParticles( nparticles )
-  , _psSizeX( ps->nMeshCells(0) )
-  , _psSizeY( ps->nMeshCells(1) )
+  , _psSizeX( PhaseSpace::nx )
+  , _psSizeY( PhaseSpace::ny )
   , _maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 )
   , _impSize( imp != nullptr ? imp->nFreqs()/2 : 0 )
   , _positionAxis(_makeDatasetInfo<1,meshaxis_t>( "/Info/AxisValues_z"
