@@ -229,7 +229,7 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
     for (uint_fast8_t j=0; j<_ip; j++) {
         hi h = _hinfo[yi*_ip+j];
         charge += data_in[offs+h.index]*h.weight;
-        offset += (static_cast<std::make_signed<meshindex_t>::type>(h.index) - yi)*data_in[offs+h.index]*h.weight;
+        offset += (yi - static_cast<std::make_signed<meshindex_t>::type>(h.index)) * data_in[offs+h.index]*h.weight;
     }
     offset /= charge;
     pos.y = std::max(static_cast<meshaxis_t>(1),
