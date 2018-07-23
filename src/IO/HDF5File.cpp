@@ -52,6 +52,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _sm_dims (_ps_dims ) ,
     _sm_size( _ps_size ),
     wf_size( 2*_ps_size )
+  , _ps(ps)
 {
     _file->createGroup("Info");
     // save Values of Phase Space Axis
@@ -722,20 +723,23 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     delete filespace;
 }
 
-void vfps::HDF5File::appendTracks(const PhaseSpace::Position *particles)
-{
+void vfps::HDF5File::appendTracks(const std::vector<PhaseSpace::Position> &p){
+    std::vector<PhaseSpace::Position> physcords;
+    physcords.reserve(pt_particles);
+    for (auto pos : p) {
+        physcords.push_back({_ps->q(pos.x), _ps->p(pos.y)});
+    }
+
     std::array<hsize_t,pt_rank> pt_offset
             = {{pt_dims[0],0,0}};
     const std::array<hsize_t,pt_rank> pt_ext
             = {{1,pt_particles,2}};
     pt_dims[0]++;
     pt_dataset.extend(pt_dims.data());
-    H5::DataSpace* filespace = new H5::DataSpace(pt_dataset.getSpace());
-    filespace->selectHyperslab(H5S_SELECT_SET, pt_ext.data(), pt_offset.data());
-    H5::DataSpace* memspace = new H5::DataSpace(pt_rank,pt_ext.data(),nullptr);
-    pt_dataset.write(particles, pt_datatype,*memspace, *filespace);
-    delete memspace;
-    delete filespace;
+    H5::DataSpace memspace(pt_rank,pt_ext.data(),nullptr);
+    H5::DataSpace filespace(pt_dataset.getSpace());
+    filespace.selectHyperslab(H5S_SELECT_SET, pt_ext.data(), pt_offset.data());
+    pt_dataset.write(physcords.data(), pt_datatype,memspace, filespace);
 }
 
 void vfps::HDF5File::appendSourceMap(const PhaseSpace::Position *allpos)

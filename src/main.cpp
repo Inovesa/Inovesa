@@ -773,7 +773,7 @@ int main(int argc, char** argv)
                 if (wkm != nullptr) {
                     hdf_file->append(wkm);
                 }
-                hdf_file->appendTracks(trackme.data());
+                hdf_file->appendTracks(trackme);
 
                 if (save_sourcemap) {
                     std::vector<PhaseSpace::Position> allpos;
@@ -884,7 +884,7 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             hdf_file->append(wkm);
         }
-        hdf_file->appendTracks(trackme.data());
+        hdf_file->appendTracks(trackme);
 
         if (save_sourcemap) {
             std::vector<PhaseSpace::Position> allpos;

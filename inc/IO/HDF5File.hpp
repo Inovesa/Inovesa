@@ -82,7 +82,7 @@ public:
         All, Defaults, PhaseSpace
     };
 
-    void appendTracks(const PhaseSpace::Position *particles);
+    void appendTracks(const std::vector<PhaseSpace::Position> &p);
 
     void appendSourceMap(const PhaseSpace::Position *allpos);
 
@@ -273,6 +273,9 @@ private: // wake function
     H5::DataType wf_datatype;
 
     hsize_t wf_size;
+
+private:
+    std::shared_ptr<PhaseSpace> _ps;
 };
 
 } // namespace vfps
