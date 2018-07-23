@@ -175,6 +175,18 @@ vfps::ProgramOptions::ProgramOptions() :
             ">0: renormalize charge every n-th simulation step\n"
             " 0: do just one initial renormalization\n"
             "<0: no renormalization")
+        ("FPType", po::value<uint32_t>(&fptype)->default_value(3),
+            "Used implementation for Fokker-Planck term\n"
+            " 0: No Fokker-Planck term\n"
+            " 1: Only damping\n"
+            " 2: Only diffusion\n"
+            " 3: Full")
+        ("FPTrack", po::value<uint32_t>(&fptrack)->default_value(3),
+            "Used implementation for FP term in tracking\n"
+            " 0: No Fokker-Planck term\n"
+            " 1: Approximation overweighting damping\n"
+            " 2: Approximation overweighting diffusion\n"
+            " 3: Stochastic")
         ("RotationType", po::value<uint32_t>(&rotationtype)->default_value(2),
             "Used implementation for rotation\n"
             " 0: Standard rotation without source map\n"

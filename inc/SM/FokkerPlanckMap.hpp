@@ -23,6 +23,8 @@
 
 #include "SM/SourceMap.hpp"
 
+#include <random>
+
 namespace vfps
 {
 
@@ -46,6 +48,13 @@ public:
         full=3
     };
 
+    enum class FPTracking : uint_fast8_t {
+        none=0,
+        approximation1=1,
+        approximation2=2,
+        stochastic=3
+    };
+
     enum DerivationType : uint_fast8_t {
         two_sided = 3,    // based on quadratic interpolation
         cubic = 4        // based on cubic interpolation
@@ -62,7 +71,8 @@ public:
     FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
                     std::shared_ptr<PhaseSpace> out,
                     const meshindex_t xsize, const meshindex_t ysize,
-                    FPType fpt, timeaxis_t e1, DerivationType dt);
+                    FPType fptype, FPTracking fptrack,
+                    timeaxis_t e1, DerivationType dt);
 
     ~FokkerPlanckMap() noexcept;
 
@@ -75,6 +85,19 @@ public:
     PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
 
 private:
+    /**
+     * @brief _dampincr damping decrement
+     */
+    timeaxis_t _dampdecr;
+
+    mutable std::mt19937 _prng;
+
+    mutable std::normal_distribution<meshaxis_t> _normdist ;
+
+    const FPTracking _fptrack;
+
+    const FPType _fptype;
+
     /**
      * @brief _meshxsize horizontal size of the meshaxis_t
      *
