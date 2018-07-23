@@ -189,9 +189,27 @@ public:
     inline meshaxis_t size(const uint_fast8_t x) const
     { return _axis[x]->size(); }
 
-    inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
+    /**
+     * @brief q normalized position coordinate of grid point x
+     * @param x
+     * @return
+     */
+    inline meshaxis_t q(const meshindex_t x) const
+        { return _qp(0,x); }
+
+    /**
+     * @brief p normalized energy coordinate of grid point y
+     * @param y
+     * @return
+     */
+    inline meshaxis_t p(const meshindex_t y) const
+        { return _qp(1,y); }
+
+private:
+    inline meshaxis_t _qp(const uint_fast8_t axis, const meshindex_t n) const
         { return _axis[axis]->at(n); }
 
+public:
     /**
      * @brief swap
      * @param other

@@ -29,7 +29,9 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
   : SourceMap(in, out, 1, ysize, dt, dt)
   , _dampdecr(e1)
   , _prng(std::mt19937(std::random_device{}()))
-  , _normdist(std::normal_distribution<meshaxis_t>(0, std::sqrt(2*e1)))
+  , _normdist( std::normal_distribution<meshaxis_t>( 0
+                                                   , std::sqrt(2*e1)
+                                                     / in->getDelta(1)))
   , _fptrack(fptrack)
   , _fptype(fptype)
   , _meshxsize(xsize)
@@ -52,7 +54,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
             _hinfo[j*_ip+2]={j+1,0};
 
             if (_fptype != FPType::none && _fptype != FPType::diffusion_only) {
-                const meshaxis_t pos = in->x(1,j);
+                const meshaxis_t pos = in->p(j);
                 _hinfo[j*_ip  ].weight += -e1_2d*pos;
                 _hinfo[j*_ip+1].weight +=  e1;
                 _hinfo[j*_ip+2].weight +=  e1_2d*pos;
@@ -77,7 +79,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
         _hinfo[_ip+2] = {0,0};
         _hinfo[_ip+3] = {0,0};
         for (meshindex_t j=2; j< ycenter; j++) {
-            const meshaxis_t pos = in->x(1,j);
+            const meshaxis_t pos = in->p(j);
             _hinfo[j*_ip  ]={j-2,0};
             _hinfo[j*_ip+1]={j-1,0};
             _hinfo[j*_ip+2]={j  ,1};
@@ -95,7 +97,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
             }
         }
         for (meshindex_t j=ycenter; j<static_cast<meshindex_t>(_ysize-2);j++) {
-            const meshaxis_t pos = in->x(1,j);
+            const meshaxis_t pos = in->p(j);
             _hinfo[j*_ip  ]={j-1,0};
             _hinfo[j*_ip+1]={j  ,1};
             _hinfo[j*_ip+2]={j+1,0};
