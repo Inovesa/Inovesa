@@ -602,9 +602,9 @@ int main(int argc, char** argv)
        && opts.getParticleTracking() != "/dev/null" ) {
         try {
             std::ifstream trackingfile(opts.getParticleTracking());
-            meshaxis_t x,y;
-            while (trackingfile >> x >> y) {
-                trackme.push_back({x,y});
+            meshaxis_t q,p;
+            while (trackingfile >> q >> p) {
+                trackme.push_back({grid_t1->x(q),grid_t1->y(p)});
             }
         } catch (std::exception& e) {
             std::cerr << e.what();

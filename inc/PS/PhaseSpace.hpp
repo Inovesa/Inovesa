@@ -186,8 +186,26 @@ public:
     inline size_t nMeshCells(const uint_fast8_t x) const
     { return _axis[x]->steps(); }
 
-    inline meshaxis_t size(const uint_fast8_t x) const
-    { return _axis[x]->size(); }
+    inline meshaxis_t length(const uint_fast8_t x) const
+    { return _axis[x]->length(); }
+
+    /**
+     * @brief x grid coordinate of normalized position
+     * @param q
+     * @return
+     */
+    inline meshaxis_t x(const meshaxis_t q) const
+        { return std::min( std::max( 0.0f,(q-_axis[0]->min())/_axis[0]->delta() )
+                         , _nmeshcellsX-1.0f) ; }
+
+    /**
+     * @brief y grid coordinate of normalized energy
+     * @param p
+     * @return
+     */
+    inline meshaxis_t y(const meshaxis_t p) const
+        { return std::min( std::max( 0.0f,(p-_axis[1]->min())/_axis[1]->delta() )
+                         , _nmeshcellsY-1.0f) ; }
 
     /**
      * @brief q normalized position coordinate of grid point x

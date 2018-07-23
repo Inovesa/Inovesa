@@ -310,7 +310,7 @@ void vfps::PhaseSpace::updateXProjection() {
             for (size_t y=0; y< nMeshCells(1); y++) {
                 _projection[0][x] += _data[x][y];
             }
-            _projection[0][x] /= size(1);
+            _projection[0][x] /= length(1);
         }
         break;
     case IntegralType::simpson:
@@ -340,7 +340,7 @@ void vfps::PhaseSpace::updateYProjection() {
             for (size_t x=0; x< nMeshCells(0); x++) {
                 _projection[1][y] += _data[x][y];
             }
-            _projection[1][y] /= size(0);
+            _projection[1][y] /= length(0);
         }
         break;
     case IntegralType::simpson:
