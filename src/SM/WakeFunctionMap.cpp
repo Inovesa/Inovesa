@@ -34,8 +34,8 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                )
   , _xaxis(Ruler<meshaxis_t>( 2*xsize
-                            , in->getMin(0)-in->size(0)/2
-                            , in->getMax(0)+in->size(0)/2
+                            , in->getMin(0)-in->length(0)/2
+                            , in->getMax(0)+in->length(0)/2
                             , in->getScale(0)))
   , _wakefunction(new meshaxis_t[2*xsize])
   , _wakesize(2*xsize)

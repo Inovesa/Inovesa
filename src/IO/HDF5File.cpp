@@ -137,6 +137,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                  , {{std::min( 4097U
                                                              , 2U*_psSizeX)}}
                                                  , {{2*_psSizeX}}))
+  , _ps(ps)
 {
     // Axis
     const double ax_z_meter = ps->getScale(0,"Meter");
@@ -349,9 +350,14 @@ void vfps::HDF5File::appendRFKicks(
     _appendData(_dynamicRFKick,kicks.data(),kicks.size());
 }
 
-void vfps::HDF5File::appendTracks(const vfps::PhaseSpace::Position *particles)
-{
-    _appendData(_particles,particles);
+void vfps::HDF5File::appendTracks(const std::vector<PhaseSpace::Position> &p){
+    std::vector<PhaseSpace::Position> physcords;
+    physcords.reserve(_nParticles);
+    for (auto pos : p) {
+        physcords.push_back({_ps->q(pos.x), _ps->p(pos.y)});
+    }
+
+    _appendData(_particles,physcords.data());
 }
 
 void vfps::HDF5File::append(const PhaseSpace& ps,

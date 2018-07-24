@@ -163,6 +163,12 @@ int main(int argc, char** argv)
     const auto derivationtype = static_cast<FokkerPlanckMap::DerivationType>
             (opts.getDerivationType());
 
+    const auto fptype = static_cast<FokkerPlanckMap::FPType>
+            (opts.getFPType());
+
+    const auto fptrack = static_cast<FokkerPlanckMap::FPTracking>
+            (opts.getFPTrack());
+
     const auto interpolationtype = static_cast<SourceMap::InterpolationType>
             (opts.getInterpolationPoints());
 
@@ -619,12 +625,9 @@ int main(int argc, char** argv)
     // SourceMap for damping and diffusion
     SourceMap* fpm;
     if (e1 > 0) {
-        Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size
-                                 , FokkerPlanckMap::FPType::full,e1
-                                 , derivationtype
-                                 , oclh
-                                 );
+        Display::printText("Building FokkerPlanckMap");
+        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size,
+                                   fptype,fptrack,e1,derivationtype, oclh);
 
         sstream.str("");
         sstream << std::scientific << calc_damp << " s";
@@ -723,9 +726,9 @@ int main(int argc, char** argv)
        && opts.getParticleTracking() != "/dev/null" ) {
         try {
             std::ifstream trackingfile(opts.getParticleTracking());
-            meshaxis_t x,y;
-            while (trackingfile >> x >> y) {
-                trackme.push_back({x,y});
+            meshaxis_t q,p;
+            while (trackingfile >> q >> p) {
+                trackme.push_back({grid_t1->x(q),grid_t1->y(p)});
             }
         } catch (std::exception& e) {
             std::cerr << e.what();
@@ -923,7 +926,7 @@ int main(int argc, char** argv)
                 if (wkm != nullptr) {
                     hdf_file->append(wkm);
                 }
-                hdf_file->appendTracks(trackme.data());
+                hdf_file->appendTracks(trackme);
 
                 if (drfm) {
                     hdf_file->appendRFKicks(drfm->getPastModulation());
@@ -1022,7 +1025,7 @@ int main(int argc, char** argv)
         if (wkm != nullptr) {
             hdf_file->append(wkm);
         }
-        hdf_file->appendTracks(trackme.data());
+        hdf_file->appendTracks(trackme);
 
         if (drfm) {
             hdf_file->appendRFKicks(drfm->getPastModulation());
