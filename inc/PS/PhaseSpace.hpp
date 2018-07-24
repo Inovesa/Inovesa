@@ -233,16 +233,52 @@ public:
     { return _axis[x]->steps(); }
 
     /**
-     * @brief size in reduced coordinates
+     * @brief length in reduced coordinates
      * @param x
      * @return
      */
-    inline meshaxis_t size(const uint_fast8_t x) const
-    { return _axis[x]->size(); }
+    inline meshaxis_t length(const uint_fast8_t x) const
+    { return _axis[x]->length(); }
 
-    inline meshaxis_t x(const uint_fast8_t axis, const size_t n) const
+    /**
+     * @brief x grid coordinate of normalized position
+     * @param q
+     * @return
+     */
+    inline meshaxis_t x(const meshaxis_t q) const
+        { return std::min( std::max( 0.0f,(q-_axis[0]->min())/_axis[0]->delta() )
+                         , _nmeshcellsX-1.0f) ; }
+
+    /**
+     * @brief y grid coordinate of normalized energy
+     * @param p
+     * @return
+     */
+    inline meshaxis_t y(const meshaxis_t p) const
+        { return std::min( std::max( 0.0f,(p-_axis[1]->min())/_axis[1]->delta() )
+                         , _nmeshcellsY-1.0f) ; }
+
+    /**
+     * @brief q normalized position coordinate of grid point x
+     * @param x
+     * @return
+     */
+    inline meshaxis_t q(const meshindex_t x) const
+        { return _qp(0,x); }
+
+    /**
+     * @brief p normalized energy coordinate of grid point y
+     * @param y
+     * @return
+     */
+    inline meshaxis_t p(const meshindex_t y) const
+        { return _qp(1,y); }
+
+private:
+    inline meshaxis_t _qp(const uint_fast8_t axis, const meshindex_t n) const
         { return _axis[axis]->at(n); }
 
+public:
     /**
      * @brief swap
      * @param first
