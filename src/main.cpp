@@ -146,6 +146,12 @@ int main(int argc, char** argv)
     const auto derivationtype = static_cast<FokkerPlanckMap::DerivationType>
             (opts.getDerivationType());
 
+    const auto fptype = static_cast<FokkerPlanckMap::FPType>
+            (opts.getFPType());
+
+    const auto fptrack = static_cast<FokkerPlanckMap::FPTracking>
+            (opts.getFPTrack());
+
     const auto interpolationtype = static_cast<SourceMap::InterpolationType>
             (opts.getInterpolationPoints());
 
@@ -523,10 +529,9 @@ int main(int argc, char** argv)
     // SourceMap for damping and diffusion
     SourceMap* fpm;
     if (e1 > 0) {
-        Display::printText("Building FokkerPlanckMap.");
+        Display::printText("Building FokkerPlanckMap");
         fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size,
-                                   FokkerPlanckMap::FPType::full,e1,
-                                   derivationtype);
+                                   fptype,fptrack,e1,derivationtype);
     } else {
         fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size);
     }
