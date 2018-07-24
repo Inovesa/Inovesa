@@ -34,8 +34,8 @@ std::unique_ptr<PhaseSpace> makePSFromHDF5( std::string fname
                                           , meshaxis_t qmin, meshaxis_t qmax
                                           , meshaxis_t pmin, meshaxis_t pmax
                                           , oclhptr_t oclh
-                                          , const double bunch_charge
-                                          , const double bunch_current
+                                          , const double beam_charge
+                                          , const double beam_current
                                           , double xscale, double yscale
                                           );
 #endif // INOVESA_USE_HDF5
@@ -44,8 +44,8 @@ std::unique_ptr<PhaseSpace> makePSFromPNG( std::string fname
                                          , meshaxis_t qmin, meshaxis_t qmax
                                          , meshaxis_t pmin, meshaxis_t pmax
                                          , oclhptr_t oclh
-                                         , const double bunch_charge
-                                         , const double bunch_current
+                                         , const double beam_charge
+                                         , const double beam_current
                                          , double xscale, double yscale
                                          );
 
@@ -53,8 +53,8 @@ std::unique_ptr<PhaseSpace> makePSFromTXT( std::string fname, int64_t ps_size
                                          , meshaxis_t qmin, meshaxis_t qmax
                                          , meshaxis_t pmin, meshaxis_t pmax
                                          , oclhptr_t oclh
-                                         , const double bunch_charge
-                                         , const double bunch_current
+                                         , const double beam_charge
+                                         , const double beam_current
                                          , double xscale, double yscale
                                          );
 

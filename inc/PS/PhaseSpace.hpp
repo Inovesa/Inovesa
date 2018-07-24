@@ -74,6 +74,7 @@ public:
               , const double beam_charge
               , const double beam_current
               , const Array::array1<integral_t> filling
+              , const double bunchspacing=0
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -83,6 +84,7 @@ public:
               , const double beam_charge
               , const double beam_current
               , const std::vector<integral_t> filling={{1}}
+              , const double bunchspacing=0
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -93,6 +95,7 @@ public:
               , const double beam_charge
               , const double beam_current
               , const std::vector<integral_t> filling={{1}}
+              , const double bunchspacing=0
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
@@ -108,6 +111,7 @@ public:
               , const double beam_charge
               , const double beam_current
               , const std::vector<integral_t> filling={{1}}
+              , const double bunchspacing=0
               , const double zoom=1
               , meshdata_t *data = nullptr
               );
@@ -307,6 +311,11 @@ protected:
      * as we work in normalitzed units, the sum should be 1, e.g. {0.25,0.75}
      */
     const Array::array1<integral_t> _fillingpattern;
+
+    /**
+     * @brief _bunchspacing
+     */
+    double _bunchspacing;
 
     /**
      * @brief _bunchpopulation: normalized bunch charges as they should are

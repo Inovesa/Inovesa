@@ -206,8 +206,9 @@ int main(int argc, char** argv)
     const frequency_t fc = opts.getCutoffFrequency();
     const auto harmonic_number = opts.getHarmonicNumber();
     const auto f_RF = f_rev*harmonic_number;
-    const double gap = opts.getVacuumChamberGap();
-    const double V_RF = opts.getRFVoltage();
+    const auto bunchspacing = 1.0/(f_RF);
+    const auto gap = opts.getVacuumChamberGap();
+    const auto V_RF = opts.getRFVoltage();
     const auto linearRF = opts.getLinearRF();
 
     const auto lorentzgamma = E0/physcons::me;
@@ -387,6 +388,13 @@ int main(int argc, char** argv)
             Display::printText("Doing " +sstream.str()+
                                " simulation steps per synchrotron period.");
         }
+
+        if (filling.size() > 1) {
+            sstream.str("");
+            sstream << filling.size() << " bunches are seperated by "
+                    << std::scientific << bunchspacing << " s.";
+            Display::printText(sstream.str());
+        }
     }
     } // end of context of information printing
 
@@ -409,9 +417,9 @@ int main(int argc, char** argv)
 
 
     /*
-     * initialization of mesh1
+     * initialization of grid
      *
-     * TODO: It can be considered ugly to do this in main(),
+     * @TODO: It can be considered ugly to do this in main(),
      * so initialization might be moved to a factory function
      * at some point.
      */
@@ -421,7 +429,7 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
-                                    , oclh, Qb,Ib,filling,zoom));
+                                    , oclh, Qb,Ib,filling,bunchspacing,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');

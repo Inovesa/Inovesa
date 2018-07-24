@@ -34,15 +34,15 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                     , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                     , oclhptr_t oclh
-                    , const double bunch_charge
-                    , const double bunch_current
+                    , const double beam_charge
+                    , const double beam_current
                     , double xscale, double yscale
                     )
 {
     try {
         auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax
                                           , oclh
-                                          , bunch_charge,bunch_current,
+                                          , beam_charge,beam_current,
                                            xscale,yscale,startdiststep);
         #ifdef INOVESA_USE_OPENCL
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
@@ -72,8 +72,8 @@ vfps::makePSFromPNG( std::string fname
                    , meshaxis_t qmin, meshaxis_t qmax
                    , meshaxis_t pmin, meshaxis_t pmax
                    , oclhptr_t oclh
-                   , const double bunch_charge
-                   , const double bunch_current
+                   , const double beam_charge
+                   , const double beam_current
                    , double qscale, double pscale
                    )
 {
@@ -108,8 +108,8 @@ vfps::makePSFromPNG( std::string fname
                                               , qmin, qmax, qscale
                                               , pmin, pmax, pscale
                                               , oclh
-                                              , bunch_charge,bunch_current
-                                              , filling, 1
+                                              , beam_charge,beam_current
+                                              , filling, 0, 1
                                               , data.data());
         // normalize integral to 1
         ps->updateXProjection();
@@ -135,7 +135,7 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
                    , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                    , oclhptr_t oclh
-                   , const double bunch_charge, const double bunch_current
+                   , const double beam_charge, const double beam_current
                    , double qscale, double pscale)
 {
     std::vector<integral_t> filling = {{ 1.0 }};
@@ -143,7 +143,7 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
                                           , qmin, qmax, qscale
                                           , pmin, pmax, pscale
                                           , oclh
-                                          , bunch_charge,bunch_current
+                                          , beam_charge,beam_current
                                           , filling
                                           );
     std::ifstream ifs;
