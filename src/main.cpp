@@ -170,10 +170,10 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    const meshindex_t ps_size = opts.getGridSize();
+    const meshindex_t ps_bins = opts.getGridSize();
     const double pqsize = opts.getPhaseSpaceSize();
-    const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
-    const double pcenter = -opts.getPSShiftY()*pqsize/(ps_size-1);
+    const double qcenter = -opts.getPSShiftX()*pqsize/(ps_bins-1);
+    const double pcenter = -opts.getPSShiftY()*pqsize/(ps_bins-1);
     const double pqhalf = pqsize/2;
     const double qmax = qcenter + pqhalf;
     const double qmin = qcenter - pqhalf;
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
     const meshaxis_t alpha2 = opts.getAlpha2();
 
 
-    // natural RMS bunch length
+    // natural RMS bunch length (m)
     const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
 
     // filling pattern, firts as individual bunch currents, latter normalized
@@ -267,11 +267,25 @@ int main(int argc, char** argv)
     const double revolutionpart = f_rev*dt;
     const double t_sync = 1.0/fs;
 
-    const double padding =std::max(opts.getPadding(),1.0);
-    const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
-    const size_t nfreqs = opts.getRoundPadding() ?
-                    Impedance::upper_power_of_two(ps_size*padding) :
-                    ps_size*padding;
+    const uint32_t nbunches = filling.size();
+
+    // number of phace spaces that would fit in the bunch spacing
+    const double spacing_ps = (bunchspacing*physcons::c/bl/pqsize);
+
+    // number of bins that fit in the bunch spacing
+    const meshindex_t spacing_bins = std::round(ps_bins*spacing_ps);
+
+    double padding =std::max(opts.getPadding(),1.0);
+    if (nbunches > 1) {
+        padding = (nbunches+padding)*spacing_ps;
+    }
+
+    const frequency_t fmax = ps_bins*vfps::physcons::c/(pqsize*bl);
+
+    size_t padded_bins = std::ceil(ps_bins*padding);
+    if (opts.getRoundPadding()) {
+        padded_bins = Impedance::upper_power_of_two(padded_bins);
+    }
     const auto s = opts.getWallConductivity();
     const auto xi = opts.getWallSusceptibility();
     const auto collimator_radius = opts.getCollimatorRadius();
@@ -408,7 +422,7 @@ int main(int argc, char** argv)
      * to two grids (only).
      */
 
-    PhaseSpace::setSize(ps_size,ps_size,filling.size());
+    PhaseSpace::setSize(ps_bins,ps_bins,nbunches);
 
      /* This first grid (grid_t1) will be initialized and
      * copied for the other ones.
@@ -424,11 +438,11 @@ int main(int argc, char** argv)
      * at some point.
      */
     if (startdistfile.empty()) {
-        if (ps_size == 0) {
+        if (ps_bins == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
+        grid_t1.reset(new PhaseSpace( ps_bins,qmin,qmax,bl,pmin,pmax,dE
                                     , oclh, Qb,Ib,filling,bunchspacing,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
@@ -452,7 +466,7 @@ int main(int argc, char** argv)
                 return EXIT_SUCCESS;
             }
 
-            if (ps_size != PhaseSpace::nx ) {
+            if (ps_bins != PhaseSpace::nx ) {
                 std::cerr << startdistfile
                           << " does not match set GridSize." << std::endl;
 
@@ -483,8 +497,8 @@ int main(int argc, char** argv)
 
     // find highest peak for display (and information in the log)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-    for (unsigned int x=0; x<ps_size; x++) {
-        for (unsigned int y=0; y<ps_size; y++) {
+    for (unsigned int x=0; x<ps_bins; x++) {
+        for (unsigned int y=0; y<ps_bins; y++) {
             maxval = std::max(maxval,(*grid_t1)[0][x][y]);
         }
     }
@@ -545,7 +559,7 @@ int main(int argc, char** argv)
         if (linearRF) {
             Display::printText("Building dynamic, linear RFKickMap...");
 
-            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_bins, ps_bins
                                            , angle, revolutionpart, f_RF
                                            , rf_phase_noise, rf_ampl_noise
                                            , rf_mod_ampl,rf_mod_step, laststep
@@ -555,7 +569,7 @@ int main(int argc, char** argv)
         } else {
             Display::printText("Building dynamic, nonlinear RFKickMap...");
 
-            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_bins, ps_bins
                                            , revolutionpart, V_eff, f_RF, V0
                                            , rf_phase_noise, rf_ampl_noise
                                            , rf_mod_ampl,rf_mod_step, laststep
@@ -583,14 +597,14 @@ int main(int argc, char** argv)
     } else {
         if (linearRF) {
             Display::printText("Building static, linear RFKickMap.");
-            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_bins,ps_bins
                                    , angle, f_RF
                                    , interpolationtype,interpol_clamp
                                    , oclh
                                    ));
         } else {
             Display::printText("Building static, nonlinear RFKickMap.");
-            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
+            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_bins,ps_bins
                                    , revolutionpart, V_eff, f_RF, V0
                                    , interpolationtype,interpol_clamp
                                    , oclh
@@ -628,7 +642,7 @@ int main(int argc, char** argv)
     const std::vector<meshaxis_t> alpha {{ angle,alpha1/alpha0*angle
                                           , alpha2/alpha0*angle }};
 
-    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,ps_size,ps_size, alpha
+    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,ps_bins,ps_bins, alpha
                                         , E0,interpolationtype,interpol_clamp
                                         , oclh );
 
@@ -639,7 +653,7 @@ int main(int argc, char** argv)
     SourceMap* fpm;
     if (e1 > 0) {
         Display::printText("Building FokkerPlanckMap.");
-        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size
+        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_bins,ps_bins
                                  , FokkerPlanckMap::FPType::full,e1
                                  , derivationtype
                                  , oclh
@@ -658,7 +672,7 @@ int main(int argc, char** argv)
         sstream << std::scientific << 1/t_damp/fs/(two_pi<double>());
         Display::printText("... damping beta: " +sstream.str());
     } else {
-        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size, oclh);
+        fpm = new Identity(grid_t3,grid_t1,ps_bins,ps_bins, oclh);
     }
 
 
@@ -670,14 +684,14 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance( nfreqs
+            = vfps::makeImpedance( padded_bins
                                  , oclh
                                  , fmax,R_bend,f_rev,gap,use_csr
                                  , s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
-            = vfps::makeImpedance( nfreqs
+            = vfps::makeImpedance( padded_bins
                                  , oclh
                                  , fmax,R_bend,f_rev,(gap>0)?gap:-1);
 
@@ -703,7 +717,7 @@ int main(int argc, char** argv)
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
         Display::printText("Reading WakeFunction from "+wakefile+".");
-        wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_size,ps_size
+        wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_bins,ps_bins
                                  , wakefile,E0,sE,Ib,dt
                                  , interpolationtype,interpol_clamp
                                  , oclh
@@ -719,7 +733,7 @@ int main(int argc, char** argv)
                                           );
 
             Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap( grid_t1,grid_t2,ps_size,ps_size
+            wkm = new WakePotentialMap( grid_t1,grid_t2,ps_bins,ps_bins
                                       , wake_field ,interpolationtype
                                       , interpol_clamp
                                       , oclh
@@ -729,7 +743,7 @@ int main(int argc, char** argv)
     if (wkm != nullptr) {
         wm = wkm;
     } else {
-        wm = new Identity( grid_t1,grid_t2,ps_size,ps_size,oclh);
+        wm = new Identity( grid_t1,grid_t2,ps_bins,ps_bins,oclh);
     }
 
     /* Load coordinates for particle tracking.
@@ -761,7 +775,7 @@ int main(int argc, char** argv)
     #ifdef INOVESA_USE_OPENGL
     if (display != nullptr) {
         try {
-            bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
+            bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_bins
                                     , Plot1DLine::Orientation::horizontal
                                     , grid_t1->projectionX_glbuf));
             display->addElement(bpv);
@@ -773,7 +787,7 @@ int main(int argc, char** argv)
         if (!trackme.empty()) {
             try {
                 ppv.reset(new Plot2DPoints(std::array<float,3>{{1,1,1}},
-                                           ps_size,ps_size));
+                                           ps_bins,ps_bins));
                 display->addElement(ppv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -783,7 +797,7 @@ int main(int argc, char** argv)
         }
         if (wkm != nullptr) {
             try {
-                wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
+                wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_bins
                                         , Plot1DLine::Orientation::horizontal
                                         , wkm->getGLBuffer()));
                 display->addElement(wpv);
@@ -1054,10 +1068,10 @@ int main(int argc, char** argv)
         for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
             maxval = std::max(val[i],maxval);
         }
-        png::image< png::gray_pixel_16 > png_file(ps_size, ps_size);
-        for (unsigned int x=0; x<ps_size; x++) {
-            for (unsigned int y=0; y<ps_size; y++) {
-                png_file[ps_size-y-1][x]=
+        png::image< png::gray_pixel_16 > png_file(ps_bins, ps_bins);
+        for (unsigned int x=0; x<ps_bins; x++) {
+            for (unsigned int y=0; y<ps_bins; y++) {
+                png_file[ps_bins-y-1][x]=
                         static_cast<png::gray_pixel_16>(
                             std::max((*grid_t1)[0][x][y],meshdata_t(0))
                             /maxval*float(UINT16_MAX));
