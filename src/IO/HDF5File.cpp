@@ -289,7 +289,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
             imp_imag.emplace_back(z.imag());
         }
         _impedanceReal.dataset.write(imp_real.data(),_impedanceReal.datatype);
-        _impedanceImag.dataset.write(imp_real.data(),_impedanceImag.datatype);
+        _impedanceImag.dataset.write(imp_imag.data(),_impedanceImag.datatype);
 
         _file.openGroup("/Impedance/data").createAttribute("Ohm", H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &(imp->factor4Ohms));
