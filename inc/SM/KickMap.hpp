@@ -98,6 +98,12 @@ protected:
     const meshindex_t _meshsize_pd;
     #endif // INOVESA_USE_OPENCL
 
+
+    /**
+     * @brief _lastbunch index of last bunch with individual KickMap
+     */
+    uint32_t _lastbunch;
+
     /**
      * @brief updateSM
      *

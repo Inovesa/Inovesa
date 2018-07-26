@@ -34,8 +34,9 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
              , kd==Axis::x?ysize*nbunches*it:xsize*nbunches*it
              , it,it,oclh),
     _kickdirection(kd),
-    _meshsize_kd(kd==Axis::x?xsize:ysize),
-    _meshsize_pd(kd==Axis::x?ysize:xsize)
+    _meshsize_kd(kd==Axis::x?xsize:ysize)
+  , _meshsize_pd(kd==Axis::x?ysize:xsize)
+  , _lastbunch(nbunches-1)
 {
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
@@ -232,7 +233,7 @@ void vfps::KickMap::apply()
     } else {
         for (uint32_t n=0; n < PhaseSpace::nb; n++) {
             const meshindex_t offs1 = n*_meshsize_kd*_meshsize_pd;
-            const size_t offs2 = n*_meshsize_kd*_meshsize_pd;
+            const size_t offs2 = std::min(n,_lastbunch)*_meshsize_pd;
             for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
                 const meshindex_t offs = offs1 + x*_meshsize_kd;
                 for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
@@ -323,7 +324,7 @@ void vfps::KickMap::updateSM()
     interpol_t* smc = new interpol_t[_it];
 
     // translate offset into SM
-    for (meshindex_t i=0; i< static_cast<meshindex_t>(_meshsize_pd); i++) {
+    for (size_t i=0; i< _offset.size(); i++) {
         meshaxis_t poffs = _meshsize_kd/2+_offset[i];
         meshaxis_t qp_int;
         //Scaled arguments of interpolation functions:
