@@ -181,7 +181,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("StepsPerRevolution", po::value<double>(&steps_per_Trev)->default_value(0),
             "Simulation steps for one revolution (overwrites StepsPerTs)")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
-            "Factor for zero padding of bunch profile(s)")
+            "Factor for zero padding of single bunch profile(s)")
         ("RoundPadding", po::value<bool>(&roundpadding)->default_value(true),
             "Always do zero padding up to 2 to the power of N")
         ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),

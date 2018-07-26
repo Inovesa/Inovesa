@@ -275,17 +275,22 @@ int main(int argc, char** argv)
     // number of bins that fit in the bunch spacing
     const meshindex_t spacing_bins = std::round(ps_bins*spacing_ps);
 
-    double padding =std::max(opts.getPadding(),1.0);
-    if (nbunches > 1) {
-        padding = (nbunches+padding)*spacing_ps;
-    }
-
     const frequency_t fmax = ps_bins*vfps::physcons::c/(pqsize*bl);
+
+    double padding =std::max(opts.getPadding(),1.0);
 
     size_t padded_bins = std::ceil(ps_bins*padding);
     if (opts.getRoundPadding()) {
         padded_bins = Impedance::upper_power_of_two(padded_bins);
     }
+
+    size_t spaced_bins = std::ceil(ps_bins*nbunches*spacing_ps);
+    if (opts.getRoundPadding()) {
+        spaced_bins = Impedance::upper_power_of_two(spaced_bins);
+    }
+
+
+
     const auto s = opts.getWallConductivity();
     const auto xi = opts.getWallSusceptibility();
     const auto collimator_radius = opts.getCollimatorRadius();
@@ -684,7 +689,7 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance( padded_bins
+            = vfps::makeImpedance( (filling.size()>0)? spaced_bins : padded_bins
                                  , oclh
                                  , fmax,R_bend,f_rev,gap,use_csr
                                  , s,xi,collimator_radius,impedance_file);
