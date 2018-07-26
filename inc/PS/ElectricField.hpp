@@ -58,6 +58,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  const meshindex_t spacing_bins,
                   oclhptr_t oclh,
                   const double f_rev,
                   const double revolutionpart = 1,
@@ -84,6 +85,7 @@ public:
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
+                 , const meshindex_t spacing_bins
                  , oclhptr_t oclh
                  , const double f_rev
                  , const double revolutionpart
@@ -104,8 +106,9 @@ public:
      * @param fs synchrotron frequency [Hz]
      * @param nmax
      */
-    ElectricField( std::shared_ptr<PhaseSpace> ps
+    ElectricField(std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
+                 , const meshindex_t spacing_bins
                  , oclhptr_t oclh
                  , const double f_rev
                  , const double Ib, const double E0
@@ -261,7 +264,7 @@ private:
 
     const size_t _nmax;
 
-    const uint32_t _bpmeshcells;
+    const size_t _spacing_bins;
 
     const Ruler<meshaxis_t> _axis_freq;
 
@@ -365,7 +368,7 @@ private:
 
     #endif // INOVESA_USE_OPENCL
 
-    meshaxis_t* _wakepotential;
+    Array::array2<meshaxis_t> _wakepotential;
 
     fft_plan _fft_wakelosses;
 

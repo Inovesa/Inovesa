@@ -697,7 +697,7 @@ int main(int argc, char** argv)
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field( grid_t1,rdtn_impedance
+    ElectricField rdtn_field( grid_t1,rdtn_impedance,spacing_bins
                             , oclh
                             , f_rev,revolutionpart);
 
@@ -726,9 +726,9 @@ int main(int argc, char** argv)
     } else {
         if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField( grid_t1,wake_impedance
+            wake_field = new ElectricField( grid_t1,wake_impedance, spacing_bins
                                           , oclh
-                                          ,f_rev
+                                          , f_rev
                                           , revolutionpart, Ib,E0,sE,dt
                                           );
 

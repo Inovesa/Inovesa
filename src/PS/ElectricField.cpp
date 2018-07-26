@@ -25,8 +25,9 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
+vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
+                                  , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
                                   , const double revolutionpart
@@ -35,15 +36,15 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   : volts(ps->getAxis(1)->delta()*ps->getScale(1,"ElectronVolt")/revolutionpart)
   , _nbunches(PhaseSpace::nb)
   , _nmax(impedance->nFreqs())
-  , _bpmeshcells( PhaseSpace::nx )
+  , _spacing_bins(spacing_bins)
   , _axis_freq(Ruler<frequency_t>( _nmax,0
                                  , 1/(ps->getDelta(0))
                                  , {{ "Hertz"
                                     , physcons::c/ps->getScale(0,"Meter")}}))
-  // _axis_wake[_bpmeshcells] will be at position 0
-  , _axis_wake(Ruler<meshaxis_t>(2*_bpmeshcells
-                                , -ps->getDelta(0)*_bpmeshcells
-                                , ps->getDelta(0)*(_bpmeshcells-1)
+  // _axis_wake[PhaseSpace::nx] will be at position 0
+  , _axis_wake(Ruler<meshaxis_t>(2*PhaseSpace::nx
+                                , -ps->getDelta(0)*PhaseSpace::nx
+                                , ps->getDelta(0)*(PhaseSpace::nx-1)
                                 , {{"Meter", ps->getScale(0,"Meter")}}))
   , _phasespace(ps)
   , _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0))
@@ -61,7 +62,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   #if defined INOVESA_USE_OPENCL and defined  INOVESA_USE_OPENGL
   , wakepotential_glbuf(0)
   #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
-  , _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr)
+  , _wakepotential(Array::array2<meshaxis_t>(PhaseSpace::nb,PhaseSpace::nx))
   , _fft_wakelosses(nullptr)
   #ifdef INOVESA_USE_CLFFT
   , _wakescaling(_oclh ? wakescalining : wakescalining/_nmax )
@@ -113,6 +114,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
+                                  , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
                                   , const double revolutionpart
@@ -120,19 +122,20 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const double sigmaE, const double dt
                                   )
   : ElectricField( ps,impedance
+                 , spacing_bins
                  , oclh
                  , f_rev,revolutionpart
                  , Ib*dt*physcons::c/ps->getScale(0,"Meter")/(ps->getDelta(1)*sigmaE*E0)
                  )
 {
-    _wakepotential = new meshaxis_t[_bpmeshcells];
+    _wakepotential = new meshaxis_t[PhaseSpace::nx];
     #ifdef INOVESA_USE_OPENCL
     if (_oclh) {
         #ifdef INOVESA_USE_OPENGL
         if (_oclh->OpenGLSharing()) {
             glGenBuffers(1, &wakepotential_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,wakepotential_glbuf);
-            glBufferData( GL_ARRAY_BUFFER, _bpmeshcells*sizeof(*_wakepotential)
+            glBufferData( GL_ARRAY_BUFFER, PhaseSpace::nx*sizeof(*_wakepotential)
                         , 0, GL_DYNAMIC_DRAW);
             wakepotential_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
                                              , wakepotential_glbuf);
@@ -140,7 +143,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
         #endif // INOVESA_USE_OPENGL
         {
             wakepotential_clbuf = cl::Buffer( _oclh->context, CL_MEM_READ_WRITE
-                                           , sizeof(*_wakepotential)*_bpmeshcells);
+                                           , sizeof(*_wakepotential)*PhaseSpace::nx);
         }
     #ifndef INOVESA_USE_CLFFT
     }
@@ -213,17 +216,18 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
+                                  , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
                                   , const double Ib, const double E0
                                   , const double sigmaE, const double dt
                                   , const double rbend, const double fs
                                   , const size_t nmax)
-  : ElectricField( ps,impedance
+  : ElectricField( ps,impedance, spacing_bins
                  , oclh
                  , f_rev,dt*physcons::c/(2*pi<double>()*rbend))
 {
-    _wakefunction = new meshaxis_t[2*_bpmeshcells];
+    _wakefunction = new meshaxis_t[2*PhaseSpace::nx];
     fftw_complex* z_fftw = fftw_alloc_complex(nmax);
     fftw_complex* zcsrf_fftw = fftw_alloc_complex(nmax);
     fftw_complex* zcsrb_fftw = fftw_alloc_complex(nmax); //for wake
@@ -256,14 +260,14 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 
     /* This method works like a DFT of Z with Z(-n) = Z*(n).
      *
-     * the element _wakefunction[_bpmeshcells] represents the self interaction
+     * the element _wakefunction[PhaseSpace::nx] represents the self interaction
      * set this element (q==0) to zero to make the function anti-semetric
      */
     _wakefunction[0] = 0;
-    for (size_t i=0; i< _bpmeshcells; i++) {
+    for (size_t i=0; i< PhaseSpace::nx; i++) {
         // zcsrf[0].real() == zcsrb[0].real(), see comment above
-        _wakefunction[_bpmeshcells-i] = g * zcsrf[i].real();
-        _wakefunction[_bpmeshcells+i] = g * zcsrb[i].real();
+        _wakefunction[PhaseSpace::nx-i] = g * zcsrf[i].real();
+        _wakefunction[PhaseSpace::nx+i] = g * zcsrb[i].real();
     }
     fftw_free(z_fftw);
     fftw_free(zcsrf_fftw);
@@ -306,7 +310,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     #ifdef INOVESA_USE_CLFFT
     if (_oclh) {
         _oclh->enqueueCopyBuffer(_phasespace->projectionX_clbuf,_bp_padded_buf,
-                                0,0,sizeof(_bp_padded[0])*_bpmeshcells);
+                                0,0,sizeof(_bp_padded[0])*PhaseSpace::nx);
         _oclh->enqueueBarrier();
         _oclh->enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
                           _bp_padded_buf,_formfactor_buf);
@@ -322,10 +326,9 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     #endif // INOVESA_USE_CLTTT
         for (uint32_t n = 0; n < _nbunches; n++) {
         if (!_oclh) {
-            // copy bunch profile so that negative times are at maximum bins
-            // copy bunch profile have correct be padding
+            // copy bunch profile to be padded
             const vfps::projection_t* bp = _phasespace->getProjection(0)[n];
-            std::copy_n(bp,_bpmeshcells,_bp_padded);
+            std::copy_n(bp,PhaseSpace::nx,_bp_padded);
 
             //FFT charge density
             fft_execute(_fft_bunchprofile);
@@ -354,7 +357,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     #ifdef INOVESA_USE_CLFFT
     if (_oclh){
         _oclh->enqueueCopyBuffer(_phasespace->projectionX_clbuf,_bp_padded_buf,
-                                0,0,sizeof(*_bp_padded)*_bpmeshcells);
+                                0,0,sizeof(*_bp_padded)*PhaseSpace::nx);
         _oclh->enqueueBarrier();
         _oclh->enqueueDFT(_clfft_bunchprofile,CLFFT_FORWARD,
                          _bp_padded_buf,_formfactor_buf);
@@ -381,7 +384,10 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     {
         // copy bunch profile have correct be padding
         const vfps::projection_t* bp= _phasespace->getProjection(0);
-        std::copy_n(bp,_bpmeshcells,_bp_padded);
+        for (size_t b=0; b<PhaseSpace::nb; b++) {
+            std::copy_n( bp+b*PhaseSpace::nx
+                       , PhaseSpace::nx,_bp_padded+b*_spacing_bins);
+        }
 
         /* Fourier transorm bunch profile (_bp_padded),
          * result will be saved to _formfactor.
@@ -401,14 +407,17 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         //Fourier transorm wakelosses
         fft_execute(_fft_wakelosses);
 
-        for (size_t i=0; i<_bpmeshcells; i++) {
-            _wakepotential[i] = _wakepotential_padded[i]*_wakescaling;
+        for (size_t b=0; b<PhaseSpace::nb; b++) {
+            for (size_t x=0; x<PhaseSpace::nx; x++) {
+                _wakepotential[b][x] = _wakescaling
+                                     * _wakepotential_padded[b*_spacing_bins+x];
+            }
         }
         #ifdef INOVESA_USE_OPENCL
         #ifndef INOVESA_USE_CLFFT
         if (_oclh) {
             _oclh->enqueueWriteBuffer(wakepotential_clbuf,CL_TRUE,0,
-                                     sizeof(*_wakepotential)*_bpmeshcells,
+                                     sizeof(*_wakepotential)*PhaseSpace::nx,
                                      _wakepotential);
         }
         #endif // INOVESA_USE_CLFFT
@@ -435,7 +444,7 @@ void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
                                        sizeof(*_wakepotential_padded)*_nmax,
                                        _wakepotential_padded);
         _oclh->enqueueWriteBuffer(wakepotential_clbuf,CL_TRUE,0,
-                                       sizeof(*_wakepotential)*_bpmeshcells,
+                                       sizeof(*_wakepotential)*PhaseSpace::nx,
                                        _wakepotential);
         break;
     case OCLH::clCopyDirection::dev2cpu:
@@ -451,7 +460,7 @@ void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
                                       sizeof(*_wakepotential_padded)*_nmax,
                                       _wakepotential_padded);
         _oclh->enqueueReadBuffer(wakepotential_clbuf,CL_TRUE,0,
-                                      sizeof(*_wakepotential)*_bpmeshcells,
+                                      sizeof(*_wakepotential)*PhaseSpace::nx,
                                       _wakepotential);
         break;
     }
