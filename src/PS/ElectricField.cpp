@@ -277,7 +277,6 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 vfps::ElectricField::~ElectricField() noexcept
 {
     delete [] _wakefunction;
-    delete [] _wakepotential;
 
     #ifdef INOVESA_USE_CLFFT
     if (_oclh) {
@@ -384,7 +383,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     {
         // copy bunch profile have correct be padding
         const vfps::projection_t* bp= _phasespace->getProjection(0);
-        for (size_t b=0; b<PhaseSpace::nb; b++) {
+        for (uint32_t b=0; b<PhaseSpace::nb; b++) {
             std::copy_n( bp+b*PhaseSpace::nx
                        , PhaseSpace::nx,_bp_padded+b*_spacing_bins);
         }

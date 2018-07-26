@@ -31,7 +31,7 @@ vfps::WakeKickMap::WakeKickMap( std::shared_ptr<PhaseSpace> in
                               , cl_GLuint glbuf
                               #endif // INOVESA_USE_OPENCL an INOVESA_USE_OPENGL
                               )  :
-    KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y,oclh)
+    KickMap( in,out,xsize,ysize,PhaseSpace::nb,it,interpol_clamp,Axis::y,oclh)
     #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
     , _offset_glbuf(glbuf)
     #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL

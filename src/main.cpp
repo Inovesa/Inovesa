@@ -697,7 +697,7 @@ int main(int argc, char** argv)
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field( grid_t1,rdtn_impedance,spacing_bins
+    ElectricField rdtn_field( grid_t1,rdtn_impedance,0 // no spacing
                             , oclh
                             , f_rev,revolutionpart);
 

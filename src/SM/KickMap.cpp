@@ -20,16 +20,19 @@
 
 #include "SM/KickMap.hpp"
 
-vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
+vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
                       , std::shared_ptr<PhaseSpace> out
                       , const meshindex_t xsize
                       , const meshindex_t ysize
+                      , const uint32_t nbunches
                       , const InterpolationType it
                       , const bool interpol_clamp
                       , const Axis kd
                       , oclhptr_t oclh
                       )
-  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1,it,it,oclh),
+  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1
+             , kd==Axis::x?ysize*nbunches*it:xsize*nbunches*it
+             , it,it,oclh),
     _kickdirection(kd),
     _meshsize_kd(kd==Axis::x?xsize:ysize),
     _meshsize_pd(kd==Axis::x?ysize:xsize)
@@ -37,7 +40,7 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
-    _offset.resize(_meshsize_pd,meshaxis_t(0));
+    _offset.resize(_meshsize_pd*nbunches,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
     for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {
         _hinfo[q_i*_ip].index = _meshsize_kd/2;
@@ -206,7 +209,7 @@ void vfps::KickMap::apply()
     meshdata_t* data_out = _out->getData();
 
     if (_kickdirection == Axis::x) {
-        for (uint32_t n=0; n < _nbunches; n++) {
+        for (uint32_t n=0; n < PhaseSpace::nb; n++) {
             const meshindex_t offs = n*_meshsize_kd*_meshsize_pd;
             for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
                 for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
@@ -227,14 +230,15 @@ void vfps::KickMap::apply()
             }
         }
     } else {
-        for (uint32_t n=0; n < _nbunches; n++) {
+        for (uint32_t n=0; n < PhaseSpace::nb; n++) {
             const meshindex_t offs1 = n*_meshsize_kd*_meshsize_pd;
+            const size_t offs2 = n*_meshsize_kd*_meshsize_pd;
             for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
                 const meshindex_t offs = offs1 + x*_meshsize_kd;
                 for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
                     meshdata_t value = 0;
                     for (uint_fast8_t j=0; j<_ip; j++) {
-                        hi h = _hinfo[x*_ip+j];
+                        hi h = _hinfo[offs2+x*_ip+j];
                         // the min makes sure not to have out of bounds accesses
                         // casting is to be sure about overflow behaviour
                         const meshindex_t ys = std::min(

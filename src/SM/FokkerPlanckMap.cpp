@@ -200,7 +200,7 @@ void vfps::FokkerPlanckMap::apply()
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();
 
-        for (uint32_t n=0; n<_nbunches; n++) {
+        for (uint32_t n=0; n<PhaseSpace::nb; n++) {
             const meshindex_t offs1 = n*_meshxsize*_ysize;
             for (meshindex_t x=0; x< _meshxsize; x++) {
                 const meshindex_t offs = offs1+x*_ysize;

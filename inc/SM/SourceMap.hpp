@@ -123,13 +123,6 @@ protected:
      */
     hi* const _hinfo;
 
-    const uint32_t _nbunches;
-
-    /**
-     * @brief _size size of the SourceMap (_xsize*_ysize)
-     */
-    const meshindex_t _size;
-
     /**
      * @brief _xsize horizontal size of the SourceMap (in grid points)
      */
