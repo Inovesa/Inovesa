@@ -127,6 +127,12 @@ public:
     inline auto getRenormalizeCharge() const
         { return renormalize; }
 
+    inline auto getFPTrack() const
+        { return fptrack; }
+
+    inline auto getFPType() const
+        { return fptype; }
+
     inline auto getRotationType() const
         { return rotationtype; }
 
@@ -240,6 +246,8 @@ private: // simulation parameters
     uint32_t steps;
     int32_t renormalize;
     double rotations;
+    uint32_t fptype;
+    uint32_t fptrack;
     uint32_t rotationtype;
     uint32_t deriv_type;
     uint32_t interpol_type;

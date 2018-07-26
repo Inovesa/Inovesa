@@ -24,11 +24,17 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
                                        std::shared_ptr<PhaseSpace> out,
                                        const meshindex_t xsize,
                                        const meshindex_t ysize,
-                                       FPType fpt, timeaxis_t e1,
-                                       DerivationType dt)
-    :
-    SourceMap(in, out, 1, ysize, dt, dt),
-    _meshxsize(xsize)
+                                       FPType fptype, FPTracking fptrack,
+                                       timeaxis_t e1, DerivationType dt)
+  : SourceMap(in, out, 1, ysize, dt, dt)
+  , _dampdecr(e1)
+  , _prng(std::mt19937(std::random_device{}()))
+  , _normdist( std::normal_distribution<meshaxis_t>( 0
+                                                   , std::sqrt(2*e1)
+                                                     / in->getDelta(1)))
+  , _fptrack(fptrack)
+  , _fptype(fptype)
+  , _meshxsize(xsize)
 {
     // the following doubles should be interpol_t
     const interpol_t e1_2d = e1/(interpol_t(2)*in->getDelta(1));
@@ -47,16 +53,16 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
             _hinfo[j*_ip+1]={j  ,1};
             _hinfo[j*_ip+2]={j+1,0};
 
-            if (fpt == FPType::full || fpt == FPType::damping_only) {
-                const meshaxis_t pos = in->x(1,j);
+            if (_fptype != FPType::none && _fptype != FPType::diffusion_only) {
+                const meshaxis_t pos = in->p(j);
                 _hinfo[j*_ip  ].weight += -e1_2d*pos;
                 _hinfo[j*_ip+1].weight +=  e1;
                 _hinfo[j*_ip+2].weight +=  e1_2d*pos;
             }
-            if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-                _hinfo[j*_ip  ].weight +=                 e1_d2;
+            if (_fptype != FPType::none && _fptype != FPType::damping_only) {
+                _hinfo[j*_ip  ].weight +=                e1_d2;
                 _hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
-                _hinfo[j*_ip+2].weight +=                 e1_d2;
+                _hinfo[j*_ip+2].weight +=                e1_d2;
             }
         }
         _hinfo[(_ysize-1)*_ip+0] = {0,0};
@@ -73,40 +79,40 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
         _hinfo[_ip+2] = {0,0};
         _hinfo[_ip+3] = {0,0};
         for (meshindex_t j=2; j< ycenter; j++) {
-            const meshaxis_t pos = in->x(1,j);
+            const meshaxis_t pos = in->p(j);
             _hinfo[j*_ip  ]={j-2,0};
             _hinfo[j*_ip+1]={j-1,0};
             _hinfo[j*_ip+2]={j  ,1};
             _hinfo[j*_ip+3]={j+1,0};
-            if (fpt == FPType::full || fpt == FPType::damping_only) {
+            if (_fptype != FPType::none && _fptype != FPType::diffusion_only) {
                 _hinfo[j*_ip  ].weight +=    e1_6d*interpol_t( 1)*pos;
                 _hinfo[j*_ip+1].weight +=    e1_6d*interpol_t(-6)*pos;
                 _hinfo[j*_ip+2].weight += e1+e1_6d*interpol_t( 3)*pos;
                 _hinfo[j*_ip+3].weight +=    e1_6d*interpol_t( 2)*pos;
             }
-            if (fpt == FPType::full || fpt == FPType::diffusion_only) {
+            if (_fptype != FPType::none && _fptype != FPType::damping_only) {
                 _hinfo[j*_ip+1].weight +=    e1_d2;
                 _hinfo[j*_ip+2].weight += interpol_t(-2)*e1_d2;
                 _hinfo[j*_ip+3].weight +=    e1_d2;
             }
         }
         for (meshindex_t j=ycenter; j<static_cast<meshindex_t>(_ysize-2);j++) {
-            const meshaxis_t pos = in->x(1,j);
+            const meshaxis_t pos = in->p(j);
             _hinfo[j*_ip  ]={j-1,0};
             _hinfo[j*_ip+1]={j  ,1};
             _hinfo[j*_ip+2]={j+1,0};
             _hinfo[j*_ip+3]={j+2,0};
 
-            if (fpt == FPType::full || fpt == FPType::damping_only) {
+            if (_fptype != FPType::none && _fptype != FPType::diffusion_only) {
                 _hinfo[j*_ip  ].weight +=    e1_6d*interpol_t(-2)*pos;
                 _hinfo[j*_ip+1].weight += e1+e1_6d*interpol_t(-3)*pos;
                 _hinfo[j*_ip+2].weight +=    e1_6d*interpol_t( 6)*pos;
                 _hinfo[j*_ip+3].weight +=    e1_6d*interpol_t(-1)*pos;
             }
-            if (fpt == FPType::full || fpt == FPType::diffusion_only) {
-                _hinfo[j*_ip  ].weight +=                 e1_d2;
+            if (_fptype != FPType::none && _fptype != FPType::damping_only) {
+                _hinfo[j*_ip  ].weight +=                e1_d2;
                 _hinfo[j*_ip+1].weight += interpol_t(-2)*e1_d2;
-                _hinfo[j*_ip+2].weight +=                 e1_d2;
+                _hinfo[j*_ip+2].weight +=                e1_d2;
             }
         }
         _hinfo[(_ysize-2)*_ip  ] = {0,0};
@@ -214,17 +220,56 @@ void vfps::FokkerPlanckMap::apply()
 vfps::PhaseSpace::Position
 vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
 {
-    meshindex_t yi = std::min(static_cast<meshindex_t>(std::floor(pos.y)),_ysize);
-    interpol_t offset = 0;
+    switch (_fptrack){
+    case FPTracking::none:
+    default:
+        break;
+    case FPTracking::approximation1:
+        {
+        meshindex_t yi = std::min( static_cast<meshindex_t>(std::floor(pos.y))
+                                 , _ysize);
+        interpol_t offset = 0;
 
-    for (uint_fast8_t j=0; j<_ip; j++) {
-        hi h = _hinfo[yi*_ip+j];
-        interpol_t dy = static_cast<interpol_t>(yi)
-                      - static_cast<interpol_t>(h.index);
-        offset += dy*h.weight;
+        for (uint_fast8_t j=0; j<_ip; j++) {
+            hi h = _hinfo[yi*_ip+j];
+            interpol_t dy = static_cast<interpol_t>(yi)
+                          - static_cast<interpol_t>(h.index);
+            offset += dy*h.weight;
+        }
+        pos.y = std::max(static_cast<meshaxis_t>(1),
+        std::min(pos.y+offset,static_cast<meshaxis_t>(_ysize-1)));
+        }
+        break;
+    case FPTracking::approximation2:
+        {
+        meshdata_t* data_in = _in->getData();
+        std::make_signed<meshindex_t>::type xi
+            = std::min( static_cast<decltype(_in->nMeshCells(0))>(std::floor(pos.x))
+                      , _in->nMeshCells(0)-1);
+        std::make_signed<meshindex_t>::type yi
+            = std::min( static_cast<decltype(_ysize)>(std::floor(pos.y))
+                      , _ysize-1);
+        const meshindex_t offs = xi*_ysize;
+        interpol_t offset = 0;
+        meshdata_t charge = 0;
+
+        for (uint_fast8_t j=0; j<_ip; j++) {
+            hi h = _hinfo[yi*_ip+j];
+            charge += data_in[offs+h.index]*h.weight;
+            offset += data_in[offs+h.index]*h.weight
+                    * (static_cast<std::make_signed<meshindex_t>::type>(h.index)
+                      - yi);
+        }
+        offset /= charge;
+        pos.y = std::max( static_cast<meshaxis_t>(1)
+                        , std::min(pos.y+offset
+                                  , static_cast<meshaxis_t>(_ysize-1)));
+        }
+        break;
+    case FPTracking::stochastic:
+        pos.y -= pos.y*_dampdecr+_normdist(_prng);
+        break;
     }
-    pos.y = std::max(static_cast<meshaxis_t>(1),
-                     std::min(pos.y+offset,static_cast<meshaxis_t>(_ysize-1)));
     return pos;
 }
 
