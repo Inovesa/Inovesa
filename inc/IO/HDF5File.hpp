@@ -84,7 +84,7 @@ public:
 
     void appendRFKicks(const std::vector<std::array<vfps::meshaxis_t,2>> kicks);
 
-    void appendTracks(const PhaseSpace::Position* particles);
+    void appendTracks(const std::vector<PhaseSpace::Position> &p);
 
     void append(const PhaseSpace& ps,
                 const timeaxis_t t,
@@ -194,6 +194,9 @@ private:
 
 
     H5::H5File _prepareFile();
+
+private:
+    std::shared_ptr<PhaseSpace> _ps;
 };
 
 } // namespace vfps

@@ -287,7 +287,7 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
     for (uint32_t n=0; n<_nbunches; n++) {
         integral_t avg = 0;
         for (size_t i=0; i<nMeshCells(axis); i++) {
-            avg += _projection[axis][n][i]*x(axis,i);
+            avg += _projection[axis][n][i]*_qp(axis,i);
         }
 
         // _projection is normalized in p/q coordinates
@@ -303,7 +303,7 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
     for (uint32_t n=0; n<_nbunches; n++) {
         meshdata_t var = 0;
         for (size_t i=0; i<nMeshCells(axis); i++) {
-            var += _projection[axis][n][i]*std::pow(x(axis,i)-_moment[axis][0][n],2);
+            var += _projection[axis][n][i]*std::pow(_qp(axis,i)-_moment[axis][0][n],2);
         }
 
         // _projection is normalized in p/q coordinates
@@ -344,7 +344,7 @@ void vfps::PhaseSpace::updateXProjection() {
                         = std::accumulate(_data[n][x].begin(),
                                           _data[n][x].end(),
                                           static_cast<integral_t>(0));
-                _projection[0][n][x] /= size(1);
+                _projection[0][n][x] /= length(1);
             }
         }
         break;
@@ -379,7 +379,7 @@ void vfps::PhaseSpace::updateYProjection() {
                 for (size_t x=0; x< nMeshCells(0); x++) {
                     _projection[1][n][y] += _data[n][x][y];
                 }
-                _projection[1][n][y] /= size(0);
+                _projection[1][n][y] /= length(0);
             }
         }
         break;

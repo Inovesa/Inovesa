@@ -106,7 +106,7 @@ public:
     inline const ruler_t delta() const
         { return _delta; }
 
-    inline const ruler_t size() const
+    inline const ruler_t length() const
         { return _max - _min; }
 
     inline const ruler_t zerobin() const
