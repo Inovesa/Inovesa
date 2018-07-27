@@ -30,7 +30,6 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
                             , const double beam_charge
                             , const double beam_current
                             , const Array::array1<integral_t> filling
-                            , const double bunchspacing
                             , const double zoom
                             , meshdata_t* data
                             )
@@ -38,8 +37,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , charge(beam_charge)
   , current(beam_current)
   , _integralmethod(IntegralMethod::simpson)
-  , _fillingpattern(filling.begin(),filling.end())
-  , _bunchspacing(bunchspacing)
+  , _filling_set(filling.begin(),filling.end())
   , _bunchpopulation(Array::array1<integral_t>(_nbunches))
   , _integral(1)
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
@@ -172,18 +170,17 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
 #endif
 }
 
-vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
+vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
                             , const std::vector<integral_t> filling
-                            , const double bunchspacing
                             , const double zoom
                             , vfps::meshdata_t *data
                             ) :
     PhaseSpace( axis, oclh, beam_charge,beam_current
               , Array::array1<integral_t>(filling.begin(),filling.end())
-              , bunchspacing,zoom,data)
+              , zoom,data)
 {
 }
 
@@ -193,13 +190,12 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , const double beam_charge
                             , const double beam_current
                             , const std::vector<integral_t> filling
-                            , const double bunchspacing
                             , const double zoom
                             , vfps::meshdata_t *data
                             ) :
     PhaseSpace( {{axis0,axis1}}
               , oclh
-              , beam_charge,beam_current,filling,bunchspacing,zoom,data)
+              , beam_charge,beam_current,filling,zoom,data)
 {
 }
 
@@ -210,13 +206,12 @@ vfps::PhaseSpace::PhaseSpace( meshindex_t ps_size
                             , const double beam_charge
                             , const double beam_current
                             , const std::vector<integral_t> filling
-                            , const double bunchspacing
                             , const double zoom, meshdata_t *data
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,{{"Meter",qscale}}))
               , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,{{"ElectronVolt",pscale}}))
               , oclh
-              , beam_charge,beam_current, filling, bunchspacing, zoom, data)
+              , beam_charge,beam_current, filling, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -225,7 +220,6 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
               , other.charge
               , other.current
               , other._bunchpopulation
-              , other._bunchspacing
               , 1 // zoom
               , other._data
               )
@@ -424,11 +418,7 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
     #endif // INOVESA_USE_OPENCL
 
     for (uint32_t n=0; n<_nbunches; n++) {
-        if (_fillingpattern[n] > 0) {
-            _data[n] *= _fillingpattern[n]/_bunchpopulation[n];
-        } else {
-            std::fill(_data[n].begin(),_data[n].end(),static_cast<meshdata_t>(0));
-        }
+        _data[n] *= _filling_set[n]/_bunchpopulation[n];
     }
 
     #ifdef INOVESA_USE_OPENCL

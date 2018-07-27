@@ -27,6 +27,7 @@ using boost::math::constants::pi;
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
+                                  , const std::vector<uint32_t> bucketnumber
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
@@ -35,6 +36,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
                                   )
   : volts(ps->getAxis(1)->delta()*ps->getScale(1,"ElectronVolt")/revolutionpart)
   , _nbunches(PhaseSpace::nb)
+  , _bucket(bucketnumber)
   , _nmax(impedance->nFreqs())
   , _spacing_bins(spacing_bins)
   , _axis_freq(Ruler<frequency_t>( _nmax,0
@@ -114,6 +116,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
 
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
+                                  , const std::vector<uint32_t> bucketnumber
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
@@ -122,7 +125,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const double sigmaE, const double dt
                                   )
   : ElectricField( ps,impedance
-                 , spacing_bins
+                 , bucketnumber, spacing_bins
                  , oclh
                  , f_rev,revolutionpart
                  , Ib*dt*physcons::c/ps->getScale(0,"Meter")/(ps->getDelta(1)*sigmaE*E0)
@@ -216,6 +219,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
+                                  , const std::vector<uint32_t> bucketnumber
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
@@ -223,7 +227,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const double sigmaE, const double dt
                                   , const double rbend, const double fs
                                   , const size_t nmax)
-  : ElectricField( ps,impedance, spacing_bins
+  : ElectricField( ps,impedance, bucketnumber, spacing_bins
                  , oclh
                  , f_rev,dt*physcons::c/(2*pi<double>()*rbend))
 {
@@ -384,8 +388,8 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         // copy bunch profile have correct be padding
         const vfps::projection_t* bp= _phasespace->getProjection(0);
         for (uint32_t b=0; b<PhaseSpace::nb; b++) {
-            std::copy_n( bp+b*PhaseSpace::nx
-                       , PhaseSpace::nx,_bp_padded+b*_spacing_bins);
+            std::copy_n( bp+_bucket[b]*PhaseSpace::nx
+                       , PhaseSpace::nx,_bp_padded+_bucket[b]*_spacing_bins);
         }
 
         /* Fourier transorm bunch profile (_bp_padded),
@@ -409,7 +413,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         for (size_t b=0; b<PhaseSpace::nb; b++) {
             for (size_t x=0; x<PhaseSpace::nx; x++) {
                 _wakepotential[b][x] = _wakescaling
-                                     * _wakepotential_padded[b*_spacing_bins+x];
+                            * _wakepotential_padded[_bucket[b]*_spacing_bins+x];
             }
         }
         #ifdef INOVESA_USE_OPENCL

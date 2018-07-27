@@ -248,6 +248,16 @@ int main(int argc, char** argv)
     std::transform(filling.begin(), filling.end(), filling.begin(),
                    std::bind(std::divides<integral_t>(), std::placeholders::_1, Ib));
 
+    // buckets that actually hold bunches
+    std::vector<uint32_t> buckets;
+
+    std::vector<integral_t> bunches;
+    for (uint32_t i=0; i<filling.size(); i++) {
+        buckets.emplace_back(i);
+        bunches.emplace_back(filling[i]);
+    }
+
+
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();
 
@@ -267,7 +277,7 @@ int main(int argc, char** argv)
     const double revolutionpart = f_rev*dt;
     const double t_sync = 1.0/fs;
 
-    const uint32_t nbunches = filling.size();
+    const uint32_t nbunches = bunches.size();
 
     // number of phace spaces that would fit in the bunch spacing
     const double spacing_ps = (bunchspacing*physcons::c/bl/pqsize);
@@ -410,7 +420,7 @@ int main(int argc, char** argv)
 
         if (filling.size() > 1) {
             sstream.str("");
-            sstream << filling.size() << " bunches are seperated by "
+            sstream << filling.size() << " buckets are seperated by "
                     << std::scientific << bunchspacing << " s.";
             Display::printText(sstream.str());
         }
@@ -448,7 +458,7 @@ int main(int argc, char** argv)
                                "or size of target mesh > 0.");
         }
         grid_t1.reset(new PhaseSpace( ps_bins,qmin,qmax,bl,pmin,pmax,dE
-                                    , oclh, Qb,Ib,filling,bunchspacing,zoom));
+                                    , oclh, Qb,Ib,bunches,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
@@ -702,7 +712,7 @@ int main(int argc, char** argv)
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field( grid_t1,rdtn_impedance,0 // no spacing
+    ElectricField rdtn_field( grid_t1,rdtn_impedance,buckets,0 // no spacing
                             , oclh
                             , f_rev,revolutionpart);
 
@@ -731,7 +741,8 @@ int main(int argc, char** argv)
     } else {
         if (wake_impedance != nullptr) {
             Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField( grid_t1,wake_impedance, spacing_bins
+            wake_field = new ElectricField( grid_t1,wake_impedance
+                                          , buckets, spacing_bins
                                           , oclh
                                           , f_rev
                                           , revolutionpart, Ib,E0,sE,dt

@@ -109,7 +109,7 @@ vfps::makePSFromPNG( std::string fname
                                               , pmin, pmax, pscale
                                               , oclh
                                               , beam_charge,beam_current
-                                              , filling, 0, 1
+                                              , filling, 1
                                               , data.data());
         // normalize integral to 1
         ps->updateXProjection();

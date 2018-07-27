@@ -58,6 +58,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  const std::vector<uint32_t> bucketnumber,
                   const meshindex_t spacing_bins,
                   oclhptr_t oclh,
                   const double f_rev,
@@ -85,6 +86,7 @@ public:
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
+                 , const std::vector<uint32_t> bucketnumber
                  , const meshindex_t spacing_bins
                  , oclhptr_t oclh
                  , const double f_rev
@@ -108,6 +110,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
+                 , const std::vector<uint32_t> bucketnumber
                  , const meshindex_t spacing_bins
                  , oclhptr_t oclh
                  , const double f_rev
@@ -261,6 +264,8 @@ private: // wrappers for FFTW
 
 private:
     const uint32_t _nbunches;
+
+    const std::vector<uint32_t> _bucket;
 
     const size_t _nmax;
 
