@@ -469,6 +469,7 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
     }
     }
 }
+#endif // INOVESA_USE_OPENCL
 
 const uint32_t& vfps::PhaseSpace::nx = vfps::PhaseSpace::_nmeshcellsX;
 
@@ -500,8 +501,6 @@ uint32_t vfps::PhaseSpace::_nmeshcellsY(0);
 uint32_t vfps::PhaseSpace::_nbunches(0);
 
 size_t vfps::PhaseSpace::_nmeshcells(0);
-
-#endif // INOVESA_USE_OPENCL
 
 void vfps::PhaseSpace::createFromProjections()
 {

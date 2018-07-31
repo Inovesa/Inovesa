@@ -328,7 +328,10 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
     }
     #endif // INOVESA_USE_CLTTT
         for (uint32_t n = 0; n < _nbunches; n++) {
-        if (!_oclh) {
+        #ifdef INOVESA_USE_OPENCL
+        if (!_oclh)
+        #endif // INOVESA_USE_OPENCL
+        {
             // copy bunch profile to be padded
             const vfps::projection_t* bp = _phasespace->getProjection(0)[n];
             std::copy_n(bp,PhaseSpace::nx,_bp_padded);

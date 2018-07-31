@@ -428,13 +428,17 @@ private:
     oclhptr_t _oclh;
 
 public:
-    #ifdef INOVESA_USE_OPENGL
+    #ifndef INOVESA_USE_OPENCL
     /**
      * @brief projectionX_glbuf will only be allocated during CL/GL sharing
      */
+    #ifdef INOVESA_USE_OPENGL
+    GLuint projectionX_glbuf;
+    #endif // INOVESA_USE_OPENGL
+    #else // INOVESA_USE_OPENCL is defined
+    #ifdef INOVESA_USE_OPENGL
     cl_GLuint projectionX_glbuf;
     #endif // INOVESA_USE_OPENGL
-    #ifdef INOVESA_USE_OPENCL
 
     cl::Buffer data_buf;
 
