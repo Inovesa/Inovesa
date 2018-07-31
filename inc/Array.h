@@ -60,8 +60,9 @@ inline void ArrayExit(const char *x);
 #ifndef __ExternalArrayExit
 inline void ArrayExit(const char *x)
 {
-  std::cerr << _newl << "ERROR: " << x << "." << std::endl;
-  exit(1);
+    std::stringstream message;
+    message << "ERROR: " << x << ".";
+    throw(message.str());
 }
 #endif
 
