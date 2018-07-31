@@ -238,25 +238,37 @@ int main(int argc, char** argv)
     // natural RMS bunch length (m)
     const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
 
-    // filling pattern, firts as individual bunch currents, latter normalized
+    // filling pattern, first as individual bunch currents
     std::vector<integral_t> filling = opts.getBunchCurrents();
 
-    // accumulated beam current
-    const double Ib = std::accumulate(filling.begin(),filling.end(),0.0);
+    // number of total buckets (including in the simulation empty ones)
+    const uint32_t nbuckets = filling.size();
 
-    // normalize filling pattern
-    std::transform(filling.begin(), filling.end(), filling.begin(),
-                   std::bind(std::divides<integral_t>(), std::placeholders::_1, Ib));
-
-    // buckets that actually hold bunches
+    /* Buckets that actually hold bunches.
+     * Eumeration is inverse to x coordinates (physical z position)
+     * because smaller numbers should come first (physical time axis).
+     */
     std::vector<uint32_t> buckets;
 
+    // the normalized bunch currents (without empty buckets)
     std::vector<integral_t> bunches;
+
     for (uint32_t i=0; i<filling.size(); i++) {
-        buckets.emplace_back(i);
-        bunches.emplace_back(filling[i]);
+        if (filling[i] > 0) {
+            buckets.push_back(filling.size()-1-i);
+            bunches.emplace_back(filling[i]);
+        }
     }
 
+    // number of total buckets (including in the simulation empty ones)
+    const uint32_t nbunches = bunches.size();
+
+    // accumulated beam current
+    const double Ib = std::accumulate(bunches.begin(),bunches.end(),0.0);
+
+    // normalize filling pattern
+    std::transform(bunches.begin(), bunches.end(), bunches.begin(),
+                   std::bind(std::divides<integral_t>(), std::placeholders::_1, Ib));
 
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();
@@ -277,8 +289,6 @@ int main(int argc, char** argv)
     const double revolutionpart = f_rev*dt;
     const double t_sync = 1.0/fs;
 
-    const uint32_t nbunches = bunches.size();
-
     // number of phace spaces that would fit in the bunch spacing
     const double spacing_ps = (bunchspacing*physcons::c/bl/pqsize);
 
@@ -294,7 +304,7 @@ int main(int argc, char** argv)
         padded_bins = Impedance::upper_power_of_two(padded_bins);
     }
 
-    size_t spaced_bins = std::ceil(ps_bins*nbunches*spacing_ps);
+    size_t spaced_bins = std::ceil(ps_bins*nbuckets*spacing_ps);
     if (opts.getRoundPadding()) {
         spaced_bins = Impedance::upper_power_of_two(spaced_bins);
     }
@@ -418,9 +428,9 @@ int main(int argc, char** argv)
                                " simulation steps per synchrotron period.");
         }
 
-        if (filling.size() > 1) {
+        if (nbuckets > 1) {
             sstream.str("");
-            sstream << filling.size() << " buckets are seperated by "
+            sstream << nbuckets << " buckets are seperated by "
                     << std::scientific << bunchspacing << " s.";
             Display::printText(sstream.str());
         }

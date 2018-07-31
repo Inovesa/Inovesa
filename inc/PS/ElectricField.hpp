@@ -153,6 +153,9 @@ public:
      */
     csrpower_t* updateCSR(const frequency_t cutoff);
 
+    const std::vector<uint32_t> &getBuckets() const
+        { return _bucket; }
+
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
 

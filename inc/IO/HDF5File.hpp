@@ -123,7 +123,9 @@ private:
 
     H5::H5File _file;
 
-    const meshindex_t _nBunches;
+    const uint32_t _nBuckets;
+
+    const uint32_t _nBunches;
 
     const uint32_t _nParticles;
 
@@ -148,6 +150,8 @@ private: // values for phase space axis
     DatasetInfo<1> _timeAxis;
 
     DatasetInfo<1> _timeAxisPS;
+
+    DatasetInfo<1> _bucketNumbers;
 
     DatasetInfo<2> _bunchPopulation;
 

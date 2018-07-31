@@ -418,7 +418,12 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
     #endif // INOVESA_USE_OPENCL
 
     for (uint32_t n=0; n<_nbunches; n++) {
-        _data[n] *= _filling_set[n]/_bunchpopulation[n];
+        if (_filling_set > 0) {
+            _data[n] *= _filling_set[n]/_bunchpopulation[n];
+        } else {
+            std::fill( _data[n].begin(),_data[n].end()
+                     , static_cast<meshdata_t>(0));
+        }
     }
 
     #ifdef INOVESA_USE_OPENCL

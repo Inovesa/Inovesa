@@ -69,7 +69,9 @@ vfps::ProgramOptions::ProgramOptions() :
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
         ("BunchCurrent,I", po::value<std::vector<integral_t>>(&I_b)->multitoken(),
-            "List of bunch currents (A)")
+            "Bunch currents (A)\n"
+            " 0: empty bucket (long gap)\n"
+            ">0: bucket containing electrons")
         ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
             "Bending radius of accelerator (m)\n"
             "negative: calculate from RevolutionFrequency")
@@ -84,7 +86,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "<0: free space CSR\n"
             " 0: no CSR\n"
             ">0: parallel plates CSR\n"
-            "(|G| used as size of the beam pipe for other impedances)")
+            "(|G| is used as size of the beam pipe for other impedances)")
         ("UseCSR", po::value<bool>(&use_csr)->default_value(true),
             "Switch to turn off CSR for VacuumGap != 0")
         ("CollimatorRadius", po::value<double>(&collimator)->default_value(0),
