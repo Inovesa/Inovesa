@@ -60,7 +60,7 @@ void vfps::WakePotentialMap::update()
     } else
     #endif // INOVESA_USE_OPENCL
     {
-        std::copy_n(_field->wakePotential(),_xsize,_offset.data());
+        std::copy_n(_field->wakePotential(),PhaseSpace::nb*_xsize,_offset.data());
     }
     updateSM();
 }
