@@ -22,6 +22,7 @@
 #ifdef INOVESA_USE_PNG
 #include <png++/png.hpp>
 #endif
+#include <iterator>
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
