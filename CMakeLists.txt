@@ -109,7 +109,6 @@ set(INC_LIST
   ./inc/Z/ResistiveWall.hpp
   ./inc/MessageStrings.hpp
   ./inc/defines.hpp
-  ./inc/fixed_point.h
 )
 
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})

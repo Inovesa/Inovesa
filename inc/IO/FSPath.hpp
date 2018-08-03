@@ -48,7 +48,7 @@ public:
         { return _path.string(); }
 
     inline const char* c_str() const
-        { return _path.c_str(); }
+        { return str().c_str(); }
 
     static std::string datapath();
 

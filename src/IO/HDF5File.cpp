@@ -411,12 +411,6 @@ vfps::HDF5File::readPhaseSpace( std::string fname
     H5::DataType datatype;
     if (std::is_same<vfps::meshdata_t,float>::value) {
         datatype = H5::PredType::IEEE_F32LE;
-    #if FXP_FRACPART < 31
-    } else if (std::is_same<vfps::meshdata_t,fixp32>::value) {
-        datatype = H5::PredType::STD_I32LE;
-    #endif // FXP_FRACPART < 31
-    } else if (std::is_same<vfps::meshdata_t,fixp64>::value) {
-        datatype = H5::PredType::STD_I64LE;
     }else if (std::is_same<vfps::meshdata_t,double>::value) {
         datatype = H5::PredType::IEEE_F64LE;
     }
@@ -426,9 +420,9 @@ vfps::HDF5File::readPhaseSpace( std::string fname
     H5::DataSet ps_dataset = file.openDataSet("/PhaseSpace/data");
     H5::DataSpace ps_space(ps_dataset.getSpace());
 
-    const auto rank = ps_space.getSimpleExtentNdims();
-    hsize_t ps_dims[rank];
-    ps_space.getSimpleExtentDims( ps_dims, nullptr );
+    auto rank = ps_space.getSimpleExtentNdims();
+    std::vector<hsize_t> ps_dims(rank);
+    ps_space.getSimpleExtentDims( ps_dims.data(), nullptr );
 
     std::vector<hsize_t> ps_offset;
     std::vector<hsize_t> ps_ext;
@@ -454,12 +448,6 @@ vfps::HDF5File::readPhaseSpace( std::string fname
     H5::DataType axistype;
     if (std::is_same<vfps::meshaxis_t,float>::value) {
         axistype = H5::PredType::IEEE_F32LE;
-    #if FXP_FRACPART < 31
-    } else if (std::is_same<vfps::meshaxis_t,fixp32>::value) {
-        axistype = H5::PredType::STD_I32LE;
-    #endif // FXP_FRACPART < 31
-    } else if (std::is_same<vfps::meshaxis_t,fixp64>::value) {
-        axistype = H5::PredType::STD_I64LE;
     }else if (std::is_same<vfps::meshaxis_t,double>::value) {
         axistype = H5::PredType::IEEE_F64LE;
     }
@@ -511,8 +499,6 @@ vfps::HDF5File::_makeDatasetInfo( std::string name
             rv_datatype = H5::PredType::IEEE_F32LE;
     } else if (std::is_same<datatype,double>::value) {
         rv_datatype = H5::PredType::IEEE_F64LE;
-    } else if (std::is_same<datatype,fixp64>::value) {
-            rv_datatype = H5::PredType::STD_I64LE;
     } else {
         throw std::string("Unknown datatype.");
     }

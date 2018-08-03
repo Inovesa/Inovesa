@@ -124,8 +124,8 @@ vfps::makePSFromPNG( std::string fname
         std::cerr << "Phase space has to be quadratic. Please adjust "
                   << fname << std::endl;
     }
-    return nullptr;
 #endif // INOVESA_USE_PNG
+    return nullptr;
 }
 
 std::unique_ptr<vfps::PhaseSpace>

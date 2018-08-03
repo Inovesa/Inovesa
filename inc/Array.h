@@ -499,8 +499,8 @@ private: // abstract iterator prototypes
     operator+( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
     { return rhs+lhs; }
 
-    friend inline const abstract_iterator
-    operator-( const std::ptrdiff_t& lhs, const abstract_iterator& rhs)
+    friend inline const std::ptrdiff_t
+    operator-( const abstract_iterator& lhs, const abstract_iterator& rhs)
     { return rhs-lhs; }
 
   public: // comparission operators
