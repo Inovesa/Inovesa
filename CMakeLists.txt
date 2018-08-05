@@ -8,13 +8,17 @@ add_definitions(-DINOVESA_ENABLE_INTERRUPT)
 
 
 # (default) options for Debug and Release builds
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${-Wall}" )
 if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-    add_definitions(-Wall -Wextra)
+    add_definitions(-Wextra)
     add_definitions(-g -DDEBUG)
     MESSAGE ("Doing debug compile, including debug symbols.")
 else()
-    add_definitions(-Wall -O3 -w )
-    MESSAGE ("Doing release compile, using optimization flags.")
+  if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+    add_definitions(-O3 )
+  endif()
+  add_definitions(-w )
+  MESSAGE ("Doing release compile, using optimization flags.")
 endif()
 
 ## end of user configuration
