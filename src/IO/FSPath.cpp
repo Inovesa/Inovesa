@@ -38,10 +38,10 @@ vfps::FSPath& vfps::FSPath::append(std::string path)
  */
 std::string vfps::FSPath::expand_user(std::string path)
 {
-  if (not path.empty() and path[0] == '~') {
-    assert(path.size() == 1 or path[1] == '/');  // or other error handling
+  if (!path.empty() && path[0] == '~') {
+    assert(path.size() == 1 || path[1] == '/');  // or other error handling
     char const* home = getenv("HOME");
-    if (home or ((home = getenv("USERPROFILE")))) {
+    if (home || ((home = getenv("USERPROFILE")))) {
       path.replace(0, 1, home);
     }
     else {

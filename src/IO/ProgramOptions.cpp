@@ -336,7 +336,7 @@ void vfps::ProgramOptions::save(std::string fname)
         ){
             continue;
         } else
-        if (it->first == "alpha0" and f_s != 0.0) {
+        if (it->first == "alpha0" && f_s != 0.0) {
             ofs << "alpha0=0" << std::endl;
             continue;
         } else
