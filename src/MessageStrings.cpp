@@ -24,14 +24,6 @@ const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
-    if (
-            #if FXP_FRACPART < 31
-            std::is_same<vfps::meshdata_t,fixp32>::value ||
-            #endif
-            std::is_same<vfps::meshdata_t,fixp64>::value)
-    {
-        rv += "Copyright (c) 2007-2009 Peter Schregle (FPML)\n";
-    }
     rv+="Copyright (c) 2012-2018 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
         "Copyright (c) 2017-2018 Johannes Schestag\n"

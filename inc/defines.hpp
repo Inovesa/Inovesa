@@ -25,19 +25,12 @@
 #include <string>
 #include <fftw3.h>
 
-#include "fixed_point.h"
 #include "InovesaConfig.hpp"
 
 //#define INOVESA_SYNC_CL
 
 namespace vfps
 {
-#define FXP_FRACPART 28
-#if FXP_FRACPART < 31
-typedef fpml::fixed_point<int32_t,31-FXP_FRACPART,FXP_FRACPART> fixp32;
-#endif
-typedef fpml::fixed_point<int64_t,63-FXP_FRACPART,FXP_FRACPART> fixp64;
-
 // has to be uint32_t (same as cl_uint) for OpenCL support
 typedef uint32_t meshindex_t;
 

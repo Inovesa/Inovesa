@@ -23,7 +23,7 @@
 
 #include <memory>
 
-#if not defined INOVESA_USE_OPENCL
+#ifndef INOVESA_USE_OPENCL
 typedef std::nullptr_t oclhptr_t;
 #else // INOVESA_USE_OPENCL
 
