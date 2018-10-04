@@ -499,6 +499,8 @@ vfps::HDF5File::_makeDatasetInfo( std::string name
             rv_datatype = H5::PredType::IEEE_F32LE;
     } else if (std::is_same<datatype,double>::value) {
         rv_datatype = H5::PredType::IEEE_F64LE;
+    }else if (std::is_same<datatype,uint32_t>::value) {
+        rv_datatype = H5::PredType::NATIVE_UINT32;
     } else {
         throw std::string("Unknown datatype.");
     }
