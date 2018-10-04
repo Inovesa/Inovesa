@@ -164,11 +164,13 @@ public:
      * @return
      *
      * @todo: Handling of negative frequencies in the formfactor
-     * @todo: Correct scaling
      *
-     * relies on an up-t date PhaseSpace::_projection[axis]
+     * relies on an up to date PhaseSpace::_projection[axis]
      */
     meshaxis_t* wakePotential();
+
+    inline integral_t* getPaddedProfile() const
+        { return _bp_padded; }
 
     #ifdef INOVESA_USE_OPENCL
     void syncCLMem(OCLH::clCopyDirection dir);
@@ -368,7 +370,7 @@ public:
     cl::Buffer wakepotential_clbuf;
 
 private:
-    // non-interleaved internal data format might be usefull
+    // @todo: non-interleaved internal data format might be usefull
     cl::Buffer _wakepotential_padded_buf;
 
     cl::Program _clProgScaleWP;
