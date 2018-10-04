@@ -179,7 +179,7 @@ public:
     inline auto getBendingRadius() const
         { return r_bend; }
 
-    inline auto getBunchCurrent() const
+    inline auto getBunchCurrents() const
         { return I_b; }
 
     inline auto getCutoffFrequency() const
@@ -302,7 +302,7 @@ private: // phsical parameters
     double s_c;
     double xi_wall;
     double H;
-    double I_b;
+    std::vector<integral_t> I_b;
     double t_d;
     double r_bend;
     double s_E;

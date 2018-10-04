@@ -53,14 +53,19 @@ public:
 public:
     virtual void update()=0;
 
-#if defined INOVESA_USE_OPENGL
+#if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
     cl_GLuint getGLBuffer() const
         { return _offset_glbuf; }
 
 protected:
     cl_GLuint _offset_glbuf;
+#elif defined INOVESA_USE_OPENGL
+    GLuint getGLBuffer() const
+        { return _offset_glbuf; }
 
-#endif // INOVESA_USE_OPENGL
+protected:
+    GLuint _offset_glbuf;
+#endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
 };
 
 } // namespace VFPS

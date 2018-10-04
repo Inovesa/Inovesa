@@ -69,26 +69,35 @@ public:
 public:
     PhaseSpace() = delete;
 
-    PhaseSpace( std::array<meshRuler_ptr,2> axis
+    PhaseSpace(std::array<meshRuler_ptr,2> axis
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const Array::array1<integral_t> filling
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
 
-    PhaseSpace( meshRuler_ptr axis0
+    PhaseSpace(std::array<meshRuler_ptr,2> axis
+              , oclhptr_t oclh
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
+              , const double zoom=1
+              , meshdata_t* data = nullptr
+              );
+
+    PhaseSpace(meshRuler_ptr axis0
               , meshRuler_ptr axis1
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
               , meshdata_t* data = nullptr
               );
 
-    PhaseSpace( meshindex_t ps_size
+    PhaseSpace(meshindex_t ps_size
               , meshaxis_t qmin
               , meshaxis_t qmax
               , double qscale
@@ -96,9 +105,9 @@ public:
               , meshaxis_t pmax
               , double pscale
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
               , meshdata_t *data = nullptr
               );
@@ -186,7 +195,8 @@ public:
         { return _rms[1]; }
 
 
-    inline const projection_t* getProjection(const uint_fast8_t x) const
+    inline const Array::array2<projection_t>
+    getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
     /**
@@ -211,6 +221,7 @@ public:
     PhaseSpace& operator=(PhaseSpace other);
 
     /**
+<<<<<<< HEAD
      * @brief nBunches number of RF buckets in simulation
      * @return
      */
@@ -304,27 +315,72 @@ public:
      */
     const double current;
 
+public:
+    /**
+     * @brief nx reference to _nmeshcellsX
+     */
+    static const uint32_t& nx;
+
+    /**
+     * @brief ny reference to _nmeshcellsY
+     */
+    static const uint32_t& ny;
+
+    /**
+     * @brief nb reference to _nbunches
+     */
+    static const uint32_t& nb;
+
+    /**
+     * @brief nxy reference to _nmeshcells
+     */
+    static const size_t& nxy;
+
+    /**
+     * @brief setSize one-time setter for sizes
+     * @param x
+     * @param y
+     * @param b
+     *
+     * As all grids have to have the same size, it is set globally.
+     */
+    static void setSize(const uint32_t x, const uint32_t y, const uint32_t b);
+
 protected:
-    const uint32_t _nmeshcellsX;
+    static bool _firstinit;
 
-    const uint32_t _nmeshcellsY;
+    static uint32_t _nmeshcellsX;
 
-    const uint32_t _nbunches;
+    static uint32_t _nmeshcellsY;
 
-    const size_t _nmeshcells;
+    static uint32_t _nbunches;
 
+    static size_t _nmeshcells;
+
+protected:
     const IntegralMethod _integralmethod;
 
     /**
-     * @brief _bunchpopulation as we work in normalitzed units,
-     * the sum should be 1
+     * @brief _fillingpattern: normalized bunch charges as they should be
+     *
+     * as we work in normalitzed units, the sum should be 1, e.g. {0.25,0.75},
+     * empty buckets are omited
+     */
+    const Array::array1<integral_t> _filling_set;
+
+    /**
+     * @brief _bunchpopulation: normalized bunch charges as they are
+     *
+     * ideally, this is the same as _fillingpattern
      */
     Array::array1<integral_t> _bunchpopulation;
 
-    /**
-     * @brief _integral as we work in normalitzed units, this sum should be 1
-     */
-    integral_t _integral;
+   /**
+    * @brief _integral
+    *
+    * as we work in normalitzed units, this should be 1
+    */
+   integral_t _integral;
 
     /**
      * @brief _projection dimensions are orientation, bunch, x/y grid cell
@@ -372,13 +428,17 @@ private:
     oclhptr_t _oclh;
 
 public:
-    #ifdef INOVESA_USE_OPENGL
+    #ifndef INOVESA_USE_OPENCL
     /**
      * @brief projectionX_glbuf will only be allocated during CL/GL sharing
      */
+    #ifdef INOVESA_USE_OPENGL
+    GLuint projectionX_glbuf;
+    #endif // INOVESA_USE_OPENGL
+    #else // INOVESA_USE_OPENCL is defined
+    #ifdef INOVESA_USE_OPENGL
     cl_GLuint projectionX_glbuf;
     #endif // INOVESA_USE_OPENGL
-    #ifdef INOVESA_USE_OPENCL
 
     cl::Buffer data_buf;
 

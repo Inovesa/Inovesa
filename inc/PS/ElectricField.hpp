@@ -58,6 +58,8 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  const std::vector<uint32_t> bucketnumber,
+                  const meshindex_t spacing_bins,
                   oclhptr_t oclh,
                   const double f_rev,
                   const double revolutionpart = 1,
@@ -84,6 +86,8 @@ public:
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
+                 , const std::vector<uint32_t> bucketnumber
+                 , const meshindex_t spacing_bins
                  , oclhptr_t oclh
                  , const double f_rev
                  , const double revolutionpart
@@ -104,8 +108,10 @@ public:
      * @param fs synchrotron frequency [Hz]
      * @param nmax
      */
-    ElectricField( std::shared_ptr<PhaseSpace> ps
+    ElectricField(std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
+                 , const std::vector<uint32_t> bucketnumber
+                 , const meshindex_t spacing_bins
                  , oclhptr_t oclh
                  , const double f_rev
                  , const double Ib, const double E0
@@ -115,14 +121,14 @@ public:
 
     ~ElectricField() noexcept;
 
-    inline const csrpower_t& getCSRPower() const
-        { return _csrintensity; }
+    inline const csrpower_t* getCSRPower() const
+        { return _csrintensity.data(); }
 
-    inline csrpower_t* getCSRSpectrum() const
-        { return _csrspectrum; }
+    inline const csrpower_t* getCSRSpectrum() const
+        { return _csrspectrum.data(); }
 
-    inline csrpower_t* getISRSpectrum() const
-        { return _isrspectrum; }
+    inline const csrpower_t* getISRSpectrum() const
+        { return _isrspectrum.data(); }
 
     inline const std::shared_ptr<Impedance> getImpedance() const
         { return _impedance; }
@@ -146,6 +152,9 @@ public:
      * relies on an up-t date PhaseSpace::_projection[0]
      */
     csrpower_t* updateCSR(const frequency_t cutoff);
+
+    const std::vector<uint32_t> &getBuckets() const
+        { return _bucket; }
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
@@ -257,9 +266,13 @@ private: // wrappers for FFTW
                           fft_direction direction);
 
 private:
+    const uint32_t _nbunches;
+
+    const std::vector<uint32_t> _bucket;
+
     const size_t _nmax;
 
-    const uint32_t _bpmeshcells;
+    const size_t _spacing_bins;
 
     const Ruler<meshaxis_t> _axis_freq;
 
@@ -283,11 +296,21 @@ public:
 
 private:
 
-    csrpower_t _csrintensity;
 
-    csrpower_t* _csrspectrum;
+    /**
+     * @brief _csrintensity dimensions: bunch
+     */
+    Array::array1<csrpower_t> _csrintensity;
 
-    csrpower_t* _isrspectrum;
+    /**
+     * @brief _csrspectrum dimensions: bunch, frequency
+     */
+    Array::array2<csrpower_t> _csrspectrum;
+
+    /**
+     * @brief _isrspectrum dimensions: bunch, frequency
+     */
+    Array::array2<csrpower_t> _isrspectrum;
 
     const std::shared_ptr<Impedance> _impedance;
 
@@ -353,7 +376,7 @@ private:
 
     #endif // INOVESA_USE_OPENCL
 
-    meshaxis_t* _wakepotential;
+    Array::array2<meshaxis_t> _wakepotential;
 
     fft_plan _fft_wakelosses;
 

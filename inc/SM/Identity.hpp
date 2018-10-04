@@ -50,7 +50,7 @@ public:
             _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
             _oclh->enqueueCopyBuffer( _in->data_buf, _out->data_buf
-                                   , 0,0,sizeof(meshdata_t)*_size
+                                   , 0,0,sizeof(meshdata_t)*PhaseSpace::nxy
                                    #ifdef INOVESA_ENABLE_CLPROFILING
                                    , nullptr,nullptr
                                    , applySMEvents.get()
@@ -65,7 +65,7 @@ public:
         {
             meshdata_t* data_in = _in->getData();
             meshdata_t* data_out = _out->getData();
-            std::copy_n(data_in,_size,data_out);
+            std::copy_n(data_in,PhaseSpace::nb*PhaseSpace::nxy,data_out);
         }
     }
 

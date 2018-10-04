@@ -20,24 +20,28 @@
 
 #include "SM/KickMap.hpp"
 
-vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
+vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
                       , std::shared_ptr<PhaseSpace> out
                       , const meshindex_t xsize
                       , const meshindex_t ysize
+                      , const uint32_t nbunches
                       , const InterpolationType it
                       , const bool interpol_clamp
                       , const Axis kd
                       , oclhptr_t oclh
                       )
-  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1,it,it,oclh),
+  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1
+             , kd==Axis::x?ysize*nbunches*it:xsize*nbunches*it
+             , it,it,oclh),
     _kickdirection(kd),
-    _meshsize_kd(kd==Axis::x?xsize:ysize),
-    _meshsize_pd(kd==Axis::x?ysize:xsize)
+    _meshsize_kd(kd==Axis::x?xsize:ysize)
+  , _meshsize_pd(kd==Axis::x?ysize:xsize)
+  , _lastbunch(nbunches-1)
 {
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
-    _offset.resize(_meshsize_pd,meshaxis_t(0));
+    _offset.resize(_meshsize_pd*nbunches,meshaxis_t(0));
     #ifdef INOVESA_INIT_KICKMAP
     for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {
         _hinfo[q_i*_ip].index = _meshsize_kd/2;
@@ -206,39 +210,46 @@ void vfps::KickMap::apply()
     meshdata_t* data_out = _out->getData();
 
     if (_kickdirection == Axis::x) {
-        for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
-            for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[y*_ip+j];
-                    // the min makes sure not to have out of bounds accesses
-                    // casting is to be sure about overflow behaviour
-                    const meshindex_t xs = std::min(
-                         static_cast<meshindex_t>(_meshsize_pd-1),
-                         static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
-                                                - static_cast<int32_t>(_meshsize_pd/2)));
-                    value += data_in[xs*_meshsize_pd+y]
-                          * static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n < PhaseSpace::nb; n++) {
+            const meshindex_t offs = n*_meshsize_kd*_meshsize_pd;
+            for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
+                for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
+                    meshdata_t value = 0;
+                    for (uint_fast8_t j=0; j<_ip; j++) {
+                        hi h = _hinfo[y*_ip+j];
+                        // the min makes sure not to have out of bounds accesses
+                        // casting is to be sure about overflow behaviour
+                        const meshindex_t xs = std::min(
+                             static_cast<meshindex_t>(_meshsize_pd-1),
+                             static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
+                                                    - static_cast<int32_t>(_meshsize_pd/2)));
+                        value += data_in[offs+xs*_meshsize_pd+y]
+                              * static_cast<meshdata_t>(h.weight);
+                    }
+                    data_out[offs+x*_meshsize_pd+y] = value;
                 }
-                data_out[x*_meshsize_pd+y] = value;
             }
         }
     } else {
-        for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
-            const meshindex_t offs = x*_meshsize_kd;
-            for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[x*_ip+j];
-                    // the min makes sure not to have out of bounds accesses
-                    // casting is to be sure about overflow behaviour
-                    const meshindex_t ys = std::min(
-                        static_cast<meshindex_t>(_meshsize_kd-1),
-                        static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
-                                               - static_cast<int32_t>(_meshsize_kd/2)));
-                    value += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n < PhaseSpace::nb; n++) {
+            const meshindex_t offs1 = n*_meshsize_kd*_meshsize_pd;
+            const size_t offs2 = std::min(n,_lastbunch)*_meshsize_pd;
+            for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
+                const meshindex_t offs = offs1 + x*_meshsize_kd;
+                for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
+                    meshdata_t value = 0;
+                    for (uint_fast8_t j=0; j<_ip; j++) {
+                        hi h = _hinfo[offs2+x*_ip+j];
+                        // the min makes sure not to have out of bounds accesses
+                        // casting is to be sure about overflow behaviour
+                        const meshindex_t ys = std::min(
+                            static_cast<meshindex_t>(_meshsize_kd-1),
+                            static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
+                                                   - static_cast<int32_t>(_meshsize_kd/2)));
+                        value += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+                    }
+                    data_out[offs+y] = value;
                 }
-                data_out[offs+y] = value;
             }
         }
     }
@@ -313,7 +324,7 @@ void vfps::KickMap::updateSM()
     interpol_t* smc = new interpol_t[_it];
 
     // translate offset into SM
-    for (meshindex_t i=0; i< static_cast<meshindex_t>(_meshsize_pd); i++) {
+    for (size_t i=0; i< _offset.size(); i++) {
         meshaxis_t poffs = _meshsize_kd/2+_offset[i];
         meshaxis_t qp_int;
         //Scaled arguments of interpolation functions:
