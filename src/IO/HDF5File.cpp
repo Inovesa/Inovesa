@@ -71,6 +71,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                   , std::min(256U,_psSizeX) }}
                                                , {{ H5S_UNLIMITED,_nBunches
                                                   , _psSizeX }} ))
+  , _paddedProfile(_makeDatasetInfo<2,integral_t>("/BunchProfile/padded"
+                                                 , {{0,_impSize}}
+                                                 , {{2,std::min(256U,_psSizeX)}}
+                                                 , {{H5S_UNLIMITED,_impSize}}))
   , _bunchLength( _makeDatasetInfo<2,meshaxis_t>( "/BunchLength/data"
                                                , {{ 0, _nBunches }}
                                                , {{ 256, 1 }}
@@ -357,6 +361,11 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
         _appendData(_csrSpectrum,ef->getCSRSpectrum());
     }
     _appendData(_csrIntensity,ef->getCSRPower());
+}
+
+void vfps::HDF5File::appendPaddedProfile(const vfps::ElectricField *ef)
+{
+    _appendData(_paddedProfile,ef->getPaddedProfile());
 }
 
 void vfps::HDF5File::appendRFKicks(

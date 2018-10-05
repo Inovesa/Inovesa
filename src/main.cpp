@@ -898,10 +898,16 @@ int main(int argc, char** argv)
     const auto h5save = opts.getSavePhaseSpace();
     // end of preparation to save results
 
-
-    if (hdf_file != nullptr && h5save == 0) {
-        // save initial phase space (if not saved anyways)
-        hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
+    if (hdf_file != nullptr) {
+        // save initial conditions
+        if (wake_field != nullptr) {
+            // padded bunch profile
+            hdf_file->appendPaddedProfile(wake_field);
+        }
+        if (h5save == 0) {
+            // phase space (if not saved anyways)
+            hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
+        }
     }
     #endif
 
@@ -1089,6 +1095,9 @@ int main(int argc, char** argv)
 
         if (drfm) {
             hdf_file->appendRFKicks(drfm->getPastModulation());
+        }
+        if (wake_field != nullptr) {
+            hdf_file->appendPaddedProfile(wake_field);
         }
     }
     #endif // INOVESA_USE_HDF5

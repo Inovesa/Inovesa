@@ -72,6 +72,13 @@ public:
     void append(const ElectricField* ef, const bool fullspectrum = true);
 
     /**
+     * @brief savePaddedProfile
+     * @param ef
+     * @param timestep 0 or 1 (for start or end of simulation)
+     */
+    void appendPaddedProfile(const ElectricField* ef);
+
+    /**
      * @brief The AppendType enum
      *
      * All: save everything
@@ -156,6 +163,8 @@ private: // values for phase space axis
     DatasetInfo<2> _bunchPopulation;
 
     DatasetInfo<3> _bunchProfile;
+
+    DatasetInfo<2> _paddedProfile;
 
     DatasetInfo<2> _bunchLength;
 
