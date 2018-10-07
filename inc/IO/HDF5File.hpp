@@ -76,7 +76,7 @@ public:
      * @param ef
      * @param timestep 0 or 1 (for start or end of simulation)
      */
-    void appendPaddedProfile(const ElectricField* ef);
+    void appendPadded(const ElectricField* ef);
 
     /**
      * @brief The AppendType enum
@@ -181,6 +181,8 @@ private: // values for phase space axis
     DatasetInfo<2> _dynamicRFKick;
 
     DatasetInfo<3> _wakePotential;
+
+    DatasetInfo<2> _paddedPotential;
 
     DatasetInfo<3> _csrSpectrum;
 

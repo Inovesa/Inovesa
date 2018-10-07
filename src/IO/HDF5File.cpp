@@ -115,6 +115,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                     , std::min(256U,_psSizeX) }}
                                                  , {{ H5S_UNLIMITED,_nBunches
                                                     , _psSizeX }} ))
+  , _paddedPotential(_makeDatasetInfo<2,integral_t>("/WakePotential/padded"
+                                                 , {{0,_impSize}}
+                                                 , {{2,std::min(256U,_psSizeX)}}
+                                                 , {{H5S_UNLIMITED,_impSize}}))
   , _csrSpectrum(_makeDatasetInfo<3,meshaxis_t>( "/CSR/Spectrum/data"
                                                , {{ 0, _nBunches, _maxn }}
                                                , {{ 64, 1
@@ -363,9 +367,10 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     _appendData(_csrIntensity,ef->getCSRPower());
 }
 
-void vfps::HDF5File::appendPaddedProfile(const vfps::ElectricField *ef)
+void vfps::HDF5File::appendPadded(const vfps::ElectricField *ef)
 {
     _appendData(_paddedProfile,ef->getPaddedProfile());
+    _appendData(_paddedPotential,ef->getPaddedWakepotential());
 }
 
 void vfps::HDF5File::appendRFKicks(

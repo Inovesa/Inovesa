@@ -894,25 +894,6 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    #ifdef INOVESA_USE_HDF5
-    const auto h5save = opts.getSavePhaseSpace();
-    // end of preparation to save results
-
-    if (hdf_file != nullptr) {
-        // save initial conditions
-        if (wake_field != nullptr) {
-            // padded bunch profile
-            hdf_file->appendPaddedProfile(wake_field);
-        }
-        if (h5save == 0) {
-            // phase space (if not saved anyways)
-            hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
-        }
-    }
-    #endif
-
-
-
     Display::printText("Starting the simulation.");
 
     // time between two status updates (in seconds)
@@ -930,6 +911,25 @@ int main(int argc, char** argv)
     grid_t1->updateYProjection();
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations),false);
+
+    #ifdef INOVESA_USE_HDF5
+    const auto h5save = opts.getSavePhaseSpace();
+    // end of preparation to save results
+
+    if (hdf_file != nullptr) {
+        // save initial conditions
+        if (wake_field != nullptr) {
+            // padded bunch and wake profiles
+            wake_field->wakePotential();
+            hdf_file->appendPadded(wake_field);
+        }
+        if (h5save == 0) {
+            // phase space (if not saved anyways)
+            hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
+        }
+    }
+    #endif
+
 
     #ifdef INOVESA_USE_OPENCL
     if (oclh) {
@@ -1097,7 +1097,7 @@ int main(int argc, char** argv)
             hdf_file->appendRFKicks(drfm->getPastModulation());
         }
         if (wake_field != nullptr) {
-            hdf_file->appendPaddedProfile(wake_field);
+            hdf_file->appendPadded(wake_field);
         }
     }
     #endif // INOVESA_USE_HDF5

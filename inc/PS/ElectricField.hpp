@@ -160,7 +160,7 @@ public:
         { return _wakefunction; }
 
     /**
-     * @brief wakePotential
+     * @brief wakePotential updates wake potential
      * @return
      *
      * @todo: Handling of negative frequencies in the formfactor
@@ -171,6 +171,9 @@ public:
 
     inline integral_t* getPaddedProfile() const
         { return _bp_padded; }
+
+    inline meshaxis_t* getPaddedWakepotential() const
+        { return _wakepotential_padded; }
 
     #ifdef INOVESA_USE_OPENCL
     void syncCLMem(OCLH::clCopyDirection dir);
