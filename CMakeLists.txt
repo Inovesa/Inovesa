@@ -32,6 +32,8 @@ set (INOVESA_VERSION_FIX -1)
 # -3 RC1
 # -n RC(n-2)
 
+SET (COVERAGE OFF CACHE BOOL "Coverage")
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/InovesaConfig.hpp.in"
   "${PROJECT_BINARY_DIR}/InovesaConfig.hpp"
@@ -224,6 +226,10 @@ ENDIF()
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
+IF(COVERAGE)
+    target_compile_options(tests PRIVATE --coverage)
+    target_link_libraries(tests PRIVATE --coverage)
+ENDIF()
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 
