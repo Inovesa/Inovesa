@@ -37,11 +37,16 @@ addons:
 #  - clang
 #  - gcc
 
+before_install:
+  - pip install --user cpp-coveralls
+
 script: # set correct compiler versions first
     - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
     - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
-    - cmake . -DCMAKE_BUILD_TYPE=Release
+    - cmake . -DCMAKE_BUILD_TYPE=Release  -DCOVERAGE=1
     - cmake --build .
     - ./inovesa --version
     - ./inovesa -T 0.1 -o test.h5
 
+after_success:
+  - coveralls --root . -E ".*CMakeFiles.*"
