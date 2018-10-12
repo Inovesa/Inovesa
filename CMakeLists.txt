@@ -227,8 +227,8 @@ ENDIF()
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
 IF(COVERAGE)
-    target_compile_options(tests PRIVATE --coverage)
-    target_link_libraries(tests PRIVATE --coverage)
+    target_compile_options(inovesa PRIVATE --coverage)
+    target_link_libraries(inovesa PRIVATE --coverage)
 ENDIF()
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
