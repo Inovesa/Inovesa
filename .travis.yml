@@ -5,6 +5,7 @@ branches:
   - master
   - develop
   - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+  - coverall
 
 addons:
   apt:
