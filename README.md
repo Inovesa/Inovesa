@@ -9,45 +9,53 @@ Vlasov-Fokker-Planck equation.
 
 Inovesa is modularly extensible and uses OpenCL to massively parallelize the
 computation. It was designed with standard desktop PCs and usability in mind.
-Inovesa and the experience of any user greatly profits from
-contributions of any form -- starting from questions or bug reports
-going all the way to implementation of new features.
-If you consider contributing to Inovesa,
-please read the [contibuting file][1].
+Inovesa and the experience of any user greatly profits from contribution of
+any form -- starting from questions or bug reports going all the way to
+implementation of new features. We warmly welcome contributions to Inovesa.
+The [contibuting file](CONTRIBUTING.md) is a good starting point.
+
+### Status
+
+[![Inovesa build status (branch: Master)](https://travis-ci.org/Inovesa/Inovesa.svg?branch=master)](https://travis-ci.org/Inovesa/Inovesa/branches)
 
 
 Publications
 ------------
 
-### Background on the implementation
+### Theoretical background
 
-* The fundamental working principle (v1.0) and example numerical studies can be found in the [first paper on Inovesa][2].
-* The features added in v1.1 are described in a [paper on modeling synchrotron motion][3]
+* The fundamental working principle (v1.0) and example numerical studies can be found in the [first paper on Inovesa][1].
+* The features added in v1.1 are described in a [paper on modeling synchrotron motion][2]
 
 
 ### Example results
 
-* Analysis of [bunch profiles using machine learning][4] (Inovesa v1.0)
-* Studies of [phase shift][5] (Inovesa v1.0)
-* A wide [range of applications][6] (Inovesa v1.0)
-* [Emitted synchrotron radiation][7] of different wavelengths (Inovesa v1.0)
+* Analysis of [bunch profiles using machine learning][3] (Inovesa v1.0)
+* Studies of [phase shift][4] (Inovesa v1.0)
+* A wide [range of applications][5] (Inovesa v1.0)
+* [Emitted synchrotron radiation][6] of different wavelengths (Inovesa v1.0)
+
+
+### Citing Inovesa
+
+We use the zenodo project to get a DOI for each version. So, when you use
+Inovesa to obtain your simulation results, you can
+[search zenodo for the right citation of your Inovesa version](https://zenodo.org/search?page=1&size=20&q=conceptrecid:597356&all_versions&sort=-version)
+to directly point to that specific version.
 
 
 
-[1]: CONTRIBUTING.md
-"Information on contributing to Inovesa"
+[1]: https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.20.030704 "Parallelized Vlasov-Fokker-Planck solver for desktop personal computers"
 
-[2]: https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.20.030704 "Parallelized Vlasov-Fokker-Planck solver for desktop personal computers"
+[2]: http://iopscience.iop.org/article/10.1088/1742-6596/1067/6/062025/meta "Elaborated Modeling of Synchrotron Motion in Vlasov-Fokker-Planck Solvers"
 
-[3]: http://iopscience.iop.org/article/10.1088/1742-6596/1067/6/062025/meta "Elaborated Modeling of Synchrotron Motion in Vlasov-Fokker-Planck Solvers"
+[3]: https://doi.org/10.18429/JACoW-IPAC2018-THPAK030 "Studies of Longitudinal Dynamics in the Micro-Bunching Instability Using Machine Learning"
 
-[4]: https://doi.org/10.18429/JACoW-IPAC2018-THPAK030 "Studies of Longitudinal Dynamics in the Micro-Bunching Instability Using Machine Learning"
+[4]: https://doi.org/10.18429/JACoW-IPAC2018-WEPAL028 "Study of the Influence of the CSR Impedance on the Synchronous Phase Shift at KARA"
 
-[5]: https://doi.org/10.18429/JACoW-IPAC2018-WEPAL028 "Study of the Influence of the CSR Impedance on the Synchronous Phase Shift at KARA"
+[5]: https://doi.org/10.5445/ir/1000084466 "Simulation and measurement of the dynamics of ultra-short electron bunch profiles for the generation of coherent THz radiation"
 
-[6]: https://doi.org/10.5445/ir/1000084466 "Simulation and measurement of the dynamics of ultra-short electron bunch profiles for the generation of coherent THz radiation"
-
-[7]: https://arxiv.org/abs/1710.09568 "Continuous bunch-by-bunch spectroscopic investigation of the micro-bunching instability"
+[6]: https://arxiv.org/abs/1710.09568 "Continuous bunch-by-bunch spectroscopic investigation of the micro-bunching instability"
 
 
 
