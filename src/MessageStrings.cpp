@@ -18,7 +18,10 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
+#include <boost/config.hpp>
+
 #include "MessageStrings.hpp"
+
 
 const std::string vfps::copyright_notice() noexcept {
     std::string rv (
@@ -86,7 +89,9 @@ const std::string vfps::inovesa_version(const bool verbose) {
                 << ", Commit: "<< GIT_COMMIT;
      }
     if (verbose) {
-        sstream << std::endl << "Build options:"
+        sstream << std::endl << "Compiler:"
+                << std::endl << '\t' << BOOST_COMPILER
+                << std::endl << "Build options:"
                 #ifdef DEBUG
                 << std::endl << '\t' << "DEBUG"
                 #endif
