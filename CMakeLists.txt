@@ -209,7 +209,7 @@ ENDIF()
 
 
 IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-    MESAGE ("Build for coverage information.")
+    MESSAGE ("Build for coverage information.")
     target_compile_options(${PROJECT_NAME} PRIVATE --coverage)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} --coverage)
 ELSE()
