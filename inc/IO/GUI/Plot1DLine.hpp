@@ -18,10 +18,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PLOT1DLINE_HPP
-#define PLOT1DLINE_HPP
+#pragma once
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 #include <array>
 #include <sstream>
@@ -88,5 +87,3 @@ private:
 } // namespace vfps
 
 #endif // INOVESA_USE_OPENGL
-
-#endif // PLOT1DLINE_HPP

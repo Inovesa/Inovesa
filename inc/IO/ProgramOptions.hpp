@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PROGRAMOPTIONS_HPP
-#define PROGRAMOPTIONS_HPP
+#pragma once
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -32,7 +31,7 @@
 #include "defines.hpp"
 #include "MessageStrings.hpp"
 #include "SM/FokkerPlanckMap.hpp"
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
 #endif
 
@@ -56,7 +55,7 @@ public:
      */
     void save(std::string fname);
 
-    #ifdef INOVESA_USE_HDF5
+    #if INOVESA_USE_HDF5 == 1
     void save(HDF5File* file);
     #endif // INOVESA_USE_HDF5
 
@@ -76,7 +75,7 @@ public:
     inline auto getSaveSourceMap() const
         { return _savesourcemap; }
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     inline auto getOpenGLVersion() const
         { return _glversion; }
 
@@ -344,4 +343,3 @@ private:
 
 }
 
-#endif // PROGRAMOPTIONS_HPP

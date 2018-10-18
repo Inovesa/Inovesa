@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef IMPEDANCE_HPP
-#define IMPEDANCE_HPP
+#pragma once
 
 #include <fstream>
 #include <string>
@@ -99,7 +98,7 @@ public:
     inline const Ruler<frequency_t>* getRuler() const
         { return &_axis; }
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer data_buf;
     #endif // INOVESA_USE_OPENCL
 
@@ -156,4 +155,3 @@ inline Impedance operator+(Impedance lhs, const Impedance& rhs)
 
 } // namespace vfps
 
-#endif // IMPEDANCE_HPP

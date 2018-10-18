@@ -18,7 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 
 #include "CL/OpenCLHandler.hpp"
 #include "IO/Display.hpp"
@@ -67,7 +67,7 @@ OCLH::OCLH( uint32_t device, bool glsharing)
         }
     }
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     queue = cl::CommandQueue(context,_device,CL_QUEUE_PROFILING_ENABLE);
     #else
     queue = cl::CommandQueue(context,_device);
@@ -75,7 +75,7 @@ OCLH::OCLH( uint32_t device, bool glsharing)
 
     devicetype = _device.getInfo<CL_DEVICE_TYPE>();
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     // cl_VENDOR_gl_sharing is present, when string contains the substring
     if (_device.getInfo<CL_DEVICE_EXTENSIONS>().find("_gl_sharing")
             == std::string::npos) {
@@ -83,12 +83,12 @@ OCLH::OCLH( uint32_t device, bool glsharing)
     }
     #endif // INOVESA_USE_OPENGL
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftInitSetupData(&fft_setup);
     clfftSetup(&fft_setup);
     #endif // INOVESA_USE_CLFFT
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     // place initial marker
     queue.enqueueMarkerWithWaitList(nullptr,&init);
     #endif // INOVESA_ENABLE_CLPROFILING
@@ -121,7 +121,7 @@ cl::Program OCLH::prepareCLProg(std::string code)
         std::cerr << e.what() << std::endl;
         std::cout << "===== OpenCL Code =====\n"
                                 << code << std::endl;
-    #ifdef DEBUG
+    #if DEBUG == 1
         throw e;
     }
     #endif
@@ -136,7 +136,7 @@ cl::Program OCLH::prepareCLProg(std::string code)
 return p;
 }
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 void OCLH::saveProfilingInfo(std::string fname)
 {
     saveTimings(&timingsCopy,"MiscCopy");
@@ -165,7 +165,7 @@ void OCLH::saveProfilingInfo(std::string fname)
 }
 #endif // INOVESA_ENABLE_CLPROFILING
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
 {
     queue.finish();
@@ -181,17 +181,17 @@ void OCLH::saveTimings(cl::vector<cl::Event*>* evts, std::string name)
 
 OCLH::~OCLH()
 {
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     saveProfilingInfo("inovesa-timings.txt");
     #else
     OCLH::queue.finish();
     #endif
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftTeardown();
     #endif // INOVESA_USE_CLFFT
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     for (auto ev : timingsCopy) {
         delete ev;
     }
@@ -253,7 +253,7 @@ void OCLH::listCLDevices()
                       << tmp_devices[d].getInfo<CL_DEVICE_MAX_MEM_ALLOC_SIZE>()/0x100000 << " MiB, "
                       << tmp_devices[d].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>() << "CU "
                       << "(" << tmp_devices[d].getInfo<CL_DEVICE_NAME>() << ")"
-                      #ifdef DEBUG
+                      #if DEBUG == 1
                       << std::endl
                       << "\ton \"" <<  p.getInfo<CL_PLATFORM_NAME>() << "\""
                       << " by \"" <<  p.getInfo<CL_PLATFORM_VENDOR>() << '\"'
@@ -305,7 +305,7 @@ std::vector<cl_context_properties> OCLH::properties( cl::Platform& platform
 {
     std::vector<cl_context_properties> rv;
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     if (glsharing) {
         #ifdef __linux__
         rv = {

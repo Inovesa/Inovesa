@@ -19,7 +19,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESA_USE_PNG
+#if INOVESA_USE_PNG == 1
 #include <png++/png.hpp>
 #endif
 #include <iterator>
@@ -29,7 +29,7 @@
 #include "IO/HDF5File.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
 
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 std::unique_ptr<vfps::PhaseSpace>
 vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
@@ -45,7 +45,7 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                                           , oclh
                                           , bunch_charge,bunch_current,
                                            xscale,yscale,startdiststep);
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
         return ps;
@@ -78,7 +78,7 @@ vfps::makePSFromPNG( std::string fname
                    , double qscale, double pscale
                    )
 {
-    #ifdef INOVESA_USE_PNG
+    #if INOVESA_USE_PNG == 1
     // load pattern to start with
     png::image<png::gray_pixel_16> image;
     try {
@@ -114,7 +114,7 @@ vfps::makePSFromPNG( std::string fname
         ps->updateXProjection();
         ps->normalize();
 
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
         std::stringstream imgsize;
@@ -181,7 +181,7 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
 
     // normalize integral to 1
     ps->normalize();
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
     #endif // INOVESA_USE_OPENCL
     return ps;

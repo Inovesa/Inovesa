@@ -33,7 +33,7 @@ const std::string vfps::copyright_notice() noexcept {
         "Copyright (c) 2017 Matthias Blaicher\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
-        #ifdef INOVESA_USE_OPENGL
+        #if INOVESA_USE_OPENGL == 1
         "Copyright (c) 2014-2015 Nathaniel J. Smith, Stefan van der Walt\n"
         "\t (Magma color code)\n"
         #endif
@@ -80,28 +80,28 @@ const std::string vfps::inovesa_version(const bool verbose) {
      }
     if (verbose) {
         sstream << std::endl << "Build options:"
-                #ifdef DEBUG
+                #if DEBUG == 1
                 << std::endl << '\t' << "DEBUG"
                 #endif
-                #ifdef INOVESA_ENABLE_INTERRUPT
+                #if INOVESA_ENABLE_INTERRUPT == 1
                 << std::endl << '\t' << "INOVESA_ENABLE_INTERRUPT"
                 #endif
-                #ifdef INOVESA_ENABLE_CLPROFILING
+                #if INOVESA_ENABLE_CLPROFILING == 1
                 << std::endl << '\t' << "INOVESA_ENABLE_CLPROFILING"
                 #endif
-                #ifdef INOVESA_USE_OPENCL
+                #if INOVESA_USE_OPENCL == 1
                 << std::endl << '\t' << "INOVESA_USE_OPENCL"
                 #endif
-                #ifdef INOVESA_USE_CLFFT
+                #if INOVESA_USE_CLFFT == 1
                 << std::endl << '\t' << "INOVESA_USE_CLFFT"
                 #endif
-                #ifdef INOVESA_USE_OPENGL
+                #if INOVESA_USE_OPENGL == 1
                 << std::endl << '\t' << "INOVESA_USE_OPENGL"
                 #endif
-                #ifdef INOVESA_USE_HDF5
+                #if INOVESA_USE_HDF5 == 1
                 << std::endl << '\t' << "INOVESA_USE_HDF5"
                 #endif
-                #ifdef INOVESA_USE_PNG
+                #if INOVESA_USE_PNG == 1
                 << std::endl << '\t' << "INOVESA_USE_PNG"
                 #endif
                 ;

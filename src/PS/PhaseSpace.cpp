@@ -49,10 +49,10 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
   , _oclh(nullptr) // OpenCL will be disabled during dirst initialization steps
-  #ifdef INOVESA_USE_OPENGL
+  #if INOVESA_USE_OPENGL == 1
   , projectionX_glbuf(0)
   #endif // INOVESA_USE_OPENGL
-  #ifdef INOVESA_ENABLE_CLPROFILING
+  #if INOVESA_ENABLE_CLPROFILING == 1
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
   , integEvents(std::make_unique<cl::vector<cl::Event*>>())
   , syncPSEvents(std::make_unique<cl::vector<cl::Event*>>())
@@ -69,7 +69,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         createFromProjections();
     }
 
-    #ifdef INOVESA_CHG_BUNCH
+    #if INOVESA_CHG_BUNCH == 1
     std::random_device seed;
     std::default_random_engine engine(seed());
 
@@ -118,14 +118,14 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     #endif // INOVESA_CHG_BUNCH
 
     _oclh = oclh; // now, OpenCL can be used
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
     try {
         data_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*_nbunches*nMeshCells(0)*nMeshCells(1),
                            _data());
-        #ifdef INOVESA_USE_OPENGL
+        #if INOVESA_USE_OPENGL == 1
         if (_oclh->OpenGLSharing()) {
             glGenBuffers(1, &projectionX_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,projectionX_glbuf);
@@ -217,7 +217,7 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
 
 vfps::PhaseSpace::~PhaseSpace() noexcept
 {
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     if (_oclh) {
         _oclh->saveTimings(xProjEvents.get(),"xProjPS");
         _oclh->saveTimings(integEvents.get(),"integPS");
@@ -237,12 +237,12 @@ vfps::PhaseSpace::~PhaseSpace() noexcept
 
 void vfps::PhaseSpace::integrate()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueNDRangeKernel( _clKernIntegral
                                   , cl::NullRange
                                   , cl::NDRange(1)
-                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
@@ -276,7 +276,7 @@ void vfps::PhaseSpace::integrate()
 void vfps::PhaseSpace::average(const uint_fast8_t axis)
 {
     if (axis == 0) {
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (_oclh) {
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
                                 , sizeof(projection_t)*nMeshCells(0)
@@ -315,7 +315,7 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
 }
 
 void vfps::PhaseSpace::updateXProjection() {
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueNDRangeKernel(_clKernProjX
                                   , cl::NullRange
@@ -328,7 +328,7 @@ void vfps::PhaseSpace::updateXProjection() {
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
         _oclh->enqueueBarrier();
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _oclh->enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
                                       sizeof(projection_t)*nMeshCells(0),
                                       _projection[0].data());
@@ -364,7 +364,7 @@ void vfps::PhaseSpace::updateXProjection() {
 }
 
 void vfps::PhaseSpace::updateYProjection() {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data());
@@ -400,13 +400,13 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
 {
     integrate();
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
 
     _data /= _integral;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
@@ -422,7 +422,7 @@ vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
     return *this;
 }
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
 {
     if (_oclh) {
@@ -441,7 +441,7 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
         _oclh->enqueueReadBuffer
             (bunchpop_buf,CL_TRUE,0,sizeof(integral_t),&_bunchpopulation,
             nullptr,evt
-            #ifdef INOVESA_ENABLE_CLPROFILING
+            #if INOVESA_ENABLE_CLPROFILING == 1
             , syncPSEvents.get()
             #endif // INOVESA_ENABLE_CLPROFILING
             );
@@ -496,7 +496,7 @@ void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
     std::swap(first._data, second._data);
 }
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 std::string vfps::PhaseSpace::cl_code_integral = R"(
     __kernel void integral(const __global float* proj,
                            const __global float* ws,

@@ -18,9 +18,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESA_USE_HDF5
-#ifndef HDF5FILE_HPP
-#define HDF5FILE_HPP
+#pragma once
+
+#if INOVESA_USE_HDF5 == 1
 
 #include <array>
 #include <H5Cpp.h>
@@ -201,5 +201,4 @@ private:
 
 } // namespace vfps
 
-#endif // HDF5FILE_HPP
 #endif // INOVESA_USE_HDF5

@@ -18,7 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 #include "IO/GUI/Plot2DPrimitive.hpp"
 

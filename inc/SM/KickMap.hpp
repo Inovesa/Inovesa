@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef KICKMAP_HPP
-#define KICKMAP_HPP
+#pragma once
 
 #include "SM/SourceMap.hpp"
 
@@ -60,7 +59,7 @@ public:
 
     PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir);
     #endif // INOVESA_USE_OPENCL
 
@@ -70,7 +69,7 @@ protected:
      */
     std::vector<meshaxis_t> _offset;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _offset_clbuf;
     #endif // INOVESA_USE_OPENCL
 
@@ -82,7 +81,7 @@ protected:
     /**
      * @brief _meshsize_kd size of the mesh in direction of the kick
      */
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     const cl_int _meshsize_kd;
     #else
     const meshindex_t _meshsize_kd;
@@ -91,7 +90,7 @@ protected:
     /**
      * @brief _meshsize_pd size of the mesh perpendicular to the kick
      */
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     const cl_int _meshsize_pd;
     #else
     const meshindex_t _meshsize_pd;
@@ -106,5 +105,3 @@ protected:
 };
 
 }
-
-#endif // KICKMAP_HPP

@@ -80,7 +80,7 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
 vfps::WakeFunctionMap::~WakeFunctionMap() noexcept
 {
     delete [] _wakefunction;
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     saveTimings("WakeFunctionMap");
     #endif // INOVESA_ENABLE_CLPROFILING
 }

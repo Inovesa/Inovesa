@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef DEFINES_HPP
-#define DEFINES_HPP
+#pragma once
 
 #include <complex>
 #include <string>
@@ -82,5 +81,4 @@ constexpr double mu0 = 1/(epsilon0*c*c);
 
 } // namespace vfps
 
-#endif // DEFINES_HPP
 

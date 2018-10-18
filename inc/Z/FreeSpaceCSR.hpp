@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef FREESPACECSR_HPP
-#define FREESPACECSR_HPP
+#pragma once
 
 #include "Z/Impedance.hpp"
 
@@ -43,5 +42,3 @@ private:
 };
 
 } // namespace vfps
-
-#endif // FREESPACECSR_HPP

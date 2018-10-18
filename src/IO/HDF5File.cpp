@@ -18,7 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
 
 #include "MessageStrings.hpp"

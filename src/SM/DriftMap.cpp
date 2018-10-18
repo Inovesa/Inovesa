@@ -43,7 +43,7 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
         _offset[y] /= _axis[0]->delta();
     }
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         syncCLMem(OCLH::clCopyDirection::cpu2dev);
     }
@@ -51,7 +51,7 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
     updateSM();
 }
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 vfps::DriftMap::~DriftMap() noexcept
 {
     saveTimings("DrifMap");

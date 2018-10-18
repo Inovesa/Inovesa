@@ -89,7 +89,7 @@ void vfps::RFKickMap::_calcKick(const meshaxis_t phase, const meshaxis_t ampl)
         }
     }
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         syncCLMem(OCLH::clCopyDirection::cpu2dev);
     }
@@ -98,7 +98,7 @@ void vfps::RFKickMap::_calcKick(const meshaxis_t phase, const meshaxis_t ampl)
 }
 
 vfps::RFKickMap::~RFKickMap() noexcept
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 {
     saveTimings("RFKickMap");
 }

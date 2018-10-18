@@ -18,9 +18,8 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef CLPROFILER_HPP
-#define CLPROFILER_HPP
-#if defined (INOVESA_USE_OPENCL) && defined (INOVESA_ENABLE_CLPROFILING)
+#pragma once
+#if (INOVESA_USE_OPENCL == 1) && (INOVESA_ENABLE_CLPROFILING == 1)
 
 
 #include <string>
@@ -65,4 +64,3 @@ inline bool operator>=(const CLTiming& lhs, const CLTiming& rhs)
 } // namespace vfps
 
 #endif // INOVESA_USE_OPENCL, INOVESA_ENABLE_CLPROFILING
-#endif // CLPROFILER_HPP

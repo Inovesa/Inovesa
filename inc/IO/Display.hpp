@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef DISPLAY_HPP
-#define DISPLAY_HPP
+#pragma once
 
 #include "defines.hpp"
 
@@ -32,7 +31,7 @@
 #include <memory>
 #include <type_traits>
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 // Include GLEW
 #include <GL/glew.h>
@@ -76,7 +75,7 @@ private:
  * but to return a nullptr.
  */
 std::unique_ptr<Display> make_display(std::string ofname
-                                      #ifdef INOVESA_USE_OPENGL
+                                      #if INOVESA_USE_OPENGL == 1
                                       , bool gui=false
                                       , uint_fast8_t glversion=0
                                       #endif // INOVESA_USE_OPENGL
@@ -104,7 +103,7 @@ public:
     Display& operator=(const Display&) = delete;
     Display& operator=(Display&&) = delete;
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     /**
      * @brief Display initializes OpenGL
      * @param glversion
@@ -117,7 +116,7 @@ public:
      */
     ~Display() noexcept;
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     void addElement(std::shared_ptr<GUIElement> newitem);
     #endif // INOVESA_USE_OPENGL
 
@@ -136,7 +135,7 @@ public:
                           bool newline = true,
                           float silentTime=0.0f);
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     void takeElement(std::shared_ptr<GUIElement> item);
     #endif // INOVESA_USE_OPENGL
 
@@ -144,7 +143,7 @@ public:
 
 
 private:
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     #if GLFW_VERSION_MAJOR == 3
 
     GLFWwindow* openWindow(uint_fast8_t glversion);
@@ -167,6 +166,4 @@ private:
 };
 
 } // namespace vfps
-
-#endif // DISPLAY_HPP
 

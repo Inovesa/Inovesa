@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef SOURCEMAP_HPP
-#define SOURCEMAP_HPP
+#pragma once
 
 #include <memory>
 #include <sstream>
@@ -106,7 +105,7 @@ protected:
     /**
      * @brief _ip holds the total number of points used for interpolation
      */
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     const cl_uint _ip;
     #else
     const uint_fast8_t _ip;
@@ -138,7 +137,7 @@ protected:
      */
     const meshindex_t _ysize;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     /**
      * @brief _hi_buf buffer for source information
      */
@@ -149,7 +148,7 @@ protected:
      */
     cl::Kernel applySM;
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     std::unique_ptr<cl::vector<cl::Event*>> applySMEvents;
 
     std::unique_ptr<cl::vector<cl::Event*>> syncSMEvents;
@@ -168,7 +167,7 @@ protected:
 
     oclhptr_t _oclh;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     /**
      * @brief genCode4SM1D generates OpenCL code for a generic source map
      */
@@ -186,11 +185,9 @@ protected:
 
     static void notClampedMessage();
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     void saveTimings(std::string mapname);
     #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 }
-
-#endif // SOURCEMAP_HPP

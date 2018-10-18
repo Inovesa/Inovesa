@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef MESSAGESTRINGS_HPP
-#define MESSAGESTRINGS_HPP
+#pragma once
 
 #include <iomanip>
 #include <memory>
@@ -54,4 +53,3 @@ const std::string status_string(std::shared_ptr<PhaseSpace> ps,
 
 } // namespace vfps
 
-#endif // MESSAGESTRINGS_HPP

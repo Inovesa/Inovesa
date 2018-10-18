@@ -55,10 +55,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
-            #ifdef INOVESA_USE_HDF5
+            #if INOVESA_USE_HDF5 == 1
             "\tInovesa result file (.hdf5, .h5)\n"
             #endif // INOVESA_USE_HDF5
-            #ifdef INOVESA_USE_PNG
+            #if INOVESA_USE_PNG == 1
             "\tgrayscale png (.png) file\n"
             #endif // INOVESA_USE_PNG
             "\ttext file (.txt) w/ particle coordinates\n"
@@ -145,7 +145,7 @@ vfps::ProgramOptions::ProgramOptions() :
     ;
     _programopts_cli.add_options()
             ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
             "OpenCL device to use\n('-1' lists available devices)")
         #else // not INOVESA_USE_OPENCL
             "(not active in this build)")
@@ -374,7 +374,7 @@ void vfps::ProgramOptions::save(std::string fname)
     }
 }
 
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 void vfps::ProgramOptions::save(vfps::HDF5File* file)
 {
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {

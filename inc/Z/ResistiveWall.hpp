@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef RESISTIVEWALL_HPP
-#define RESISTIVEWALL_HPP
+#pragma once
 
 #include "Z/Impedance.hpp"
 
@@ -65,4 +64,3 @@ private:
 
 } // namespace vfps
 
-#endif // RESISTIVEWALL_HPP

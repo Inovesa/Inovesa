@@ -18,10 +18,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PLOT2DPRIMITIVE_HPP
-#define PLOT2DPRIMITIVE_HPP
+#pragma once
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 
 #include "IO/GUI/GUIElement.hpp"
@@ -62,5 +61,3 @@ private:
 } // namespace vfps
 
 #endif // INOVESA_USE_OPENGL
-
-#endif // PLOT2DPRIMITIVE_HPP

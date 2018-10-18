@@ -18,8 +18,8 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef WAKEIMPEDANCEMAP_HPP
-#define WAKEIMPEDANCEMAP_HPP
+#pragma once
+
 
 #include "SM/WakeKickMap.hpp"
 #include "PS/ElectricField.hpp"
@@ -55,4 +55,3 @@ private:
 
 } // namespace vfps
 
-#endif // WAKEIMPEDANCEMAP_HPP

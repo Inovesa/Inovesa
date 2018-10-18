@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef IDENTITY_HPP
-#define IDENTITY_HPP
+#pragma once
 
 #include "SM/SourceMap.hpp"
 
@@ -44,20 +43,20 @@ public:
      */
     void apply() override
     {
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (_oclh) {
-            #ifdef INOVESA_SYNC_CL
+            #if INOVESA_SYNC_CL == 1
             _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
             _oclh->enqueueCopyBuffer( _in->data_buf, _out->data_buf
                                    , 0,0,sizeof(meshdata_t)*_size
-                                   #ifdef INOVESA_ENABLE_CLPROFILING
+                                   #if INOVESA_ENABLE_CLPROFILING == 1
                                    , nullptr,nullptr
                                    , applySMEvents.get()
                                    # endif // INOVESA_ENABLE_CLPROFILING
                                    );
             _oclh->enqueueBarrier();
-            #ifdef INOVESA_SYNC_CL
+            #if INOVESA_SYNC_CL == 1
             _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
             #endif // INOVESA_SYNC_CL
         } else
@@ -78,5 +77,3 @@ public:
 };
 
 }
-
-#endif // IDENTITY_HPP

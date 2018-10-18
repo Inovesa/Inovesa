@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef COLLIMATORIMPEDANCE_HPP
-#define COLLIMATORIMPEDANCE_HPP
+#pragma once
 
 #include "Z/ConstImpedance.hpp"
 
@@ -42,5 +41,3 @@ public:
 };
 
 } // namespace vfps
-
-#endif // COLLIMATORIMPEDANCE_HPP

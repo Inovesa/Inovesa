@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef WAKEKICKMAP_HPP
-#define WAKEKICKMAP_HPP
+#pragma once
 
 #include <array>
 #include <fftw3.h>
@@ -53,7 +52,7 @@ public:
 public:
     virtual void update()=0;
 
-#if defined INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
     cl_GLuint getGLBuffer() const
         { return _offset_glbuf; }
 
@@ -65,4 +64,3 @@ protected:
 
 } // namespace VFPS
 
-#endif // WAKEKICKMAP_HPP

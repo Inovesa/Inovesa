@@ -21,7 +21,7 @@
 #include "SM/Identity.hpp"
 
 vfps::Identity::~Identity() noexcept
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 {
     saveTimings("IDM");
 }

@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PARALLELPLATESCSR_HPP
-#define PARALLELPLATESCSR_HPP
+#pragma once
 
 #include "Z/Impedance.hpp"
 
@@ -45,5 +44,3 @@ private:
 };
 
 } // namespace VFPS
-
-#endif // PARALLELPLATESCSR_HPP

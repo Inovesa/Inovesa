@@ -18,9 +18,6 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef RULER_HPP
-#define RULER_HPP
-
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -150,4 +147,4 @@ protected:
 
 }
 
-#endif // RULER_HPP
+#pragma once

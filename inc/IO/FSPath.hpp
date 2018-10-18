@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef FSPATH_HPP
-#define FSPATH_HPP
+#pragma once
 
 #include <string>
 #include <boost/filesystem.hpp>
@@ -61,6 +60,4 @@ private:
 };
 
 } // namespace vfps
-
-#endif // FSPATH_HPP
 

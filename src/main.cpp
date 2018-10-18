@@ -48,7 +48,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#ifdef INOVESA_USE_PNG
+#if INOVESA_USE_PNG == 1
 #include <png++/png.hpp>
 #endif
 #include <memory>
@@ -60,7 +60,7 @@ using boost::math::constants::two_pi;
 
 using namespace vfps;
 
-#ifdef INOVESA_ENABLE_INTERRUPT
+#if INOVESA_ENABLE_INTERRUPT == 1
 #include<csignal> // for SIGINT handling
 
 void SIGINT_handler(int) {
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
      */
     Display::start_time = std::chrono::system_clock::now();
 
-    #ifdef INOVESA_ENABLE_INTERRUPT
+    #if INOVESA_ENABLE_INTERRUPT == 1
     //Install signal handler for SIGINT
     signal(SIGINT, SIGINT_handler);
     #endif // INOVESA_ENABLE_INTERRUPT
@@ -103,12 +103,12 @@ int main(int argc, char** argv)
     std::string ofname = opts.getOutFile();
 
     if (ofname.empty() && !opts.getForceRun() && cldev >= 0
-        #ifdef INOVESA_USE_OPENGL
+        #if INOVESA_USE_OPENGL == 1
         && !opts.showPhaseSpace()
         #endif // INOVESA_USE_OPENGL
        ) {
         std::cout << "Nothing to do. Set at least one of "
-                     #ifdef INOVESA_USE_OPENGL
+                     #if INOVESA_USE_OPENGL == 1
                      " 'gui',"
                      #endif // INOVESA_USE_OPENGL
                      " 'output', or"
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (cldev < 0) {
         OCLH::listCLDevices();
         return EXIT_SUCCESS;
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 
 
     std::unique_ptr<vfps::Display> display;
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     try {
         display = make_display( ofname
                               , opts.showPhaseSpace()
@@ -142,11 +142,11 @@ int main(int argc, char** argv)
 
     oclhptr_t oclh;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (cldev > 0) {
         try {
             oclh = std::make_shared<OCLH>( opts.getCLDevice()-1
-                                         #ifdef INOVESA_USE_OPENGL
+                                         #if INOVESA_USE_OPENGL == 1
                                          , opts.showPhaseSpace()
                                          #endif // INOVESA_USE_OPENGL
                                          );
@@ -420,14 +420,14 @@ int main(int argc, char** argv)
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
-        #ifdef INOVESA_USE_PNG
+        #if INOVESA_USE_PNG == 1
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
             grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
                                    , oclh, Qb,Ib,bl,dE);
         } else
         #endif // INOVESA_USE_PNG
-        #ifdef INOVESA_USE_HDF5
+        #if INOVESA_USE_HDF5 == 1
         if (  isOfFileType(".h5",startdistfile)
            || isOfFileType(".hdf5",startdistfile) ) {
             grid_t1 = makePSFromHDF5( startdistfile,opts.getStartDistStep()
@@ -483,7 +483,7 @@ int main(int argc, char** argv)
                            +sstream.str()+".");
     }
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     /**************************************************************************
      *  stuff for (graphical) display                                         *
      **************************************************************************/
@@ -743,7 +743,7 @@ int main(int argc, char** argv)
     }
 
     // initialze the rest of the display elements
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     if (display != nullptr) {
         try {
             bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
@@ -795,7 +795,7 @@ int main(int argc, char** argv)
     /*
      * preparation to save results
      */
-    #ifdef INOVESA_USE_HDF5
+    #if INOVESA_USE_HDF5 == 1
     HDF5File* hdf_file = nullptr;
     if ( isOfFileType(".h5",ofname)
       || isOfFileType(".hdf5",ofname) ) {
@@ -820,7 +820,7 @@ int main(int argc, char** argv)
         }
     } else
     #endif // INOVESA_USE_HDF5
-    #ifdef INOVESA_USE_PNG
+    #if INOVESA_USE_PNG == 1
     if ( isOfFileType(".png",ofname)) {
         opts.save(ofname+".cfg");
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
@@ -834,7 +834,7 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    #ifdef INOVESA_USE_HDF5
+    #if INOVESA_USE_HDF5 == 1
     const auto h5save = opts.getSavePhaseSpace();
     // end of preparation to save results
 
@@ -865,7 +865,7 @@ int main(int argc, char** argv)
     grid_t1->variance(1);
     Display::printText(status_string(grid_t1,0,rotations),false);
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (oclh) {
         oclh->finish();
     }
@@ -903,7 +903,7 @@ int main(int argc, char** argv)
             grid_t1->variance(0);
             grid_t1->updateYProjection();
             grid_t1->variance(1);
-            #ifdef INOVESA_USE_OPENCL
+            #if INOVESA_USE_OPENCL == 1
             if (oclh) {
                 grid_t1->syncCLMem(OCLH::clCopyDirection::dev2cpu);
                 if (wkm != nullptr) {
@@ -911,7 +911,7 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESA_USE_OPENCL
-            #ifdef INOVESA_USE_HDF5
+            #if INOVESA_USE_HDF5 == 1
             if (hdf_file != nullptr) {
                 HDF5File::AppendType at =
                         (h5save > 0 && outstepnr%h5save == 0)
@@ -934,7 +934,7 @@ int main(int argc, char** argv)
             }
             outstepnr++;
             #endif // INOVESA_USE_HDF5
-            #ifdef INOVESA_USE_OPENGL
+            #if INOVESA_USE_OPENGL == 1
             if (display != nullptr) {
                 if (psv != nullptr) {
                     psv->createTexture(grid_t1);
@@ -949,7 +949,7 @@ int main(int argc, char** argv)
                     wpv->update(wkm->getForce());
                 }
                 if (history != nullptr) {
-                    #ifdef INOVESA_USE_HDF5
+                    #if INOVESA_USE_HDF5 == 1
                     if (hdf_file == nullptr)
                     #endif // INOVESA_USE_HDF5
                     {
@@ -979,7 +979,7 @@ int main(int argc, char** argv)
         // udate for next time step
         grid_t1->updateXProjection();
 
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (oclh) {
             oclh->flush();
         }
@@ -988,7 +988,7 @@ int main(int argc, char** argv)
         simulationstep++;
     } // end of main simulation loop
 
-    #ifdef INOVESA_USE_HDF5
+    #if INOVESA_USE_HDF5 == 1
     // save final result
     if (hdf_file != nullptr) {
         if (wkm != nullptr) {
@@ -1008,7 +1008,7 @@ int main(int argc, char** argv)
         grid_t1->variance(0);
         grid_t1->updateYProjection();
         grid_t1->variance(1);
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (oclh) {
             grid_t1->syncCLMem(OCLH::clCopyDirection::dev2cpu);
             if (wkm != nullptr) {
@@ -1032,7 +1032,7 @@ int main(int argc, char** argv)
         }
     }
     #endif // INOVESA_USE_HDF5
-    #ifdef INOVESA_USE_PNG
+    #if INOVESA_USE_PNG == 1
     if ( isOfFileType(".png",ofname)) {
         meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
         meshdata_t* val = grid_t1->getData();

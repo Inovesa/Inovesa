@@ -129,7 +129,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap( std::shared_ptr<PhaseSpace> in
         break;
     }
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
     _cl_code += R"(
     __kernel void applySM_Y(const __global data_t* src,
@@ -171,7 +171,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap( std::shared_ptr<PhaseSpace> in
 }
 
 vfps::FokkerPlanckMap::~FokkerPlanckMap() noexcept
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 {
     saveTimings("FokkerPlanckMap");
 }
@@ -181,15 +181,15 @@ vfps::FokkerPlanckMap::~FokkerPlanckMap() noexcept
 
 void vfps::FokkerPlanckMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
                                   , cl::NDRange(_meshxsize,_ysize)
-                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
@@ -197,7 +197,7 @@ void vfps::FokkerPlanckMap::apply()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
         _oclh->enqueueBarrier();
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else

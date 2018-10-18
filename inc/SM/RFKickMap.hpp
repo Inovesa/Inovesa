@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef RFKICKMAP_HPP
-#define RFKICKMAP_HPP
+#pragma once
 
 #include "SM/KickMap.hpp"
 
@@ -79,4 +78,3 @@ protected:
 
 } // namespace vfps
 
-#endif // RFKICKMAP_HPP

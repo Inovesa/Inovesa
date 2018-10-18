@@ -19,8 +19,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef DYNAMICRFKICKMAP_HPP
-#define DYNAMICRFKICKMAP_HPP
+#pragma once
 
 #include "SM/RFKickMap.hpp"
 
@@ -129,4 +128,3 @@ protected:
 
 } // namespace vfps
 
-#endif // DYNAMICRFKICKMAP_HPP

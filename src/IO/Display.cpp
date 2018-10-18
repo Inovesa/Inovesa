@@ -25,7 +25,7 @@
 
 
 std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
-                                                  #ifdef INOVESA_USE_OPENGL
+                                                  #if INOVESA_USE_OPENGL == 1
                                                   , bool gui
                                                   , uint_fast8_t glversion
                                                   #endif // INOVESA_USE_OPENGL
@@ -47,7 +47,7 @@ std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
     if (!ofname.empty()) {
         Display::printText("Will create log at \""+ofname+".log\".");
     }
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     if (gui) {
         return std::make_unique<Display>(glversion);
     }
@@ -55,7 +55,7 @@ std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
     return nullptr;
 }
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 vfps::Display::Display(uint_fast8_t glversion)
     #if GLFW_VERSION_MAJOR == 3
         :
@@ -116,20 +116,20 @@ vfps::Display::Display(uint_fast8_t glversion)
 
 vfps::Display::~Display() noexcept
 {
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
     #endif // INOVESA_USE_OPENGL
 }
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 void vfps::Display::addElement(std::shared_ptr<GUIElement> newitem)
 {
     _item.push_back(newitem);
 }
 #endif // INOVESA_USE_OPENGL
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 void vfps::Display::draw() {
     if (! glfwWindowShouldClose(_window)) {
         // Clear the screen
@@ -178,7 +178,7 @@ void vfps::Display::printText(std::string txt, bool newline, float silentTime)
     }
 }
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 void vfps::Display::takeElement(std::shared_ptr<GUIElement> item)
 {
     for (size_t i=0; i< _item.size(); i++) {

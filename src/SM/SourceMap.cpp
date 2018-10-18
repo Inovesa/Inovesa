@@ -37,7 +37,7 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
   , _size(xsize*ysize)
   , _xsize(xsize)
   , _ysize(ysize)
-  #ifdef INOVESA_ENABLE_CLPROFILING
+  #if INOVESA_ENABLE_CLPROFILING == 1
   , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
   , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
   #endif // INOVESA_ENABLE_CLPROFILING
@@ -46,7 +46,7 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
   , _out(out)
   , _oclh(oclh)
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
     #endif // INOVESA_USE_OPENCL
 }
@@ -67,7 +67,7 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
 vfps::SourceMap::~SourceMap() noexcept
 {
     delete [] _hinfo;
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     for (auto ev : *applySMEvents) {
         delete ev;
     }
@@ -78,7 +78,7 @@ vfps::SourceMap::~SourceMap() noexcept
 }
 
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 void vfps::SourceMap::saveTimings(std::string mapname) {
     if (_oclh) {
         _oclh->saveTimings(applySMEvents.get(),"Apply"+mapname);
@@ -89,22 +89,22 @@ void vfps::SourceMap::saveTimings(std::string mapname) {
 
 void vfps::SourceMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
                                   , cl::NDRange(_size)
-                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
                                   , applySMEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
@@ -131,7 +131,7 @@ void vfps::SourceMap::applyTo(std::vector<vfps::PhaseSpace::Position> &particles
 }
 
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::SourceMap::genCode4SM1D()
 {
     _cl_code += R"(

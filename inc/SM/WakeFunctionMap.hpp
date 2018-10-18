@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef WAKEFUNCTIONMAP_HPP
-#define WAKEFUNCTIONMAP_HPP
+#pragma once
 
 #include "SM/WakeKickMap.hpp"
 
@@ -109,4 +108,3 @@ private:
 
 } // namespace vfps
 
-#endif // WAKEFUNCTIONMAP_HPP

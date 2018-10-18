@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef DRIFTMAP_HPP
-#define DRIFTMAP_HPP
+#pragma once
 
 #include "SM/KickMap.hpp"
 
@@ -40,7 +39,7 @@ public:
             , oclhptr_t oclh
             );
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     ~DriftMap() noexcept;
     #else
     ~DriftMap() = default;
@@ -48,5 +47,3 @@ public:
 };
 
 } // namespace fvps
-
-#endif // DRIFTMAP_HPP

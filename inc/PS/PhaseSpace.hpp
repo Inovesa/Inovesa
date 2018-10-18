@@ -18,15 +18,14 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PHASESPACE_HPP
-#define PHASESPACE_HPP
+#pragma once
 
 #include <algorithm>
 #include <array>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 #include <GL/glew.h>
 #ifndef __APPLE__
 #include <GL/gl.h>
@@ -286,7 +285,7 @@ public:
      */
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir, cl::Event* evt = nullptr);
     #endif // INOVESA_USE_OPENCL
 
@@ -372,13 +371,13 @@ private:
     oclhptr_t _oclh;
 
 public:
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     /**
      * @brief projectionX_glbuf will only be allocated during CL/GL sharing
      */
     cl_GLuint projectionX_glbuf;
     #endif // INOVESA_USE_OPENGL
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
 
     cl::Buffer data_buf;
 
@@ -435,5 +434,3 @@ private:
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 }
-
-#endif // PHASESPACE_HPP

@@ -18,10 +18,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef GUIELEMENT_HPP
-#define GUIELEMENT_HPP
+#pragma once
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 //forward declaration
 namespace vfps {
@@ -77,5 +76,3 @@ private:
 } // namespace vfps
 
 #endif // INOVESA_USE_OPENGL
-
-#endif // GUIELEMENT_HPP

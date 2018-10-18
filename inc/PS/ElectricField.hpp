@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef ELECTRICFIELD_HPP
-#define ELECTRICFIELD_HPP
+#pragma once
 
 #include <algorithm>
 #include <fftw3.h>
@@ -161,7 +160,7 @@ public:
      */
     meshaxis_t* wakePotential();
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir);
     #endif // INOVESA_USE_OPENCL
 
@@ -295,7 +294,7 @@ private:
 
     integral_t* _bp_padded_fft;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _bp_padded_buf;
     #endif // INOVESA_USE_OPENCL
 
@@ -305,7 +304,7 @@ private:
 
     oclhptr_t _oclh;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;
@@ -314,7 +313,7 @@ private:
 
     fft_plan _fft_bunchprofile;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_bunchprofile;
     #endif // INOVESA_USE_CLFFT
 
@@ -324,7 +323,7 @@ private:
 
     fft_complex* _wakelosses_fft;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     cl::Buffer _wakelosses_buf;
     #endif // INOVESA_USE_CLFFT
 
@@ -336,9 +335,9 @@ private:
      */
     meshaxis_t* _wakepotential_padded;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
 public:
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     cl_GLuint wakepotential_glbuf;
     #endif // INOVESA_USE_OPENGL
 
@@ -357,7 +356,7 @@ private:
 
     fft_plan _fft_wakelosses;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_wakelosses;
     #endif // INOVESA_USE_CLFFT
 
@@ -365,5 +364,3 @@ private:
 };
 
 } // namespace vfps
-
-#endif // ELECTRICFIELD_HPP

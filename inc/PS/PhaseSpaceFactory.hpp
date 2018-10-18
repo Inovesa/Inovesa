@@ -18,8 +18,7 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PHASESPACEFACTORY_HPP
-#define PHASESPACEFACTORY_HPP
+#pragma once
 
 #include <memory>
 #include <string>
@@ -28,7 +27,7 @@
 
 namespace vfps {
 
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 std::unique_ptr<PhaseSpace> makePSFromHDF5( std::string fname
                                           , int64_t startdiststep
                                           , meshaxis_t qmin, meshaxis_t qmax
@@ -60,5 +59,3 @@ std::unique_ptr<PhaseSpace> makePSFromTXT( std::string fname, int64_t ps_size
 
 
 } // namespace vfps
-
-#endif // PHASESPACEFACTORY_HPP

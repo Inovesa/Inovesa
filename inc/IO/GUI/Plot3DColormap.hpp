@@ -19,10 +19,9 @@
  * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
  ******************************************************************************/
 
-#ifndef PLOT2D_HPP
-#define PLOT2D_HPP
+#pragma once
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 #include <memory>
 
@@ -320,5 +319,3 @@ private:
 } // namespace vfps
 
 #endif // INOVESA_USE_OPENGL
-
-#endif // PLOT2D_HPP

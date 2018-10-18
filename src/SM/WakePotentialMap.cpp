@@ -39,7 +39,7 @@ vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
 }
 
 vfps::WakePotentialMap::~WakePotentialMap() noexcept
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 {
     saveTimings("WakePotentialMap");
 }
@@ -49,12 +49,12 @@ vfps::WakePotentialMap::~WakePotentialMap() noexcept
 
 void vfps::WakePotentialMap::update()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _field->wakePotential();
         _oclh->enqueueCopyBuffer(_field->wakepotential_clbuf,_offset_clbuf,
                                 0,0,sizeof(meshaxis_t)*_xsize);
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
