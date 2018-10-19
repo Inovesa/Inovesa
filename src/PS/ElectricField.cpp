@@ -1,22 +1,9 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include "PS/ElectricField.hpp"
 
@@ -62,13 +49,13 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
   #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
   , _wakepotential(wakescalining!=0?new meshaxis_t[_bpmeshcells]:nullptr)
   , _fft_wakelosses(nullptr)
-  #ifdef INOVESA_USE_CLFFT
+  #if INOVESA_USE_CLFFT == 1
   , _wakescaling(_oclh ? wakescalining : wakescalining/_nmax )
   #else // INOVESA_USE_CLFFT
   , _wakescaling(wakescalining/_nmax)
   #endif // INOVESA_USE_CLFFT
 {
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     if (_oclh) {
         try {
             _bp_padded = new integral_t[_nmax];
@@ -125,9 +112,9 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                  )
 {
     _wakepotential = new meshaxis_t[_bpmeshcells];
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
-        #ifdef INOVESA_USE_OPENGL
+        #if INOVESA_USE_OPENGL == 1
         if (_oclh->OpenGLSharing()) {
             glGenBuffers(1, &wakepotential_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,wakepotential_glbuf);
@@ -276,7 +263,7 @@ vfps::ElectricField::~ElectricField() noexcept
     delete [] _wakefunction;
     delete [] _wakepotential;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     if (_oclh) {
         delete [] _bp_padded;
         delete [] _formfactor;
@@ -304,7 +291,7 @@ vfps::ElectricField::~ElectricField() noexcept
 
 vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
 {
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     if (_oclh) {
         _oclh->enqueueCopyBuffer(_phasespace->projectionX_clbuf,_bp_padded_buf,
                                 0,0,sizeof(_bp_padded[0])*_bpmeshcells);
@@ -349,7 +336,7 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
 
 vfps::meshaxis_t *vfps::ElectricField::wakePotential()
 {
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     if (_oclh){
         _oclh->enqueueCopyBuffer(_phasespace->projectionX_clbuf,_bp_padded_buf,
                                 0,0,sizeof(*_bp_padded)*_bpmeshcells);
@@ -367,7 +354,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         _oclh->enqueueNDRangeKernel( _clKernScaleWP,cl::NullRange,
                                           cl::NDRange(_nmax));
         _oclh->enqueueBarrier();
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
@@ -402,7 +389,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         for (size_t i=0; i<_bpmeshcells; i++) {
             _wakepotential[i] = _wakepotential_padded[i]*_wakescaling;
         }
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         #ifndef INOVESA_USE_CLFFT
         if (_oclh) {
             _oclh->enqueueWriteBuffer(wakepotential_clbuf,CL_TRUE,0,
@@ -415,7 +402,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     return _wakepotential;
 }
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
 {
     if (_oclh) {
@@ -425,7 +412,7 @@ void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
                                        sizeof(*_bp_padded)*_nmax,_bp_padded);
         _oclh->enqueueWriteBuffer(_formfactor_buf,CL_TRUE,0,
                                        sizeof(*_formfactor)*_nmax,_formfactor);
-        #ifdef INOVESA_USE_CLFFT
+        #if INOVESA_USE_CLFFT == 1
         _oclh->enqueueWriteBuffer(_wakelosses_buf,CL_TRUE,0,
                                        sizeof(*_wakelosses)*_nmax,_wakelosses);
         #endif // INOVESA_USE_CLFFT
@@ -441,7 +428,7 @@ void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
                                       sizeof(*_bp_padded)*_nmax,_bp_padded);
         _oclh->enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                       sizeof(*_formfactor)*_nmax,_formfactor);
-        #ifdef INOVESA_USE_CLFFT
+        #if INOVESA_USE_CLFFT == 1
         _oclh->enqueueReadBuffer(_wakelosses_buf,CL_TRUE,0,
                                       sizeof(*_wakelosses)*_nmax,_wakelosses);
         #endif // INOVESA_USE_CLFFT

@@ -1,32 +1,18 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef PHASESPACE_HPP
-#define PHASESPACE_HPP
+#pragma once
 
 #include <algorithm>
 #include <array>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 #include <GL/glew.h>
 #ifndef __APPLE__
 #include <GL/gl.h>
@@ -286,7 +272,7 @@ public:
      */
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir, cl::Event* evt = nullptr);
     #endif // INOVESA_USE_OPENCL
 
@@ -372,13 +358,13 @@ private:
     oclhptr_t _oclh;
 
 public:
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     /**
      * @brief projectionX_glbuf will only be allocated during CL/GL sharing
      */
     cl_GLuint projectionX_glbuf;
     #endif // INOVESA_USE_OPENGL
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
 
     cl::Buffer data_buf;
 
@@ -435,5 +421,3 @@ private:
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 }
-
-#endif // PHASESPACE_HPP

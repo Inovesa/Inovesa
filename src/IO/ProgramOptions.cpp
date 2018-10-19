@@ -1,24 +1,9 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- * Copyright (c) 2017: Patrick Schreiber                                      *
- * Copyright (c) 2017: Tobias Boltz                                           *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include "IO/ProgramOptions.hpp"
 
@@ -55,10 +40,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Harmonic Number (1)")
         ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
             "might be:\n"
-            #ifdef INOVESA_USE_HDF5
+            #if INOVESA_USE_HDF5 == 1
             "\tInovesa result file (.hdf5, .h5)\n"
             #endif // INOVESA_USE_HDF5
-            #ifdef INOVESA_USE_PNG
+            #if INOVESA_USE_PNG == 1
             "\tgrayscale png (.png) file\n"
             #endif // INOVESA_USE_PNG
             "\ttext file (.txt) w/ particle coordinates\n"
@@ -145,7 +130,7 @@ vfps::ProgramOptions::ProgramOptions() :
     ;
     _programopts_cli.add_options()
             ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
             "OpenCL device to use\n('-1' lists available devices)")
         #else // not INOVESA_USE_OPENCL
             "(not active in this build)")
@@ -374,7 +359,7 @@ void vfps::ProgramOptions::save(std::string fname)
     }
 }
 
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 void vfps::ProgramOptions::save(vfps::HDF5File* file)
 {
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {

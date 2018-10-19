@@ -1,31 +1,18 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2012-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef OPENCLHANDLER_HPP
-#define OPENCLHANDLER_HPP
+#pragma once
 
 #include <memory>
 
-#ifndef INOVESA_USE_OPENCL
+// negation for preprocessor to have short alternative on top
+#if !(INOVESA_USE_OPENCL == 1)
 typedef std::nullptr_t oclhptr_t;
-#else // INOVESA_USE_OPENCL
+#else
 
 class OCLH;
 typedef std::shared_ptr<OCLH> oclhptr_t;
@@ -38,11 +25,11 @@ typedef std::shared_ptr<OCLH> oclhptr_t;
 
 #include "CL/local_cl.hpp"
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 #include "CL/CLProfiler.hpp"
 #endif
 
-#ifdef INOVESA_USE_CLFFT
+#if INOVESA_USE_CLFFT == 1
 #include <clFFT.h>
 #endif // INOVESA_USE_CLFFT
 
@@ -107,7 +94,7 @@ private:
 
     bool ogl_sharing;
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     void saveProfilingInfo(std::string fname);
 
     std::list<vfps::CLTiming> timingInfo;
@@ -116,7 +103,7 @@ private:
     #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     /**
      * @brief bakeClfftPlan wrapper for clfftBakePlan
      * @param plHandle
@@ -133,12 +120,12 @@ public:
                cl::Buffer inputBuffer,
                cl::Buffer outputBuffer)
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         cl::Event* event = new cl::Event();
         timingsDFT.push_back(event);
         #endif // INOVESA_ENABLE_CLPROFILING
         clfftEnqueueTransform(plHandle,dir,1,&queue(),0,nullptr,
-                              #ifdef INOVESA_ENABLE_CLPROFILING
+                              #if INOVESA_ENABLE_CLPROFILING == 1
                               &(*event)(),
                               #else
                               nullptr,
@@ -150,9 +137,9 @@ public:
     inline void
     enqueueBarrier()
     {
-        #ifdef CL_VERSION_1_2
+        #if CL_VERSION_1_2 == 1
         queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
+        #elif CL_VERSION_1_1 == 1
         queue.enqueueBarrier();
         #endif // CL_VERSION_1_2
     }
@@ -167,12 +154,12 @@ public:
                          const cl::NDRange& local = cl::NullRange,
                          const cl::vector<cl::Event>* events = nullptr,
                          cl::Event* event = nullptr
-                         #ifdef INOVESA_ENABLE_CLPROFILING
+                         #if INOVESA_ENABLE_CLPROFILING == 1
                          , cl::vector<cl::Event*>* timings = nullptr
                          #endif // INOVESA_ENABLE_CLPROFILING
                          )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -180,8 +167,8 @@ public:
             timingsExecute.push_back(event);
         } else {
             timings->push_back(event);
-        } // INOVESA_ENABLE_CLPROFILING
-        #endif
+        }
+        #endif // INOVESA_ENABLE_CLPROFILING
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
 
         enqueueBarrier();
@@ -198,12 +185,12 @@ public:
                       cl::size_type size,
                       const cl::vector<cl::Event>* events = nullptr,
                       cl::Event* event = nullptr
-                      #ifdef INOVESA_ENABLE_CLPROFILING
+                      #if INOVESA_ENABLE_CLPROFILING == 1
                       , cl::vector<cl::Event*>* timings = nullptr
                       #endif // INOVESA_ENABLE_CLPROFILING
                       )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -228,12 +215,12 @@ public:
                        void* ptr,
                        const cl::vector<cl::Event>* events = nullptr,
                        cl::Event* event = nullptr
-                     #ifdef INOVESA_ENABLE_CLPROFILING
+                     #if INOVESA_ENABLE_CLPROFILING == 1
                      , cl::vector<cl::Event*>* timings = nullptr
                      #endif // INOVESA_ENABLE_CLPROFILING
                      )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -258,12 +245,12 @@ public:
                       , const void* ptr
                       , const cl::vector<cl::Event>* events = nullptr
                       , cl::Event* event = nullptr
-                      #ifdef INOVESA_ENABLE_CLPROFILING
+                      #if INOVESA_ENABLE_CLPROFILING == 1
                       , cl::vector<cl::Event*>* timings = nullptr
                       #endif // INOVESA_ENABLE_CLPROFILING
                       )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -287,16 +274,16 @@ public:
         queue.flush();
     }
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     void saveTimings(cl::vector<cl::Event *> *evts, std::string name);
     #endif // INOVESA_ENABLE_CLPROFILING
 
 private:
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftSetupData fft_setup;
     #endif // INOVESA_USE_CLFFT
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     cl::vector<cl::Event*> timingsCopy;
     cl::vector<cl::Event*> timingsDFT;
     cl::vector<cl::Event*> timingsExecute;
@@ -314,4 +301,3 @@ private: // helper functions
 };
 
 #endif // INOVESA_USE_OPENCL
-#endif // OPENCLHANDLER_HPP
