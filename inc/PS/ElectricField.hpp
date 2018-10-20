@@ -1,25 +1,11 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef ELECTRICFIELD_HPP
-#define ELECTRICFIELD_HPP
+#pragma once
 
 #include <algorithm>
 #include <fftw3.h>
@@ -175,9 +161,10 @@ public:
     inline meshaxis_t* getPaddedWakepotential() const
         { return _wakepotential_padded; }
 
-    #ifdef INOVESA_USE_OPENCL
+
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir);
-    #endif // INOVESA_USE_OPENCL
+    #endif // INOVESA_USE_OPENCL == 1
 
 public:
     const double volts;
@@ -323,7 +310,7 @@ private:
 
     integral_t* _bp_padded_fft;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _bp_padded_buf;
     #endif // INOVESA_USE_OPENCL
 
@@ -333,7 +320,7 @@ private:
 
     oclhptr_t _oclh;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;
@@ -342,7 +329,7 @@ private:
 
     fft_plan _fft_bunchprofile;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_bunchprofile;
     #endif // INOVESA_USE_CLFFT
 
@@ -352,7 +339,7 @@ private:
 
     fft_complex* _wakelosses_fft;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     cl::Buffer _wakelosses_buf;
     #endif // INOVESA_USE_CLFFT
 
@@ -364,9 +351,9 @@ private:
      */
     meshaxis_t* _wakepotential_padded;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
 public:
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     cl_GLuint wakepotential_glbuf;
     #endif // INOVESA_USE_OPENGL
 
@@ -385,7 +372,7 @@ private:
 
     fft_plan _fft_wakelosses;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_wakelosses;
     #endif // INOVESA_USE_CLFFT
 
@@ -393,5 +380,3 @@ private:
 };
 
 } // namespace vfps
-
-#endif // ELECTRICFIELD_HPP

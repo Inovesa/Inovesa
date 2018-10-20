@@ -1,22 +1,9 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include "SM/KickMap.hpp"
 
@@ -42,7 +29,7 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
         notClampedMessage();
     }
     _offset.resize(_meshsize_pd*nbunches,meshaxis_t(0));
-    #ifdef INOVESA_INIT_KICKMAP
+    #if INOVESA_INIT_KICKMAP == 1
     for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {
         _hinfo[q_i*_ip].index = _meshsize_kd/2;
         _hinfo[q_i*_ip].weight = 1;
@@ -52,7 +39,7 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
         }
     }
     #endif
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _offset_clbuf = cl::Buffer(_oclh->context,CL_MEM_READ_WRITE,
                                 sizeof(meshaxis_t)*_meshsize_pd);
@@ -174,7 +161,7 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
 }
 
 vfps::KickMap::~KickMap() noexcept
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 {
     saveTimings("KickMap");
 }
@@ -184,15 +171,15 @@ vfps::KickMap::~KickMap() noexcept
 
 void vfps::KickMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
                                   , cl::NDRange(_meshsize_pd)
-                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
@@ -200,7 +187,7 @@ void vfps::KickMap::apply()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
         _oclh->enqueueBarrier();
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
@@ -285,7 +272,7 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
     return pos;
 }
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
 {
     switch (dir) {
@@ -293,7 +280,7 @@ void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
         _oclh->enqueueWriteBuffer( _offset_clbuf,CL_TRUE,0
                                 , sizeof(meshaxis_t)*_meshsize_pd
                                 , _offset.data()
-                                #ifdef INOVESA_ENABLE_CLPROFILING
+                                #if INOVESA_ENABLE_CLPROFILING == 1
                                 , nullptr,nullptr
                                 , syncSMEvents.get()
                                 #endif // INOVESA_ENABLE_CLPROFILING
@@ -304,7 +291,7 @@ void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
         _oclh->enqueueReadBuffer( _offset_clbuf,CL_TRUE,0
                                , sizeof(meshaxis_t)*_meshsize_pd
                                , _offset.data()
-                               #ifdef INOVESA_ENABLE_CLPROFILING
+                               #if INOVESA_ENABLE_CLPROFILING == 1
                                , nullptr,nullptr
                                , syncSMEvents.get()
                                #endif // INOVESA_ENABLE_CLPROFILING
