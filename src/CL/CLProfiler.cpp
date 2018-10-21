@@ -5,7 +5,7 @@
  * in the version control history of the file.
  */
 
-#if defined (INOVESA_USE_OPENCL) && defined (INOVESA_ENABLE_CLPROFILING)
+#if (INOVESA_USE_OPENCL == 1) && (INOVESA_ENABLE_CLPROFILING == 1)
 
 #include "CL/CLProfiler.hpp"
 
