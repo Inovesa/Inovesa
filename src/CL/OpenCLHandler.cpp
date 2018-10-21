@@ -108,17 +108,13 @@ cl::Program OCLH::prepareCLProg(std::string code)
         std::cerr << e.what() << std::endl;
         std::cout << "===== OpenCL Code =====\n"
                                 << code << std::endl;
-    #if DEBUG == 1
-        throw e;
-    }
-    #endif
         std::cout << "===== OpenCL Build Log =====\n"
                   << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device)
                   << std::endl;
-    #ifndef DEBUG
+        #if DEBUG == 1
         throw e;
+        #endif
     }
-    #endif
 
 return p;
 }
