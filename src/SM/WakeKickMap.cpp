@@ -14,12 +14,12 @@ vfps::WakeKickMap::WakeKickMap( std::shared_ptr<PhaseSpace> in
                               , const InterpolationType it
                               , const bool interpol_clamp
                               , oclhptr_t oclh
-                              #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
+                              #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
                               , cl_GLuint glbuf
                               #endif // INOVESA_USE_OPENCL an INOVESA_USE_OPENGL
                               )  :
     KickMap( in,out,xsize,ysize,PhaseSpace::nb,it,interpol_clamp,Axis::y,oclh)
-    #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
     , _offset_glbuf(glbuf)
     #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
 {

@@ -48,7 +48,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
   , _wakelosses(nullptr)
   , _wakelosses_fft(nullptr)
   , _wakepotential_padded(nullptr)
-  #if defined INOVESA_USE_OPENCL and defined  INOVESA_USE_OPENGL
+  #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
   , wakepotential_glbuf(0)
   #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
   , _wakepotential(Array::array2<meshaxis_t>(PhaseSpace::nb,PhaseSpace::nx))
@@ -309,13 +309,13 @@ vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
         _oclh->enqueueReadBuffer(_formfactor_buf,CL_TRUE,0,
                                 _nmax*sizeof(*_formfactor),_formfactor);
     }
-    #elif defined INOVESA_USE_OPENCL
+    #elif INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _phasespace->syncCLMem(OCLH::clCopyDirection::dev2cpu);
     }
     #endif // INOVESA_USE_CLTTT
         for (uint32_t n = 0; n < _nbunches; n++) {
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (!_oclh)
         #endif // INOVESA_USE_OPENCL
         {
@@ -369,7 +369,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
-    #elif defined INOVESA_USE_OPENCL
+    #elif INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _phasespace->syncCLMem(OCLH::clCopyDirection::dev2cpu);
     }

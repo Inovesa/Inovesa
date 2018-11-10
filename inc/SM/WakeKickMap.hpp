@@ -29,7 +29,7 @@ public:
                , const meshindex_t xsize, const meshindex_t ysize
                , const InterpolationType it, const bool interpol_clamp
                , oclhptr_t oclh
-               #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
+               #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
                , cl_GLuint glbuf
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
@@ -46,7 +46,7 @@ public:
 
 protected:
     cl_GLuint _offset_glbuf;
-#elif defined INOVESA_USE_OPENGL
+#elif INOVESA_USE_OPENGL == 1
     GLuint getGLBuffer() const
         { return _offset_glbuf; }
 

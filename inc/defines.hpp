@@ -68,4 +68,31 @@ constexpr double mu0 = 1/(epsilon0*c*c);
 
 } // namespace vfps
 
+#ifndef INOVESA_USE_OPENGL
+#define INOVESA_USE_OPENGL 0
+#endif
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+#ifndef INOVESA_ENABLE_INTERRUPT
+#define INOVESA_ENABLE_INTERRUPT 0
+#endif
+#ifndef INOVESA_ENABLE_CLPROFILING
+#define INOVESA_ENABLE_CLPROFILING 0
+#endif
+#ifndef INOVESA_USE_OPENCL
+#define INOVESA_USE_OPENCL 0
+#endif
+#ifndef INOVESA_USE_CLFFT
+#define INOVESA_USE_CLFFT 0
+#endif
+#ifndef INOVESA_USE_OPENGL
+#define INOVESA_USE_OPENGL 0
+#endif
+#ifndef INOVESA_USE_HDF5
+#define INOVESA_USE_HDF5 0
+#endif
+#ifndef INOVESA_USE_PNG
+#define INOVESA_USE_PNG 0
+#endif
 
