@@ -23,6 +23,7 @@
 
 // Defining NDEBUG improves optimization but disables argument checking.
 
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <climits>
