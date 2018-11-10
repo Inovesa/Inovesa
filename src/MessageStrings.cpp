@@ -5,7 +5,10 @@
  * in the version control history of the file.
  */
 
+#include <boost/config.hpp>
+
 #include "MessageStrings.hpp"
+
 
 const std::string vfps::copyright_notice() noexcept {
     std::string rv (
@@ -67,6 +70,9 @@ const std::string vfps::inovesa_version(const bool verbose) {
      }
     if (verbose) {
         sstream << std::endl << "Build options:"
+                << std::endl << "Compiler:"
+                << std::endl << '\t' << BOOST_COMPILER
+                << std::endl << "Build options:"
                 #if DEBUG == 1
                 << std::endl << '\t' << "DEBUG"
                 #endif
