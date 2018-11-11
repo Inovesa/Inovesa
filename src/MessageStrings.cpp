@@ -50,15 +50,15 @@ const std::string vfps::inovesa_version(const bool verbose) {
         // version number release branches (and releases)
         sstream << 'v' << INOVESA_VERSION_MAJOR
                 << '.' << INOVESA_VERSION_MINOR;
-        if ( INOVESA_VERSION_FIX >= 0 ) {
+        #if ( INOVESA_VERSION_FIX >= 0)
             sstream << '.' << INOVESA_VERSION_FIX;
-        } else if ( INOVESA_VERSION_FIX == -1 ) {
+        #elif ( INOVESA_VERSION_FIX == -1 )
                 sstream << " alpha";
-        } else if ( INOVESA_VERSION_FIX == -2 ) {
+        #elif ( INOVESA_VERSION_FIX == -2 )
             sstream << " beta";
-        } else {
+        #else
             sstream << " RC" << std::abs(INOVESA_VERSION_FIX)-2;
-        }
+        #endif
         if (branchstr.front()=='v') {
             // plus commit for pre-release branches
             sstream << ", Commit: "<< GIT_COMMIT;
