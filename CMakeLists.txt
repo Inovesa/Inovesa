@@ -75,7 +75,6 @@ set(SRC_LIST
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
   ./src/MessageStrings.cpp
-  ./src/main.cpp
 )
 
 set(INC_LIST
@@ -117,7 +116,7 @@ set(INC_LIST
   ./inc/defines.hpp
 )
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+add_executable(${PROJECT_NAME} ./src/main.cpp ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
 include(CheckIncludeFileCXX)
 
@@ -236,3 +235,31 @@ ENDIF()
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 
+#Setup CMake to run tests
+enable_testing()
+
+#Prep ourselves for compiling boost
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+include_directories (${Boost_INCLUDE_DIRS})
+
+#I like to keep test files in a separate source directory called test
+file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
+
+
+set(testName testrunner)
+
+#Add compile target
+add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+
+#link to Boost libraries AND your targets and dependencies
+target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+
+#I like to move testing binaries into a testBin directory
+set_target_properties(${testName} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}/testBin)
+
+#Finally add it to test execution -
+#Notice the WORKING_DIRECTORY and COMMAND
+add_test(NAME ${testName}
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/testBin
+         COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/testBin/${testName} )
