@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE( copyright_notice ) {
     std::string s = vfps::copyright_notice();
 
     // there should be at least five lines
-    BOOST_CHECK_LE(std::count(s.begin(), s.end(), '\n'), static_cast<std::size_t>(5));
+    BOOST_CHECK_GE(std::count(s.begin(), s.end(), '\n'), static_cast<std::size_t>(5));
 
     std::vector<std::string> lines;
     boost::split(lines, s, boost::is_any_of("\n"));
