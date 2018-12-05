@@ -231,13 +231,7 @@ ELSE()
     MESSAGE ("Did not find PNG++. Will compile without PNG support.")
 ENDIF()
 
-IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-    MESSAGE ("Build for coverage information.")
-    target_compile_options(${PROJECT_NAME} PRIVATE --coverage)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} --coverage)
-ELSE()
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-ENDIF()
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 
@@ -258,7 +252,13 @@ set(testName inovesa-test)
 add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
 #link to Boost libraries AND your targets and dependencies
-target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+    MESSAGE ("Build for coverage information.")
+    target_compile_options(${testName} PRIVATE --coverage)
+    target_link_libraries(${testName} PRIVATE ${Boost_LIBRARIES} ${LIBS} --coverage)
+ELSE()
+    target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+ENDIF()
 
 #Finally add it to test execution -
 #Notice the WORKING_DIRECTORY and COMMAND
