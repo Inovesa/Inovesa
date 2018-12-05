@@ -112,7 +112,7 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
     std::stringstream status;
     status.precision(5);
     status << std::setw(6) << roatation << '/' << total_rotations;
-    float delta = 1.0 - ps->getIntegral();
+    integral_t delta = static_cast<integral_t>(1) - ps->getIntegral();
     status << "\t1-Q/Q_0=";
     // this is to have constant spacing in the output
     if (delta < 0) {
