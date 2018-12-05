@@ -23,6 +23,7 @@ addons:
       - libboost-system-dev # required
       - libboost-filesystem-dev # required
       - libboost-program-options-dev # required
+      - libboost-test-dev # for unit tests
 #      - libclfft-dev # optional
       - libfftw3-dev # required
 #      - libglew-dev # optional
