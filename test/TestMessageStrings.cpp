@@ -1,4 +1,3 @@
-#define BOOST_TEST_MODULE messagestrings
 #include <boost/test/unit_test.hpp>
 
 #include <boost/algorithm/string.hpp>
