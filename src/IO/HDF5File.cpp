@@ -467,8 +467,9 @@ vfps::HDF5File::readPhaseSpace( std::string fname
 
     std::vector<integral_t> filling = {{ 1.0 }};
 
-    auto ps = std::make_unique<PhaseSpace>( ps_size
-                                          , qmin,qmax,bl
+    PhaseSpace::setSize(ps_size, ps_size, filling.size());
+
+    auto ps = std::make_unique<PhaseSpace>( qmin,qmax,bl
                                           , pmin,pmax,dE
                                           , oclh
                                           , Qb,Ib_unscaled,filling,1

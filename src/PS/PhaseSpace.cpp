@@ -186,8 +186,7 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
 {
 }
 
-vfps::PhaseSpace::PhaseSpace( meshindex_t ps_size
-                            , meshaxis_t qmin, meshaxis_t qmax, double qscale
+vfps::PhaseSpace::PhaseSpace( meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , meshaxis_t pmin, meshaxis_t pmax, double pscale
                             , oclhptr_t oclh
                             , const double beam_charge
@@ -195,8 +194,8 @@ vfps::PhaseSpace::PhaseSpace( meshindex_t ps_size
                             , const std::vector<integral_t> filling
                             , const double zoom, meshdata_t *data
                             )
-  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,{{"Meter",qscale}}))
-              , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,{{"ElectronVolt",pscale}}))
+  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,{{"Meter",qscale}}))
+              , meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::ny,pmin,pmax,{{"ElectronVolt",pscale}}))
               , oclh
               , beam_charge,beam_current, filling, zoom, data)
 {}
@@ -320,7 +319,7 @@ void vfps::PhaseSpace::updateXProjection() {
         _oclh->enqueueNDRangeKernel(_clKernProjX
                                   , cl::NullRange
                                   , cl::NDRange(_nmeshcellsX)
-                                  # ifdef INOVESA_ENABLE_CLPROFILING
+                                  # if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr

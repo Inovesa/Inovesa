@@ -83,8 +83,7 @@ public:
               , meshdata_t* data = nullptr
               );
 
-    PhaseSpace(meshindex_t ps_size
-              , meshaxis_t qmin
+    PhaseSpace( meshaxis_t qmin
               , meshaxis_t qmax
               , double qscale
               , meshaxis_t pmin

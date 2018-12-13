@@ -459,7 +459,8 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        grid_t1.reset(new PhaseSpace( ps_bins,qmin,qmax,bl,pmin,pmax,dE
+        PhaseSpace::setSize(ps_bins, ps_bins, bunches.size());
+        grid_t1.reset(new PhaseSpace( qmin,qmax,bl,pmin,pmax,dE
                                     , oclh, Qb,Ib,bunches,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""

@@ -91,8 +91,8 @@ vfps::makePSFromPNG( std::string fname
         }
 
         std::vector<integral_t> filling = {{ 1.0 }};
-        auto ps = std::make_unique<PhaseSpace>( ps_size
-                                              , qmin, qmax, qscale
+        PhaseSpace::setSize(ps_size, ps_size, filling.size());
+        auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                               , pmin, pmax, pscale
                                               , oclh
                                               , beam_charge,beam_current
@@ -126,8 +126,8 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
                    , double qscale, double pscale)
 {
     std::vector<integral_t> filling = {{ 1.0 }};
-    auto ps = std::make_unique<PhaseSpace>( ps_size
-                                          , qmin, qmax, qscale
+    PhaseSpace::setSize(ps_size, ps_size, filling.size());
+    auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                           , pmin, pmax, pscale
                                           , oclh
                                           , beam_charge,beam_current
