@@ -320,7 +320,7 @@ void vfps::PhaseSpace::updateXProjection() {
         _oclh->enqueueNDRangeKernel(_clKernProjX
                                   , cl::NullRange
                                   , cl::NDRange(_nmeshcellsX)
-                                  # ifdef INOVESA_ENABLE_CLPROFILING
+                                  # if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr

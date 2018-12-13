@@ -143,10 +143,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # workaround CMake bug (e.g. in MacOS)
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
-
-IF( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
-    AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0 )
-  set(CMAKE_CXX_FLAGS "-fext-numeric-literals ${CMAKE_CXX_FLAGS}")
+# workaround problem in boost with g++
+IF( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+    set(CMAKE_CXX_FLAGS "-fext-numeric-literals ${CMAKE_CXX_FLAGS}")
 ENDIF()
 
 # turn on automatic optimizations for current architecture when GCC is used
