@@ -6,6 +6,7 @@
 
 #include "MessageStrings.hpp"
 
+// normaly, there should be no long lines
 void longLinesCheck(std::string text) {
     std::vector<std::string> lines;
     boost::split(lines, text, boost::is_any_of("\n"));
@@ -25,6 +26,8 @@ BOOST_AUTO_TEST_CASE(copyright_notice) {
 }
 
 BOOST_AUTO_TEST_CASE(inovesa_version) {
+    longLinesCheck(vfps::inovesa_version(true,1,2,3,"master","$(hash)"));
+
     BOOST_CHECK_EQUAL(vfps::inovesa_version(false,1,2,3,"master","$(hash)"),
                       "v1.2.3");
     BOOST_CHECK_EQUAL(vfps::inovesa_version(false,1,3,0,"v1.3","$(hash)"),
