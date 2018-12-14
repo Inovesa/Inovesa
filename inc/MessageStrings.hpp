@@ -37,8 +37,8 @@ const std::string inovesa_version(
         const int_fast16_t v_mayor = INOVESA_VERSION_MAJOR,
         const int_fast16_t v_minor = INOVESA_VERSION_MINOR,
         const int_fast16_t v_fix = INOVESA_VERSION_FIX,
-        const std::__cxx11::string branch = GIT_BRANCH,
-        const std::__cxx11::string commit = GIT_COMMIT);
+        const std::string branch = GIT_BRANCH,
+        const std::string commit = GIT_COMMIT);
 
 const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,
