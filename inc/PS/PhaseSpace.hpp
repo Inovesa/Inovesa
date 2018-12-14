@@ -206,7 +206,6 @@ public:
     PhaseSpace& operator=(PhaseSpace other);
 
     /**
-<<<<<<< HEAD
      * @brief nBunches number of RF buckets in simulation
      * @return
      */

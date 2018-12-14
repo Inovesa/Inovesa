@@ -38,35 +38,45 @@ const std::string vfps::copyright_notice() noexcept {
         "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
         "GNU General Public License for more details.\n"
         "\n"
-        "You should have received a copy of the GNU General Public License"
+        "You should have received a copy of the GNU General Public License\n"
         "along with Inovesa. If not, see <http://www.gnu.org/licenses/>.";
     return rv;
 }
 
-const std::string vfps::inovesa_version(const bool verbose) {
+const std::string vfps::inovesa_version(const bool verbose,
+                                        const int_fast16_t v_mayor,
+                                        const int_fast16_t v_minor,
+                                        const int_fast16_t v_fix,
+                                        const std::string branch,
+                                        const std::string commit) {
     std::stringstream sstream;
-    auto branchstr = std::string(GIT_BRANCH);
-    if (branchstr.empty() || branchstr == "master" || branchstr.front()=='v') {
+    if (branch.empty() || branch == "master" || branch.front()=='v') {
         // version number release branches (and releases)
-        sstream << 'v' << INOVESA_VERSION_MAJOR
-                << '.' << INOVESA_VERSION_MINOR;
-        #if ( INOVESA_VERSION_FIX >= 0)
-            sstream << '.' << INOVESA_VERSION_FIX;
-        #elif ( INOVESA_VERSION_FIX == -1 )
-                sstream << " alpha";
-        #elif ( INOVESA_VERSION_FIX == -2 )
+        sstream << 'v' << v_mayor
+                << '.' << v_minor;
+        switch ( v_fix ) {
+        case -1:
+            sstream << " alpha";
+            break;
+        case -2:
             sstream << " beta";
-        #else
-            sstream << " RC" << std::abs(INOVESA_VERSION_FIX)-2;
-        #endif
-        if (branchstr.front()=='v') {
+            break;
+        default:
+            if (v_fix >= 0) {
+                sstream << '.' << v_fix;
+            } else {
+                sstream << " RC" << std::abs(v_fix)-2;
+            }
+            break;
+        }
+        if (branch.front()=='v') {
             // plus commit for pre-release branches
-            sstream << ", Commit: "<< GIT_COMMIT;
+            sstream << ", Commit: "<< commit;
         }
      } else {
         // no version number for development or feature branches
-        sstream << "Branch: "<< GIT_BRANCH
-                << ", Commit: "<< GIT_COMMIT;
+        sstream << "Branch: "<< branch
+                << ", Commit: "<< commit;
      }
     if (verbose) {
         sstream << std::endl << "Build options:"
