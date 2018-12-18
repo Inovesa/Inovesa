@@ -422,7 +422,7 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
     return _bunchpopulation;
 }
 
-vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
+vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace& other)
 {
     swap(*this,other);
     return *this;

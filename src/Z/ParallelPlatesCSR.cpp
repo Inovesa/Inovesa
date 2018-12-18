@@ -32,7 +32,7 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t nfreqs,
     std::vector<vfps::impedance_t> rv(nfreqs,0);
 
     // frequency resolution: impedance will be sampled at multiples of delta
-    const frequency_t delta = f_max/f0/(nfreqs-1.0);
+    const double delta = f_max/f0/(nfreqs-1.0);
 
     const double r_bend = physcons::c/(2*pi<double>()*f0);
     constexpr std::complex<double> j(0,1);
@@ -59,7 +59,12 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t nfreqs,
             Z += zinc;
         }
         Z *= 4.0*b*n*g/r_bend*pi_sqr<double>()*std::pow(2,1./3.)*physcons::Z0;
-        rv[i] = Z;
+
+        /* Calculation was done using double to increase accuracy
+         * for this one-time computation. Explicitly cast down to
+         * impedance_t, to make this transparent.
+         */
+        rv[i] = static_cast<impedance_t>(Z);
     }
 
     return rv;

@@ -203,7 +203,7 @@ public:
      */
     Array::array1<integral_t> normalize();
 
-    PhaseSpace& operator=(PhaseSpace other);
+    PhaseSpace& operator=(PhaseSpace& other);
 
     /**
      * @brief nBunches number of RF buckets in simulation
