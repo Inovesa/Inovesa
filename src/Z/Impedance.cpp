@@ -9,7 +9,7 @@
 
 #include <fstream>
 
-vfps::Impedance::Impedance(const vfps::Impedance &other)
+vfps::Impedance::Impedance(const Impedance &other)
   : Impedance( other._axis,other._data, other._oclh)
 {
 }

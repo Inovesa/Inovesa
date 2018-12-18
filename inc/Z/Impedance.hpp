@@ -28,7 +28,7 @@ public:
      * @param axis
      * @param z
      */
-    Impedance( Ruler<frequency_t> axis
+    Impedance(Ruler<frequency_t> axis
              , const std::vector<impedance_t> &z
              , oclhptr_t oclh = nullptr
              );
@@ -37,7 +37,7 @@ public:
      * @brief Impedance copy constructor
      * @param other
      */
-    Impedance(const Impedance& other);
+    Impedance(const Impedance &other);
 
 
     /**
@@ -134,7 +134,7 @@ public:
     static uint64_t upper_power_of_two(uint64_t v);
 };
 
-inline Impedance operator+(Impedance lhs, const Impedance& rhs)
+inline Impedance operator+(Impedance& lhs, const Impedance& rhs)
 {
     lhs += rhs;
     return lhs;
