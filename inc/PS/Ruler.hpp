@@ -74,10 +74,10 @@ public:
     inline const ruler_t* data() const
         { return _data; }
 
-    inline const ruler_t max() const
+    inline ruler_t max() const
         {return _max;}
 
-    inline const ruler_t min() const
+    inline ruler_t min() const
         { return _min; }
 
     std::map<std::string,double> scale() const
@@ -89,13 +89,13 @@ public:
     inline meshindex_t steps() const
         { return _steps; }
 
-    inline const ruler_t delta() const
+    inline ruler_t delta() const
         { return _delta; }
 
-    inline const ruler_t length() const
+    inline ruler_t length() const
         { return _max - _min; }
 
-    inline const ruler_t zerobin() const
+    inline ruler_t zerobin() const
         { return _zerobin; }
 
     inline const ruler_t& operator[](meshindex_t d) const
