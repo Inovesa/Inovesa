@@ -83,4 +83,4 @@ to directly point to that specific version.
 
 [6]: https://doi.org/10.5445/ir/1000084466 "Simulation and measurement of the dynamics of ultra-short electron bunch profiles for the generation of coherent THz radiation"
 
-[7]: https://arxiv.org/abs/1710.09568 "Continuous bunch-by-bunch spectroscopic investigation of the micro-bunching instability"
+[7]: https://doi.org/10.1103/PhysRevAccelBeams.21.110705 "Continuous bunch-by-bunch spectroscopic investigation of the microbunching instability"
