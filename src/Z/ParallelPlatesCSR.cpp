@@ -12,24 +12,24 @@
 using boost::math::constants::pi;
 using boost::math::constants::pi_sqr;
 
-vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t n
+vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t nfreqs
                                           , const frequency_t f0
                                           , const frequency_t f_max
                                           , const double g
                                           , oclhptr_t oclh
                                           )
     :
-      Impedance(__calcImpedance(n,f0,f_max,g),f_max, oclh )
+      Impedance(__calcImpedance(nfreqs,f0,f_max,g),f_max, oclh )
 {
 }
 
 std::vector<vfps::impedance_t>
-vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
+vfps::ParallelPlatesCSR::__calcImpedance(const size_t nfreqs,
                                          const vfps::frequency_t f0,
                                          const vfps::frequency_t f_max,
                                          const double g)
 {
-    std::vector<vfps::impedance_t> rv(n,0);
+    std::vector<vfps::impedance_t> rv(nfreqs,0);
 
     // frequency resolution: impedance will be sampled at multiples of delta
     const frequency_t delta = f_max/f0/(n-1.0);
