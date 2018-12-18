@@ -45,7 +45,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     if (data != nullptr) {
         std::copy(data,data+_data.size(),_data());
     } else {
-        for (uint32_t n=0; n<_nbunches; n++) {
+        for (meshindex_t  n=0; n<_nbunches; n++) {
             gaus(0,n,zoom); // creates gaussian for x axis
             gaus(1,n,zoom); // creates gaussian for y axis
         }
@@ -249,7 +249,7 @@ void vfps::PhaseSpace::integrate()
     } else
     #endif
     {
-    for (uint32_t n=0; n<_nbunches; n++) {
+    for (meshindex_t n=0; n<_nbunches; n++) {
         switch (_integralmethod) {
         case IntegralMethod::sum:
             _bunchpopulation[n] = std::accumulate(_projection[0][n].begin(),
@@ -281,8 +281,8 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
         }
         #endif
     }
-    const uint32_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
-    for (uint32_t n=0; n<_nbunches; n++) {
+    const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+    for (meshindex_t n=0; n<_nbunches; n++) {
         integral_t avg = 0;
         for (size_t i=0; i<maxi; i++) {
             avg += _projection[axis][n][i]*_qp(axis,i);
@@ -298,8 +298,8 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
 void vfps::PhaseSpace::variance(const uint_fast8_t axis)
 {
     average(axis);
-    const uint32_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
-    for (uint32_t n=0; n<_nbunches; n++) {
+    const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+    for (meshindex_t n=0; n<_nbunches; n++) {
         meshdata_t var = 0;
         for (size_t i=0; i<maxi; i++) {
             var += _projection[axis][n][i]*std::pow(_qp(axis,i)-_moment[axis][0][n],2);
@@ -403,7 +403,7 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
 
-    for (uint32_t n=0; n<_nbunches; n++) {
+    for (meshindex_t n=0; n<_nbunches; n++) {
         if (_filling_set > 0) {
             _data[n] *= _filling_set[n]/_bunchpopulation[n];
         } else {
@@ -457,17 +457,17 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
 }
 #endif // INOVESA_USE_OPENCL
 
-const uint32_t& vfps::PhaseSpace::nx = vfps::PhaseSpace::_nmeshcellsX;
+const vfps::meshindex_t& vfps::PhaseSpace::nx = vfps::PhaseSpace::_nmeshcellsX;
 
-const uint32_t& vfps::PhaseSpace::ny = vfps::PhaseSpace::_nmeshcellsY;
+const vfps::meshindex_t& vfps::PhaseSpace::ny = vfps::PhaseSpace::_nmeshcellsY;
 
-const uint32_t& vfps::PhaseSpace::nb = vfps::PhaseSpace::_nbunches;
+const vfps::meshindex_t& vfps::PhaseSpace::nb = vfps::PhaseSpace::_nbunches;
 
-const size_t& vfps::PhaseSpace::nxy = vfps::PhaseSpace::_nmeshcells;
+const vfps::meshindex_t& vfps::PhaseSpace::nxy = vfps::PhaseSpace::_nmeshcells;
 
-void vfps::PhaseSpace::setSize( const uint32_t x
-                              , const uint32_t y
-                              , const uint32_t b )
+void vfps::PhaseSpace::setSize( const meshindex_t x
+                              , const meshindex_t y
+                              , const meshindex_t b )
 {
     if (vfps::PhaseSpace::_firstinit) {
         vfps::PhaseSpace::_firstinit = false;
@@ -480,13 +480,13 @@ void vfps::PhaseSpace::setSize( const uint32_t x
 
 bool vfps::PhaseSpace::_firstinit(true);
 
-uint32_t vfps::PhaseSpace::_nmeshcellsX(0);
+vfps::meshindex_t vfps::PhaseSpace::_nmeshcellsX(0);
 
-uint32_t vfps::PhaseSpace::_nmeshcellsY(0);
+vfps::meshindex_t vfps::PhaseSpace::_nmeshcellsY(0);
 
-uint32_t vfps::PhaseSpace::_nbunches(0);
+vfps::meshindex_t vfps::PhaseSpace::_nbunches(0);
 
-size_t vfps::PhaseSpace::_nmeshcells(0);
+vfps::meshindex_t vfps::PhaseSpace::_nmeshcells(0);
 
 void vfps::PhaseSpace::createFromProjections()
 {
@@ -502,12 +502,12 @@ void vfps::PhaseSpace::createFromProjections()
 }
 
 void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
-                            const uint32_t bunch,
+                            const meshindex_t bunch,
                             const double zoom)
 {
     const double zoom2=zoom*zoom;
-    const uint32_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
-    for(uint32_t i=0; i<maxi; i++){
+    const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+    for(meshindex_t i=0; i<maxi; i++){
         _projection[axis][bunch][i]=boost::math::constants::one_div_root_two_pi<double>()
                 *std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }

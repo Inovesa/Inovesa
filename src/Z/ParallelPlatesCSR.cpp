@@ -32,11 +32,11 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t nfreqs,
     std::vector<vfps::impedance_t> rv(nfreqs,0);
 
     // frequency resolution: impedance will be sampled at multiples of delta
-    const frequency_t delta = f_max/f0/(n-1.0);
+    const frequency_t delta = f_max/f0/(nfreqs-1.0);
 
     const double r_bend = physcons::c/(2*pi<double>()*f0);
     constexpr std::complex<double> j(0,1);
-    for (size_t i=1; i<=n/2; i++) {
+    for (size_t i=1; i<=nfreqs/2; i++) {
         std::complex<double> Z=0;
         const double n = i*delta;
         const double m = n*std::pow(g/r_bend,3./2.);

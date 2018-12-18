@@ -30,7 +30,7 @@ public:
     Ruler() = delete;
 
     Ruler(meshindex_t steps, ruler_t min, ruler_t max
-          , std::map<std::string,double> scale)
+          , std::map<std::string,meshdata_t> scale)
       : _steps(steps)
       , _max(max)
       , _min(min)
@@ -80,7 +80,7 @@ public:
     inline ruler_t min() const
         { return _min; }
 
-    std::map<std::string,double> scale() const
+    std::map<std::string,meshdata_t> scale() const
         { return _scale; }
 
     inline double scale(std::string unit) const
@@ -129,7 +129,7 @@ protected:
      */
     const ruler_t _delta;
 
-    const std::map<std::string,double> _scale;
+    const std::map<std::string,meshdata_t> _scale;
 
     const ruler_t _zerobin;
 };
