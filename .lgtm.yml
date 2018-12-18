@@ -1,2 +1,4 @@
-library:
+path_classifiers:
+  library:
     - inc/Array.h
+
