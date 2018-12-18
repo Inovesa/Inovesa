@@ -24,20 +24,20 @@ public:
     Impedance() = delete;
 
     /**
-     * @brief Impedance basic constructor that initializes everything
-     * @param axis
-     * @param z
-     */
-    Impedance(Ruler<frequency_t> axis
-             , const std::vector<impedance_t> &z
-             , oclhptr_t oclh = nullptr
-             );
-
-    /**
      * @brief Impedance copy constructor
      * @param other
      */
     Impedance(const Impedance &other);
+
+    /**
+     * @brief Impedance basic constructor that initializes everything
+     * @param axis
+     * @param z
+     */
+    Impedance(Ruler<frequency_t> &&axis
+             , const std::vector<impedance_t> &z
+             , oclhptr_t oclh = nullptr
+             );
 
 
     /**
