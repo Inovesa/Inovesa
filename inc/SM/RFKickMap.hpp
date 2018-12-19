@@ -39,7 +39,7 @@ public:
              , oclhptr_t oclh
              );
 
-    ~RFKickMap() noexcept;
+    ~RFKickMap() noexcept override;
 
 protected:
     const bool _linear;
