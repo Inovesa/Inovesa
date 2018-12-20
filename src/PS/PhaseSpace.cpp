@@ -465,16 +465,15 @@ const vfps::meshindex_t& vfps::PhaseSpace::nb = vfps::PhaseSpace::_nbunches;
 
 const vfps::meshindex_t& vfps::PhaseSpace::nxy = vfps::PhaseSpace::_nmeshcells;
 
-void vfps::PhaseSpace::setSize( const meshindex_t x
-                              , const meshindex_t y
-                              , const meshindex_t b )
+void vfps::PhaseSpace::setSize(const meshindex_t x,
+                               const meshindex_t b )
 {
     if (vfps::PhaseSpace::_firstinit) {
         vfps::PhaseSpace::_firstinit = false;
         vfps::PhaseSpace::_nmeshcellsX = x;
-        vfps::PhaseSpace::_nmeshcellsY = y;
+        vfps::PhaseSpace::_nmeshcellsY = x;
         vfps::PhaseSpace::_nbunches = b;
-        vfps::PhaseSpace::_nmeshcells = x*y;
+        vfps::PhaseSpace::_nmeshcells = x*x;
     }
 }
 

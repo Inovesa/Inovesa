@@ -323,13 +323,11 @@ public:
     /**
      * @brief setSize one-time setter for sizes
      * @param x
-     * @param y
      * @param b
      *
      * As all grids have to have the same size, it is set globally.
      */
     static void setSize(const meshindex_t x,
-                        const meshindex_t y,
                         const meshindex_t b);
 
 protected:
