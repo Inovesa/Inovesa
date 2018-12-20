@@ -11,7 +11,7 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
                       , std::shared_ptr<PhaseSpace> out
                       , const meshindex_t xsize
                       , const meshindex_t ysize
-                      , const uint32_t nbunches
+                      , const meshindex_t nbunches
                       , const InterpolationType it
                       , const bool interpol_clamp
                       , const Axis kd
@@ -28,12 +28,14 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
-    _offset.resize(_meshsize_pd*nbunches,meshaxis_t(0));
+    // explicitly state that product should fit into meshindex_t
+    _offset.resize(static_cast<meshindex_t>(_meshsize_pd*nbunches),
+                   static_cast<meshaxis_t>(0));
     #if INOVESA_INIT_KICKMAP == 1
     for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {
         _hinfo[q_i*_ip].index = _meshsize_kd/2;
         _hinfo[q_i*_ip].weight = 1;
-        for (unsigned int j1=1; j1<_it; j1++) {
+        for (meshindex_t j1=1; j1<_it; j1++) {
             _hinfo[q_i*_ip+j1].index = 0;
             _hinfo[q_i*_ip+j1].weight = 0;
         }
@@ -220,7 +222,7 @@ void vfps::KickMap::apply()
     } else {
         for (uint32_t n=0; n < PhaseSpace::nb; n++) {
             const meshindex_t offs1 = n*_meshsize_kd*_meshsize_pd;
-            const size_t offs2 = std::min(n,_lastbunch)*_meshsize_pd;
+            const meshindex_t offs2 = std::min(n,_lastbunch)*_meshsize_pd;
             for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
                 const meshindex_t offs = offs1 + x*_meshsize_kd;
                 for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {

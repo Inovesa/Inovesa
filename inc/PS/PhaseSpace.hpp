@@ -124,7 +124,7 @@ public:
     inline meshaxis_t getMin(const uint_fast8_t x) const
     { return _axis[x]->min(); }
 
-    inline std::map<std::string,double> getScale(const uint_fast8_t x) const
+    inline std::map<std::string,meshdata_t> getScale(const uint_fast8_t x) const
     { return _axis[x]->scale(); }
 
     inline double getScale(const uint_fast8_t x, std::string unit) const
@@ -203,20 +203,20 @@ public:
      */
     Array::array1<integral_t> normalize();
 
-    PhaseSpace& operator=(PhaseSpace other);
+    PhaseSpace& operator=(PhaseSpace& other);
 
     /**
      * @brief nBunches number of RF buckets in simulation
      * @return
      */
-    inline uint32_t nBunches() const
+    inline meshindex_t nBunches() const
     { return _nbunches; }
 
     /**
      * @brief nMeshCells total number of mesh cells
      * @return
      */
-    inline size_t nMeshCells() const
+    inline meshindex_t nMeshCells() const
     { return _axis[0]->steps()*_axis[1]->steps(); }
 
     /**
@@ -224,7 +224,7 @@ public:
      * @param x direction (0: x, 1: y)
      * @return
      */
-    inline uint32_t nMeshCells(const uint_fast8_t x) const
+    inline meshindex_t nMeshCells(const uint_fast8_t x) const
     { return _axis[x]->steps(); }
 
     /**
@@ -303,22 +303,22 @@ public:
     /**
      * @brief nx reference to _nmeshcellsX
      */
-    static const uint32_t& nx;
+    static const meshindex_t& nx;
 
     /**
      * @brief ny reference to _nmeshcellsY
      */
-    static const uint32_t& ny;
+    static const meshindex_t& ny;
 
     /**
      * @brief nb reference to _nbunches
      */
-    static const uint32_t& nb;
+    static const meshindex_t& nb;
 
     /**
      * @brief nxy reference to _nmeshcells
      */
-    static const size_t& nxy;
+    static const meshindex_t& nxy;
 
     /**
      * @brief setSize one-time setter for sizes
@@ -328,18 +328,20 @@ public:
      *
      * As all grids have to have the same size, it is set globally.
      */
-    static void setSize(const uint32_t x, const uint32_t y, const uint32_t b);
+    static void setSize(const meshindex_t x,
+                        const meshindex_t y,
+                        const meshindex_t b);
 
 protected:
     static bool _firstinit;
 
-    static uint32_t _nmeshcellsX;
+    static meshindex_t _nmeshcellsX;
 
-    static uint32_t _nmeshcellsY;
+    static meshindex_t _nmeshcellsY;
 
-    static uint32_t _nbunches;
+    static meshindex_t _nbunches;
 
-    static size_t _nmeshcells;
+    static meshindex_t _nmeshcells;
 
 protected:
     const IntegralMethod _integralmethod;
@@ -462,7 +464,9 @@ private:
      * @param axis
      * @param zoom
      */
-    void gaus(const uint_fast8_t axis, const uint32_t bunch, const double zoom);
+    void gaus(const uint_fast8_t axis,
+              const meshindex_t bunch,
+              const double zoom);
 
     /**
      * @brief simpsonWeights helper function to allow for const _ws

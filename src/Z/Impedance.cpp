@@ -9,17 +9,17 @@
 
 #include <fstream>
 
-vfps::Impedance::Impedance(const vfps::Impedance &other)
-  : Impedance( other._axis,other._data, other._oclh)
+vfps::Impedance::Impedance(const Impedance &other)
+  : Impedance( Ruler<frequency_t>(other._axis),other._data, other._oclh)
 {
 }
 
-vfps::Impedance::Impedance( Ruler<vfps::frequency_t> axis
+vfps::Impedance::Impedance(Ruler<frequency_t> &&axis
                           , const std::vector<vfps::impedance_t> &z
                           , oclhptr_t oclh
                           )
   : _nfreqs(z.size())
-  , _axis(axis)
+  , _axis(std::move(axis))
   , _data(z)
   , _oclh(oclh)
 {

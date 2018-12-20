@@ -82,7 +82,7 @@ vfps::makePSFromPNG( std::string fname
     if (image.get_width() == image.get_height()) {
         meshindex_t ps_size = image.get_height();
 
-        std::vector<meshdata_t> data(ps_size*ps_size);
+        std::vector<meshdata_t> data(static_cast<meshindex_t>(ps_size*ps_size));
 
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
