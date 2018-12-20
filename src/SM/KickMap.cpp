@@ -28,6 +28,7 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
+    // explicitly state that product should fit into meshindex_t
     _offset.resize(static_cast<meshindex_t>(_meshsize_pd*nbunches),
                    static_cast<meshaxis_t>(0));
     #if INOVESA_INIT_KICKMAP == 1
