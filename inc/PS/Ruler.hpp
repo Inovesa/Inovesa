@@ -80,7 +80,7 @@ public:
     inline ruler_t min() const
         { return _min; }
 
-    std::map<std::string,meshdata_t> scale() const
+    std::map<std::string,ruler_t> scale() const
         { return _scale; }
 
     inline double scale(std::string unit) const
@@ -129,7 +129,7 @@ protected:
      */
     const ruler_t _delta;
 
-    const std::map<std::string,meshdata_t> _scale;
+    const std::map<std::string,ruler_t> _scale;
 
     const ruler_t _zerobin;
 };
