@@ -241,8 +241,10 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
             = std::min( static_cast<decltype(_in->nMeshCells(0))>(std::floor(pos.x))
                       , _in->nMeshCells(0)-1);
         std::make_signed<meshindex_t>::type yi
-            = std::min( static_cast<decltype(_ysize)>(std::floor(pos.y))
-                      , _ysize-1);
+            = std::min( static_cast<std::make_signed<meshindex_t>::type>(
+                            std::floor(pos.y)),
+                        static_cast<std::make_signed<meshindex_t>::type>(
+                            _ysize-1));
         const meshindex_t offs = xi*_ysize;
         interpol_t offset = 0;
         meshdata_t charge = 0;
