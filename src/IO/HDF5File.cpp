@@ -214,6 +214,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _energyAverage.dataset.createAttribute("ElectronVolt",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_E_eVolt);
 
+    _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/RFKicks/axis0" );
 
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/Particles/axis0" );
 
