@@ -84,11 +84,13 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // see documentation of make_display(...)
+    #if INOVESA_USE_OPENCL == 1
     auto cldev = opts.getCLDevice();
+    #endif // INOVESA_USE_OPENCL
+
     std::string ofname = opts.getOutFile();
 
-    if (ofname.empty() && !opts.getForceRun() && cldev >= 0
+    if (ofname.empty() && !opts.getForceRun()
         #if INOVESA_USE_OPENGL == 1
         && !opts.showPhaseSpace()
         #endif // INOVESA_USE_OPENGL
@@ -101,14 +103,6 @@ int main(int argc, char** argv)
                      " 'run_anyway'." << std::endl;
         return EXIT_SUCCESS;
     }
-
-    #if INOVESA_USE_OPENCL == 1
-    if (cldev < 0) {
-        OCLH::listCLDevices();
-        return EXIT_SUCCESS;
-    }
-    #endif // INOVESA_USE_OPENCL
-
 
     std::unique_ptr<vfps::Display> display;
     #if INOVESA_USE_OPENGL == 1

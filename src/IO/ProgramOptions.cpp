@@ -5,6 +5,8 @@
  * in the version control history of the file.
  */
 
+#include "CL/OpenCLHandler.hpp"
+
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
@@ -255,6 +257,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << vfps::inovesa_version(true) << std::endl;
         return false;
     }
+    #if INOVESA_USE_OPENCL == 1
+    if (_cldevice < 0) {
+        OCLH::listCLDevices();
+        return false;
+    }
+    #endif // INOVESA_USE_OPENCL
     if (_configfile == "/dev/null") {
         _configfile.clear();
     } else if (!_configfile.empty()) {
@@ -288,9 +296,9 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     if (_startdistfile == "/dev/null") {
         _startdistfile.clear();
     }
-    #ifndef INOVESA_USE_OPENCL
-    if (_vm.count("cldev")) {
-        std::cout    << "Warning: Defined device for OpenCL "
+    #if INOVESA_USE_OPENCL == 0
+    if (_cldevice > 0 && _vm.count("cldev")) {
+        std::cout   << "Warning: Defined device for OpenCL "
                     << "but running Inovesa without OpenCL support."
                     << std::endl;
     }

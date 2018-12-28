@@ -32,6 +32,22 @@ class ProgramOptions
 public:
     ProgramOptions();
 
+    /**
+     * @brief parse parse command line parameters
+     * @param argc argument count (handed over from main)
+     * @param argv argument values (handed over from main)
+     * @return Run simulation?
+     *
+     * Function will return true, except in cases where it is undesired that the
+     * simulation is run. This is the case when one of the following command
+     * line parameters is present:
+     *
+     * --help: print list of
+     * --copyright: print copyright hint
+     * --version: print showt version information
+     * --buildinfo: print verbose build information
+     * --cldev < 0: list available devices for OpenCL
+     */
     bool parse(int argc, char** argv);
 
     /**
