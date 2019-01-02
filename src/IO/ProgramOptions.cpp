@@ -89,7 +89,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Accelerating Voltage (V) for one revolution")
         ("LinearRF",
             po::value<bool>(&linearRF)->default_value(true),
-            "Use linear model for accelerating voltage")
+            "Use linear model for accelerating voltage (experimental)")
         ("RFAmplitudeSpread",
             po::value<double>(&rf_amplitude_spread)->default_value(0),
             "Relative accelerating voltage amplitude spread per turn")
