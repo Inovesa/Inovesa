@@ -106,7 +106,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "File containing wake function.")
     ;
     _programopts_file.add_options()
-        ("cldev", po::value<int32_t>(&_cldevice)->default_value(1),
+        ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
@@ -135,7 +135,7 @@ vfps::ProgramOptions::ProgramOptions() :
         #if INOVESA_USE_OPENCL == 1
             "OpenCL device to use\n('-1' lists available devices)")
         #else // not INOVESA_USE_OPENCL
-            "(not active in this build)")
+            "(ignored in this build)")
         #endif // INOVESA_USE_OPENCL
         ("config,c", po::value<std::string>(&_configfile),
             "name of a file containing a configuration.")
