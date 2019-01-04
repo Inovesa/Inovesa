@@ -16,8 +16,9 @@ If you consider contributing, the [contibuting file](CONTRIBUTING.md)
 is a good starting point.
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
-[![Inovesa build status (branch: Master)](https://travis-ci.org/Inovesa/Inovesa.svg)](https://travis-ci.org/Inovesa/Inovesa/branches)
+[![Inovesa build status](https://travis-ci.com/Inovesa/Inovesa.svg)](https://travis-ci.com/Inovesa/Inovesa/branches)
 [![Coverage Status](https://coveralls.io/repos/github/Inovesa/Inovesa/badge.svg)](https://coveralls.io/github/Inovesa/Inovesa)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/context:cpp)
 
 
 Installation
@@ -82,4 +83,4 @@ to directly point to that specific version.
 
 [6]: https://doi.org/10.5445/ir/1000084466 "Simulation and measurement of the dynamics of ultra-short electron bunch profiles for the generation of coherent THz radiation"
 
-[7]: https://arxiv.org/abs/1710.09568 "Continuous bunch-by-bunch spectroscopic investigation of the micro-bunching instability"
+[7]: https://doi.org/10.1103/PhysRevAccelBeams.21.110705 "Continuous bunch-by-bunch spectroscopic investigation of the microbunching instability"
