@@ -96,7 +96,7 @@ public:
     inline auto zerobin() const
         { return _zerobin; }
 
-    inline const auto& operator[](meshindex_t d) const
+    inline const auto operator[](meshindex_t d) const
         { return at(d); }
 
     /**
