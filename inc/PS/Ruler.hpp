@@ -66,7 +66,7 @@ public:
     ~Ruler() noexcept
         { delete [] _data; }
 
-    inline const auto at(meshindex_t d) const
+    inline auto at(meshindex_t d) const
         { return _data[d]; }
 
     inline const auto* data() const
@@ -96,11 +96,11 @@ public:
     inline auto zerobin() const
         { return _zerobin; }
 
-    inline const auto operator[](meshindex_t d) const
+    inline auto operator[](meshindex_t d) const
         { return at(d); }
 
     /**
-     * @brief operator == compares grids
+     * @brief operator == compares ruler dimensions (not the scales)
      * @param other grid to compare
      * @return true (same dimensions) or false (different dimensions)
      */
