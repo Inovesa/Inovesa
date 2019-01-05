@@ -34,7 +34,7 @@ public:
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
 
-    ~WakeKickMap() noexcept;
+    ~WakeKickMap() noexcept override;
 
 public:
     virtual void update()=0;

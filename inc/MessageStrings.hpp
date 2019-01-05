@@ -32,7 +32,13 @@ const std::string copyright_notice() noexcept;
  * or " {descriptor}" for pre-releas versions.
  * Development versions do not have to follow this convention.
  */
-const std::string inovesa_version(const bool verbose=false);
+const std::string inovesa_version(
+        const bool verbose=false,
+        const int_fast16_t v_mayor = INOVESA_VERSION_MAJOR,
+        const int_fast16_t v_minor = INOVESA_VERSION_MINOR,
+        const int_fast16_t v_fix = INOVESA_VERSION_FIX,
+        const std::string branch = GIT_BRANCH,
+        const std::string commit = GIT_COMMIT);
 
 const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,

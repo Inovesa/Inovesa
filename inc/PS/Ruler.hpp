@@ -29,8 +29,8 @@ class Ruler
 public:
     Ruler() = delete;
 
-    Ruler(meshindex_t steps, ruler_t min, ruler_t max
-          , std::map<std::string,ruler_t> scale)
+    Ruler(meshindex_t steps, ruler_t min, ruler_t max,
+          std::map<std::string,ruler_t> scale = std::map<std::string,ruler_t>())
       : _steps(steps)
       , _max(max)
       , _min(min)
@@ -78,7 +78,7 @@ public:
     inline auto min() const
         { return _min; }
 
-    inline auto& scale() const
+  inline auto& scale() const
         { return _scale; }
 
     inline auto scale(std::string unit) const
@@ -127,7 +127,7 @@ protected:
      */
     const ruler_t _delta;
 
-    const std::map<std::string,meshdata_t> _scale;
+    const std::map<std::string,ruler_t> _scale;
 
     const ruler_t _zerobin;
 };

@@ -23,7 +23,7 @@ public:
   : SourceMap( in, out, xsize, ysize, 0, 0, oclh)
 {}
 
-    ~Identity() noexcept;
+    ~Identity() noexcept override;
 
     /**
      * @brief apply copys data from in to out

@@ -27,7 +27,7 @@ public:
             );
 
     #if INOVESA_ENABLE_CLPROFILING == 1
-    ~DriftMap() noexcept;
+    ~DriftMap() noexcept override;
     #else
     ~DriftMap() = default;
     #endif // INOVESA_ENABLE_CLPROFILING

@@ -48,11 +48,6 @@ public:
     };
 
 public:
-    enum class IntegralMethod : uint_fast8_t {
-        sum,simpson
-    };
-
-public:
     PhaseSpace() = delete;
 
     PhaseSpace(std::array<meshRuler_ptr,2> axis
@@ -342,8 +337,6 @@ protected:
     static meshindex_t _nmeshcells;
 
 protected:
-    const IntegralMethod _integralmethod;
-
     /**
      * @brief _fillingpattern: normalized bunch charges as they should be
      *

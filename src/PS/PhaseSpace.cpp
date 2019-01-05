@@ -23,7 +23,6 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   : _axis(axis)
   , charge(beam_charge)
   , current(beam_current)
-  , _integralmethod(IntegralMethod::simpson)
   , _filling_set(filling.begin(),filling.end())
   , _bunchpopulation(Array::array1<integral_t>(_nbunches))
   , _integral(1)
@@ -250,19 +249,10 @@ void vfps::PhaseSpace::integrate()
     #endif
     {
     for (meshindex_t n=0; n<_nbunches; n++) {
-        switch (_integralmethod) {
-        case IntegralMethod::sum:
-            _bunchpopulation[n] = std::accumulate(_projection[0][n].begin(),
-                                           _projection[0][n].end(),
-                                           static_cast<integral_t>(0));
-            break;
-        case IntegralMethod::simpson:
-            _bunchpopulation[n] = std::inner_product(_projection[0][n].begin(),
-                                              _projection[0][n].end(),
-                                              _ws.begin(),
-                                              static_cast<integral_t>(0));
-            break;
-        }
+        _bunchpopulation[n] = std::inner_product(_projection[0][n].begin(),
+                                                 _projection[0][n].end(),
+                                                 _ws.begin(),
+                                                 static_cast<integral_t>(0));
     }
     _integral = std::accumulate( _bunchpopulation.begin()
                                , _bunchpopulation.end()
@@ -302,7 +292,8 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
     for (meshindex_t n=0; n<_nbunches; n++) {
         meshdata_t var = 0;
         for (size_t i=0; i<maxi; i++) {
-            var += _projection[axis][n][i]*std::pow(_qp(axis,i)-_moment[axis][0][n],2);
+            var += _projection[axis][n][i]*std::pow(_qp(axis,i)
+                                                    -_moment[axis][0][n],2);
         }
 
         // _projection is normalized in p/q coordinates
@@ -335,30 +326,15 @@ void vfps::PhaseSpace::updateXProjection() {
     } else
     #endif
     {
-    switch (_integralmethod) {
-    case IntegralMethod::sum:
-        for (size_t n=0; n < _nbunches; n++) {
-            for (size_t x=0; x < _nmeshcellsX; x++) {
-                _projection[0][n][x]
-                        = std::accumulate(_data[n][x].begin(),
-                                          _data[n][x].end(),
-                                          static_cast<integral_t>(0));
-                _projection[0][n][x] /= length(1);
-            }
-        }
-        break;
-    case IntegralMethod::simpson:
-          for (size_t n=0; n < _nbunches; n++) {
-              for (size_t x=0; x < _nmeshcellsX; x++) {
-                  _projection[0][n][x]
-                          = std::inner_product(_data[n][x].begin(),
-                                               _data[n][x].end(),
-                                               _ws.begin(),
-                                               static_cast<integral_t>(0));
-              }
+      for (size_t n=0; n < _nbunches; n++) {
+          for (size_t x=0; x < _nmeshcellsX; x++) {
+              _projection[0][n][x]
+                      = std::inner_product(_data[n][x].begin(),
+                                           _data[n][x].end(),
+                                           _ws.begin(),
+                                           static_cast<integral_t>(0));
           }
-          break;
-    }
+      }
     }
 }
 
@@ -369,29 +345,13 @@ void vfps::PhaseSpace::updateYProjection() {
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data());
     }
     #endif
-    switch (_integralmethod) {
-    case IntegralMethod::sum:
-        for (size_t n=0; n < _nbunches; n++) {
-            for (size_t y=0; y< _nmeshcellsY; y++) {
-                _projection[1][n][y] = 0;
-
-                for (size_t x=0; x< _nmeshcellsX; x++) {
-                    _projection[1][n][y] += _data[n][x][y];
-                }
-                _projection[1][n][y] /= length(0);
+    for (size_t n=0; n < _nbunches; n++) {
+        for (size_t y=0; y< _nmeshcellsY; y++) {
+            _projection[1][n][y] = 0;
+            for (size_t x=0; x< _nmeshcellsX; x++) {
+                _projection[1][n][y] += _data[n][x][y]*_ws[x];
             }
         }
-        break;
-    case IntegralMethod::simpson:
-        for (size_t n=0; n < _nbunches; n++) {
-            for (size_t y=0; y< _nmeshcellsY; y++) {
-                _projection[1][n][y] = 0;
-                for (size_t x=0; x< _nmeshcellsX; x++) {
-                    _projection[1][n][y] += _data[n][x][y]*_ws[x];
-                }
-            }
-        }
-        break;
     }
 }
 
@@ -404,7 +364,7 @@ Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
     #endif // INOVESA_USE_OPENCL
 
     for (meshindex_t n=0; n<_nbunches; n++) {
-        if (_filling_set > 0) {
+        if (_filling_set[n] > 0) {
             _data[n] *= _filling_set[n]/_bunchpopulation[n];
         } else {
             std::fill( _data[n].begin(),_data[n].end()
@@ -507,8 +467,9 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
     const double zoom2=zoom*zoom;
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
     for(meshindex_t i=0; i<maxi; i++){
-        _projection[axis][bunch][i]=boost::math::constants::one_div_root_two_pi<double>()
-                *std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
+        _projection[axis][bunch][i]
+                = boost::math::constants::one_div_root_two_pi<double>()
+                * std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
 }
 
@@ -521,7 +482,7 @@ const Array::array1<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
     const integral_t h03 = getDelta(0)/integral_t(3);
     rv[0] = h03;
     for (size_t x=1; x< _nmeshcellsX-1; x++){
-        _ws[x] = h03 * (ca+dc);
+        rv[x] = h03 * (ca+dc);
         dc = -dc;
     }
     rv[_nmeshcellsX-1] = h03;

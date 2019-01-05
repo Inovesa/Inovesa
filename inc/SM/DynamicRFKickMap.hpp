@@ -67,7 +67,7 @@ public:
                     , oclhptr_t oclh
                     );
 
-    ~DynamicRFKickMap() noexcept;
+    ~DynamicRFKickMap() noexcept override;
 
     /**
      * @brief apply updates RFKickMap before it is actually applied

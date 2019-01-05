@@ -75,7 +75,6 @@ set(SRC_LIST
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
   ./src/MessageStrings.cpp
-  ./src/main.cpp
 )
 
 set(INC_LIST
@@ -117,7 +116,7 @@ set(INC_LIST
   ./inc/defines.hpp
 )
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+add_executable(${PROJECT_NAME} ./src/main.cpp ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
 include(CheckIncludeFileCXX)
 
@@ -144,6 +143,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # workaround CMake bug (e.g. in MacOS)
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
+# workaround problem in boost with g++
+IF( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+    set(CMAKE_CXX_FLAGS "-fext-numeric-literals ${CMAKE_CXX_FLAGS}")
+ENDIF()
+
 # turn on automatic optimizations for current architecture when GCC is used
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   add_definitions(-march=native)
@@ -166,12 +170,17 @@ IF(OPENCL_FOUND)
         MESSAGE ("Found clFFT. Will add support.")
         SET(LIBS ${LIBS} ${CLFFT_LIBRARIES})
         include_directories(${CLFFT_INCLUDE_DIRS})
+    ELSE()
+        add_definitions( -DINOVESA_USE_CLFFT=0)
     ENDIF()
     IF((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
         # Enable OpenCL profiling
         add_definitions(-DINOVESA_ENABLE_CLPROFILING=1)
+    ELSE()
+        add_definitions(-DINOVESA_ENABLE_CLPROFILING=0)
     ENDIF()
 ELSE()
+    add_definitions( -DINOVESA_USE_OPENCL=0)
     MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
 ENDIF()
 
@@ -188,6 +197,7 @@ IF((OPENGL_FOUND) AND (GLEW_FOUND) AND (GLFW_FOUND))
               ${GL_LIBRARY} ${OPENGL_LIBRARIES}
     )
 ELSE()
+    add_definitions(-DINOVESA_USE_OPENGL=0)
     MESSAGE ("Did not find OpenGL. Will compile without OpenGL support.")
 ENDIF()
 
@@ -209,6 +219,7 @@ IF(HDF5_FOUND)
     include_directories(${HDF5_INCLUDE_DIRS})
     set (LIBS ${LIBS} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
 ELSE()
+    add_definitions( -DINOVESA_USE_HDF5=0)
     MESSAGE ("Did not find HDF5. Will compile without HDF5 support.")
 ENDIF()
 
@@ -223,16 +234,39 @@ IF(PNG++_FOUND)
     SET(LIBS ${LIBS} ${PNG_LIBRARIES})
     MESSAGE ("Found PNG++. Will add PNG support.")
 ELSE()
+    add_definitions( -DINOVESA_USE_PNG=0)
     MESSAGE ("Did not find PNG++. Will compile without PNG support.")
 ENDIF()
 
-IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-    MESSAGE ("Build for coverage information.")
-    target_compile_options(${PROJECT_NAME} PRIVATE --coverage)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} --coverage)
-ELSE()
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-ENDIF()
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 
+#Setup CMake to run tests
+enable_testing()
+
+#Prep ourselves for compiling boost
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+include_directories (${Boost_INCLUDE_DIRS})
+
+#I like to keep test files in a separate source directory called test
+file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
+
+
+set(testName inovesa-test)
+
+#Add compile target
+add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+
+#link to Boost libraries AND your targets and dependencies
+IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+    MESSAGE ("Build for coverage information.")
+    target_compile_options(${testName} PRIVATE --coverage)
+    target_link_libraries(${testName} PRIVATE ${Boost_LIBRARIES} ${LIBS} --coverage)
+ELSE()
+    target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+ENDIF()
+
+#Finally add it to test execution -
+#Notice the WORKING_DIRECTORY and COMMAND
+add_test(NAME ${testName} COMMAND ${testName} )

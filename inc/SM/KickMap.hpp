@@ -36,7 +36,7 @@ public:
            , oclhptr_t oclh
            );
 
-    ~KickMap() noexcept;
+    ~KickMap() noexcept override;
 
 public:
     const inline meshaxis_t* getForce() const
