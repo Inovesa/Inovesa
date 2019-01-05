@@ -193,8 +193,10 @@ vfps::PhaseSpace::PhaseSpace( meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , const std::vector<integral_t> filling
                             , const double zoom, meshdata_t *data
                             )
-  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,{{"Meter",qscale}}))
-              , meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::ny,pmin,pmax,{{"ElectronVolt",pscale}}))
+  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,
+                {{"Meter",qscale}}))
+              , meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::ny,pmin,pmax,
+                {{"ElectronVolt",pscale}}))
               , oclh
               , beam_charge,beam_current, filling, zoom, data)
 {}
@@ -425,6 +427,9 @@ const vfps::meshindex_t& vfps::PhaseSpace::nb = vfps::PhaseSpace::_nbunches;
 
 const vfps::meshindex_t& vfps::PhaseSpace::nxy = vfps::PhaseSpace::_nmeshcells;
 
+const vfps::meshindex_t& vfps::PhaseSpace::nxyb
+    = vfps::PhaseSpace::_totalmeshcells;
+
 void vfps::PhaseSpace::setSize(const meshindex_t x,
                                const meshindex_t b )
 {
@@ -434,6 +439,7 @@ void vfps::PhaseSpace::setSize(const meshindex_t x,
         vfps::PhaseSpace::_nmeshcellsY = x;
         vfps::PhaseSpace::_nbunches = b;
         vfps::PhaseSpace::_nmeshcells = x*x;
+        vfps::PhaseSpace::_totalmeshcells = x*x*b;
     }
 }
 
@@ -446,6 +452,8 @@ vfps::meshindex_t vfps::PhaseSpace::_nmeshcellsY(0);
 vfps::meshindex_t vfps::PhaseSpace::_nbunches(0);
 
 vfps::meshindex_t vfps::PhaseSpace::_nmeshcells(0);
+
+vfps::meshindex_t vfps::PhaseSpace::_totalmeshcells(0);
 
 void vfps::PhaseSpace::createFromProjections()
 {
