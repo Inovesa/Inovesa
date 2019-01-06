@@ -111,10 +111,10 @@ public:
     inline meshaxis_t getMin(const uint_fast8_t x) const
     { return _axis[x]->min(); }
 
-    inline std::map<std::string,meshdata_t> getScale(const uint_fast8_t x) const
+    inline const auto& getScale(const uint_fast8_t x) const
     { return _axis[x]->scale(); }
 
-    inline double getScale(const uint_fast8_t x, std::string unit) const
+    inline auto getScale(const uint_fast8_t x, std::string unit) const
     { return _axis[x]->scale(unit); }
 
     /**
