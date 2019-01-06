@@ -262,7 +262,8 @@ int main(int argc, char** argv)
 
     // normalize filling pattern
     std::transform(bunches.begin(), bunches.end(), bunches.begin(),
-                   std::bind(std::divides<integral_t>(), std::placeholders::_1, Ib));
+                   std::bind(std::divides<integral_t>(), std::placeholders::_1,
+                             Ib));
 
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();
@@ -947,7 +948,7 @@ int main(int argc, char** argv)
         }
         if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
-            grid_t1->normalize();
+            grid_t1->integrateAndNormalize();
         } else {
             // works on XProjection
             grid_t1->integrate();
@@ -1057,7 +1058,7 @@ int main(int argc, char** argv)
          */
         if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
-            grid_t1->normalize();
+            grid_t1->integrateAndNormalize();
         } else {
             // works on XProjection
             grid_t1->integrate();
