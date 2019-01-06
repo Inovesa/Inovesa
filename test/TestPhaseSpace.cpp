@@ -24,6 +24,10 @@ BOOST_AUTO_TEST_CASE( phasespace_constructors ){
     BOOST_CHECK_EQUAL(ps2.getMax(1),  12);
     BOOST_CHECK_EQUAL(ps2.getMin(1), -12);
     BOOST_CHECK_CLOSE(ps2.getIntegral(),1,0.1f);
+
+
+    BOOST_CHECK_CLOSE(ps2.getDelta(0), 24/(32-1.0f), 0.1f);
+    BOOST_CHECK_CLOSE(ps2.getDelta(1), 24/(32-1.0f), 0.1f);
     }
     {
     auto nb = 2U;
