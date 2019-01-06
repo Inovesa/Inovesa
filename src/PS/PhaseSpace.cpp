@@ -60,6 +60,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     }
 
     updateXProjection();
+    updateYProjection();
     integrate();
 
     _oclh = oclh; // now, OpenCL can be used
@@ -225,12 +226,14 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
     for (meshindex_t n=0; n<_nbunches; n++) {
         integral_t avg = 0;
-        for (size_t i=0; i<maxi; i++) {
-            avg += _projection[axis][n][i]*_qp(axis,i);
-        }
+        if (_filling_set[n] > 0) {
+            for (size_t i=0; i<maxi; i++) {
+                avg += _projection[axis][n][i]*_qp(axis,i);
+            }
 
-        // _projection is normalized in p/q coordinates
-        avg *= getDelta(axis)/_filling[n];
+            // _projection is normalized in p/q coordinates
+            avg *= getDelta(axis)/_filling[n];
+        }
 
         _moment[axis][0][n] = avg;
     }
@@ -242,13 +245,15 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
     for (meshindex_t n=0; n<_nbunches; n++) {
         meshdata_t var = 0;
-        for (size_t i=0; i<maxi; i++) {
-            var += _projection[axis][n][i]*std::pow(_qp(axis,i)
-                                                    -_moment[axis][0][n],2);
-        }
+        if (_filling_set[n] > 0) {
+            for (size_t i=0; i<maxi; i++) {
+                var += _projection[axis][n][i]*std::pow(_qp(axis,i)
+                                                        -_moment[axis][0][n],2);
+            }
 
-        // _projection is normalized in p/q coordinates
-        var *= getDelta(axis)/_filling[n];
+            // _projection is normalized in p/q coordinates
+            var *= getDelta(axis)/_filling[n];
+        }
 
         _moment[axis][1][n] = var;
         _rms[axis][n] = std::sqrt(var);

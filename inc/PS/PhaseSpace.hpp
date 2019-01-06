@@ -159,6 +159,11 @@ public:
      */
     void variance(const uint_fast8_t axis);
 
+    /**
+     * @brief getMoment
+     * @param x axis
+     * @param m m-th moment
+     */
     inline auto getMoment( const uint_fast8_t x
                          , const uint_fast8_t m) const
         { return _moment[x][m]; }
