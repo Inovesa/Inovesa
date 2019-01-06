@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <boost/multi_array.hpp>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
@@ -49,15 +50,6 @@ public:
 
 public:
     PhaseSpace() = delete;
-
-    PhaseSpace(std::array<meshRuler_ptr,2> axis
-              , oclhptr_t oclh
-              , const double beam_charge
-              , const double beam_current
-              , const Array::array1<integral_t> filling
-              , const double zoom=1
-              , meshdata_t* data = nullptr
-              );
 
     PhaseSpace(std::array<meshRuler_ptr,2> axis
               , oclhptr_t oclh
@@ -119,10 +111,10 @@ public:
     inline meshaxis_t getMin(const uint_fast8_t x) const
     { return _axis[x]->min(); }
 
-    inline std::map<std::string,meshdata_t> getScale(const uint_fast8_t x) const
+    inline const auto& getScale(const uint_fast8_t x) const
     { return _axis[x]->scale(); }
 
-    inline double getScale(const uint_fast8_t x, std::string unit) const
+    inline auto getScale(const uint_fast8_t x, std::string unit) const
     { return _axis[x]->scale(unit); }
 
     /**
@@ -149,8 +141,11 @@ public:
      */
     void integrate();
 
-    inline const Array::array1<integral_t> getBunchPopulation() const
-        { return _bunchpopulation; }
+    inline const std::vector<integral_t> getBunchPopulation() const
+        { return _filling; }
+
+    inline auto getSetBunchPopulation() const
+        { return _filling_set; }
 
     inline integral_t getIntegral() const
         { return _integral; }
@@ -196,7 +191,13 @@ public:
      *
      * normalize() does neither recompute the integral nor sets it to 1
      */
-    Array::array1<integral_t> normalize();
+    inline const std::vector<integral_t>& integrateAndNormalize() {
+        integrate();
+        normalize();
+        return _filling;
+    }
+
+    const std::vector<integral_t>& normalize();
 
     PhaseSpace& operator=(PhaseSpace& other);
 
@@ -316,6 +317,29 @@ public:
     static const meshindex_t& nxy;
 
     /**
+     * @brief nxy reference to _totalmeshcells
+     */
+    static const meshindex_t& nxyb;
+
+
+    #if INOVESA_ALLOW_PS_RESET == 1
+    /**
+     * @brief resetSize relevant for unit tests
+     */
+    inline static void resetSize()
+        { _firstinit = true; }
+
+
+    static void resetSize( const meshindex_t x,
+                           const meshindex_t b)
+    {
+        resetSize();
+        setSize(x,b);
+    }
+
+    #endif
+
+    /**
      * @brief setSize one-time setter for sizes
      * @param x
      * @param b
@@ -336,6 +360,8 @@ protected:
 
     static meshindex_t _nmeshcells;
 
+    static meshindex_t _totalmeshcells;
+
 protected:
     /**
      * @brief _fillingpattern: normalized bunch charges as they should be
@@ -343,14 +369,14 @@ protected:
      * as we work in normalitzed units, the sum should be 1, e.g. {0.25,0.75},
      * empty buckets are omited
      */
-    const Array::array1<integral_t> _filling_set;
+    const std::vector<integral_t> _filling_set;
 
     /**
      * @brief _bunchpopulation: normalized bunch charges as they are
      *
-     * ideally, this is the same as _fillingpattern
+     * ideally, this is the same as _filling_set
      */
-    Array::array1<integral_t> _bunchpopulation;
+    std::vector<integral_t> _filling;
 
    /**
     * @brief _integral
@@ -398,8 +424,10 @@ protected:
 
     /**
      * @brief _ws weights for Simpson integration
+     *
+     * assumes nx == ny
      */
-    const Array::array1<meshdata_t> _ws;
+    const std::vector<meshdata_t> _ws;
 
 private:
     oclhptr_t _oclh;
@@ -463,7 +491,7 @@ private:
      * @brief simpsonWeights helper function to allow for const _ws
      * @return
      */
-    const Array::array1<meshdata_t> simpsonWeights();
+    const std::vector<meshdata_t> simpsonWeights();
 };
 
 /**
