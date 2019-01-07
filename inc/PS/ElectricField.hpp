@@ -48,7 +48,7 @@ public:
                   const meshindex_t spacing_bins,
                   oclhptr_t oclh,
                   const double f_rev,
-                  const double revolutionpart = 1,
+                  const meshaxis_t revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
 
     /**

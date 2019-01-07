@@ -18,7 +18,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
-                                  , const double revolutionpart
+                                  , const meshaxis_t revolutionpart
                                   , const meshaxis_t wakescalining
                                   )
   : volts(ps->getAxis(1)->delta()*ps->getScale(1,"ElectronVolt")/revolutionpart)
