@@ -1,81 +1,145 @@
 #include <boost/test/unit_test.hpp>
 
 #include <array>
+#include <cstring>
 
 #include "defines.hpp"
 #define INOVESA_ALLOW_PS_RESET 1
 #include "PS/PhaseSpace.hpp"
 
-BOOST_AUTO_TEST_CASE( phasespace ){
-    // test case with one bucket
-    {
-        vfps::PhaseSpace::resetSize(32,1);
-        // default constructor
-        vfps::PhaseSpace ps1(-12,12,3,-12,12,4,nullptr,1,1);
-        BOOST_CHECK_EQUAL(ps1.getMax(0),  12);
-        BOOST_CHECK_EQUAL(ps1.getMin(0), -12);
-        BOOST_CHECK_EQUAL(ps1.getMax(1),  12);
-        BOOST_CHECK_EQUAL(ps1.getMin(1), -12);
-        BOOST_CHECK_CLOSE(ps1.getIntegral(),1,0.1);
+BOOST_AUTO_TEST_CASE( phasespace_one_bucket ){
+    vfps::PhaseSpace::resetSize(32,1);
+    // default constructor
+    vfps::PhaseSpace ps1(-12,12,3,-12,12,4,nullptr,1,1);
+    BOOST_CHECK_EQUAL(ps1.getMax(0),  12);
+    BOOST_CHECK_EQUAL(ps1.getMin(0), -12);
+    BOOST_CHECK_EQUAL(ps1.getScale(0, "Meter"), 3);
+    BOOST_CHECK_EQUAL(ps1.getMax(1),  12);
+    BOOST_CHECK_EQUAL(ps1.getMin(1), -12);
+    BOOST_CHECK_EQUAL(ps1.getScale(1, "ElectronVolt"), 4);
+    BOOST_CHECK_CLOSE(ps1.getIntegral(),1,0.1);
 
-        // copy constructor
-        vfps::PhaseSpace ps2(ps1);
-        BOOST_CHECK_EQUAL(ps2.getMax(0),  12);
-        BOOST_CHECK_EQUAL(ps2.getMin(0), -12);
-        BOOST_CHECK_EQUAL(ps2.getMax(1),  12);
-        BOOST_CHECK_EQUAL(ps2.getMin(1), -12);
-        BOOST_CHECK_CLOSE(ps2.getIntegral(),1,0.1f);
+    // copy constructor
+    vfps::PhaseSpace ps2(ps1);
+    BOOST_CHECK_EQUAL(ps2.getMax(0),  12);
+    BOOST_CHECK_EQUAL(ps2.getMin(0), -12);
+    BOOST_CHECK_EQUAL(ps2.getMax(1),  12);
+    BOOST_CHECK_EQUAL(ps2.getMin(1), -12);
+    BOOST_CHECK_CLOSE(ps2.getIntegral(),1,0.1f);
 
 
-        BOOST_CHECK_CLOSE(ps2.getDelta(0), 24/(32-1.0f), 0.1f);
-        BOOST_CHECK_CLOSE(ps2.getDelta(1), 24/(32-1.0f), 0.1f);
+    BOOST_CHECK_CLOSE(ps2.getDelta(0), 24/(32-1.0f), 0.1f);
+    BOOST_CHECK_CLOSE(ps2.getDelta(1), 24/(32-1.0f), 0.1f);
+}
+
+BOOST_AUTO_TEST_CASE( phasespace_two_buckets ){
+    std::vector<vfps::integral_t> buckets{{0.5,0.5}};
+    vfps::PhaseSpace::resetSize(32,buckets.size());
+
+    vfps::PhaseSpace ps1(-12,12,2,-12,12,4,nullptr,1,1,buckets);
+    BOOST_CHECK_CLOSE(ps1.getIntegral(),1,0.1f);
+
+    for (auto i=0U; i<buckets.size(); i++) {
+        BOOST_CHECK_CLOSE(ps1.getBunchPopulation()[i],
+                          ps1.getSetBunchPopulation()[i],
+                          static_cast<vfps::integral_t>(0.1f));
+    }
+}
+
+BOOST_AUTO_TEST_CASE( phasespace_five_buckets ){
+    std::vector<vfps::integral_t> buckets{{0.75,0,0.15,0.1,0}};
+    vfps::PhaseSpace::resetSize(32,buckets.size());
+
+    vfps::PhaseSpace ps1(-12,12,2,-12,12,4,nullptr,1,1,buckets);
+    BOOST_CHECK_CLOSE(ps1.getIntegral(),1,0.1f);
+
+    for (auto i=0U; i<buckets.size(); i++) {
+        BOOST_CHECK_CLOSE(ps1.getBunchPopulation()[i],buckets[i],0.1);
+        BOOST_CHECK_CLOSE(ps1.getSetBunchPopulation()[i],buckets[i],0.1);
     }
 
-    // test case with two buckets
-    {
-        std::vector<vfps::integral_t> buckets{{0.5,0.5}};
-        vfps::PhaseSpace::resetSize(32,buckets.size());
+    ps1.variance(0);
+    ps1.variance(1);
+    auto mq = ps1.getMoment(0,0);
+    auto sq = ps1.getBunchLength();
+    auto mp = ps1.getMoment(1,0);
+    auto sp = ps1.getEnergySpread();
 
-        vfps::PhaseSpace ps1(-12,12,2,-12,12,4,nullptr,1,1,buckets);
-        BOOST_CHECK_CLOSE(ps1.getIntegral(),1,0.1f);
-
-        for (auto i=0U; i<buckets.size(); i++) {
-            BOOST_CHECK_CLOSE(ps1.getBunchPopulation()[i],
-                              ps1.getSetBunchPopulation()[i],
-                              static_cast<vfps::integral_t>(0.1f));
+    for (auto i=0U; i<buckets.size(); i++) {
+        BOOST_CHECK_SMALL(mq[i],static_cast<vfps::meshaxis_t>(1e-3));
+        BOOST_CHECK_SMALL(mp[i],static_cast<vfps::meshaxis_t>(1e-3));
+        if (buckets[i] > 0) {
+            BOOST_CHECK_CLOSE(sq[i],1,0.1);
+            BOOST_CHECK_CLOSE(sp[i],1,0.1);
+        } else {
+            BOOST_CHECK_EQUAL(sq[i],0);
+            BOOST_CHECK_EQUAL(sp[i],0);
         }
     }
+}
 
-    // test case with five buckets
-    {
-        std::vector<vfps::integral_t> buckets{{0.75,0,0.15,0.1,0}};
-        vfps::PhaseSpace::resetSize(32,buckets.size());
+BOOST_AUTO_TEST_CASE( phasespace_no_norm ){
+    std::vector<vfps::integral_t> buckets{{0.75,0.75}};
+    vfps::PhaseSpace::resetSize(32,buckets.size());
 
-        vfps::PhaseSpace ps1(-12,12,2,-12,12,4,nullptr,1,1,buckets);
-        BOOST_CHECK_CLOSE(ps1.getIntegral(),1,0.1f);
+    BOOST_CHECK_THROW(
+            vfps::PhaseSpace ps1(-12,12,2,-12,12,4,nullptr,1,1,buckets),
+            std::invalid_argument );
+}
 
-        for (auto i=0U; i<buckets.size(); i++) {
-            BOOST_CHECK_CLOSE(ps1.getBunchPopulation()[i],buckets[i],0.1);
-            BOOST_CHECK_CLOSE(ps1.getSetBunchPopulation()[i],buckets[i],0.1);
-        }
+BOOST_AUTO_TEST_CASE( phasespace_swap ){
+    std::vector<vfps::integral_t> buckets{{0.6,0.4}};
+    vfps::PhaseSpace::resetSize(2,buckets.size());
 
-        ps1.variance(0);
-        ps1.variance(1);
-        auto mq = ps1.getMoment(0,0);
-        auto sq = ps1.getBunchLength();
-        auto mp = ps1.getMoment(1,0);
-        auto sp = ps1.getEnergySpread();
+    std::vector<vfps::meshdata_t> data1{{ 0.7, 0.7,
+                                          0.5, 0.5,
 
-        for (auto i=0U; i<buckets.size(); i++) {
-            BOOST_CHECK_SMALL(mq[i],static_cast<vfps::meshaxis_t>(1e-3));
-            BOOST_CHECK_SMALL(mp[i],static_cast<vfps::meshaxis_t>(1e-3));
-            if (buckets[i] > 0) {
-                BOOST_CHECK_CLOSE(sq[i],1,0.1);
-                BOOST_CHECK_CLOSE(sp[i],1,0.1);
-            } else {
-                BOOST_CHECK_EQUAL(sq[i],0);
-                BOOST_CHECK_EQUAL(sp[i],0);
-            }
-        }
-    }
+                                          0.5, 0.5,
+                                          0.3, 0.3}};
+
+    vfps::PhaseSpace ps1(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data1.data());
+
+
+    std::vector<vfps::meshdata_t> data2{{ 0.6, 0.0,
+                                          0.0, 0.6,
+
+                                          0.0, 0.4,
+                                          0.4, 0.0}};
+
+    vfps::PhaseSpace ps2(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data2.data());
+
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2.getData(),data2.size()), 0);
+
+    vfps::swap(ps1,ps2);
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps2.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps1.getData(),data2.size()), 0);
+}
+
+BOOST_AUTO_TEST_CASE( phasespace_assign ){
+    std::vector<vfps::integral_t> buckets{{0.6,0.4}};
+    vfps::PhaseSpace::resetSize(2,buckets.size());
+
+    std::vector<vfps::meshdata_t> data1{{ 0.7, 0.7,
+                                          0.5, 0.5,
+
+                                          0.5, 0.5,
+                                          0.3, 0.3}};
+
+    vfps::PhaseSpace ps1(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data1.data());
+
+    std::vector<vfps::meshdata_t> data2{{ 0.6, 0.0,
+                                          0.0, 0.6,
+
+                                          0.0, 0.4,
+                                          0.4, 0.0}};
+
+    vfps::PhaseSpace ps2(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data2.data());
+
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2.getData(),data2.size()), 0);
+
+    ps2 = ps1;
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps2.getData(),data2.size()), 0);
 }
