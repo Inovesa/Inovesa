@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE( phasespace_no_norm ){
     vfps::PhaseSpace::resetSize(32,buckets.size());
 
     BOOST_CHECK_THROW(
-            vfps::PhaseSpace ps1(-12,12,2,-12,12,4,nullptr,1,1,buckets),
+            vfps::PhaseSpace(-12,12,2,-12,12,4,nullptr,1,1,buckets),
             std::invalid_argument );
 }
 

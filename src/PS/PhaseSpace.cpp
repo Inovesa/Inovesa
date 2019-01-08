@@ -456,7 +456,7 @@ const std::vector<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
 
 void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
 {
-    std::swap(first._data, second._data);
+    Array::swaparray(first._data, second._data);
 }
 
 #if INOVESA_USE_OPENCL == 1
