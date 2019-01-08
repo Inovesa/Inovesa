@@ -49,8 +49,8 @@ public:
         } else
         #endif // INOVESA_USE_OPENCL
         {
-            meshdata_t* data_in = _in->getData();
-            meshdata_t* data_out = _out->getData();
+            auto data_in = _in->getData();
+            auto data_out = _out->getData();
             std::copy_n(data_in,PhaseSpace::nb*PhaseSpace::nxy,data_out);
         }
     }

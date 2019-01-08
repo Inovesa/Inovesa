@@ -128,8 +128,8 @@ BOOST_AUTO_TEST_CASE( phasespace_swap ){
 
     // explicitly use std::swap to check template specialization
     std::swap(ps1,ps2);
-    BOOST_WARN_EQUAL(std::memcmp(data1.data(),ps2.getData(),data1.size()), 0);
-    BOOST_WARN_EQUAL(std::memcmp(data2.data(),ps1.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps2.getData(),data1.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps1.getData(),data2.size()), 0);
 }
 
 BOOST_AUTO_TEST_CASE( phasespace_assign ){

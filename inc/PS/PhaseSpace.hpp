@@ -51,15 +51,21 @@ public:
 public:
     PhaseSpace() = delete;
 
+    /**
+     * PhaseSpace initalizing constructor
+     */
     PhaseSpace(std::array<meshRuler_ptr,2> axis
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
               , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
-              , meshdata_t* data = nullptr
+              , const meshdata_t *data = nullptr
               );
 
+    /**
+     * PhaseSpace initalizing constructor
+     */
     PhaseSpace(meshRuler_ptr axis0
               , meshRuler_ptr axis1
               , oclhptr_t oclh
@@ -67,9 +73,12 @@ public:
               , const double beam_current
               , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
-              , meshdata_t* data = nullptr
+              , const meshdata_t* data = nullptr
               );
 
+    /**
+     * @brief PhaseSpace initalizing constructor
+     */
     PhaseSpace( meshaxis_t qmin
               , meshaxis_t qmax
               , double qscale
@@ -81,7 +90,7 @@ public:
               , const double beam_current
               , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
-              , meshdata_t *data = nullptr
+              , const meshdata_t* data = nullptr
               );
 
     /**
@@ -96,8 +105,11 @@ public:
       *
       * @return pointer to array holding size<0>()*size<1>() data points
       */
-    inline meshdata_t* getData() const
-    { return _data(); }
+    inline const meshdata_t* getData() const
+    { return _data.data(); }
+
+    inline meshdata_t* getData()
+    { return _data.data(); }
 
     inline auto operator [] (const unsigned int i)
     { return _data[i]; }
@@ -204,7 +216,12 @@ public:
 
     const std::vector<integral_t>& normalize();
 
-    PhaseSpace& operator=(PhaseSpace& other);
+    /**
+     * @brief operator = unifying assignment operator
+     * @param other
+     * @return
+     */
+    PhaseSpace& operator =(PhaseSpace other);
 
     /**
      * @brief nBunches number of RF buckets in simulation
@@ -277,10 +294,11 @@ private:
 public:
     /**
      * @brief swap
-     * @param first
-     * @param second
+     * @param other
+     *
+     * @todo adjust to also swap cl::Buffer and other elements
      */
-    friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
+    void swap(PhaseSpace& other) noexcept;
 
     #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir, cl::Event* evt = nullptr);
@@ -398,7 +416,7 @@ protected:
     /**
      * @brief _data dimensions are: bunch, x coordinate, y coordinate
      */
-    Array::array3<meshdata_t> _data;
+    boost::multi_array<meshdata_t,3> _data;
 
     /**
      * @brief _moment: holds the moments for distributions
@@ -499,13 +517,16 @@ private:
     const std::vector<meshdata_t> simpsonWeights();
 };
 
-/**
- * @brief swap
- * @param first
- * @param second
- *
- * @todo adjust to also swap cl::Buffer
- */
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-}
+} // namespace vfps
+
+namespace std {
+/**
+ * @brief specialization of std::swap to use the above vfps::swap
+ */
+template<>
+inline void swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second)
+    {vfps::swap(first, second); }
+
+} // namespace std

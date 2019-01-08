@@ -19,7 +19,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
                             , const double beam_current
                             , const std::vector<integral_t> filling
                             , const double zoom
-                            , meshdata_t* data
+                            , const meshdata_t* data
                             )
   : _axis(axis)
   , charge(beam_charge)
@@ -28,7 +28,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _filling(std::vector<integral_t>(_nbunches))
   , _integral(1)
   , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
-  , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
+  , _data(boost::extents[_nbunches][_nmeshcellsX][_nmeshcellsY])
   , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
   , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
@@ -49,7 +49,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         throw std::invalid_argument("Argument \"filling\" not normalized.");
     }
     if (data != nullptr) {
-        std::copy(data,data+_data.size(),_data());
+        std::copy(data,data+_totalmeshcells,_data.data());
     } else {
         for (meshindex_t  n=0; n<_nbunches; n++) {
             gaus(0,n,zoom); // creates gaussian for x axis
@@ -127,7 +127,7 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , const double beam_current
                             , const std::vector<integral_t> filling
                             , const double zoom
-                            , vfps::meshdata_t *data
+                            , const meshdata_t* data
                             ) :
     PhaseSpace( {{axis0,axis1}}
               , oclh
@@ -141,7 +141,7 @@ vfps::PhaseSpace::PhaseSpace( meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , const double beam_charge
                             , const double beam_current
                             , const std::vector<integral_t> filling
-                            , const double zoom, meshdata_t *data
+                            , const double zoom, const meshdata_t* data
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,
                 {{"Meter",qscale}}))
@@ -156,9 +156,9 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
               , other._oclh
               , other.charge
               , other.current
-              , other._filling
+              , other._filling_set
               , 1 // zoom
-              , other._data
+              , other._data.data()
               )
 {
 }
@@ -317,12 +317,19 @@ const std::vector<vfps::integral_t>& vfps::PhaseSpace::normalize()
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
 
-    for (meshindex_t n=0; n<_nbunches; n++) {
+    for (size_t n=0; n < _nbunches; n++) {
         if (_filling_set[n] > 0) {
-            _data[n] *= _filling_set[n]/_filling[n];
+            for (meshindex_t x = 0; x < _nmeshcellsX; x++) {
+                for (meshindex_t y = 0; y < _nmeshcellsY; y++) {
+                    _data[n][x][y] *= _filling_set[n]/_filling[n];
+                }
+            }
         } else {
-            std::fill( _data[n].begin(),_data[n].end(),
-                       static_cast<meshdata_t>(0));
+            for (meshindex_t x = 0; x < _nmeshcellsX; x++) {
+                for (meshindex_t y = 0; y < _nmeshcellsY; y++) {
+                    _data[n][x][y] = 0;
+                }
+            }
         }
     }
 
@@ -336,9 +343,9 @@ const std::vector<vfps::integral_t>& vfps::PhaseSpace::normalize()
     return _filling;
 }
 
-vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace& other)
+vfps::PhaseSpace& vfps::PhaseSpace::operator =(vfps::PhaseSpace other)
 {
-    swap(*this,other);
+    other.swap(*this);
     return *this;
 }
 
@@ -412,7 +419,6 @@ vfps::meshindex_t vfps::PhaseSpace::_totalmeshcells(0);
 
 void vfps::PhaseSpace::createFromProjections()
 {
-    _data.Activate();
     for (size_t n=0; n < _nbunches; n++) {
         for (meshindex_t x = 0; x < _nmeshcellsX; x++) {
             for (meshindex_t y = 0; y < _nmeshcellsY; y++) {
@@ -454,9 +460,9 @@ const std::vector<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
     return rv;
 }
 
-void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
+void vfps::PhaseSpace::swap(vfps::PhaseSpace& other) noexcept
 {
-    std::swap(first._data, second._data);
+    std::swap(_data, other._data);
 }
 
 #if INOVESA_USE_OPENCL == 1
@@ -491,3 +497,8 @@ std::string vfps::PhaseSpace::cl_code_projection_x = R"(
      )";
 #endif // INOVESA_USE_OPENCL
 
+
+void vfps::swap(vfps::PhaseSpace &first, vfps::PhaseSpace &second) noexcept
+{
+    first.swap(second);
+}
