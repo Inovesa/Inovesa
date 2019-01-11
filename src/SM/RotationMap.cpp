@@ -14,16 +14,17 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                                const meshaxis_t angle,
                                const InterpolationType it,
                                const bool interpol_clamped,
-                               const size_t rotmapsize) :
-    SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
+                               const size_t rotmapsize,
+                               oclhptr_t oclh) :
+    SourceMap( in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it,oclh),
     _rotmapsize(rotmapsize),
     _clamp(interpol_clamped),
     _cos_dt(std::cos(-angle)),
     _sin_dt(std::sin(-angle))
 {
     if (_rotmapsize == 0) {
-        #ifdef INOVESA_USE_OPENCL
-        if (OCLH::active) {
+        #if INOVESA_USE_OPENCL == 1
+        if (_oclh) {
             rot = {{float(_cos_dt),float(_sin_dt)}};
             imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
             zerobin = {{(_axis[0]->zerobin()),(_axis[1]->zerobin())}};
@@ -46,7 +47,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                 genHInfo(q_i,p_i,&_hinfo[(q_i*ysize+p_i)*_ip]);
             }
         }
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (OCLH::active) {
             _sm_buf = cl::Buffer(OCLH::context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -79,7 +80,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
     }
 }
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 vfps::RotationMap::~RotationMap() noexcept
 {
     saveTimings("RotationMap");
@@ -88,9 +89,9 @@ vfps::RotationMap::~RotationMap() noexcept
 
 void vfps::RotationMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (OCLH::active) {
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         if (_rotmapsize == 0) {
@@ -261,7 +262,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
 }
 
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::RotationMap::genCode4SM4sat()
 {
     _cl_code+= R"(

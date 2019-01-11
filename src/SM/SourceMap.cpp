@@ -141,7 +141,7 @@ void vfps::SourceMap::genCode4SM1D()
 
 void vfps::SourceMap::calcCoefficiants(vfps::interpol_t* ic,
                                          const vfps::interpol_t f,
-                                         const uint_fast8_t it) const
+                                         const uint_fast8_t it)
 {
     switch (it) {
     case InterpolationType::none:

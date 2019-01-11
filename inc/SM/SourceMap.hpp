@@ -162,8 +162,8 @@ protected:
      * @param f distance from lower mesh point
      * @param it number of interpolation coefficiants (size of ic)
      */
-    void calcCoefficiants(interpol_t* ic, const interpol_t f,
-                          const uint_fast8_t it) const;
+    static void calcCoefficiants(interpol_t* ic, const interpol_t f,
+                          const uint_fast8_t it);
 
     static void notClampedMessage();
 
