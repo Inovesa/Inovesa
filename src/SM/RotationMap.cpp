@@ -5,6 +5,8 @@
  * in the version control history of the file.
  */
 
+#include <stdexcept>
+
 #include "SM/RotationMap.hpp"
 
 vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
@@ -14,16 +16,17 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                                const meshaxis_t angle,
                                const InterpolationType it,
                                const bool interpol_clamped,
-                               const size_t rotmapsize) :
-    SourceMap(in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it),
+                               const size_t rotmapsize,
+                               oclhptr_t oclh) :
+    SourceMap( in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it,oclh),
     _rotmapsize(rotmapsize),
     _clamp(interpol_clamped),
     _cos_dt(std::cos(-angle)),
     _sin_dt(std::sin(-angle))
 {
     if (_rotmapsize == 0) {
-        #ifdef INOVESA_USE_OPENCL
-        if (OCLH::active) {
+        #if INOVESA_USE_OPENCL == 1
+        if (_oclh) {
             rot = {{float(_cos_dt),float(_sin_dt)}};
             imgsize = {{cl_int(_xsize),cl_int(_ysize)}};
             zerobin = {{(_axis[0]->zerobin()),(_axis[1]->zerobin())}};
@@ -46,7 +49,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                 genHInfo(q_i,p_i,&_hinfo[(q_i*ysize+p_i)*_ip]);
             }
         }
-        #ifdef INOVESA_USE_OPENCL
+        #if INOVESA_USE_OPENCL == 1
         if (OCLH::active) {
             _sm_buf = cl::Buffer(OCLH::context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
@@ -77,9 +80,14 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
         }
         #endif // INOVESA_USE_OPENCL
     }
+    if (interpol_clamped && !(it==InterpolationType::cubic && rotmapsize>0)) {
+        throw std::invalid_argument("Clamping only supported"
+                                    "with cubic interpolation"
+                                    "and rotmapsize > 0.");
+    }
 }
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 vfps::RotationMap::~RotationMap() noexcept
 {
     saveTimings("RotationMap");
@@ -88,9 +96,9 @@ vfps::RotationMap::~RotationMap() noexcept
 
 void vfps::RotationMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     if (OCLH::active) {
-        #ifdef INOVESA_SYNC_CL
+        #if INOVESA_SYNC_CL == 1
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         if (_rotmapsize == 0) {
@@ -136,18 +144,6 @@ void vfps::RotationMap::apply()
                     for (uint_fast8_t j=0; j<_ip; j++) {
                         hi h = _hinfo[j];
                         data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-                    }
-                    if (_clamp) {
-                        // handle overshooting
-                        meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
-                        meshdata_t flor=std::numeric_limits<meshdata_t>::max();
-                        for (size_t x=1; x<=2; x++) {
-                            for (size_t y=1; y<=2; y++) {
-                                ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
-                                flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
-                            }
-                        }
-                        data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
                     }
                 }
             }
@@ -261,7 +257,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
 }
 
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::RotationMap::genCode4SM4sat()
 {
     _cl_code+= R"(
