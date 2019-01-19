@@ -5,6 +5,8 @@
  * in the version control history of the file.
  */
 
+#include <stdexcept>
+
 #include "SM/RotationMap.hpp"
 
 vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
@@ -78,6 +80,11 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
         }
         #endif // INOVESA_USE_OPENCL
     }
+    if (interpol_clamped && !(it==InterpolationType::cubic && rotmapsize>0)) {
+        throw std::invalid_argument("Clamping only supported"
+                                    "with cubic interpolation"
+                                    "and rotmapsize > 0.");
+    }
 }
 
 #if INOVESA_ENABLE_CLPROFILING == 1
@@ -137,18 +144,6 @@ void vfps::RotationMap::apply()
                     for (uint_fast8_t j=0; j<_ip; j++) {
                         hi h = _hinfo[j];
                         data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
-                    }
-                    if (_clamp) {
-                        // handle overshooting
-                        meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
-                        meshdata_t flor=std::numeric_limits<meshdata_t>::max();
-                        for (size_t x=1; x<=2; x++) {
-                            for (size_t y=1; y<=2; y++) {
-                                ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
-                                flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
-                            }
-                        }
-                        data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
                     }
                 }
             }
