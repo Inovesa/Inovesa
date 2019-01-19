@@ -58,7 +58,7 @@ Publications
 * Analysis of [bunch profiles using machine learning][4] (Inovesa v1.0)
 * Studies of [phase shift][5] (Inovesa v1.0)
 * A wide [range of applications][6] (Inovesa v1.0)
-* [Emitted synchrotron radiation][7] of different wavelengths (Inovesa v1.0)
+* [Emitted synchrotron radiation][7] at different wavelengths (Inovesa v1.0)
 
 
 ### Citing Inovesa
