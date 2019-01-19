@@ -58,6 +58,8 @@ public:
 
     /**
      * @brief apply overrides HM::apply() by an optimized implementation
+     *
+     * @param pos position (in x/y coordinates)
      */
     PhaseSpace::Position apply(const PhaseSpace::Position pos) const override;
 
