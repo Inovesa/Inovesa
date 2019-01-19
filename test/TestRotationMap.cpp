@@ -157,8 +157,11 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_map ){
 
     vfps::PhaseSpace::Position p0{0,0};
     auto p1 = rm.apply(p0);
-    vfps::PhaseSpace::Position p2{0,3};
 
-    BOOST_CHECK_EQUAL(p1.x, p2.x);
-    BOOST_CHECK_EQUAL(p1.y, p2.y);
+    // expected result from the above operation
+    vfps::PhaseSpace::Position p2{3,0};
+
+    // chack whether difference is small (BOOST_CHECK_CLOSE checks relative)
+    BOOST_CHECK_SMALL(p1.x-p2.x, static_cast<vfps::meshaxis_t>(1e-3f));
+    BOOST_CHECK_SMALL(p1.y-p2.y, static_cast<vfps::meshaxis_t>(1e-3f));
 }
