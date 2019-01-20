@@ -35,7 +35,10 @@ BOOST_AUTO_TEST_CASE( linear_noclamp_map ){
 
     rm.apply();
 
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2->getData(),data2.size()), 0);
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
 }
 
 BOOST_AUTO_TEST_CASE( quadratic_clamp_nomap ){
@@ -94,7 +97,10 @@ BOOST_AUTO_TEST_CASE( quadratic_noclamp_nomap ){
 
     rm.apply();
 
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2->getData(),data2.size()), 0);
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
 }
 
 BOOST_AUTO_TEST_CASE( cubic_clamp_nomap ){
@@ -153,7 +159,11 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_map ){
 
     rm.apply();
 
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2->getData(),data2.size()), 0);
+
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
 
     vfps::PhaseSpace::Position p0{0,0};
     auto p1 = rm.apply(p0);
