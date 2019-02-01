@@ -257,8 +257,8 @@ vfps::meshaxis_t vfps::PhaseSpace::average(const uint_fast8_t axis)
         avg += _projection[axis][i]*_qp(axis,i);
     }
 
-    // _projection is normalized in p/q coordinates
-    avg *= getDelta(axis);
+    // _projection is normalized in p/q coordinates with respect to charge
+    avg *= getDelta(axis) / _integral;
 
     _moment[axis][0] = avg;
 
@@ -273,8 +273,8 @@ vfps::meshdata_t vfps::PhaseSpace::variance(const uint_fast8_t axis)
         var += _projection[axis][i]*std::pow(_qp(axis,i)-avg,2);
     }
 
-    // _projection is normalized in p/q coordinates
-    var *= getDelta(axis);
+    // _projection is normalized in p/q coordinates with respect to charge
+    var *= getDelta(axis) / _integral;
 
     _moment[axis][1] = var;
 
