@@ -20,7 +20,6 @@ The [contibuting file](CONTRIBUTING.md) is a good starting point.
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
 [![Inovesa build status (branch: Master)](https://travis-ci.org/Inovesa/Inovesa.svg?branch=master)](https://travis-ci.org/Inovesa/Inovesa/branches)
-[![Coverage Status](https://coveralls.io/repos/github/Inovesa/Inovesa/badge.svg?branch=master)](https://coveralls.io/github/Inovesa/Inovesa?branch=master)
 
 
 Publications
