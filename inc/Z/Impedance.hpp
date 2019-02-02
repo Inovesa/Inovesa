@@ -96,6 +96,13 @@ public:
 
 public:
     /**
+     * @brief operator = unifying assignment operator
+     * @param other
+     * @return
+     */
+    Impedance& operator=(Impedance other);
+
+    /**
      * @brief operator +=
      * @param rhs
      * @return
@@ -103,6 +110,8 @@ public:
      * assumes size() equals rhs.size()
      */
     Impedance& operator+=(const Impedance& rhs);
+
+    void swap(Impedance& other);
 
 private:
     size_t _nfreqs;
@@ -112,7 +121,9 @@ private:
 protected:
     std::vector<impedance_t> _data;
 
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem();
+    #endif // INOVESA_USE_OPENCL
 
     oclhptr_t _oclh;
 

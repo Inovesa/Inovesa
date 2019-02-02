@@ -7,20 +7,21 @@
 #include "Z/Impedance.hpp"
 
 BOOST_AUTO_TEST_CASE( impedance_constructors ){
-    vfps::impedance_t j{0,1};
+    vfps::impedance_t j{0,0.5};
 
     std::vector<vfps::impedance_t> zv(8);
     zv[5] = j;
 
-    vfps::Impedance Z1(zv, 1e9);
+    vfps::Impedance z1(zv, 1e9);
 
-    BOOST_CHECK_EQUAL(Z1[0],static_cast<vfps::impedance_t>(0));
-    BOOST_CHECK_EQUAL(Z1[5],j);
+    BOOST_CHECK_EQUAL(z1[0],static_cast<vfps::impedance_t>(0));
+    BOOST_CHECK_EQUAL(z1[5],j);
+    BOOST_CHECK_CLOSE(z1.getRuler()->max(), 1e9, 1e-3);
 
-    vfps::Impedance Z2(Z1);
+    vfps::Impedance z2(z1);
 
-    BOOST_CHECK_EQUAL(Z2[0],static_cast<vfps::impedance_t>(0));
-    BOOST_CHECK_EQUAL(Z2[5],j);
+    BOOST_CHECK_EQUAL(z2[0],static_cast<vfps::impedance_t>(0));
+    BOOST_CHECK_EQUAL(z2[5],j);
 }
 
 BOOST_AUTO_TEST_CASE( impedance_addition ){
@@ -35,7 +36,8 @@ BOOST_AUTO_TEST_CASE( impedance_addition ){
 
     vfps::Impedance z1(zv1, 1e9);
     vfps::Impedance z2(zv2, 1e9);
-    vfps::Impedance z3 = z1 + z2;
+    vfps::Impedance z3(n,1e9);
+    z3 = z1 + z2;
 
     for (int i = 0; i < n; i++) {
         BOOST_CHECK_EQUAL(z3[i],zv1[i]+zv2[i]);
@@ -46,5 +48,13 @@ BOOST_AUTO_TEST_CASE( impedance_addition ){
     for (int i = 0; i < n; i++) {
         BOOST_CHECK_EQUAL(z2[i],zv2[i]);
         BOOST_CHECK_EQUAL(z1[i],z3[i]);
+    }
+
+    vfps::Impedance z4(z1);
+    z1.swap(z2);
+    for (int i = 0; i < n; i++) {
+        BOOST_CHECK_EQUAL(z1[i],zv2[i]);
+        BOOST_CHECK_EQUAL(z2[i],z3[i]);
+        BOOST_CHECK_EQUAL(z4[i],z2[i]);
     }
 }
