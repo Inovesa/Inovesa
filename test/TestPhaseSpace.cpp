@@ -9,7 +9,7 @@
 
 BOOST_AUTO_TEST_CASE( phasespace_one_bucket ){
     vfps::PhaseSpace::resetSize(32,1);
-    // default constructor
+    // initializing constructor (default data)
     vfps::PhaseSpace ps1(-12,12,3,-12,12,4,nullptr,1,1);
     BOOST_CHECK_EQUAL(ps1.getMax(0),  12);
     BOOST_CHECK_EQUAL(ps1.getMin(0), -12);
@@ -87,6 +87,21 @@ BOOST_AUTO_TEST_CASE( phasespace_no_norm ){
             std::invalid_argument );
 }
 
+BOOST_AUTO_TEST_CASE( phasespace_datacopy ){
+    std::vector<vfps::integral_t> buckets{{0.6,0.4}};
+    vfps::PhaseSpace::resetSize(2,buckets.size());
+
+    std::vector<vfps::meshdata_t> data1{{ 0.7, 0.7,
+                                          0.5, 0.5,
+
+                                          0.5, 0.5,
+                                          0.3, 0.3}};
+
+    vfps::PhaseSpace ps1(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data1.data());
+
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
+}
+
 BOOST_AUTO_TEST_CASE( phasespace_swap ){
     std::vector<vfps::integral_t> buckets{{0.6,0.4}};
     vfps::PhaseSpace::resetSize(2,buckets.size());
@@ -111,9 +126,10 @@ BOOST_AUTO_TEST_CASE( phasespace_swap ){
     BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
     BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2.getData(),data2.size()), 0);
 
-    vfps::swap(ps1,ps2);
-    BOOST_WARN_EQUAL(std::memcmp(data1.data(),ps2.getData(),data2.size()), 0);
-    BOOST_WARN_EQUAL(std::memcmp(data2.data(),ps1.getData(),data2.size()), 0);
+    // explicitly use std::swap to check template specialization
+    std::swap(ps1,ps2);
+    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps2.getData(),data1.size()), 0);
+    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps1.getData(),data2.size()), 0);
 }
 
 BOOST_AUTO_TEST_CASE( phasespace_assign ){

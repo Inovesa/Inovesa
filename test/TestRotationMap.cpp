@@ -35,7 +35,42 @@ BOOST_AUTO_TEST_CASE( linear_noclamp_map ){
 
     rm.apply();
 
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2->getData(),data2.size()), 0);
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
+}
+
+BOOST_AUTO_TEST_CASE( linear_offcenter ){
+    std::vector<vfps::integral_t> buckets{{1}};
+    vfps::PhaseSpace::resetSize(4,buckets.size());
+
+    std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
+                                          0.0, 0.1, 0.2, 0.0,
+                                          0.0, 0.3, 0.4, 0.0,
+                                          0.0, 0.0, 0.0, 0.0 }};
+
+    std::vector<vfps::meshdata_t> data2{{ 0.0, 0.0, 0.0, 0.0,
+                                          0.0, 0.0, 0.0, 0.0,
+                                          0.0, 0.4, 0.3, 0.0,
+                                          0.0, 0.2, 0.1, 0.0 }};
+
+    auto ps1 = std::make_shared<vfps::PhaseSpace>(-2,1,2,-2,2,4,nullptr,1,1,
+                                                  buckets,1,data1.data());
+
+    auto ps2 = std::make_shared<vfps::PhaseSpace>(-2,1,2,-2,2,4,nullptr,1,1,
+                                                  buckets,1);
+
+    vfps::RotationMap rm(
+                ps1,ps2,4,4,boost::math::constants::pi<vfps::meshaxis_t>(),
+                vfps::SourceMap::InterpolationType::linear,false,0,nullptr);
+
+    rm.apply();
+
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
 }
 
 BOOST_AUTO_TEST_CASE( quadratic_clamp_nomap ){
@@ -94,7 +129,10 @@ BOOST_AUTO_TEST_CASE( quadratic_noclamp_nomap ){
 
     rm.apply();
 
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2->getData(),data2.size()), 0);
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
 }
 
 BOOST_AUTO_TEST_CASE( cubic_clamp_nomap ){
@@ -153,7 +191,11 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_map ){
 
     rm.apply();
 
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2->getData(),data2.size()), 0);
+
+    for (auto i=0; i<16; i++) {
+        BOOST_CHECK_SMALL(ps2->getData()[i]-data2[i],
+                          static_cast<vfps::meshdata_t>(1e-5));
+    }
 
     vfps::PhaseSpace::Position p0{0,0};
     auto p1 = rm.apply(p0);
