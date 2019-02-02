@@ -134,9 +134,9 @@ public:
     static uint64_t upper_power_of_two(uint64_t v);
 };
 
-inline Impedance operator+(const Impedance& lhs, const Impedance& rhs)
+inline Impedance operator+(Impedance lhs, const Impedance& rhs)
 {
-    return Impedance(lhs) += rhs;
+    return lhs += rhs;
 }
 
 } // namespace vfps
