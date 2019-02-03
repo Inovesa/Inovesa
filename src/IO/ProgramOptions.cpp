@@ -5,6 +5,8 @@
  * in the version control history of the file.
  */
 
+#include "CL/OpenCLHandler.hpp"
+
 #include "IO/ProgramOptions.hpp"
 
 vfps::ProgramOptions::ProgramOptions() :
@@ -90,7 +92,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "Accelerating Voltage (V) for one revolution")
         ("LinearRF",
             po::value<bool>(&linearRF)->default_value(true),
-            "Use linear model for accelerating voltage")
+            "Use linear model for accelerating voltage (experimental)")
         ("RFAmplitudeSpread",
             po::value<double>(&rf_amplitude_spread)->default_value(0),
             "Relative accelerating voltage amplitude spread per turn")
@@ -107,7 +109,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "File containing wake function.")
     ;
     _programopts_file.add_options()
-        ("cldev", po::value<int32_t>(&_cldevice)->default_value(1),
+        ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
         ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
             "Force OpenGL version")
@@ -136,7 +138,7 @@ vfps::ProgramOptions::ProgramOptions() :
         #if INOVESA_USE_OPENCL == 1
             "OpenCL device to use\n('-1' lists available devices)")
         #else // not INOVESA_USE_OPENCL
-            "(not active in this build)")
+            "(ignored in this build)")
         #endif // INOVESA_USE_OPENCL
         ("config,c", po::value<std::string>(&_configfile),
             "name of a file containing a configuration.")
@@ -258,6 +260,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
         std::cout << vfps::inovesa_version(true) << std::endl;
         return false;
     }
+    #if INOVESA_USE_OPENCL == 1
+    if (_cldevice < 0) {
+        OCLH::listCLDevices();
+        return false;
+    }
+    #endif // INOVESA_USE_OPENCL
     if (_configfile == "/dev/null") {
         _configfile.clear();
     } else if (!_configfile.empty()) {
@@ -291,9 +299,9 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     if (_startdistfile == "/dev/null") {
         _startdistfile.clear();
     }
-    #ifndef INOVESA_USE_OPENCL
-    if (_vm.count("cldev")) {
-        std::cout    << "Warning: Defined device for OpenCL "
+    #if INOVESA_USE_OPENCL == 0
+    if (_cldevice > 0 && _vm.count("cldev")) {
+        std::cout   << "Warning: Defined device for OpenCL "
                     << "but running Inovesa without OpenCL support."
                     << std::endl;
     }
