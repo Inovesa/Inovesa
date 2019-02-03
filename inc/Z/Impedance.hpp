@@ -131,9 +131,19 @@ private:
     static std::vector<impedance_t> readData(std::string fname);
 };
 
-inline Impedance operator+(Impedance lhs, const Impedance& rhs)
+/**
+ * @brief operator +
+ * @param lhs
+ * @param rhs
+ * @return
+ *
+ * As soon as a move constructor is available, it will make sence to add
+ * overloads that can use these.
+ */
+inline Impedance operator+(const Impedance& lhs, const Impedance& rhs)
 {
-    return lhs += rhs;
+    auto rv = Impedance(lhs);
+    return rv += rhs;
 }
 
 } // namespace vfps
