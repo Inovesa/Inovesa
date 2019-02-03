@@ -16,7 +16,7 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "SM/FokkerPlanckMap.hpp"
 #if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"

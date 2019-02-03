@@ -7,7 +7,7 @@
 
 #include <sstream>
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "IO/Display.hpp"
 
 

@@ -8,7 +8,7 @@
 #if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
 vfps::HDF5File::HDF5File(const std::string filename,
                          const std::shared_ptr<PhaseSpace> ps,

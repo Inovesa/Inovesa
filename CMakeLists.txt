@@ -75,7 +75,7 @@ set(SRC_LIST
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
-  ./src/MessageStrings.cpp
+  ./src/HelperFunctions.cpp
 )
 
 set(INC_LIST
@@ -114,7 +114,7 @@ set(INC_LIST
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
   ./inc/Z/ResistiveWall.hpp
-  ./inc/MessageStrings.hpp
+  ./inc/HelperFunctions.hpp
   ./inc/defines.hpp
 )
 
@@ -259,6 +259,9 @@ set(testName inovesa-test)
 
 #Add compile target
 add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/impedance.dat
+    ${CMAKE_CURRENT_BINARY_DIR}/impedance.dat COPYONLY)
 
 #link to Boost libraries AND your targets and dependencies
 IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))

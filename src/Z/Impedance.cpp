@@ -23,7 +23,9 @@ vfps::Impedance::Impedance(Ruler<frequency_t> &&axis
   , _data(z)
   , _oclh(oclh)
 {
+    #if INOVESA_USE_OPENCL == 1
     syncCLMem();
+    #endif // INOVESA_USE_OPENCL
 }
 
 vfps::Impedance::Impedance( const std::vector<vfps::impedance_t> &z
@@ -55,25 +57,38 @@ vfps::Impedance::Impedance( std::string datafile
 {
 }
 
+vfps::Impedance &vfps::Impedance::operator=(vfps::Impedance other)
+{
+    other.swap(*this);
+    return *this;
+}
+
 vfps::Impedance &vfps::Impedance::operator+=(const vfps::Impedance &rhs)
 {
     for (size_t i=0; i<_nfreqs; i++) {
         _data[i] += rhs._data[i];
     }
+    #if INOVESA_USE_OPENCL == 1
     syncCLMem();
+    #endif
     return *this;
 }
 
+void vfps::Impedance::swap(vfps::Impedance &other)
+{
+    std::swap(_data, other._data);
+}
+
+#if INOVESA_USE_OPENCL == 1
 void vfps::Impedance::syncCLMem()
 {
-    #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         data_buf = cl::Buffer(_oclh->context,
                               CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                              _nfreqs*sizeof(impedance_t),_data.data());
     }
-    #endif
 }
+#endif
 
 std::vector<vfps::impedance_t> vfps::Impedance::readData(std::string fname)
 {
@@ -88,19 +103,6 @@ std::vector<vfps::impedance_t> vfps::Impedance::readData(std::string fname)
         rv.push_back(impedance_t(real,imag));
     }
     return rv;
-}
-
-uint64_t vfps::Impedance::upper_power_of_two(uint64_t v)
-{
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v |= v >> 32;
-    v++;
-    return v;
 }
 
 constexpr double vfps::Impedance::factor4Ohms;

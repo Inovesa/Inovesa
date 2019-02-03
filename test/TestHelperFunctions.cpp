@@ -4,7 +4,9 @@
 #include <vector>
 
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
+
+BOOST_AUTO_TEST_SUITE(HelperFunctions)
 
 // normaly, there should be no long lines
 void longLinesCheck(std::string text) {
@@ -20,7 +22,8 @@ BOOST_AUTO_TEST_CASE(copyright_notice) {
     auto s = vfps::copyright_notice();
 
     // there should be at least five lines
-    BOOST_CHECK_GE(std::count(s.begin(), s.end(), '\n'), static_cast<std::size_t>(5));
+    BOOST_CHECK_GE(std::count(s.begin(), s.end(), '\n'),
+                   static_cast<std::size_t>(5));
 
     longLinesCheck(s);
 }
@@ -60,3 +63,11 @@ BOOST_AUTO_TEST_CASE(status_string) {
     longLinesCheck(s);
     BOOST_CHECK_EQUAL(s[17],'+');
 }
+
+BOOST_AUTO_TEST_CASE( upper_power_of_two ){
+    BOOST_CHECK_EQUAL(vfps::upper_power_of_two(7),8);
+    BOOST_CHECK_EQUAL(vfps::upper_power_of_two(8),8);
+    BOOST_CHECK_EQUAL(vfps::upper_power_of_two(9),16);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

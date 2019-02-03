@@ -96,6 +96,13 @@ public:
 
 public:
     /**
+     * @brief operator = unifying assignment operator
+     * @param other
+     * @return
+     */
+    Impedance& operator=(Impedance other);
+
+    /**
      * @brief operator +=
      * @param rhs
      * @return
@@ -103,6 +110,8 @@ public:
      * assumes size() equals rhs.size()
      */
     Impedance& operator+=(const Impedance& rhs);
+
+    void swap(Impedance& other);
 
 private:
     size_t _nfreqs;
@@ -112,31 +121,29 @@ private:
 protected:
     std::vector<impedance_t> _data;
 
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem();
+    #endif // INOVESA_USE_OPENCL
 
     oclhptr_t _oclh;
 
 private:
     static std::vector<impedance_t> readData(std::string fname);
-
-public:
-    /**
-     * @brief upper_power_of_two
-     * @param v
-     * @return
-     *
-     * @todo In Impedance for historical reasons.
-     * It might be useful to move it somewhere else,
-     * as it does now relate to more than just the impedance.
-     *
-     * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-     */
-    static uint64_t upper_power_of_two(uint64_t v);
 };
 
-inline Impedance operator+(Impedance lhs, const Impedance& rhs)
+/**
+ * @brief operator +
+ * @param lhs
+ * @param rhs
+ * @return
+ *
+ * As soon as a move constructor is available, it will make sence to add
+ * overloads that can use these.
+ */
+inline Impedance operator+(const Impedance& lhs, const Impedance& rhs)
 {
-    return lhs += rhs;
+    auto rv = Impedance(lhs);
+    return rv += rhs;
 }
 
 } // namespace vfps

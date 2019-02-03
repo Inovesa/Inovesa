@@ -8,6 +8,7 @@
 #include "PS/PhaseSpace.hpp"
 #include "SM/RotationMap.hpp"
 
+BOOST_AUTO_TEST_SUITE( RotationMap )
 
 BOOST_AUTO_TEST_CASE( linear_noclamp_map ){
     std::vector<vfps::integral_t> buckets{{1}};
@@ -207,3 +208,5 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_map ){
     BOOST_CHECK_SMALL(p1.x-p2.x, static_cast<vfps::meshaxis_t>(1e-3f));
     BOOST_CHECK_SMALL(p1.y-p2.y, static_cast<vfps::meshaxis_t>(1e-3f));
 }
+
+BOOST_AUTO_TEST_SUITE_END()

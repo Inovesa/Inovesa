@@ -7,7 +7,7 @@
 
 #include "SM/SourceMap.hpp"
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
 vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
