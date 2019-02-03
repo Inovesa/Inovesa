@@ -6,7 +6,7 @@
  */
 
 #include "defines.hpp"
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "IO/Display.hpp"
 #include "IO/FSPath.hpp"
 #include "IO/GUI/Plot1DLine.hpp"
@@ -296,12 +296,12 @@ int main(int argc, char** argv)
 
     size_t padded_bins = std::ceil(ps_bins*padding);
     if (opts.getRoundPadding()) {
-        padded_bins = Impedance::upper_power_of_two(padded_bins);
+        padded_bins = upper_power_of_two(padded_bins);
     }
 
     size_t spaced_bins = std::ceil(ps_bins*nbuckets*spacing_ps);
     if (opts.getRoundPadding()) {
-        spaced_bins = Impedance::upper_power_of_two(spaced_bins);
+        spaced_bins = upper_power_of_two(spaced_bins);
     }
 
 

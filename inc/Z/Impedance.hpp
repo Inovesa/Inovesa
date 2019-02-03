@@ -129,20 +129,6 @@ protected:
 
 private:
     static std::vector<impedance_t> readData(std::string fname);
-
-public:
-    /**
-     * @brief upper_power_of_two
-     * @param v
-     * @return
-     *
-     * @todo In Impedance for historical reasons.
-     * It might be useful to move it somewhere else,
-     * as it does now relate to more than just the impedance.
-     *
-     * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-     */
-    static uint64_t upper_power_of_two(uint64_t v);
 };
 
 inline Impedance operator+(Impedance lhs, const Impedance& rhs)

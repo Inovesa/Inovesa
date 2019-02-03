@@ -75,7 +75,7 @@ set(SRC_LIST
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
-  ./src/MessageStrings.cpp
+  ./src/HelperFunctions.cpp
 )
 
 set(INC_LIST
@@ -114,7 +114,7 @@ set(INC_LIST
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
   ./inc/Z/ResistiveWall.hpp
-  ./inc/MessageStrings.hpp
+  ./inc/HelperFunctions.hpp
   ./inc/defines.hpp
 )
 

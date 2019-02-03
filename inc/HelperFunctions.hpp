@@ -44,5 +44,14 @@ const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,
                                 float total_rotations);
 
+/**
+ * @brief upper_power_of_two
+ * @param v
+ * @return
+ *
+ * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+ */
+uint64_t upper_power_of_two(uint64_t v);
+
 } // namespace vfps
 

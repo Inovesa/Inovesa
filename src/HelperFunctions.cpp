@@ -7,7 +7,7 @@
 
 #include <boost/config.hpp>
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
 
 const std::string vfps::copyright_notice() noexcept {
@@ -137,5 +137,18 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
            << *ps->getEnergySpread();
 
     return status.str();
+}
+
+uint64_t vfps::upper_power_of_two(uint64_t v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v |= v >> 32;
+    v++;
+    return v;
 }
 
