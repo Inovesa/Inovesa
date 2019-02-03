@@ -1,4 +1,22 @@
-*.fftw
-build
+# files created here if CMake is run in source directory
 CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+InovesaConfig.hpp
+
+# files created by Inovesa (if run in source directory)
+*.fftw
 *.pyc
+
+# files created by/for other applications
+.vs/
+Win32/
+inovesa.dir/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+
+.directory
+

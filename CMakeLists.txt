@@ -4,26 +4,28 @@ project(inovesa)
 
 ## User configuration
 # Enable interrupts (Ctrl+C)
-add_definitions(-DINOVESA_ENABLE_INTERRUPT)
+add_definitions(-DINOVESA_ENABLE_INTERRUPT=1)
 
 
 # (default) options for Debug and Release builds
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${-Wall}" )
 if((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-    add_definitions(-Wall -Wextra)
-    add_definitions(-g -DDEBUG)
+    add_definitions(-Wextra)
+    add_definitions(-g -DDEBUG=1)
     MESSAGE ("Doing debug compile, including debug symbols.")
-    # Enable OpenCL profiling
-    add_definitions(-DINOVESA_ENABLE_CLPROFILING)
 else()
-    add_definitions(-Wall -O3 -w )
-    MESSAGE ("Doing release compile, using optimization flags.")
+  if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+    add_definitions(-O3 )
+  endif()
+  add_definitions(-w )
+  MESSAGE ("Doing release compile, using optimization flags.")
 endif()
 
 ## end of user configuration
 
 set (INOVESA_VERSION_MAJOR 1)
-set (INOVESA_VERSION_MINOR 0)
-set (INOVESA_VERSION_FIX 2)
+set (INOVESA_VERSION_MINOR 1)
+set (INOVESA_VERSION_FIX -1)
 # pre release numbers:
 # -1: alpha
 # -2: beta
@@ -46,7 +48,9 @@ set(SRC_LIST
   ./src/IO/Display.cpp
   ./src/IO/FSPath.cpp
   ./src/IO/GUI/GUIElement.cpp
-  ./src/IO/GUI/Plot2DLine.cpp
+  ./src/IO/GUI/Plot1DLine.cpp
+  ./src/IO/GUI/Plot2DPoints.cpp
+  ./src/IO/GUI/Plot2DPrimitive.cpp
   ./src/IO/GUI/Plot3DColormap.cpp
   ./src/IO/HDF5File.cpp
   ./src/IO/ProgramOptions.cpp
@@ -56,6 +60,7 @@ set(SRC_LIST
   ./src/SM/DriftMap.cpp
   ./src/SM/FokkerPlanckMap.cpp
   ./src/SM/KickMap.cpp
+  ./src/SM/DynamicRFKickMap.cpp
   ./src/SM/RFKickMap.cpp
   ./src/SM/RotationMap.cpp
   ./src/SM/Identity.cpp
@@ -70,11 +75,11 @@ set(SRC_LIST
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
-  ./src/MessageStrings.cpp
-  ./src/main.cpp
+  ./src/HelperFunctions.cpp
 )
 
 set(INC_LIST
+  ./inc/Array.h
   ./inc/CL/CLProfiler.hpp
   ./inc/CL/local_cl.hpp
   ./inc/CL/OpenCLHandler.hpp
@@ -85,16 +90,19 @@ set(INC_LIST
   ./inc/IO/Display.hpp
   ./inc/IO/FSPath.hpp
   ./inc/IO/GUI/GUIElement.hpp
-  ./inc/IO/GUI/Plot2DLine.hpp
+  ./inc/IO/GUI/Plot1DLine.hpp
+  ./inc/IO/GUI/Plot2DPoints.hpp
+  ./inc/IO/GUI/Plot2DPrimitive.hpp
   ./inc/IO/GUI/Plot3DColormap.hpp
   ./inc/IO/HDF5File.hpp
   ./inc/IO/ProgramOptions.hpp
   ./inc/SM/DriftMap.hpp
   ./inc/SM/FokkerPlanckMap.hpp
   ./inc/SM/KickMap.hpp
+  ./inc/SM/DynamicRFKickMap.hpp
   ./inc/SM/RFKickMap.hpp
-  ./inc/SM/Identity.hpp
   ./inc/SM/RotationMap.hpp
+  ./inc/SM/Identity.hpp
   ./inc/SM/SourceMap.hpp
   ./inc/SM/WakePotentialMap.hpp
   ./inc/SM/WakeKickMap.hpp
@@ -106,12 +114,11 @@ set(INC_LIST
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
   ./inc/Z/ResistiveWall.hpp
-  ./inc/MessageStrings.hpp
+  ./inc/HelperFunctions.hpp
   ./inc/defines.hpp
-  ./inc/fixed_point.h
 )
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+add_executable(${PROJECT_NAME} ./src/main.cpp ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
 include(CheckIncludeFileCXX)
 
@@ -138,24 +145,44 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # workaround CMake bug (e.g. in MacOS)
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
+# workaround problem in boost with g++
+IF( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+    set(CMAKE_CXX_FLAGS "-fext-numeric-literals ${CMAKE_CXX_FLAGS}")
+ENDIF()
+
+# turn on automatic optimizations for current architecture when GCC is used
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  add_definitions(-march=native)
+  MESSAGE ("Builing for current architecture. Binary might not work on other CPU.")
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
 ## OpenCL (optional)
 find_package(OpenCL QUIET)
 IF(OPENCL_FOUND)
-    add_definitions( -DINOVESA_USE_OPENCL)
+    add_definitions( -DINOVESA_USE_OPENCL=1)
     MESSAGE ("Found OpenCL. Will add support.")
     SET(LIBS ${LIBS} ${OPENCL_LIBRARIES})
     include_directories(${OPENCL_INCLUDE_DIRS})
-    #find_package(clFFT QUIET)
+    find_package(clFFT QUIET)
     IF(clFFT_FOUND)
-        add_definitions( -DINOVESA_USE_CLFFT)
+        add_definitions( -DINOVESA_USE_CLFFT=1)
         MESSAGE ("Found clFFT. Will add support.")
         SET(LIBS ${LIBS} ${CLFFT_LIBRARIES})
         include_directories(${CLFFT_INCLUDE_DIRS})
+    ELSE()
+        add_definitions( -DINOVESA_USE_CLFFT=0)
+    ENDIF()
+    IF((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+        # Enable OpenCL profiling
+        add_definitions(-DINOVESA_ENABLE_CLPROFILING=1)
+    ELSE()
+        add_definitions(-DINOVESA_ENABLE_CLPROFILING=0)
     ENDIF()
 ELSE()
+    add_definitions( -DINOVESA_USE_OPENCL=0)
     MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
 ENDIF()
 
@@ -164,7 +191,7 @@ find_package(OpenGL QUIET)
 find_package(GLEW QUIET)
 find_package(GLFW QUIET)
 IF((OPENGL_FOUND) AND (GLEW_FOUND) AND (GLFW_FOUND))
-    add_definitions( -DINOVESA_USE_OPENGL)
+    add_definitions( -DINOVESA_USE_OPENGL=1)
     MESSAGE ("Found OpenGL. Will add support.")
     add_definitions( -DGLFW_VERSION_MAJOR=${GLFW_VERSION_MAJOR})
     include_directories(${GLEW_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
@@ -172,6 +199,7 @@ IF((OPENGL_FOUND) AND (GLEW_FOUND) AND (GLFW_FOUND))
               ${GL_LIBRARY} ${OPENGL_LIBRARIES}
     )
 ELSE()
+    add_definitions(-DINOVESA_USE_OPENGL=0)
     MESSAGE ("Did not find OpenGL. Will compile without OpenGL support.")
 ENDIF()
 
@@ -188,11 +216,12 @@ SET(LIBS ${LIBS} ${FFTW_LIBRARIES} )
 ## HDF5 (optional)
 find_package(HDF5 COMPONENTS CXX QUIET)
 IF(HDF5_FOUND)
-    add_definitions( -DINOVESA_USE_HDF5)
+    add_definitions( -DINOVESA_USE_HDF5=1)
     MESSAGE ("Found HDF5. Will add support.")
     include_directories(${HDF5_INCLUDE_DIRS})
     set (LIBS ${LIBS} ${HDF5_CXX_LIBRARIES} ${HDF5_LIBRARIES})
 ELSE()
+    add_definitions( -DINOVESA_USE_HDF5=0)
     MESSAGE ("Did not find HDF5. Will compile without HDF5 support.")
 ENDIF()
 
@@ -202,23 +231,47 @@ IF(PNG_FOUND)
 find_package(PNG++ QUIET)
 ENDIF()
 IF(PNG++_FOUND)
-    add_definitions( -DINOVESA_USE_PNG)
+    add_definitions( -DINOVESA_USE_PNG=1)
     include_directories(${PNG_INCLUDE_DIRS})
     SET(LIBS ${LIBS} ${PNG_LIBRARIES})
     MESSAGE ("Found PNG++. Will add PNG support.")
 ELSE()
+    add_definitions( -DINOVESA_USE_PNG=0)
     MESSAGE ("Did not find PNG++. Will compile without PNG support.")
 ENDIF()
 
-
-IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-    MESSAGE ("Build for coverage information.")
-    target_compile_options(${PROJECT_NAME} PRIVATE --coverage)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} --coverage)
-ELSE()
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
-ENDIF()
-
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
 
+#Setup CMake to run tests
+enable_testing()
+
+#Prep ourselves for compiling boost
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+include_directories (${Boost_INCLUDE_DIRS})
+
+#I like to keep test files in a separate source directory called test
+file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
+
+
+set(testName inovesa-test)
+
+#Add compile target
+add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/impedance.dat
+    ${CMAKE_CURRENT_BINARY_DIR}/impedance.dat COPYONLY)
+
+#link to Boost libraries AND your targets and dependencies
+IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+    MESSAGE ("Build for coverage information.")
+    target_compile_options(${testName} PRIVATE --coverage)
+    target_link_libraries(${testName} PRIVATE ${Boost_LIBRARIES} ${LIBS} --coverage)
+ELSE()
+    target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+ENDIF()
+
+#Finally add it to test execution -
+#Notice the WORKING_DIRECTORY and COMMAND
+add_test(NAME ${testName} COMMAND ${testName} )

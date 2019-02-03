@@ -1,47 +1,38 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2017-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2017: Julian Gethmann                                        *
- * Copyright (c) 2017-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifdef INOVESA_USE_PNG
+#if INOVESA_USE_PNG == 1
 #include <png++/png.hpp>
 #endif
+#include <iterator>
 
 #include "defines.hpp"
 #include "IO/Display.hpp"
 #include "IO/HDF5File.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
 
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
-                     vfps::meshaxis_t qmin, vfps::meshaxis_t qmax,
-                     vfps::meshaxis_t pmin, vfps::meshaxis_t pmax,
-                     const double bunch_charge, const double bunch_current,
-                     double xscale, double yscale)
+vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
+                    , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
+                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
+                    , oclhptr_t oclh
+                    , const double beam_charge
+                    , const double beam_current
+                    , double xscale, double yscale
+                    )
 {
     try {
-        auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax,
-                                           bunch_charge,bunch_current,
+        auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax
+                                          , oclh
+                                          , beam_charge,beam_current,
                                            xscale,yscale,startdiststep);
-        #ifdef INOVESA_USE_OPENCL
-        ps->syncCLMem(clCopyDirection::cpu2dev);
+        #if INOVESA_USE_OPENCL == 1
+        ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
         return ps;
     } catch (const std::exception& ex) {
@@ -64,14 +55,16 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep,
 #endif // INOVESA_USE_HDF5
 
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromPNG(std::string fname,
-                    meshaxis_t qmin, meshaxis_t qmax,
-                    meshaxis_t pmin, meshaxis_t pmax,
-                    const double bunch_charge,
-                    const double bunch_current,
-                    double xscale, double yscale)
+vfps::makePSFromPNG( std::string fname
+                   , meshaxis_t qmin, meshaxis_t qmax
+                   , meshaxis_t pmin, meshaxis_t pmax
+                   , oclhptr_t oclh
+                   , const double beam_charge
+                   , const double beam_current
+                   , double qscale, double pscale
+                   )
 {
-    #ifdef INOVESA_USE_PNG
+    #if INOVESA_USE_PNG == 1
     // load pattern to start with
     png::image<png::gray_pixel_16> image;
     try {
@@ -89,22 +82,28 @@ vfps::makePSFromPNG(std::string fname,
     if (image.get_width() == image.get_height()) {
         meshindex_t ps_size = image.get_height();
 
-        std::vector<meshdata_t> data(ps_size*ps_size);
+        std::vector<meshdata_t> data(static_cast<meshindex_t>(ps_size*ps_size));
 
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
                 data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
             }
         }
-        auto ps = std::make_unique<PhaseSpace>(ps_size,qmin,qmax,pmin,pmax,
-                                               bunch_charge,bunch_current,
-                                               xscale,yscale,1,data.data());
+
+        std::vector<integral_t> filling = {{ 1.0 }};
+        PhaseSpace::setSize(ps_size, filling.size());
+        auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
+                                              , pmin, pmax, pscale
+                                              , oclh
+                                              , beam_charge,beam_current
+                                              , filling, 1
+                                              , data.data());
         // normalize integral to 1
         ps->updateXProjection();
         ps->normalize();
 
-        #ifdef INOVESA_USE_OPENCL
-        ps->syncCLMem(clCopyDirection::cpu2dev);
+        #if INOVESA_USE_OPENCL == 1
+        ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
         std::stringstream imgsize;
         imgsize << ps_size;
@@ -114,20 +113,26 @@ vfps::makePSFromPNG(std::string fname,
         std::cerr << "Phase space has to be quadratic. Please adjust "
                   << fname << std::endl;
     }
-    return nullptr;
 #endif // INOVESA_USE_PNG
+    return nullptr;
 }
 
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromTXT(std::string fname, int64_t ps_size,
-                    vfps::meshaxis_t qmin, vfps::meshaxis_t qmax,
-                    vfps::meshaxis_t pmin, vfps::meshaxis_t pmax,
-                    const double bunch_charge, const double bunch_current,
-                    double xscale, double yscale)
+vfps::makePSFromTXT(std::string fname, int64_t ps_size
+                   , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
+                   , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
+                   , oclhptr_t oclh
+                   , const double beam_charge, const double beam_current
+                   , double qscale, double pscale)
 {
-    auto ps = std::make_unique<PhaseSpace>(ps_size,qmin,qmax,pmin,pmax,
-                                              bunch_charge,bunch_current,
-                                              xscale,yscale);
+    std::vector<integral_t> filling = {{ 1.0 }};
+    PhaseSpace::setSize(ps_size, filling.size());
+    auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
+                                          , pmin, pmax, pscale
+                                          , oclh
+                                          , beam_charge,beam_current
+                                          , filling
+                                          );
     std::ifstream ifs;
     try {
         ifs.open(fname);
@@ -158,15 +163,15 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size,
         meshindex_t x = std::lround((xf/qmax+0.5f)*ps_size);
         meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
         if (x < ps_size && y < ps_size) {
-            (*ps)[x][y] += 1.0/line_count;
+            (*ps)[0][x][y] += 1.0/line_count;
         }
     }
     ifs.close();
 
     // normalize integral to 1
     ps->normalize();
-    #ifdef INOVESA_USE_OPENCL
-    ps->syncCLMem(clCopyDirection::cpu2dev);
+    #if INOVESA_USE_OPENCL == 1
+    ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
     #endif // INOVESA_USE_OPENCL
     return ps;
 }

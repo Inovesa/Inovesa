@@ -1,26 +1,13 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifdef INOVESA_USE_HDF5
-#ifndef HDF5FILE_HPP
-#define HDF5FILE_HPP
+#pragma once
+
+#if INOVESA_USE_HDF5 == 1
 
 #include <array>
 #include <H5Cpp.h>
@@ -72,6 +59,13 @@ public:
     void append(const ElectricField* ef, const bool fullspectrum = true);
 
     /**
+     * @brief savePaddedProfile
+     * @param ef
+     * @param timestep 0 or 1 (for start or end of simulation)
+     */
+    void appendPadded(const ElectricField* ef);
+
+    /**
      * @brief The AppendType enum
      *
      * All: save everything
@@ -82,200 +76,131 @@ public:
         All, Defaults, PhaseSpace
     };
 
-    void appendTracks(const PhaseSpace::Position *particles);
+    void appendRFKicks(const std::vector<std::array<vfps::meshaxis_t,2>> kicks);
 
-    void appendSourceMap(const PhaseSpace::Position *allpos);
+    void appendTracks(const std::vector<PhaseSpace::Position> &p);
 
     void append(const PhaseSpace& ps,
+                const timeaxis_t t,
                 const AppendType at=AppendType::Defaults);
 
     void append(const WakeKickMap* wkm);
 
-    void appendTime(const timeaxis_t t);
-
 public:
     static std::unique_ptr<PhaseSpace>
-        readPhaseSpace(std::string fname,
-                       meshaxis_t qmin, meshaxis_t qmax,
-                       meshaxis_t pmin, meshaxis_t pmax,
-                       double Qb, double Ib_unscaled,
-                       double bl, double dE,
-                       int64_t use_step=-1l);
+        readPhaseSpace( std::string fname
+                      , meshaxis_t qmin, meshaxis_t qmax
+                      , meshaxis_t pmin, meshaxis_t pmax
+                      , oclhptr_t oclh
+                      , double Qb, double Ib_unscaled
+                      , double bl, double dE
+                      , int64_t use_step=-1l
+                      );
 
 private:
-    std::unique_ptr<H5::H5File> _file;
+    template <int N>
+    struct DatasetInfo {
+        DatasetInfo() = delete;
+        DatasetInfo( H5::DataSet dataset
+                   , H5::DataType datatype
+                   , std::array<hsize_t,N> dims)
+        : dataset(dataset), datatype(datatype), dims(dims)
+        {}
 
-    std::string fname;
+        static constexpr int rank = N;
+        const H5::DataSet dataset;
+        const H5::DataType datatype;
+        std::array<hsize_t,N> dims;
+    };
+
+    const std::string _fname;
+
+    H5::H5File _file;
+
+    const uint32_t _nBuckets;
+
+    const uint32_t _nBunches;
+
+    const uint32_t _nParticles;
+
+    const uint32_t _psSizeX;
+
+    const uint32_t _psSizeY;
+
+    const uint32_t _maxn;
+
+    const uint32_t _impSize;
 
     static constexpr uint_fast8_t compression = 6;
 
-    H5::DataType datatype_integral;
-
-    H5::DataType datatype_meshdata;
-
 private: // values for phase space axis
-    static constexpr uint_fast8_t axps_rank = 1;
 
-    H5::DataSet ax0ps_dataset;
+    DatasetInfo<1> _positionAxis;
 
-    H5::DataSet ax1ps_dataset;
+    DatasetInfo<1> _energyAxis;
 
-    H5::DataType axps_datatype;
+    DatasetInfo<1> _frequencyAxis;
 
-private: // values for frequency axis
-    static constexpr uint_fast8_t axfreq_rank = 1;
+    DatasetInfo<1> _timeAxis;
 
-    H5::DataSet axfreq_dataset;
+    DatasetInfo<1> _timeAxisPS;
 
-    H5::DataType axfreq_datatype;
+    DatasetInfo<1> _bucketNumbers;
 
-private: // time axis
-    static constexpr uint_fast8_t ta_rank = 1;
+    DatasetInfo<2> _bunchPopulation;
 
-    H5::DataSet ta_dataset;
+    DatasetInfo<3> _bunchProfile;
 
-    H5::DataType ta_datatype;
+    DatasetInfo<2> _paddedProfile;
 
-    hsize_t ta_dims;
+    DatasetInfo<2> _bunchLength;
 
-private: // bunch current
-    static constexpr uint_fast8_t bc_rank = 1;
+    DatasetInfo<2> _bunchPosition;
 
-    H5::DataSet bc_dataset;
+    DatasetInfo<3> _energyProfile;
 
-    H5::DataType bc_datatype;
+    DatasetInfo<2> _energySpread;
 
-    hsize_t bc_dims;
+    DatasetInfo<2> _energyAverage;
 
-private: // bunch profile
-    static constexpr uint_fast8_t bp_rank = 2;
+    DatasetInfo<3> _particles;
 
-    H5::DataSet bp_dataset;
+    DatasetInfo<2> _dynamicRFKick;
 
-    H5::DataType bp_datatype;
+    DatasetInfo<3> _wakePotential;
 
-    std::array<hsize_t,bp_rank> bp_dims;
+    DatasetInfo<2> _paddedPotential;
 
-private: // bunch length
-    static constexpr uint_fast8_t bl_rank = 1;
+    DatasetInfo<3> _csrSpectrum;
 
-    H5::DataSet bl_dataset;
+    DatasetInfo<2> _csrIntensity;
 
-    H5::DataType bl_datatype;
+    DatasetInfo<4> _phaseSpace;
 
-    hsize_t bl_dims;
+    DatasetInfo<1> _impedanceReal;
+    DatasetInfo<1> _impedanceImag;
 
-private: // bunch position
-    static constexpr uint_fast8_t qb_rank = 1;
+    DatasetInfo<1> _wakeFunction;
 
-    H5::DataSet qb_dataset;
+private:
+    template <int rank, typename datatype>
+    void _appendData( DatasetInfo<rank>& ds
+                    , const datatype* const data
+                    , const size_t size=1);
 
-    H5::DataType qb_datatype;
+    template<int rank, typename datatype>
+    DatasetInfo<rank> _makeDatasetInfo( std::string name
+                                      , std::array<hsize_t,rank> dims
+                                      , std::array<hsize_t,rank> chunkdims
+                                      , std::array<hsize_t,rank> maxdims);
 
-    hsize_t qb_dims;
 
-private: // energy profile
-    static constexpr uint_fast8_t ep_rank = 2;
+    H5::H5File _prepareFile();
 
-    H5::DataSet ep_dataset;
-
-    H5::DataType ep_datatype;
-
-    std::array<hsize_t,ep_rank> ep_dims;
-
-private: // energy spread
-    static constexpr uint_fast8_t es_rank = 1;
-
-    H5::DataSet es_dataset;
-
-    H5::DataType es_datatype;
-
-    hsize_t es_dims;
-
-private: // particles (tracking)
-    static constexpr uint_fast8_t pt_rank = 3;
-
-    H5::DataSet pt_dataset;
-
-    H5::DataType pt_datatype;
-
-    std::array<hsize_t,pt_rank> pt_dims;
-
-    const size_t pt_particles;
-
-private: // wake potential
-    static constexpr uint_fast8_t wp_rank = 2;
-
-    H5::DataSet wp_dataset;
-
-    H5::DataType wp_datatype;
-
-    std::array<hsize_t,wp_rank> wp_dims;
-
-private: // csr spectrum
-    static constexpr uint_fast8_t csr_rank = 2;
-
-    H5::DataSet csr_dataset;
-
-    H5::DataType csr_datatype;
-
-    size_t maxn;
-
-    std::array<hsize_t,csr_rank> csr_dims;
-
-private: // csr intensity
-    static constexpr uint_fast8_t csri_rank = 1;
-
-    H5::DataSet csri_dataset;
-
-    H5::DataType csri_datatype;
-
-    hsize_t csri_dims;
-
-private: // phase space
-    static constexpr uint_fast8_t _ps_rank = 3;
-
-    H5::DataSet _ps_dataset;
-
-    H5::DataType _ps_datatype;
-
-    std::array<hsize_t,_ps_rank> _ps_dims;
-
-    meshindex_t _ps_size;
-
-private: // impedance
-    static constexpr uint_fast8_t imp_rank = 1;
-
-    H5::DataSet imp_dataset_real;
-    H5::DataSet imp_dataset_imag;
-
-    H5::DataType imp_datatype;
-
-    hsize_t imp_size;
-
-private: // source map
-    static constexpr uint_fast8_t _sm_rank = _ps_rank;
-
-    H5::DataSet _sm_dataset_x;
-    H5::DataSet _sm_dataset_y;
-
-    H5::DataType _sm_datatype;
-
-    std::array<hsize_t,_sm_rank> _sm_dims;
-
-    meshindex_t _sm_size;
-
-private: // wake function
-    static constexpr uint_fast8_t wf_rank = 1;
-
-    H5::DataSet wf_dataset;
-
-    H5::DataType wf_datatype;
-
-    hsize_t wf_size;
+private:
+    std::shared_ptr<PhaseSpace> _ps;
 };
 
 } // namespace vfps
 
-#endif // HDF5FILE_HPP
 #endif // INOVESA_USE_HDF5

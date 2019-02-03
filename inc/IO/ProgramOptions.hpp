@@ -1,25 +1,11 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef PROGRAMOPTIONS_HPP
-#define PROGRAMOPTIONS_HPP
+#pragma once
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -30,9 +16,9 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "SM/FokkerPlanckMap.hpp"
-#ifdef INOVESA_USE_HDF5
+#if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
 #endif
 
@@ -48,9 +34,15 @@ public:
 
     bool parse(int argc, char** argv);
 
+    /**
+     * @brief save
+     * @param fname
+     *
+     * @todo ignore members of _compatopts
+     */
     void save(std::string fname);
 
-    #ifdef INOVESA_USE_HDF5
+    #if INOVESA_USE_HDF5 == 1
     void save(HDF5File* file);
     #endif // INOVESA_USE_HDF5
 
@@ -70,7 +62,7 @@ public:
     inline auto getSaveSourceMap() const
         { return _savesourcemap; }
 
-    #ifdef INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENGL == 1
     inline auto getOpenGLVersion() const
         { return _glversion; }
 
@@ -109,8 +101,11 @@ public:
     inline auto getRoundPadding() const
         { return roundpadding; }
 
-    inline auto getSteps() const
-        { return steps; }
+    inline auto getStepsPerTsync() const
+        { return steps_per_Ts; }
+
+    inline auto getStepsPerTrev() const
+        { return steps_per_Trev; }
 
     inline auto getNRotations() const
         { return rotations; }
@@ -133,9 +128,6 @@ public:
     inline auto getFPType() const
         { return fptype; }
 
-    inline auto getRotationType() const
-        { return rotationtype; }
-
     inline auto getDerivationType() const
         { return deriv_type; }
 
@@ -155,13 +147,25 @@ public:
     inline auto getAlpha2() const
         { return alpha2; }
 
+    inline auto getRFAmplitudeSpread() const
+        { return rf_amplitude_spread; }
+
+    inline auto getRFPhaseSpread() const
+        { return rf_phase_spread; }
+
+    inline auto getRFPhaseModAmplitude() const
+        { return rf_phase_mod_amplitude; }
+
+    inline auto getRFPhaseModFrequency() const
+        { return rf_phase_mod_frequency; }
+
     inline auto getBeamEnergy() const
         { return E_0; }
 
     inline auto getBendingRadius() const
         { return r_bend; }
 
-    inline auto getBunchCurrent() const
+    inline auto getBunchCurrents() const
         { return I_b; }
 
     inline auto getCutoffFrequency() const
@@ -197,6 +201,9 @@ public:
     inline auto getUseCSR() const
         { return use_csr; }
 
+    inline auto getLinearRF() const
+        { return linearRF; }
+
     inline auto getCollimatorRadius() const
         { return collimator; }
 
@@ -213,7 +220,7 @@ private: // program parameters
 
     std::string _outfile;
 
-    bool _savephasespace;
+    uint32_t _savephasespace;
 
     bool _savesourcemap;
 
@@ -243,7 +250,8 @@ private: // simulation parameters
     double pq_size;
     double meshshiftx;
     double meshshifty;
-    uint32_t steps;
+    uint32_t steps_per_Ts;
+    double steps_per_Trev;
     int32_t renormalize;
     double rotations;
     uint32_t fptype;
@@ -257,6 +265,12 @@ private: // phsical parameters
     double alpha0;
     double alpha1;
     double alpha2;
+
+    double rf_phase_spread;
+    double rf_amplitude_spread;
+
+    double rf_phase_mod_amplitude;
+    double rf_phase_mod_frequency;
 
     double E_0;
 
@@ -274,15 +288,18 @@ private: // phsical parameters
     double s_c;
     double xi_wall;
     double H;
-    double I_b;
+    std::vector<integral_t> I_b;
     double t_d;
     double r_bend;
     double s_E;
     double V_RF;
+    bool linearRF;
 
     bool use_csr;
 
 private:
+    po::options_description _compatopts;
+
     po::options_description _cfgfileopts;
 
     po::options_description _commandlineopts;
@@ -300,7 +317,9 @@ private:
     /**
      * @brief _compatopts options from old config files
      */
-    po::options_description _compatopts;
+    po::options_description _compatopts_alias;
+
+    po::options_description _compatopts_ignore;
 
     po::options_description _simulopts;
 
@@ -311,4 +330,3 @@ private:
 
 }
 
-#endif // PROGRAMOPTIONS_HPP

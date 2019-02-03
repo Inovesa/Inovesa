@@ -1,22 +1,9 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include "Z/ParallelPlatesCSR.hpp"
 
@@ -25,29 +12,31 @@
 using boost::math::constants::pi;
 using boost::math::constants::pi_sqr;
 
-vfps::ParallelPlatesCSR::ParallelPlatesCSR(const size_t n,
-                                           const frequency_t f0,
-                                           const frequency_t f_max,
-                                           const double g)
+vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t nfreqs
+                                          , const frequency_t f0
+                                          , const frequency_t f_max
+                                          , const double g
+                                          , oclhptr_t oclh
+                                          )
     :
-      Impedance(__calcImpedance(n,f0,f_max,g),f_max)
+      Impedance(__calcImpedance(nfreqs,f0,f_max,g),f_max, oclh )
 {
 }
 
 std::vector<vfps::impedance_t>
-vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
+vfps::ParallelPlatesCSR::__calcImpedance(const size_t nfreqs,
                                          const vfps::frequency_t f0,
                                          const vfps::frequency_t f_max,
                                          const double g)
 {
-    std::vector<vfps::impedance_t> rv(n,0);
+    std::vector<vfps::impedance_t> rv(nfreqs,0);
 
     // frequency resolution: impedance will be sampled at multiples of delta
-    const frequency_t delta = f_max/f0/(n-1.0);
+    const double delta = f_max/f0/(nfreqs-1.0);
 
     const double r_bend = physcons::c/(2*pi<double>()*f0);
     constexpr std::complex<double> j(0,1);
-    for (size_t i=1; i<=n/2; i++) {
+    for (size_t i=1; i<=nfreqs/2; i++) {
         std::complex<double> Z=0;
         const double n = i*delta;
         const double m = n*std::pow(g/r_bend,3./2.);
@@ -70,7 +59,12 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
             Z += zinc;
         }
         Z *= 4.0*b*n*g/r_bend*pi_sqr<double>()*std::pow(2,1./3.)*physcons::Z0;
-        rv[i] = Z;
+
+        /* Calculation was done using double to increase accuracy
+         * for this one-time computation. Explicitly cast down to
+         * impedance_t, to make this transparent.
+         */
+        rv[i] = static_cast<impedance_t>(Z);
     }
 
     return rv;

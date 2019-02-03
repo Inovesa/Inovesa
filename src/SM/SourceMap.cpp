@@ -1,66 +1,59 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include "SM/SourceMap.hpp"
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
-vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
-                           std::shared_ptr<PhaseSpace> out,
-                           meshindex_t xsize, meshindex_t ysize,
-                           size_t memsize,
-                           uint_fast8_t interpoints,
-                           uint_fast8_t intertype)
-    : _ip(interpoints)
-    , _it(intertype)
-    , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
-    , _size(xsize*ysize)
-    , _xsize(xsize)
-    , _ysize(ysize)
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
-    , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
-    #endif // INOVESA_ENABLE_CLPROFILING
-    , _axis(std::array<meshRuler_ptr,2>{{in->getAxis(0),in->getAxis(1)}})
-    , _in(in)
-    , _out(out)
+vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
+                          , std::shared_ptr<PhaseSpace> out
+                          , meshindex_t xsize
+                          , meshindex_t ysize
+                          , size_t memsize
+                          , uint_fast8_t interpoints
+                          , uint_fast8_t intertype
+                          , oclhptr_t oclh
+                          )
+  : _ip(interpoints)
+  , _it(intertype)
+  , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
+  , _xsize(xsize)
+  , _ysize(ysize)
+  #if INOVESA_ENABLE_CLPROFILING == 1
+  , applySMEvents(std::make_unique<std::vector<cl::Event*>>())
+  , syncSMEvents(std::make_unique<std::vector<cl::Event*>>())
+  #endif // INOVESA_ENABLE_CLPROFILING
+  , _axis(std::array<meshRuler_ptr,2>{{in->getAxis(0),in->getAxis(1)}})
+  , _in(in)
+  , _out(out)
+  , _oclh(oclh)
 {
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     _cl_code  += "typedef struct { uint src; data_t weight; } hi;\n";
     #endif // INOVESA_USE_OPENCL
 }
 
-vfps::SourceMap::SourceMap(std::shared_ptr<PhaseSpace> in,
-                           std::shared_ptr<PhaseSpace> out,
-                               size_t xsize, size_t ysize,
-                               uint_fast8_t interpoints,
-                               uint_fast8_t intertype) :
-    SourceMap(in,out,xsize,ysize,xsize*ysize*interpoints,
-                interpoints,intertype)
+vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
+                          , std::shared_ptr<PhaseSpace> out
+                          , size_t xsize, size_t ysize
+                          , uint_fast8_t interpoints
+                          , uint_fast8_t intertype
+                          , oclhptr_t oclh
+                          )
+  : SourceMap( in,out,xsize,ysize,xsize*ysize*interpoints
+             , interpoints,intertype,oclh
+             )
 {
 }
 
 vfps::SourceMap::~SourceMap() noexcept
 {
     delete [] _hinfo;
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     for (auto ev : *applySMEvents) {
         delete ev;
     }
@@ -71,34 +64,34 @@ vfps::SourceMap::~SourceMap() noexcept
 }
 
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 void vfps::SourceMap::saveTimings(std::string mapname) {
-    if (OCLH::active) {
-        OCLH::saveTimings(applySMEvents.get(),"Apply"+mapname);
-        OCLH::saveTimings(syncSMEvents.get(),"Sync"+mapname);
+    if (_oclh) {
+        _oclh->saveTimings(applySMEvents.get(),"Apply"+mapname);
+        _oclh->saveTimings(syncSMEvents.get(),"Sync"+mapname);
     }
 }
 #endif // INOVESA_ENABLE_CLPROFILING
 
 void vfps::SourceMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
-        #ifdef INOVESA_SYNC_CL
-        _in->syncCLMem(clCopyDirection::cpu2dev);
+    #if INOVESA_USE_OPENCL == 1
+    if (_oclh) {
+        #if INOVESA_SYNC_CL == 1
+        _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::enqueueNDRangeKernel( applySM
+        _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
-                                  , cl::NDRange(_size)
-                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  , cl::NDRange(PhaseSpace::nxy)
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
                                   , applySMEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
-        #ifdef INOVESA_SYNC_CL
-        _out->syncCLMem(clCopyDirection::dev2cpu);
+        #if INOVESA_SYNC_CL == 1
+        _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #endif // INOVESA_USE_OPENCL
@@ -106,7 +99,7 @@ void vfps::SourceMap::apply()
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();
 
-        for (meshindex_t i=0; i< _size; i++) {
+        for (meshindex_t i=0; i< PhaseSpace::nxy; i++) {
             data_out[i] = 0;
             for (meshindex_t j=0; j<_ip; j++) {
                 hi h = _hinfo[i*_ip+j];
@@ -124,7 +117,7 @@ void vfps::SourceMap::applyTo(std::vector<vfps::PhaseSpace::Position> &particles
 }
 
 
-#ifdef INOVESA_USE_OPENCL
+#if INOVESA_USE_OPENCL == 1
 void vfps::SourceMap::genCode4SM1D()
 {
     _cl_code += R"(
@@ -148,7 +141,7 @@ void vfps::SourceMap::genCode4SM1D()
 
 void vfps::SourceMap::calcCoefficiants(vfps::interpol_t* ic,
                                          const vfps::interpol_t f,
-                                         const uint_fast8_t it) const
+                                         const uint_fast8_t it)
 {
     switch (it) {
     case InterpolationType::none:

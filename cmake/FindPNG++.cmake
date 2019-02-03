@@ -4,8 +4,9 @@ if(png++_FIND_QUIETLY)
   set(_FIND_PNG_ARG QUIET)
 endif()
 
-find_package(PNG ${_FIND_PNG_ARG} REQUIRED)
+find_package(PNG ${_FIND_PNG_ARG})
 
+IF(PNG_FOUND)
 find_path(png++_INCLUDE_DIR
   NAMES  png++/color.hpp  png++/config.hpp  png++/consumer.hpp  png++/convert_color_space.hpp
   png++/end_info.hpp  png++/error.hpp  png++/ga_pixel.hpp  png++/generator.hpp
@@ -22,3 +23,5 @@ set(png++_LIBRARIES ${PNG_LIBRARIES})
 find_package_handle_standard_args(png++ DEFAULT_MSG png++_INCLUDE_DIR)
 
 mark_as_advanced(png++_LIBRARY png++_INCLUDE_DIR)
+
+ENDIF()

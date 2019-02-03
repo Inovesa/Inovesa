@@ -1,25 +1,11 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2016: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2016: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef IMPEDANCE_HPP
-#define IMPEDANCE_HPP
+#pragma once
 
 #include <fstream>
 #include <string>
@@ -38,18 +24,20 @@ public:
     Impedance() = delete;
 
     /**
+     * @brief Impedance copy constructor
+     * @param other
+     */
+    Impedance(const Impedance &other);
+
+    /**
      * @brief Impedance basic constructor that initializes everything
      * @param axis
      * @param z
      */
-    Impedance(Ruler<frequency_t> axis,
-              const std::vector<impedance_t> &z);
-
-    /**
-     * @brief Impedance copy constructor
-     * @param other
-     */
-    Impedance(const Impedance& other);
+    Impedance(Ruler<frequency_t> &&axis
+             , const std::vector<impedance_t> &z
+             , oclhptr_t oclh = nullptr
+             );
 
 
     /**
@@ -60,10 +48,16 @@ public:
      * Note that we will use this for DFT,
      * so n>z.size()/2 is defined to be equivalent to n<0.
      */
-    Impedance(const std::vector<impedance_t>& z, const frequency_t f_max);
+    Impedance( const std::vector<impedance_t>& z
+             , const frequency_t f_max
+             , oclhptr_t oclh = nullptr
+             );
 
 
-    Impedance(const size_t nfreqs, const frequency_t f_max);
+    Impedance( const size_t nfreqs
+             , const frequency_t f_max
+             , oclhptr_t oclh = nullptr
+             );
 
 
     /**
@@ -71,7 +65,7 @@ public:
      * @param name of datafile in the format "n Re(Z) Im(Z)",
      *        where n=f/f_rev is the revolution harmonic
      */
-    Impedance(std::string datafile, double f_max);
+    Impedance( std::string datafile, double f_max, oclhptr_t oclh = nullptr);
 
     inline const impedance_t* data() const
         { return _data.data(); }
@@ -91,7 +85,7 @@ public:
     inline const Ruler<frequency_t>* getRuler() const
         { return &_axis; }
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer data_buf;
     #endif // INOVESA_USE_OPENCL
 
@@ -102,6 +96,13 @@ public:
 
 public:
     /**
+     * @brief operator = unifying assignment operator
+     * @param other
+     * @return
+     */
+    Impedance& operator=(Impedance other);
+
+    /**
      * @brief operator +=
      * @param rhs
      * @return
@@ -109,6 +110,8 @@ public:
      * assumes size() equals rhs.size()
      */
     Impedance& operator+=(const Impedance& rhs);
+
+    void swap(Impedance& other);
 
 private:
     size_t _nfreqs;
@@ -118,32 +121,30 @@ private:
 protected:
     std::vector<impedance_t> _data;
 
+    #if INOVESA_USE_OPENCL == 1
     void syncCLMem();
+    #endif // INOVESA_USE_OPENCL
+
+    oclhptr_t _oclh;
 
 private:
     static std::vector<impedance_t> readData(std::string fname);
-
-public:
-    /**
-     * @brief upper_power_of_two
-     * @param v
-     * @return
-     *
-     * @todo In Impedance for historical reasons.
-     * It might be useful to move it somewhere else,
-     * as it does now relate to more than just the impedance.
-     *
-     * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-     */
-    static uint64_t upper_power_of_two(uint64_t v);
 };
 
-inline Impedance operator+(Impedance lhs, const Impedance& rhs)
+/**
+ * @brief operator +
+ * @param lhs
+ * @param rhs
+ * @return
+ *
+ * As soon as a move constructor is available, it will make sence to add
+ * overloads that can use these.
+ */
+inline Impedance operator+(const Impedance& lhs, const Impedance& rhs)
 {
-    lhs += rhs;
-    return lhs;
+    auto rv = Impedance(lhs);
+    return rv += rhs;
 }
 
 } // namespace vfps
 
-#endif // IMPEDANCE_HPP
