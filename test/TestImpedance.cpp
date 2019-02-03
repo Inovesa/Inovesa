@@ -6,7 +6,9 @@
 #include "defines.hpp"
 #include "Z/Impedance.hpp"
 
-BOOST_AUTO_TEST_CASE( impedance_constructors ){
+BOOST_AUTO_TEST_SUITE( Impedance )
+
+BOOST_AUTO_TEST_CASE( constructors ){
     vfps::impedance_t j{0,0.5};
 
     std::vector<vfps::impedance_t> zv(8);
@@ -24,7 +26,7 @@ BOOST_AUTO_TEST_CASE( impedance_constructors ){
     BOOST_CHECK_EQUAL(z2[5],j);
 }
 
-BOOST_AUTO_TEST_CASE( impedance_addition ){
+BOOST_AUTO_TEST_CASE( addition ){
     constexpr size_t n = 8;
     std::vector<vfps::impedance_t> zv1(n);
     std::vector<vfps::impedance_t> zv2(n);
@@ -58,3 +60,5 @@ BOOST_AUTO_TEST_CASE( impedance_addition ){
         BOOST_CHECK_EQUAL(z4[i],z2[i]);
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END()

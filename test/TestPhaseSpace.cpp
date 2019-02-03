@@ -1,13 +1,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <array>
-#include <cstring>
 
 #include "defines.hpp"
 #define INOVESA_ALLOW_PS_RESET 1
 #include "PS/PhaseSpace.hpp"
 
-BOOST_AUTO_TEST_CASE( phasespace_one_bucket ){
+BOOST_AUTO_TEST_SUITE( PhaseSpace )
+
+BOOST_AUTO_TEST_CASE( one_bucket ){
     vfps::PhaseSpace::resetSize(32,1);
     // initializing constructor (default data)
     vfps::PhaseSpace ps1(-12,12,3,-12,12,4,nullptr,1,1);
@@ -32,7 +33,7 @@ BOOST_AUTO_TEST_CASE( phasespace_one_bucket ){
     BOOST_CHECK_CLOSE(ps2.getDelta(1), 24/(32-1.0f), 0.1f);
 }
 
-BOOST_AUTO_TEST_CASE( phasespace_two_buckets ){
+BOOST_AUTO_TEST_CASE( two_buckets ){
     std::vector<vfps::integral_t> buckets{{0.5,0.5}};
     vfps::PhaseSpace::resetSize(32,buckets.size());
 
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE( phasespace_two_buckets ){
     }
 }
 
-BOOST_AUTO_TEST_CASE( phasespace_five_buckets ){
+BOOST_AUTO_TEST_CASE( five_buckets ){
     std::vector<vfps::integral_t> buckets{{0.75,0,0.15,0.1,0}};
     vfps::PhaseSpace::resetSize(32,buckets.size());
 
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE( phasespace_five_buckets ){
     }
 }
 
-BOOST_AUTO_TEST_CASE( phasespace_no_norm ){
+BOOST_AUTO_TEST_CASE( no_norm ){
     std::vector<vfps::integral_t> buckets{{0.75,0.75}};
     vfps::PhaseSpace::resetSize(32,buckets.size());
 
@@ -87,7 +88,7 @@ BOOST_AUTO_TEST_CASE( phasespace_no_norm ){
             std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_CASE( phasespace_datacopy ){
+BOOST_AUTO_TEST_CASE( datacopy ){
     std::vector<vfps::integral_t> buckets{{0.6,0.4}};
     vfps::PhaseSpace::resetSize(2,buckets.size());
 
@@ -99,10 +100,11 @@ BOOST_AUTO_TEST_CASE( phasespace_datacopy ){
 
     vfps::PhaseSpace ps1(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data1.data());
 
-    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps1.getData(),ps1.getData()+data1.size());
 }
 
-BOOST_AUTO_TEST_CASE( phasespace_swap ){
+BOOST_AUTO_TEST_CASE( swap ){
     std::vector<vfps::integral_t> buckets{{0.6,0.4}};
     vfps::PhaseSpace::resetSize(2,buckets.size());
 
@@ -123,16 +125,20 @@ BOOST_AUTO_TEST_CASE( phasespace_swap ){
 
     vfps::PhaseSpace ps2(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data2.data());
 
-    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps1.getData(),ps1.getData()+ps1.nxyb);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data2.data(),data2.data()+data2.size(),
+                                  ps2.getData(),ps2.getData()+ps2.nxyb);
 
     // explicitly use std::swap to check template specialization
     std::swap(ps1,ps2);
-    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps2.getData(),data1.size()), 0);
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps1.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps2.getData(),ps2.getData()+data1.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(data2.data(),data2.data()+data2.size(),
+                                  ps1.getData(),ps1.getData()+data2.size());
 }
 
-BOOST_AUTO_TEST_CASE( phasespace_assign ){
+BOOST_AUTO_TEST_CASE( assign ){
     std::vector<vfps::integral_t> buckets{{0.6,0.4}};
     vfps::PhaseSpace::resetSize(2,buckets.size());
 
@@ -152,10 +158,16 @@ BOOST_AUTO_TEST_CASE( phasespace_assign ){
 
     vfps::PhaseSpace ps2(-1,1,2,-1,1,4,nullptr,1,1,buckets,1,data2.data());
 
-    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data1.size()), 0);
-    BOOST_CHECK_EQUAL(std::memcmp(data2.data(),ps2.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps1.getData(),ps1.getData()+ps1.nxyb);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data2.data(),data2.data()+data2.size(),
+                                  ps2.getData(),ps2.getData()+ps2.nxyb);
 
     ps2 = ps1;
-    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps1.getData(),data2.size()), 0);
-    BOOST_CHECK_EQUAL(std::memcmp(data1.data(),ps2.getData(),data2.size()), 0);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps1.getData(),ps1.getData()+ps1.nxyb);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps2.getData(),ps2.getData()+ps2.nxyb);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
