@@ -260,6 +260,9 @@ set(testName inovesa-test)
 #Add compile target
 add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/impedance.dat
+    ${CMAKE_CURRENT_BINARY_DIR}/impedance.dat COPYONLY)
+
 #link to Boost libraries AND your targets and dependencies
 IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
     MESSAGE ("Build for coverage information.")
