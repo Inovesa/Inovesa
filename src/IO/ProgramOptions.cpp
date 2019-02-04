@@ -186,7 +186,7 @@ vfps::ProgramOptions::ProgramOptions() :
             " 1: Only damping\n"
             " 2: Only diffusion\n"
             " 3: Full")
-        ("FPTrack", po::value<uint32_t>(&fptrack)->default_value(1),
+        ("FPTrack", po::value<uint32_t>(&fptrack)->default_value(3),
             "Used implementation for FP term in tracking\n"
             " 0: No Fokker-Planck term\n"
             " 1: Approximation overweighting damping\n"
