@@ -258,8 +258,7 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
         }
         break;
     case FPTracking::stochastic:
-        auto delta = pos.y*_dampdecr+_normdist(_prng);
-        pos.y -= delta;
+        pos.y -= pos.y*_dampdecr+_normdist(_prng);
         break;
     }
     return pos;

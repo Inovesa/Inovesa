@@ -36,9 +36,9 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
   , _oclh(nullptr) // OpenCL will be disabled during dirst initialization steps
-  #if INOVESA_USE_OPENGL == 1
+  #if INOVESA_USE_OPENCL == 1 && INOVESA_USE_OPENGL == 1
   , projectionX_glbuf(0)
-  #endif // INOVESA_USE_OPENGL
+  #endif // INOVESA_USE_OPENCL && INOVESA_USE_OPENGL
   #if INOVESA_ENABLE_CLPROFILING == 1
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
   , integEvents(std::make_unique<cl::vector<cl::Event*>>())
@@ -271,14 +271,15 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
         }
         #endif
     }
+
     for (uint32_t n=0; n<_nbunches; n++) {
         integral_t avg = 0;
         for (size_t i=0; i<nMeshCells(axis); i++) {
             avg += _projection[axis][n][i]*_qp(axis,i);
         }
 
-        // _projection is normalized in p/q coordinates
-        avg *= getDelta(axis);
+        // _projection is normalized in p/q coordinates with respect to charge
+        avg *= getDelta(axis) / _integral;
 
         _moment[axis][0][n] = avg;
     }
@@ -293,8 +294,8 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
             var += _projection[axis][n][i]*std::pow(_qp(axis,i)-_moment[axis][0][n],2);
         }
 
-        // _projection is normalized in p/q coordinates
-        var *= getDelta(axis);
+        // _projection is normalized in p/q coordinates with respect to charge
+        var *= getDelta(axis) / _integral;
 
         _moment[axis][1][n] = var;
         _rms[axis][n] = std::sqrt(var);

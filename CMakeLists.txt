@@ -32,6 +32,8 @@ set (INOVESA_VERSION_FIX -4)
 # -3 RC1
 # -n RC(n-2)
 
+SET (COVERAGE OFF CACHE BOOL "Coverage")
+
 configure_file (
   "${PROJECT_SOURCE_DIR}/InovesaConfig.hpp.in"
   "${PROJECT_BINARY_DIR}/InovesaConfig.hpp"
@@ -211,7 +213,10 @@ ELSE()
 ENDIF()
 
 ## PNG (optional)
+find_package(PNG QUIET)
+IF(PNG_FOUND)
 find_package(PNG++ QUIET)
+ENDIF()
 IF(PNG++_FOUND)
     add_definitions( -DINOVESA_USE_PNG=1)
     include_directories(${PNG_INCLUDE_DIRS})
@@ -222,7 +227,13 @@ ELSE()
 ENDIF()
 
 
-target_link_libraries(${PROJECT_NAME} ${LIBS})
+IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+    MESSAGE ("Build for coverage information.")
+    target_compile_options(${PROJECT_NAME} PRIVATE --coverage)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS} --coverage)
+ELSE()
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+ENDIF()
 
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
