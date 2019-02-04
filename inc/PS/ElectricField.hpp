@@ -1,31 +1,18 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef ELECTRICFIELD_HPP
-#define ELECTRICFIELD_HPP
+#pragma once
 
 #include <algorithm>
 #include <fftw3.h>
 #include <memory>
 #include <sstream>
 
+#include "Array.h"
 #include "defines.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/Ruler.hpp"
@@ -57,6 +44,7 @@ public:
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  oclhptr_t oclh,
                   const double f_rev,
                   const double revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
@@ -80,12 +68,14 @@ public:
      *   c/ps->getScale(0) (charge/sigma_z -> current)
      *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
      */
-    ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  std::shared_ptr<Impedance> impedance,
-                  const double f_rev,
-                  const double revolutionpart,
-                  const double Ib, const double E0,
-                  const double sigmaE, const double dt);
+    ElectricField( std::shared_ptr<PhaseSpace> ps
+                 , std::shared_ptr<Impedance> impedance
+                 , oclhptr_t oclh
+                 , const double f_rev
+                 , const double revolutionpart
+                 , const double Ib, const double E0
+                 , const double sigmaE, const double dt
+                 );
 
     /**
      * @brief ElectricField (unmaintained) constructor for use of wake function
@@ -100,16 +90,18 @@ public:
      * @param fs synchrotron frequency [Hz]
      * @param nmax
      */
-    ElectricField(std::shared_ptr<PhaseSpace> ps,
-                  std::shared_ptr<Impedance> impedance,
-                  const double f_rev,
-                  const double Ib, const double E0,
-                  const double sigmaE, const double dt, const double rbend,
-                  const double fs, const size_t nmax);
+    ElectricField( std::shared_ptr<PhaseSpace> ps
+                 , std::shared_ptr<Impedance> impedance
+                 , oclhptr_t oclh
+                 , const double f_rev
+                 , const double Ib, const double E0
+                 , const double sigmaE, const double dt, const double rbend
+                 , const double fs, const size_t nmax
+                 );
 
     ~ElectricField() noexcept;
 
-    inline csrpower_t getCSRPower() const
+    inline const csrpower_t& getCSRPower() const
         { return _csrintensity; }
 
     inline csrpower_t* getCSRSpectrum() const
@@ -155,9 +147,9 @@ public:
      */
     meshaxis_t* wakePotential();
 
-    #ifdef INOVESA_USE_OPENCL
-    void syncCLMem(clCopyDirection dir);
-    #endif
+    #if INOVESA_USE_OPENCL == 1
+    void syncCLMem(OCLH::clCopyDirection dir);
+    #endif // INOVESA_USE_OPENCL
 
 public:
     const double volts;
@@ -289,7 +281,7 @@ private:
 
     integral_t* _bp_padded_fft;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _bp_padded_buf;
     #endif // INOVESA_USE_OPENCL
 
@@ -297,7 +289,9 @@ private:
 
     fft_complex* _formfactor_fft;
 
-    #ifdef INOVESA_USE_OPENCL
+    oclhptr_t _oclh;
+
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer _formfactor_buf;
 
     cl::Program _clProgWakelosses;
@@ -306,7 +300,7 @@ private:
 
     fft_plan _fft_bunchprofile;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_bunchprofile;
     #endif // INOVESA_USE_CLFFT
 
@@ -316,7 +310,7 @@ private:
 
     fft_complex* _wakelosses_fft;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     cl::Buffer _wakelosses_buf;
     #endif // INOVESA_USE_CLFFT
 
@@ -328,9 +322,13 @@ private:
      */
     meshaxis_t* _wakepotential_padded;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
 public:
-    cl::Buffer _wakepotential_buf;
+    #if INOVESA_USE_OPENGL == 1
+    cl_GLuint wakepotential_glbuf;
+    #endif // INOVESA_USE_OPENGL
+
+    cl::Buffer wakepotential_clbuf;
 
 private:
     // non-interleaved internal data format might be usefull
@@ -345,7 +343,7 @@ private:
 
     fft_plan _fft_wakelosses;
 
-    #ifdef INOVESA_USE_CLFFT
+    #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_wakelosses;
     #endif // INOVESA_USE_CLFFT
 
@@ -353,5 +351,3 @@ private:
 };
 
 } // namespace vfps
-
-#endif // ELECTRICFIELD_HPP

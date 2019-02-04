@@ -1,22 +1,9 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlesov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include <boost/config.hpp>
 
@@ -27,23 +14,16 @@ const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
-    if (
-            #if FXP_FRACPART < 31
-            std::is_same<vfps::meshdata_t,fixp32>::value ||
-            #endif
-            std::is_same<vfps::meshdata_t,fixp64>::value)
-    {
-        rv += "Copyright (c) 2007-2009 Peter Schregle (FPML)\n";
-    }
     rv+="Copyright (c) 2012-2018 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 2017-2018 Johannes Schestag\n"
         "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 2017 Julian Gethmann\n"
         "Copyright (c) 2017 Matthias Blaicher\n"
         "Copyright (c) 1997-2016 John C. Bowman,\n"
         "\tUniversity of Alberta (Array class)\n"
-        #ifdef INOVESA_USE_OPENGL
+        #if INOVESA_USE_OPENGL == 1
         "Copyright (c) 2014-2015 Nathaniel J. Smith, Stefan van der Walt\n"
         "\t (Magma color code)\n"
         #endif
@@ -92,28 +72,28 @@ const std::string vfps::inovesa_version(const bool verbose) {
         sstream << std::endl << "Compiler:"
                 << std::endl << '\t' << BOOST_COMPILER
                 << std::endl << "Build options:"
-                #ifdef DEBUG
+                #if DEBUG == 1
                 << std::endl << '\t' << "DEBUG"
                 #endif
-                #ifdef INOVESA_ENABLE_INTERRUPT
+                #if INOVESA_ENABLE_INTERRUPT == 1
                 << std::endl << '\t' << "INOVESA_ENABLE_INTERRUPT"
                 #endif
-                #ifdef INOVESA_ENABLE_CLPROFILING
+                #if INOVESA_ENABLE_CLPROFILING == 1
                 << std::endl << '\t' << "INOVESA_ENABLE_CLPROFILING"
                 #endif
-                #ifdef INOVESA_USE_OPENCL
+                #if INOVESA_USE_OPENCL == 1
                 << std::endl << '\t' << "INOVESA_USE_OPENCL"
                 #endif
-                #ifdef INOVESA_USE_CLFFT
+                #if INOVESA_USE_CLFFT == 1
                 << std::endl << '\t' << "INOVESA_USE_CLFFT"
                 #endif
-                #ifdef INOVESA_USE_OPENGL
+                #if INOVESA_USE_OPENGL == 1
                 << std::endl << '\t' << "INOVESA_USE_OPENGL"
                 #endif
-                #ifdef INOVESA_USE_HDF5
+                #if INOVESA_USE_HDF5 == 1
                 << std::endl << '\t' << "INOVESA_USE_HDF5"
                 #endif
-                #ifdef INOVESA_USE_PNG
+                #if INOVESA_USE_PNG == 1
                 << std::endl << '\t' << "INOVESA_USE_PNG"
                 #endif
                 ;
@@ -143,7 +123,7 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
            << std::abs(delta)
            << "\ts_p="
            << std::fixed << std::setprecision(4)
-           << ps->getEnergySpread();
+           << *ps->getEnergySpread();
 
     return status.str();
 }

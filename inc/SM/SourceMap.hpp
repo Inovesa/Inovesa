@@ -1,25 +1,11 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef SOURCEMAP_HPP
-#define SOURCEMAP_HPP
+#pragma once
 
 #include <memory>
 #include <sstream>
@@ -65,9 +51,11 @@ public:
      * @param interpoints
      * @param intertype number of points used for interpolation
      */
-    SourceMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out,
-                meshindex_t xsize, meshindex_t ysize, size_t memsize,
-                uint_fast8_t interpoints, uint_fast8_t intertype);
+    SourceMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
+             , meshindex_t xsize, meshindex_t ysize, size_t memsize
+             , uint_fast8_t interpoints, uint_fast8_t intertype
+             , oclhptr_t oclh
+             );
 
     /**
      * @brief SourceMap
@@ -77,10 +65,12 @@ public:
      * @param ysize
      * @param interpoints number of points used for interpolation
      */
-    SourceMap(std::shared_ptr<PhaseSpace> in,
-              std::shared_ptr<PhaseSpace> out,
-                size_t xsize, size_t ysize,
-                uint_fast8_t interpoints, uint_fast8_t intertype);
+    SourceMap( std::shared_ptr<PhaseSpace> in
+             , std::shared_ptr<PhaseSpace> out
+             , size_t xsize, size_t ysize
+             , uint_fast8_t interpoints, uint_fast8_t intertype
+             , oclhptr_t oclh
+             );
 
     virtual ~SourceMap() noexcept;
 
@@ -96,17 +86,17 @@ public:
      */
     virtual PhaseSpace::Position apply(PhaseSpace::Position pos) const =0;
 
-    void applyTo(std::vector<PhaseSpace::Position> &particles);
+    void applyTo(std::vector<PhaseSpace::Position>& particles);
 
 protected:
     /**
      * @brief _ip holds the total number of points used for interpolation
      */
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     const cl_uint _ip;
     #else
     const uint_fast8_t _ip;
-    #endif
+    #endif // INOVESA_USE_OPENCL
 
     /**
      * @brief _ip holds the per dimension number
@@ -134,7 +124,7 @@ protected:
      */
     const meshindex_t _ysize;
 
-    #ifdef INOVESA_USE_OPENCL
+    #if INOVESA_USE_OPENCL == 1
     /**
      * @brief _hi_buf buffer for source information
      */
@@ -145,7 +135,7 @@ protected:
      */
     cl::Kernel applySM;
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     std::unique_ptr<cl::vector<cl::Event*>> applySMEvents;
 
     std::unique_ptr<cl::vector<cl::Event*>> syncSMEvents;
@@ -162,7 +152,9 @@ protected:
     std::shared_ptr<PhaseSpace> _in;
     std::shared_ptr<PhaseSpace> _out;
 
-    #ifdef INOVESA_USE_OPENCL
+    oclhptr_t _oclh;
+
+    #if INOVESA_USE_OPENCL == 1
     /**
      * @brief genCode4SM1D generates OpenCL code for a generic source map
      */
@@ -180,11 +172,9 @@ protected:
 
     static void notClampedMessage();
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
+    #if INOVESA_ENABLE_CLPROFILING == 1
     void saveTimings(std::string mapname);
     #endif // INOVESA_ENABLE_CLPROFILING
 };
 
 }
-
-#endif // SOURCEMAP_HPP

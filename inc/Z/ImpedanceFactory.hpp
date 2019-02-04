@@ -1,5 +1,11 @@
-#ifndef IMPEDANCEFACTORY_HPP
-#define IMPEDANCEFACTORY_HPP
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
+
+#pragma once
 
 #include <memory>
 
@@ -27,18 +33,17 @@ namespace vfps
  * It should be the single point in the program where Impedances are created.
  * As such, it provides a shortcut to common cases.
  */
-std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs,
-                                         const frequency_t fmax,
-                                         const double f0,
-                                         const double frev,
-                                         const double gap,
-                                         const bool use_csr = true,
-                                         const double s = 0,
-                                         const double xi = 0,
-                                         const double inner_coll_radius = 0,
-                                         const std::string impedance_file = ""
-                                         );
+std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs
+                                        , oclhptr_t oclh
+                                        , const frequency_t fmax
+                                        , const double R_bend
+                                        , const double frev
+                                        , const double gap
+                                        , const bool use_csr = true
+                                        , const double s = 0
+                                        , const double xi = 0
+                                        , const double inner_coll_radius = 0
+                                        , const std::string impedance_file = ""
+                                        );
 
 } // namespace vfps
-
-#endif // IMPEDANCEFACTORY_HPP

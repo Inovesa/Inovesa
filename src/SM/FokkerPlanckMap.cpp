@@ -1,32 +1,22 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
 #include "SM/FokkerPlanckMap.hpp"
 
-vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
-                                       std::shared_ptr<PhaseSpace> out,
-                                       const meshindex_t xsize,
-                                       const meshindex_t ysize,
-                                       FPType fptype, FPTracking fptrack,
-                                       timeaxis_t e1, DerivationType dt)
-  : SourceMap(in, out, 1, ysize, dt, dt)
+vfps::FokkerPlanckMap::FokkerPlanckMap( std::shared_ptr<PhaseSpace> in
+                                      , std::shared_ptr<PhaseSpace> out
+                                      , const meshindex_t xsize
+                                      , const meshindex_t ysize
+                                      , FPType fptype, FPTracking fptrack
+                                      , timeaxis_t e1
+                                      , DerivationType dt
+                                      , oclhptr_t oclh
+                                      )
+  : SourceMap( in, out, 1, ysize, dt, dt, oclh)
   , _dampdecr(e1)
   , _prng(std::mt19937(std::random_device{}()))
   , _normdist( std::normal_distribution<meshaxis_t>( 0
@@ -126,8 +116,8 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
         break;
     }
 
-    #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
+    #if INOVESA_USE_OPENCL == 1
+    if (_oclh) {
     _cl_code += R"(
     __kernel void applySM_Y(const __global data_t* src,
                             const __global hi* sm,
@@ -149,10 +139,10 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
     }
     )";
 
-    _cl_prog = OCLH::prepareCLProg(_cl_code);
+    _cl_prog = _oclh->prepareCLProg(_cl_code);
 
-    if (OCLH::active) {
-        _sm_buf = cl::Buffer(OCLH::context,
+    if (_oclh) {
+        _sm_buf = cl::Buffer(_oclh->context,
                              CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                              sizeof(hi)*_ip*_ysize,
                              _hinfo);
@@ -168,7 +158,7 @@ vfps::FokkerPlanckMap::FokkerPlanckMap(std::shared_ptr<PhaseSpace> in,
 }
 
 vfps::FokkerPlanckMap::~FokkerPlanckMap() noexcept
-#ifdef INOVESA_ENABLE_CLPROFILING
+#if INOVESA_ENABLE_CLPROFILING == 1
 {
     saveTimings("FokkerPlanckMap");
 }
@@ -178,24 +168,24 @@ vfps::FokkerPlanckMap::~FokkerPlanckMap() noexcept
 
 void vfps::FokkerPlanckMap::apply()
 {
-    #ifdef INOVESA_USE_OPENCL
-    if (OCLH::active) {
-        #ifdef INOVESA_SYNC_CL
-        _in->syncCLMem(clCopyDirection::cpu2dev);
+    #if INOVESA_USE_OPENCL == 1
+    if (_oclh) {
+        #if INOVESA_SYNC_CL == 1
+        _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
-        OCLH::enqueueNDRangeKernel( applySM
+        _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
                                   , cl::NDRange(_meshxsize,_ysize)
-                                  #ifdef INOVESA_ENABLE_CLPROFILING
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
                                   , applySMEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
-        OCLH::enqueueBarrier();
-        #ifdef INOVESA_SYNC_CL
-        _out->syncCLMem(clCopyDirection::dev2cpu);
+        _oclh->enqueueBarrier();
+        #if INOVESA_SYNC_CL == 1
+        _out->syncCLMem(OCLH::clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
     } else
     #endif // INOVESA_USE_OPENCL
@@ -206,12 +196,13 @@ void vfps::FokkerPlanckMap::apply()
         for (meshindex_t x=0; x< _meshxsize; x++) {
             const meshindex_t offs = x*_ysize;
             for (meshindex_t y=0; y< _ysize; y++) {
-                data_out[offs+y] = 0;
+                meshdata_t value = 0;
                 for (uint_fast8_t j=0; j<_ip; j++) {
                     hi h = _hinfo[y*_ip+j];
-                    data_out[offs+y] += data_in[offs+h.index]
+                    value += data_in[offs+h.index]
                                      *  static_cast<meshdata_t>(h.weight);
                 }
+                data_out[offs+y] = value;
             }
         }
     }

@@ -1,32 +1,18 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2013-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef PHASESPACE_HPP
-#define PHASESPACE_HPP
+#pragma once
 
 #include <algorithm>
 #include <array>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 #include <GL/glew.h>
 #ifndef __APPLE__
 #include <GL/gl.h>
@@ -44,6 +30,8 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
+#include "Array.h"
+
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -60,29 +48,50 @@ public:
     };
 
 public:
-    enum class IntegralType : uint_fast8_t {
+    enum class IntegralMethod : uint_fast8_t {
         sum,simpson
     };
 
 public:
     PhaseSpace() = delete;
 
-    PhaseSpace(std::array<meshRuler_ptr,2> axis,
-               const double bunch_charge, const double bunch_current,
-               const double zoom=1, meshdata_t *data = nullptr);
+    PhaseSpace( std::array<meshRuler_ptr,2> axis
+              , oclhptr_t oclh
+              , const double bunch_charge
+              , const double bunch_current
+              , const uint32_t nbunches=1
+              , const double zoom=1
+              , meshdata_t* data = nullptr
+              );
 
-    PhaseSpace(meshRuler_ptr axis0,
-               meshRuler_ptr axis1,
-               const double bunch_charge, const double bunch_current,
-               const double zoom=1, meshdata_t *data = nullptr);
+    PhaseSpace( meshRuler_ptr axis0
+              , meshRuler_ptr axis1
+              , oclhptr_t oclh
+              , const double bunch_charge
+              , const double bunch_current
+              , const uint32_t nbunches=1
+              , const double zoom=1
+              , meshdata_t* data = nullptr
+              );
 
-    PhaseSpace(meshindex_t ps_size,
-               meshaxis_t xmin, meshaxis_t xmax,
-               meshaxis_t ymin, meshaxis_t ymax,
-               const double bunch_charge, const double bunch_current,
-               double xscale=0, double yscale=0,
-               const double zoom=1, meshdata_t *data = nullptr);
+    PhaseSpace( meshindex_t ps_size
+              , meshaxis_t qmin
+              , meshaxis_t qmax
+              , double qscale
+              , meshaxis_t pmin
+              , meshaxis_t pmax
+              , double pscale
+              , oclhptr_t oclh
+              , const double bunch_charge
+              , const double bunch_current
+              , const uint32_t nbunches=1
+              , const double zoom=1
+              , meshdata_t *data = nullptr
+              );
 
+    /**
+     * @brief PhaseSpace copy constructor
+     */
     PhaseSpace(const PhaseSpace& other);
 
     ~PhaseSpace() noexcept;
@@ -93,7 +102,10 @@ public:
       * @return pointer to array holding size<0>()*size<1>() data points
       */
     inline meshdata_t* getData() const
-    { return _data1D; }
+    { return _data(); }
+
+    inline auto operator [] (const unsigned int i)
+    { return _data[i]; }
 
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
@@ -104,8 +116,11 @@ public:
     inline meshaxis_t getMin(const uint_fast8_t x) const
     { return _axis[x]->min(); }
 
-    inline double getScale(const uint_fast8_t x) const
+    inline std::map<std::string,double> getScale(const uint_fast8_t x) const
     { return _axis[x]->scale(); }
+
+    inline double getScale(const uint_fast8_t x, std::string unit) const
+    { return _axis[x]->scale(unit); }
 
     /**
      * @brief getAxis
@@ -118,11 +133,10 @@ public:
     /**
      * @brief average
      * @param axis which axis? (0 -> x or 1 -> y)
-     * @return projection to axis
      *
      * relies on an up-t date _projection[axis]
      */
-    meshdata_t average(const uint_fast8_t axis);
+    void average(const uint_fast8_t axis);
 
     /**
      * @brief integral
@@ -132,7 +146,10 @@ public:
      */
     void integrate();
 
-    inline const integral_t& getIntegral() const
+    inline const Array::array1<integral_t> getBunchPopulation() const
+        { return _bunchpopulation; }
+
+    inline integral_t getIntegral() const
         { return _integral; }
 
     /**
@@ -142,19 +159,21 @@ public:
      *
      * relies on an up-to-date _projection[axis]
      */
-    meshdata_t variance(const uint_fast8_t axis);
+    void variance(const uint_fast8_t axis);
 
-    inline meshdata_t getBunchLength() const
-        { return std::sqrt(getMoment(0,1)); }
-
-    inline meshdata_t getEnergySpread() const
-        { return std::sqrt(getMoment(1,1)); }
-
-    inline meshdata_t getMoment(const uint_fast8_t x,const uint_fast16_t m) const
+    inline auto getMoment( const uint_fast8_t x
+                         , const uint_fast8_t m) const
         { return _moment[x][m]; }
 
+    inline const meshaxis_t* getBunchLength() const
+        { return _rms[0]; }
+
+    inline const meshaxis_t* getEnergySpread() const
+        { return _rms[1]; }
+
+
     inline const projection_t* getProjection(const uint_fast8_t x) const
-        { return _projection[x].data(); }
+        { return _projection[x]; }
 
     /**
      * @brief updateXProjection
@@ -173,21 +192,57 @@ public:
      *
      * normalize() does neither recompute the integral nor sets it to 1
      */
-    integral_t normalize();
-
-    inline meshdata_t* operator[](const meshindex_t i) const
-    { return _data[i]; }
+    Array::array1<integral_t> normalize();
 
     PhaseSpace& operator=(PhaseSpace other);
 
+    /**
+     * @brief nBunches number of RF buckets in simulation
+     * @return
+     */
+    inline uint32_t nBunches() const
+    { return _nbunches; }
+
+    /**
+     * @brief nMeshCells total number of mesh cells
+     * @return
+     */
     inline size_t nMeshCells() const
     { return _axis[0]->steps()*_axis[1]->steps(); }
 
-    inline size_t nMeshCells(const uint_fast8_t x) const
+    /**
+     * @brief nMeshCells number of mes cells in direction
+     * @param x direction (0: x, 1: y)
+     * @return
+     */
+    inline uint32_t nMeshCells(const uint_fast8_t x) const
     { return _axis[x]->steps(); }
 
-    inline meshaxis_t size(const uint_fast8_t x) const
-    { return _axis[x]->size(); }
+    /**
+     * @brief length in reduced coordinates
+     * @param x
+     * @return
+     */
+    inline meshaxis_t length(const uint_fast8_t x) const
+    { return _axis[x]->length(); }
+
+    /**
+     * @brief x grid coordinate of normalized position
+     * @param q
+     * @return
+     */
+    inline meshaxis_t x(const meshaxis_t q) const
+        { return std::min( std::max( 0.0f,(q-_axis[0]->min())/_axis[0]->delta() )
+                         , _nmeshcellsX-1.0f) ; }
+
+    /**
+     * @brief y grid coordinate of normalized energy
+     * @param p
+     * @return
+     */
+    inline meshaxis_t y(const meshaxis_t p) const
+        { return std::min( std::max( 0.0f,(p-_axis[1]->min())/_axis[1]->delta() )
+                         , _nmeshcellsY-1.0f) ; }
 
     /**
      * @brief q normalized position coordinate of grid point x
@@ -212,68 +267,110 @@ private:
 public:
     /**
      * @brief swap
-     * @param other
+     * @param first
+     * @param second
      */
     friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-    #ifdef INOVESA_USE_OPENCL
-    void syncCLMem(clCopyDirection dir, cl::Event* evt = nullptr);
-    #endif
+    #if INOVESA_USE_OPENCL == 1
+    void syncCLMem(OCLH::clCopyDirection dir, cl::Event* evt = nullptr);
+    #endif // INOVESA_USE_OPENCL
 
 protected:
     const std::array<meshRuler_ptr,2> _axis;
 
 public:
     /**
-     * @brief _charge conversion factor _integral -> bunch charge in C
+     * @brief charge conversion factor _integral -> bunch charge in C
      */
     const double charge;
 
     /**
-     * @brief _charge conversion factor _integral -> bunch current in A
+     * @brief current conversion factor _integral -> bunch current in A
      */
     const double current;
 
 protected:
-    /**
-     * @brief _integral as we work in normalitzed units, this should be 1
-     */
-    integral_t _integral;
-
-    std::array<std::vector<projection_t>,2> _projection;
-
     const uint32_t _nmeshcellsX;
 
     const uint32_t _nmeshcellsY;
 
+    const uint32_t _nbunches;
+
     const size_t _nmeshcells;
 
-    const IntegralType _integraltype;
+    const IntegralMethod _integralmethod;
 
-    meshdata_t** _data;
+    /**
+     * @brief _bunchpopulation as we work in normalitzed units,
+     * the sum should be 1
+     */
+    Array::array1<integral_t> _bunchpopulation;
 
-    meshdata_t* _data1D;
+    /**
+     * @brief _integral as we work in normalitzed units, this sum should be 1
+     */
+    integral_t _integral;
+
+    /**
+     * @brief _projection dimensions are orientation, bunch, x/y grid cell
+     */
+    Array::array3<projection_t> _projection;
+
+    /**
+     * @brief _data dimensions are: bunch, x coordinate, y coordinate
+     */
+    Array::array3<meshdata_t> _data;
 
     /**
      * @brief _moment: holds the moments for distributions
      *            in both axis in mesh coordinates
      *
+     * 0: x-Axis
+     * 1: y-axis
+     *
      * 0: average
      * 1: variance
      * 2: skewness
      * 3: kurtosis
+     *
+     * n: bunch number
      */
-    std::array<std::array<meshdata_t,4>,2> _moment;
+    Array::array3<meshaxis_t> _moment;
 
-    std::vector<meshdata_t> _ws;
 
-#ifdef INOVESA_USE_OPENCL
+    /**
+     * @brief _RMS
+     *
+     * 0: x-Axis
+     * 1: y-axis
+     *
+     * n: bunch number
+     */
+    Array::array2<meshaxis_t> _rms;
+
+    /**
+     * @brief _ws weights for Simpson integration
+     */
+    const Array::array1<meshdata_t> _ws;
+
+private:
+    oclhptr_t _oclh;
+
 public:
+    #if INOVESA_USE_OPENGL == 1
+    /**
+     * @brief projectionX_glbuf will only be allocated during CL/GL sharing
+     */
+    cl_GLuint projectionX_glbuf;
+    #endif // INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENCL == 1
+
     cl::Buffer data_buf;
 
-    cl::Buffer projectionX_buf;
+    cl::Buffer projectionX_clbuf;
 
-    cl::Buffer integral_buf;
+    cl::Buffer bunchpop_buf;
 
 private:
     cl::Program _clProgProjX;
@@ -297,7 +394,7 @@ private:
     static std::string cl_code_projection_x;
 #endif // INOVESA_USE_OPENCL
 
-public:
+private:
     void createFromProjections();
 
     /**
@@ -305,7 +402,13 @@ public:
      * @param axis
      * @param zoom
      */
-    void gaus(const uint_fast8_t axis, const double zoom);
+    void gaus(const uint_fast8_t axis, const uint32_t bunch, const double zoom);
+
+    /**
+     * @brief simpsonWeights helper function to allow for const _ws
+     * @return
+     */
+    const Array::array1<meshdata_t> simpsonWeights();
 };
 
 /**
@@ -318,5 +421,3 @@ public:
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
 }
-
-#endif // PHASESPACE_HPP
