@@ -20,7 +20,8 @@ The [contibuting file](CONTRIBUTING.md) is a good starting point.
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
 [![Inovesa build status (branch: Master)](https://travis-ci.org/Inovesa/Inovesa.svg?branch=master)](https://travis-ci.org/Inovesa/Inovesa/branches)
-
+[![Code quality alerts](https://img.shields.io/lgtm/alerts/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/alerts/)
+[![Code quality grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/context:cpp)
 
 Publications
 ------------
