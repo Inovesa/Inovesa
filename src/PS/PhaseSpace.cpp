@@ -36,9 +36,9 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
   , _ws(simpsonWeights())
   , _oclh(nullptr) // OpenCL will be disabled during dirst initialization steps
-  #if INOVESA_USE_OPENGL == 1
+  #if INOVESA_USE_OPENCL == 1 && INOVESA_USE_OPENGL == 1
   , projectionX_glbuf(0)
-  #endif // INOVESA_USE_OPENGL
+  #endif // INOVESA_USE_OPENCL && INOVESA_USE_OPENGL
   #if INOVESA_ENABLE_CLPROFILING == 1
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
   , integEvents(std::make_unique<cl::vector<cl::Event*>>())
