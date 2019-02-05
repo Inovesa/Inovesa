@@ -223,6 +223,7 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
         }
         #endif
     }
+
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
     for (meshindex_t n=0; n<_nbunches; n++) {
         integral_t avg = 0;
@@ -231,7 +232,7 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
                 avg += _projection[axis][n][i]*_qp(axis,i);
             }
 
-            // _projection is normalized in p/q coordinates
+            // _projection is normalized in p/q coordinates with respect to charge
             avg *= getDelta(axis)/_filling[n];
         }
 
@@ -251,7 +252,7 @@ void vfps::PhaseSpace::variance(const uint_fast8_t axis)
                                                         -_moment[axis][0][n],2);
             }
 
-            // _projection is normalized in p/q coordinates
+            // _projection is normalized in p/q coordinates with respect to charge
             var *= getDelta(axis)/_filling[n];
         }
 

@@ -456,10 +456,13 @@ private:
     oclhptr_t _oclh;
 
 public:
-
     #if INOVESA_USE_OPENGL == 1
     /**
-     * @brief projectionX_glbuf will only be allocated during CL/GL sharing
+     * @brief buffer to show projection in OpenGL view
+     *
+     * projectionX_glbuf will be allocated by the constructor
+     * if CL/GL sharing is enabled. Else, it will just hold
+     * 0 and allocation is left to the Inovesa displaying system.
      */
     #if INOVESA_USE_OPENCL == 1
     cl_GLuint projectionX_glbuf;
@@ -468,8 +471,8 @@ public:
     #endif // INOVESA_USE_OPENCL != 1
     #endif // INOVESA_USE_OPENGL == 1
 
-    #if INOVESA_USE_OPENCL == 1
 
+    #if INOVESA_USE_OPENCL == 1
     cl::Buffer data_buf;
 
     cl::Buffer projectionX_clbuf;

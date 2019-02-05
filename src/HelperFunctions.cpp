@@ -79,8 +79,7 @@ const std::string vfps::inovesa_version(const bool verbose,
                 << ", Commit: "<< commit;
      }
     if (verbose) {
-        sstream << std::endl << "Build options:"
-                << std::endl << "Compiler:"
+        sstream << std::endl << "Compiler:"
                 << std::endl << '\t' << BOOST_COMPILER
                 << std::endl << "Build options:"
                 #if DEBUG == 1
