@@ -20,7 +20,7 @@ vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
                           , const bool interpol_clamp
                           , oclhptr_t oclh
                           )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  : KickMap( in,out,xsize,ysize,1U,it,interpol_clamp,Axis::y, oclh)
   , _linear(true)
   , _angle(angle)
   , _revolutionpart(0)
@@ -45,7 +45,7 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , const bool interpol_clamp
                           , oclhptr_t oclh
                           )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  : KickMap( in,out,xsize,ysize,1U,it,interpol_clamp,Axis::y, oclh)
   , _linear(false)
   , _angle(0)
   , _revolutionpart(revolutionpart)

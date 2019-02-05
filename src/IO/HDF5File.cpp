@@ -8,7 +8,7 @@
 #if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
 vfps::HDF5File::HDF5File(const std::string filename,
                          const std::shared_ptr<PhaseSpace> ps,
@@ -20,10 +20,11 @@ vfps::HDF5File::HDF5File(const std::string filename,
                          const double f_rev)
   : _fname( filename )
   , _file( _prepareFile() )
-  , _nBunches( ps->nBunches() )
+  , _nBuckets( (ef != nullptr)? ef->getBuckets().size() : 0)
+  , _nBunches( PhaseSpace::nb )
   , _nParticles( nparticles )
-  , _psSizeX( ps->nMeshCells(0) )
-  , _psSizeY( ps->nMeshCells(1) )
+  , _psSizeX( PhaseSpace::nx )
+  , _psSizeY( PhaseSpace::ny )
   , _maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 )
   , _impSize( imp != nullptr ? imp->nFreqs()/2 : 0 )
   , _positionAxis(_makeDatasetInfo<1,meshaxis_t>( "/Info/AxisValues_z"
@@ -42,6 +43,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                              , {{0}},{{256}},{{H5F_UNLIMITED}}))
   , _timeAxisPS(_makeDatasetInfo<1,timeaxis_t>( "/PhaseSpace/axis0"
                                            , {{0}},{{256}},{{H5F_UNLIMITED}}))
+  , _bucketNumbers(_makeDatasetInfo<1,uint32_t>( "/Info/BucketNumbers"
+                                              , {{_nBuckets}}
+                                              , {{std::min(2048U,_nBuckets)}}
+                                              , {{_nBuckets}}))
   , _bunchPopulation(_makeDatasetInfo<2,integral_t>( "/BunchPopulation/data"
                                                   , {{0,_nBunches}}
                                                   , {{256,_nBunches}}
@@ -53,6 +58,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                   , std::min(256U,_psSizeX) }}
                                                , {{ H5S_UNLIMITED,_nBunches
                                                   , _psSizeX }} ))
+  , _paddedProfile(_makeDatasetInfo<2,integral_t>("/BunchProfile/padded"
+                                                 , {{0,_impSize}}
+                                                 , {{2,std::min(256U,_psSizeX)}}
+                                                 , {{H5S_UNLIMITED,_impSize}}))
   , _bunchLength( _makeDatasetInfo<2,meshaxis_t>( "/BunchLength/data"
                                                , {{ 0, _nBunches }}
                                                , {{ 256, 1 }}
@@ -93,6 +102,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                     , std::min(256U,_psSizeX) }}
                                                  , {{ H5S_UNLIMITED,_nBunches
                                                     , _psSizeX }} ))
+  , _paddedPotential(_makeDatasetInfo<2,integral_t>("/WakePotential/padded"
+                                                 , {{0,_impSize}}
+                                                 , {{2,std::min(256U,_psSizeX)}}
+                                                 , {{H5S_UNLIMITED,_impSize}}))
   , _csrSpectrum(_makeDatasetInfo<3,meshaxis_t>( "/CSR/Spectrum/data"
                                                , {{ 0, _nBunches, _maxn }}
                                                , {{ 64, 1
@@ -167,7 +180,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _bunchPopulation.dataset.createAttribute("Coulomb",_bunchPopulation.datatype,
             H5::DataSpace()).write(_bunchPopulation.datatype,&(ps->charge));
 
+    if (ef != nullptr) {
+        _bucketNumbers.dataset.write( ef->getBuckets().data()
+                                    , _bucketNumbers.datatype);
+    }
+
+
     // actual data
+
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis0" );
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/BunchProfile/axis1" );
 
@@ -332,7 +352,13 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     if (fullspectrum) {
         _appendData(_csrSpectrum,ef->getCSRSpectrum());
     }
-    _appendData(_csrIntensity,&ef->getCSRPower());
+    _appendData(_csrIntensity,ef->getCSRPower());
+}
+
+void vfps::HDF5File::appendPadded(const vfps::ElectricField *ef)
+{
+    _appendData(_paddedProfile,ef->getPaddedProfile());
+    _appendData(_paddedPotential,ef->getPaddedWakepotential());
 }
 
 void vfps::HDF5File::appendRFKicks(
@@ -363,13 +389,13 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
 
     if (at != AppendType::PhaseSpace) {
         _appendData(_timeAxis,&t);
-        _appendData(_bunchProfile,ps.getProjection(0));
+        _appendData(_bunchProfile,ps.getProjection(0).data());
         _appendData(_bunchLength,ps.getBunchLength());
         {
         auto mean_q = ps.getMoment(0,0);
         _appendData(_bunchPosition,mean_q.data());
         }
-        _appendData(_energyProfile,ps.getProjection(1));
+        _appendData(_energyProfile,ps.getProjection(1).data());
         _appendData(_energySpread,ps.getEnergySpread());
         {
         auto mean_E = ps.getMoment(1,0);
@@ -440,11 +466,14 @@ vfps::HDF5File::readPhaseSpace( std::string fname
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    auto ps = std::make_unique<PhaseSpace>( ps_size
-                                          , qmin,qmax,bl
+    std::vector<integral_t> filling = {{ 1.0 }};
+
+    PhaseSpace::setSize(ps_size, filling.size());
+
+    auto ps = std::make_unique<PhaseSpace>( qmin,qmax,bl
                                           , pmin,pmax,dE
                                           , oclh
-                                          , Qb,Ib_unscaled,1U,1
+                                          , Qb,Ib_unscaled,filling,1
                                           );
     ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
 
@@ -484,7 +513,7 @@ vfps::HDF5File::_makeDatasetInfo( std::string name
 
     H5::DataType rv_datatype;
     if (std::is_same<datatype,float>::value) {
-            rv_datatype = H5::PredType::IEEE_F32LE;
+        rv_datatype = H5::PredType::IEEE_F32LE;
     } else if (std::is_same<datatype,double>::value) {
         rv_datatype = H5::PredType::IEEE_F64LE;
     }else if (std::is_same<datatype,uint32_t>::value) {

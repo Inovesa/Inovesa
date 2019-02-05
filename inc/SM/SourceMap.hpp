@@ -110,11 +110,6 @@ protected:
     hi* const _hinfo;
 
     /**
-     * @brief _size size of the SourceMap (_xsize*_ysize)
-     */
-    const meshindex_t _size;
-
-    /**
      * @brief _xsize horizontal size of the SourceMap (in grid points)
      */
     const meshindex_t _xsize;
@@ -167,8 +162,8 @@ protected:
      * @param f distance from lower mesh point
      * @param it number of interpolation coefficiants (size of ic)
      */
-    void calcCoefficiants(interpol_t* ic, const interpol_t f,
-                          const uint_fast8_t it) const;
+    static void calcCoefficiants(interpol_t* ic, const interpol_t f,
+                          const uint_fast8_t it);
 
     static void notClampedMessage();
 

@@ -7,7 +7,7 @@
 
 #include "SM/SourceMap.hpp"
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
 vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
@@ -21,7 +21,6 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
   : _ip(interpoints)
   , _it(intertype)
   , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
-  , _size(xsize*ysize)
   , _xsize(xsize)
   , _ysize(ysize)
   #if INOVESA_ENABLE_CLPROFILING == 1
@@ -83,7 +82,7 @@ void vfps::SourceMap::apply()
         #endif // INOVESA_SYNC_CL
         _oclh->enqueueNDRangeKernel( applySM
                                   , cl::NullRange
-                                  , cl::NDRange(_size)
+                                  , cl::NDRange(PhaseSpace::nxy)
                                   #if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
@@ -100,7 +99,7 @@ void vfps::SourceMap::apply()
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();
 
-        for (meshindex_t i=0; i< _size; i++) {
+        for (meshindex_t i=0; i< PhaseSpace::nxy; i++) {
             data_out[i] = 0;
             for (meshindex_t j=0; j<_ip; j++) {
                 hi h = _hinfo[i*_ip+j];
@@ -142,7 +141,7 @@ void vfps::SourceMap::genCode4SM1D()
 
 void vfps::SourceMap::calcCoefficiants(vfps::interpol_t* ic,
                                          const vfps::interpol_t f,
-                                         const uint_fast8_t it) const
+                                         const uint_fast8_t it)
 {
     switch (it) {
     case InterpolationType::none:

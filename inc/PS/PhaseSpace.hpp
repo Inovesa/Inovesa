@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <array>
+#include <boost/multi_array.hpp>
 #include <cfloat>
 #include <cmath>
 #include <fstream>
@@ -48,45 +49,48 @@ public:
     };
 
 public:
-    enum class IntegralMethod : uint_fast8_t {
-        sum,simpson
-    };
-
-public:
     PhaseSpace() = delete;
 
-    PhaseSpace( std::array<meshRuler_ptr,2> axis
+    /**
+     * PhaseSpace initalizing constructor
+     */
+    PhaseSpace(std::array<meshRuler_ptr,2> axis
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
-              , meshdata_t* data = nullptr
+              , const meshdata_t *data = nullptr
               );
 
-    PhaseSpace( meshRuler_ptr axis0
+    /**
+     * PhaseSpace initalizing constructor
+     */
+    PhaseSpace(meshRuler_ptr axis0
               , meshRuler_ptr axis1
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
-              , meshdata_t* data = nullptr
+              , const meshdata_t* data = nullptr
               );
 
-    PhaseSpace( meshindex_t ps_size
-              , meshaxis_t qmin
+    /**
+     * @brief PhaseSpace initalizing constructor
+     */
+    PhaseSpace( meshaxis_t qmin
               , meshaxis_t qmax
               , double qscale
               , meshaxis_t pmin
               , meshaxis_t pmax
               , double pscale
               , oclhptr_t oclh
-              , const double bunch_charge
-              , const double bunch_current
-              , const uint32_t nbunches=1
+              , const double beam_charge
+              , const double beam_current
+              , const std::vector<integral_t> filling={{1}}
               , const double zoom=1
-              , meshdata_t *data = nullptr
+              , const meshdata_t* data = nullptr
               );
 
     /**
@@ -101,8 +105,11 @@ public:
       *
       * @return pointer to array holding size<0>()*size<1>() data points
       */
-    inline meshdata_t* getData() const
-    { return _data(); }
+    inline const meshdata_t* getData() const
+    { return _data.data(); }
+
+    inline meshdata_t* getData()
+    { return _data.data(); }
 
     inline auto operator [] (const unsigned int i)
     { return _data[i]; }
@@ -116,10 +123,10 @@ public:
     inline meshaxis_t getMin(const uint_fast8_t x) const
     { return _axis[x]->min(); }
 
-    inline std::map<std::string,double> getScale(const uint_fast8_t x) const
+    inline const auto& getScale(const uint_fast8_t x) const
     { return _axis[x]->scale(); }
 
-    inline double getScale(const uint_fast8_t x, std::string unit) const
+    inline auto getScale(const uint_fast8_t x, std::string unit) const
     { return _axis[x]->scale(unit); }
 
     /**
@@ -146,8 +153,11 @@ public:
      */
     void integrate();
 
-    inline const Array::array1<integral_t> getBunchPopulation() const
-        { return _bunchpopulation; }
+    inline const std::vector<integral_t> getBunchPopulation() const
+        { return _filling; }
+
+    inline auto getSetBunchPopulation() const
+        { return _filling_set; }
 
     inline integral_t getIntegral() const
         { return _integral; }
@@ -161,6 +171,11 @@ public:
      */
     void variance(const uint_fast8_t axis);
 
+    /**
+     * @brief getMoment
+     * @param x axis
+     * @param m m-th moment
+     */
     inline auto getMoment( const uint_fast8_t x
                          , const uint_fast8_t m) const
         { return _moment[x][m]; }
@@ -172,7 +187,8 @@ public:
         { return _rms[1]; }
 
 
-    inline const projection_t* getProjection(const uint_fast8_t x) const
+    inline const Array::array2<projection_t>
+    getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
     /**
@@ -192,22 +208,33 @@ public:
      *
      * normalize() does neither recompute the integral nor sets it to 1
      */
-    Array::array1<integral_t> normalize();
+    inline const std::vector<integral_t>& integrateAndNormalize() {
+        integrate();
+        normalize();
+        return _filling;
+    }
 
-    PhaseSpace& operator=(PhaseSpace other);
+    const std::vector<integral_t>& normalize();
+
+    /**
+     * @brief operator = unifying assignment operator
+     * @param other
+     * @return
+     */
+    PhaseSpace& operator =(PhaseSpace other);
 
     /**
      * @brief nBunches number of RF buckets in simulation
      * @return
      */
-    inline uint32_t nBunches() const
+    inline meshindex_t nBunches() const
     { return _nbunches; }
 
     /**
      * @brief nMeshCells total number of mesh cells
      * @return
      */
-    inline size_t nMeshCells() const
+    inline meshindex_t nMeshCells() const
     { return _axis[0]->steps()*_axis[1]->steps(); }
 
     /**
@@ -215,7 +242,7 @@ public:
      * @param x direction (0: x, 1: y)
      * @return
      */
-    inline uint32_t nMeshCells(const uint_fast8_t x) const
+    inline meshindex_t nMeshCells(const uint_fast8_t x) const
     { return _axis[x]->steps(); }
 
     /**
@@ -267,10 +294,11 @@ private:
 public:
     /**
      * @brief swap
-     * @param first
-     * @param second
+     * @param other
+     *
+     * @todo adjust to also swap cl::Buffer and other elements
      */
-    friend void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
+    void swap(PhaseSpace& other) noexcept;
 
     #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir, cl::Event* evt = nullptr);
@@ -290,27 +318,95 @@ public:
      */
     const double current;
 
+public:
+    /**
+     * @brief nx reference to _nmeshcellsX
+     */
+    static const meshindex_t& nx;
+
+    /**
+     * @brief ny reference to _nmeshcellsY
+     */
+    static const meshindex_t& ny;
+
+    /**
+     * @brief nb reference to _nbunches
+     */
+    static const meshindex_t& nb;
+
+    /**
+     * @brief nxy reference to _nmeshcells
+     */
+    static const meshindex_t& nxy;
+
+    /**
+     * @brief nxy reference to _totalmeshcells
+     */
+    static const meshindex_t& nxyb;
+
+
+    #if INOVESA_ALLOW_PS_RESET == 1
+    /**
+     * @brief resetSize relevant for unit tests
+     */
+    inline static void resetSize()
+        { _firstinit = true; }
+
+
+    static void resetSize( const meshindex_t x,
+                           const meshindex_t b)
+    {
+        resetSize();
+        setSize(x,b);
+    }
+
+    #endif
+
+    /**
+     * @brief setSize one-time setter for sizes
+     * @param x
+     * @param b
+     *
+     * As all grids have to have the same size, it is set globally.
+     */
+    static void setSize(const meshindex_t x,
+                        const meshindex_t b);
+
 protected:
-    const uint32_t _nmeshcellsX;
+    static bool _firstinit;
 
-    const uint32_t _nmeshcellsY;
+    static meshindex_t _nmeshcellsX;
 
-    const uint32_t _nbunches;
+    static meshindex_t _nmeshcellsY;
 
-    const size_t _nmeshcells;
+    static meshindex_t _nbunches;
 
-    const IntegralMethod _integralmethod;
+    static meshindex_t _nmeshcells;
+
+    static meshindex_t _totalmeshcells;
+
+protected:
+    /**
+     * @brief _fillingpattern: normalized bunch charges as they should be
+     *
+     * as we work in normalitzed units, the sum should be 1, e.g. {0.25,0.75},
+     * empty buckets are omited
+     */
+    const std::vector<integral_t> _filling_set;
 
     /**
-     * @brief _bunchpopulation as we work in normalitzed units,
-     * the sum should be 1
+     * @brief _bunchpopulation: normalized bunch charges as they are
+     *
+     * ideally, this is the same as _filling_set
      */
-    Array::array1<integral_t> _bunchpopulation;
+    std::vector<integral_t> _filling;
 
-    /**
-     * @brief _integral as we work in normalitzed units, this sum should be 1
-     */
-    integral_t _integral;
+   /**
+    * @brief _integral
+    *
+    * as we work in normalitzed units, this should be 1
+    */
+   integral_t _integral;
 
     /**
      * @brief _projection dimensions are orientation, bunch, x/y grid cell
@@ -320,7 +416,7 @@ protected:
     /**
      * @brief _data dimensions are: bunch, x coordinate, y coordinate
      */
-    Array::array3<meshdata_t> _data;
+    boost::multi_array<meshdata_t,3> _data;
 
     /**
      * @brief _moment: holds the moments for distributions
@@ -351,8 +447,10 @@ protected:
 
     /**
      * @brief _ws weights for Simpson integration
+     *
+     * assumes nx == ny
      */
-    const Array::array1<meshdata_t> _ws;
+    const std::vector<meshdata_t> _ws;
 
 private:
     oclhptr_t _oclh;
@@ -392,7 +490,7 @@ private:
     static std::string cl_code_integral;
 
     static std::string cl_code_projection_x;
-#endif // INOVESA_USE_OPENCL
+    #endif // INOVESA_USE_OPENCL == 1
 
 private:
     void createFromProjections();
@@ -402,22 +500,27 @@ private:
      * @param axis
      * @param zoom
      */
-    void gaus(const uint_fast8_t axis, const uint32_t bunch, const double zoom);
+    void gaus(const uint_fast8_t axis,
+              const meshindex_t bunch,
+              const double zoom);
 
     /**
      * @brief simpsonWeights helper function to allow for const _ws
      * @return
      */
-    const Array::array1<meshdata_t> simpsonWeights();
+    const std::vector<meshdata_t> simpsonWeights();
 };
 
-/**
- * @brief swap
- * @param first
- * @param second
- *
- * @todo adjust to also swap cl::Buffer
- */
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
 
-}
+} // namespace vfps
+
+namespace std {
+/**
+ * @brief specialization of std::swap to use the above vfps::swap
+ */
+template<>
+inline void swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second)
+    {vfps::swap(first, second); }
+
+} // namespace std

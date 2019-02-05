@@ -15,7 +15,7 @@ namespace vfps
 class ParallelPlatesCSR : public Impedance
 {
 public:
-    ParallelPlatesCSR( const size_t n
+    ParallelPlatesCSR( const size_t nfreqs
                      , const frequency_t f0
                      , const frequency_t f_max
                      , const double g
@@ -24,7 +24,7 @@ public:
 
 private:
     static std::vector<vfps::impedance_t>
-    __calcImpedance(const size_t n,
+    __calcImpedance(const size_t nfreqs,
                     const frequency_t f0,
                     const frequency_t f_max,
                     const double g);

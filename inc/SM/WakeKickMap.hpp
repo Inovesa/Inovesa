@@ -29,24 +29,30 @@ public:
                , const meshindex_t xsize, const meshindex_t ysize
                , const InterpolationType it, const bool interpol_clamp
                , oclhptr_t oclh
-               #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
+               #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
                , cl_GLuint glbuf
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
 
-    ~WakeKickMap() noexcept;
+    ~WakeKickMap() noexcept override;
 
 public:
     virtual void update()=0;
 
-#if INOVESA_USE_OPENGL == 1
+
+#if (INOVESA_USE_OPENGL == 1) && (INOVESA_USE_OPENCL == 1)
     cl_GLuint getGLBuffer() const
         { return _offset_glbuf; }
 
 protected:
     cl_GLuint _offset_glbuf;
+#elif INOVESA_USE_OPENGL == 1
+    GLuint getGLBuffer() const
+        { return _offset_glbuf; }
 
-#endif // INOVESA_USE_OPENGL
+protected:
+    GLuint _offset_glbuf;
+#endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
 };
 
 } // namespace VFPS

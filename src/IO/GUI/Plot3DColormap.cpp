@@ -146,7 +146,7 @@ void vfps::Plot3DColormap::createTexture(std::shared_ptr<vfps::PhaseSpace> mesh)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-    size_t npixels = mesh->nMeshCells();
+    size_t npixels = PhaseSpace::nxy;
     float* data = new float[3*npixels];
     vfps::meshdata_t* meshdata = mesh->getData();
     float newmax=std::numeric_limits<vfps::meshdata_t>::min();
@@ -159,7 +159,7 @@ void vfps::Plot3DColormap::createTexture(std::shared_ptr<vfps::PhaseSpace> mesh)
         }
         maxValue = newmax;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-                 mesh->nMeshCells(0), mesh->nMeshCells(1),
+                 PhaseSpace::nx, PhaseSpace::ny,
                  0, GL_RGB, GL_FLOAT, data);
     delete [] data;
 

@@ -40,7 +40,7 @@ public:
                    , oclhptr_t oclh
                    );
 
-    ~WakeFunctionMap() noexcept;
+    ~WakeFunctionMap() noexcept override;
 
 public:
     inline const meshaxis_t* getWakeFunction() const

@@ -28,7 +28,7 @@ public:
                     , oclhptr_t oclh
                     );
 
-    ~WakePotentialMap() noexcept;
+    ~WakePotentialMap() noexcept override;
 
 public:
     /**

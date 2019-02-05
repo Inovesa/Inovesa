@@ -23,7 +23,7 @@ public:
   : SourceMap( in, out, xsize, ysize, 0, 0, oclh)
 {}
 
-    ~Identity() noexcept;
+    ~Identity() noexcept override;
 
     /**
      * @brief apply copys data from in to out
@@ -36,7 +36,7 @@ public:
             _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
             _oclh->enqueueCopyBuffer( _in->data_buf, _out->data_buf
-                                   , 0,0,sizeof(meshdata_t)*_size
+                                   , 0,0,sizeof(meshdata_t)*PhaseSpace::nxy
                                    #if INOVESA_ENABLE_CLPROFILING == 1
                                    , nullptr,nullptr
                                    , applySMEvents.get()
@@ -49,9 +49,9 @@ public:
         } else
         #endif // INOVESA_USE_OPENCL
         {
-            meshdata_t* data_in = _in->getData();
-            meshdata_t* data_out = _out->getData();
-            std::copy_n(data_in,_size,data_out);
+            auto data_in = _in->getData();
+            auto data_out = _out->getData();
+            std::copy_n(data_in,PhaseSpace::nb*PhaseSpace::nxy,data_out);
         }
     }
 

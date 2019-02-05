@@ -28,14 +28,15 @@ public:
     };
 
 public:
-    KickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
+    KickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
            , const meshindex_t xsize, const meshindex_t ysize
+           , const meshindex_t nbunches
            , const InterpolationType it, const bool interpol_clamp
            , const Axis kd
            , oclhptr_t oclh
            );
 
-    ~KickMap() noexcept;
+    ~KickMap() noexcept override;
 
 public:
     const inline meshaxis_t* getForce() const
@@ -82,6 +83,12 @@ protected:
     #else
     const meshindex_t _meshsize_pd;
     #endif // INOVESA_USE_OPENCL
+
+
+    /**
+     * @brief _lastbunch index of last bunch with individual KickMap
+     */
+    uint32_t _lastbunch;
 
     /**
      * @brief updateSM

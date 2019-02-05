@@ -29,8 +29,8 @@ class Ruler
 public:
     Ruler() = delete;
 
-    Ruler(meshindex_t steps, ruler_t min, ruler_t max
-          , std::map<std::string,double> scale)
+    Ruler(meshindex_t steps, ruler_t min, ruler_t max,
+          std::map<std::string,ruler_t> scale = std::map<std::string,ruler_t>())
       : _steps(steps)
       , _max(max)
       , _min(min)
@@ -64,45 +64,43 @@ public:
     }
 
     ~Ruler() noexcept
-    {
-        delete [] _data;
-    }
+        { delete [] _data; }
 
-    inline const ruler_t& at(meshindex_t d) const
+    inline auto at(meshindex_t d) const
         { return _data[d]; }
 
-    inline const ruler_t* data() const
+    inline const auto* data() const
         { return _data; }
 
-    inline const ruler_t max() const
+    inline auto max() const
         {return _max;}
 
-    inline const ruler_t min() const
+    inline auto min() const
         { return _min; }
 
-    std::map<std::string,double> scale() const
+  inline auto& scale() const
         { return _scale; }
 
-    inline double scale(std::string unit) const
+    inline auto scale(std::string unit) const
         { return _scale.at(unit); }
 
-    inline meshindex_t steps() const
+    inline auto steps() const
         { return _steps; }
 
-    inline const ruler_t delta() const
+    inline auto delta() const
         { return _delta; }
 
-    inline const ruler_t length() const
+    inline auto length() const
         { return _max - _min; }
 
-    inline const ruler_t zerobin() const
+    inline auto zerobin() const
         { return _zerobin; }
 
-    inline const ruler_t& operator[](meshindex_t d) const
+    inline auto operator[](meshindex_t d) const
         { return at(d); }
 
     /**
-     * @brief operator == compares grids
+     * @brief operator == compares ruler dimensions (not the scales)
      * @param other grid to compare
      * @return true (same dimensions) or false (different dimensions)
      */
@@ -129,7 +127,7 @@ protected:
      */
     const ruler_t _delta;
 
-    const std::map<std::string,double> _scale;
+    const std::map<std::string,ruler_t> _scale;
 
     const ruler_t _zerobin;
 };

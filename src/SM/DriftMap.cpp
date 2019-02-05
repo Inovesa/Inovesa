@@ -14,18 +14,20 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
                         , const meshindex_t xsize
                         , const meshindex_t ysize
                         , const std::vector<meshaxis_t> slip
-                        , const double E0
+                        , const meshaxis_t E0
                         , const InterpolationType it
                         , const bool interpol_clamp
                         , oclhptr_t oclh
                         )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::x,oclh)
+  : KickMap( in,out,xsize,ysize,1U,it,interpol_clamp,Axis::x,oclh)
 {
     for(meshindex_t y=0; y<_ysize; y++) {
         _offset[y] = 0;
-        for (size_t i=0; i<slip.size(); i++) {
-            _offset[y] += slip[i]*_axis[1]->at(y)
-                       *  std::pow(_axis[1]->at(y)*_axis[1]->scale("ElectronVolt")/E0,i);
+        for (meshindex_t i=0; i<slip.size(); i++) {
+            _offset[y] += slip[i]*_axis[1]->at(y) *
+                          std::pow( _axis[1]->at(y) *
+                                    _axis[1]->scale("ElectronVolt")/E0,
+                                    static_cast<meshaxis_t>(i));
         }
         _offset[y] /= _axis[0]->delta();
     }

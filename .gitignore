@@ -9,7 +9,7 @@ InovesaConfig.hpp
 *.fftw
 *.pyc
 
-# files created by/for MS Visual Studio
+# files created by/for other applications
 .vs/
 Win32/
 inovesa.dir/
@@ -17,3 +17,6 @@ inovesa.dir/
 *.vcxproj.filters
 *.vcxproj.user
 *.sln
+
+.directory
+

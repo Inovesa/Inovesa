@@ -59,6 +59,13 @@ public:
     void append(const ElectricField* ef, const bool fullspectrum = true);
 
     /**
+     * @brief savePaddedProfile
+     * @param ef
+     * @param timestep 0 or 1 (for start or end of simulation)
+     */
+    void appendPadded(const ElectricField* ef);
+
+    /**
      * @brief The AppendType enum
      *
      * All: save everything
@@ -110,7 +117,9 @@ private:
 
     H5::H5File _file;
 
-    const meshindex_t _nBunches;
+    const uint32_t _nBuckets;
+
+    const uint32_t _nBunches;
 
     const uint32_t _nParticles;
 
@@ -136,9 +145,13 @@ private: // values for phase space axis
 
     DatasetInfo<1> _timeAxisPS;
 
+    DatasetInfo<1> _bucketNumbers;
+
     DatasetInfo<2> _bunchPopulation;
 
     DatasetInfo<3> _bunchProfile;
+
+    DatasetInfo<2> _paddedProfile;
 
     DatasetInfo<2> _bunchLength;
 
@@ -155,6 +168,8 @@ private: // values for phase space axis
     DatasetInfo<2> _dynamicRFKick;
 
     DatasetInfo<3> _wakePotential;
+
+    DatasetInfo<2> _paddedPotential;
 
     DatasetInfo<3> _csrSpectrum;
 

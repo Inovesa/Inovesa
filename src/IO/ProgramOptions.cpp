@@ -11,6 +11,7 @@
 
 vfps::ProgramOptions::ProgramOptions() :
     _configfile("default.cfg"),
+    I_b({{3e-3f}}),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),
@@ -54,8 +55,10 @@ vfps::ProgramOptions::ProgramOptions() :
             "Select step of HDF5 file for initial distribution")
         ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
             "Magnification for generation of initial distribution")
-        ("BunchCurrent,I", po::value<double>(&I_b)->default_value(3e-3,"3e-3"),
-            "Ring Current due to a single bunch (A)")
+        ("BunchCurrent,I", po::value<std::vector<integral_t>>(&I_b)->multitoken(),
+            "Bunch currents (A)\n"
+            " 0: empty bucket (long gap)\n"
+            ">0: bucket containing electrons")
         ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
             "Bending radius of accelerator (m)\n"
             "negative: calculate from RevolutionFrequency")
@@ -70,7 +73,7 @@ vfps::ProgramOptions::ProgramOptions() :
             "<0: free space CSR\n"
             " 0: no CSR\n"
             ">0: parallel plates CSR\n"
-            "(|G| used as size of the beam pipe for other impedances)")
+            "(|G| is used as size of the beam pipe for other impedances)")
         ("UseCSR", po::value<bool>(&use_csr)->default_value(true),
             "Switch to turn off CSR for VacuumGap != 0")
         ("CollimatorRadius", po::value<double>(&collimator)->default_value(0),
@@ -167,7 +170,7 @@ vfps::ProgramOptions::ProgramOptions() :
         ("StepsPerRevolution", po::value<double>(&steps_per_Trev)->default_value(0),
             "Simulation steps for one revolution (overwrites StepsPerTs)")
         ("padding,p", po::value<double>(&padding)->default_value(8.0),
-            "Factor for zero padding of bunch profile")
+            "Factor for zero padding of single bunch profile(s)")
         ("RoundPadding", po::value<bool>(&roundpadding)->default_value(true),
             "Always do zero padding up to 2 to the power of N")
         ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),

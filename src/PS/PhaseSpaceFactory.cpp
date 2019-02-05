@@ -21,15 +21,15 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                     , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                     , oclhptr_t oclh
-                    , const double bunch_charge
-                    , const double bunch_current
+                    , const double beam_charge
+                    , const double beam_current
                     , double xscale, double yscale
                     )
 {
     try {
         auto ps = HDF5File::readPhaseSpace(fname,qmin,qmax,pmin,pmax
                                           , oclh
-                                          , bunch_charge,bunch_current,
+                                          , beam_charge,beam_current,
                                            xscale,yscale,startdiststep);
         #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
@@ -59,8 +59,8 @@ vfps::makePSFromPNG( std::string fname
                    , meshaxis_t qmin, meshaxis_t qmax
                    , meshaxis_t pmin, meshaxis_t pmax
                    , oclhptr_t oclh
-                   , const double bunch_charge
-                   , const double bunch_current
+                   , const double beam_charge
+                   , const double beam_current
                    , double qscale, double pscale
                    )
 {
@@ -82,19 +82,21 @@ vfps::makePSFromPNG( std::string fname
     if (image.get_width() == image.get_height()) {
         meshindex_t ps_size = image.get_height();
 
-        std::vector<meshdata_t> data(ps_size*ps_size);
+        std::vector<meshdata_t> data(static_cast<meshindex_t>(ps_size*ps_size));
 
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
                 data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
             }
         }
-        auto ps = std::make_unique<PhaseSpace>( ps_size
-                                              , qmin, qmax, qscale
+
+        std::vector<integral_t> filling = {{ 1.0 }};
+        PhaseSpace::setSize(ps_size, filling.size());
+        auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                               , pmin, pmax, pscale
                                               , oclh
-                                              , bunch_charge,bunch_current
-                                              , 1U, 1
+                                              , beam_charge,beam_current
+                                              , filling, 1
                                               , data.data());
         // normalize integral to 1
         ps->updateXProjection();
@@ -120,15 +122,16 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
                    , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                    , oclhptr_t oclh
-                   , const double bunch_charge, const double bunch_current
+                   , const double beam_charge, const double beam_current
                    , double qscale, double pscale)
 {
-    auto ps = std::make_unique<PhaseSpace>( ps_size
-                                          , qmin, qmax, qscale
+    std::vector<integral_t> filling = {{ 1.0 }};
+    PhaseSpace::setSize(ps_size, filling.size());
+    auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                           , pmin, pmax, pscale
                                           , oclh
-                                          , bunch_charge,bunch_current
-                                          , 1U
+                                          , beam_charge,beam_current
+                                          , filling
                                           );
     std::ifstream ifs;
     try {

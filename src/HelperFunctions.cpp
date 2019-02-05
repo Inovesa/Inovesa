@@ -7,7 +7,7 @@
 
 #include <boost/config.hpp>
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
 
 const std::string vfps::copyright_notice() noexcept {
@@ -38,35 +38,45 @@ const std::string vfps::copyright_notice() noexcept {
         "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
         "GNU General Public License for more details.\n"
         "\n"
-        "You should have received a copy of the GNU General Public License"
+        "You should have received a copy of the GNU General Public License\n"
         "along with Inovesa. If not, see <http://www.gnu.org/licenses/>.";
     return rv;
 }
 
-const std::string vfps::inovesa_version(const bool verbose) {
+const std::string vfps::inovesa_version(const bool verbose,
+                                        const int_fast16_t v_mayor,
+                                        const int_fast16_t v_minor,
+                                        const int_fast16_t v_fix,
+                                        const std::string branch,
+                                        const std::string commit) {
     std::stringstream sstream;
-    auto branchstr = std::string(GIT_BRANCH);
-    if (branchstr.empty() || branchstr == "master" || branchstr.front()=='v') {
+    if (branch.empty() || branch == "master" || branch.front()=='v') {
         // version number release branches (and releases)
-        sstream << 'v' << INOVESA_VERSION_MAJOR
-                << '.' << INOVESA_VERSION_MINOR;
-        if ( INOVESA_VERSION_FIX >= 0 ) {
-            sstream << '.' << INOVESA_VERSION_FIX;
-        } else if ( INOVESA_VERSION_FIX == -1 ) {
-                sstream << " alpha";
-        } else if ( INOVESA_VERSION_FIX == -2 ) {
+        sstream << 'v' << v_mayor
+                << '.' << v_minor;
+        switch ( v_fix ) {
+        case -1:
+            sstream << " alpha";
+            break;
+        case -2:
             sstream << " beta";
-        } else {
-            sstream << " RC" << std::abs(INOVESA_VERSION_FIX)-2;
+            break;
+        default:
+            if (v_fix >= 0) {
+                sstream << '.' << v_fix;
+            } else {
+                sstream << " RC" << std::abs(v_fix)-2;
+            }
+            break;
         }
-        if (branchstr.front()=='v') {
+        if (branch.front()=='v') {
             // plus commit for pre-release branches
-            sstream << ", Commit: "<< GIT_COMMIT;
+            sstream << ", Commit: "<< commit;
         }
      } else {
         // no version number for development or feature branches
-        sstream << "Branch: "<< GIT_BRANCH
-                << ", Commit: "<< GIT_COMMIT;
+        sstream << "Branch: "<< branch
+                << ", Commit: "<< commit;
      }
     if (verbose) {
         sstream << std::endl << "Compiler:"
@@ -111,7 +121,7 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
     std::stringstream status;
     status.precision(5);
     status << std::setw(6) << roatation << '/' << total_rotations;
-    float delta = 1.0 - ps->getIntegral();
+    integral_t delta = static_cast<integral_t>(1) - ps->getIntegral();
     status << "\t1-Q/Q_0=";
     // this is to have constant spacing in the output
     if (delta < 0) {
@@ -126,5 +136,18 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
            << *ps->getEnergySpread();
 
     return status.str();
+}
+
+uint64_t vfps::upper_power_of_two(uint64_t v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v |= v >> 32;
+    v++;
+    return v;
 }
 

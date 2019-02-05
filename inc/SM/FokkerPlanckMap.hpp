@@ -64,7 +64,7 @@ public:
                    , oclhptr_t oclh
                    );
 
-    ~FokkerPlanckMap() noexcept;
+    ~FokkerPlanckMap() noexcept override;
 
 
     /**
