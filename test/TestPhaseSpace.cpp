@@ -2,8 +2,9 @@
 
 #include <array>
 
-#include "defines.hpp"
 #define INOVESA_ALLOW_PS_RESET 1
+
+#include "defines.hpp"
 #include "PS/PhaseSpace.hpp"
 
 BOOST_AUTO_TEST_SUITE( PhaseSpace )

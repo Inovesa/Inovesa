@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include<vector>
+#include <vector>
 #include <iostream>
 
 #include "defines.hpp"
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE( constructors ){
 }
 
 BOOST_AUTO_TEST_CASE( file_read_in ){
-    constexpr size_t n = 6;
+    constexpr int n = 6;
     std::vector<vfps::impedance_t> zv1(n);
     for (int i = 0; i < n; i++) {
         zv1[i] = vfps::impedance_t(i-2, 2.5-i);
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( file_read_in ){
 }
 
 BOOST_AUTO_TEST_CASE( addition ){
-    constexpr size_t n = 8;
+    constexpr int n = 8;
     std::vector<vfps::impedance_t> zv1(n);
     std::vector<vfps::impedance_t> zv2(n);
 

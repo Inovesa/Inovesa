@@ -14,7 +14,7 @@ using boost::math::constants::pi;
 
 vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
-                                  , const std::vector<uint32_t> bucketnumber
+                                  , const std::vector<uint32_t> &bucketnumber
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
@@ -103,7 +103,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
 
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
-                                  , const std::vector<uint32_t> bucketnumber
+                                  , const std::vector<uint32_t> &bucketnumber
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
@@ -206,7 +206,7 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
 // (unmaintained) constructor for use of wake function
 vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                                   , const std::shared_ptr<Impedance> impedance
-                                  , const std::vector<uint32_t> bucketnumber
+                                  , const std::vector<uint32_t> &bucketnumber
                                   , const meshindex_t spacing_bins
                                   , oclhptr_t oclh
                                   , const double f_rev
