@@ -21,6 +21,8 @@ namespace vfps
 class FSPath
 {
 public:
+    FSPath() = delete;
+
     FSPath(std::string path);
 
     /**
@@ -38,11 +40,11 @@ public:
 
     static std::string datapath();
 
-private:
     static std::string expand_user(std::string path);
 
-    void checkDirectory(std::string path);
+    static bool validateDirectory(fs::path path);
 
+private:
     fs::path _path;
 };
 

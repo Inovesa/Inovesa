@@ -5,18 +5,20 @@
  * in the version control history of the file.
  */
 
+#include <stdlib.h>
+
 #include "IO/FSPath.hpp"
 
 vfps::FSPath::FSPath(std::string path)
   : _path(expand_user(path))
 {
-    checkDirectory(path);
+    validateDirectory(_path);
 }
 
 vfps::FSPath& vfps::FSPath::append(std::string path)
 {
     _path /= path;
-    checkDirectory(path);
+    validateDirectory(_path);
     return *this;
 }
 
@@ -27,13 +29,13 @@ std::string vfps::FSPath::expand_user(std::string path)
 {
   if (!path.empty() && path[0] == '~') {
     assert(path.size() == 1 || path[1] == '/');  // or other error handling
-    char const* home = getenv("HOME");
-    if (home || ((home = getenv("USERPROFILE")))) {
+    char const* home = std::getenv("HOME");
+    if (home || ((home = std::getenv("USERPROFILE")))) {
       path.replace(0, 1, home);
     }
     else {
-      char const *hdrive = getenv("HOMEDRIVE"),
-        *hpath = getenv("HOMEPATH");
+      char const *hdrive = std::getenv("HOMEDRIVE");
+      char const *hpath = std::getenv("HOMEPATH");
       assert(hdrive);  // or other error handling
       assert(hpath);
       path.replace(0, 1, std::string(hdrive) + hpath);
@@ -42,15 +44,16 @@ std::string vfps::FSPath::expand_user(std::string path)
   return path;
 }
 
-void vfps::FSPath::checkDirectory(std::string path)
+bool vfps::FSPath::validateDirectory(boost::filesystem::path path)
 {
-    if (!fs::exists(_path)) {
-        if ((path.back()) == '/') {
-            fs::create_directories(_path);
+    if (!fs::exists(path)) {
+        if ((path.string().back()) == '/') {
+            return fs::create_directories(path);
         } else {
-            fs::create_directories(_path.parent_path());
+            return fs::create_directories(path.parent_path());
         }
     }
+    return false;
 }
 
 /* References:
@@ -61,7 +64,7 @@ void vfps::FSPath::checkDirectory(std::string path)
  */
 std::string vfps::FSPath::datapath()
 {
-    char const *envstr = getenv("XDG_DATA_HOME");
+    char const *envstr = std::getenv("XDG_DATA_HOME");
     std::string rval;
     if (envstr != nullptr) {
         rval = std::string(envstr);
