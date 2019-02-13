@@ -23,7 +23,8 @@ vfps::FSPath& vfps::FSPath::append(std::string path)
 }
 
 /* References:
- * https://stackoverflow.com/questions/4891006/how-to-create-a-folder-in-the-home-directory
+ * https://stackoverflow.com/questions/4891006/
+ *          how-to-create-a-folder-in-the-home-directory
  */
 std::string vfps::FSPath::expand_user(std::string path)
 {

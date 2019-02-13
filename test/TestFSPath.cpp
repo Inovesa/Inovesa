@@ -42,7 +42,15 @@ BOOST_AUTO_TEST_CASE( home_finder ){
 }
 
 BOOST_AUTO_TEST_CASE( datapath ){
+    const std::string homepath(vfps::FSPath::expand_user("~/.local/share"));
+
+    // save environment variable
+    char const * datapath_ptr = std::getenv("XDG_DATA_HOME");
+    const std::string datapath_orig(datapath_ptr ? datapath_ptr : "");
+
     std::string datapath;
+
+    // find using defaults
     BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
 
     // datapath ends on "/inovesa/"
@@ -52,6 +60,32 @@ BOOST_AUTO_TEST_CASE( datapath ){
                 datapath.data()+datapath.size(),
                 cmpstring.data(),
                 cmpstring.data()+cmpstring.size());
+
+
+    // find with XDG_DATA_HOME set
+    setenv("XDG_DATA_HOME",datapath.c_str(), 1);
+    BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+                datapath.data()+datapath.size()-cmpstring.size(),
+                datapath.data()+datapath.size(),
+                cmpstring.data(),
+                cmpstring.data()+cmpstring.size());
+
+    // find without XDG_DATA_HOME set
+    unsetenv("XDG_DATA_HOME");
+    BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+                datapath.data()+datapath.size()-cmpstring.size(),
+                datapath.data()+datapath.size(),
+                cmpstring.data(),
+                cmpstring.data()+cmpstring.size());
+
+    // restore environment variable
+    setenv("XDG_DATA_HOME",datapath_orig.c_str(), 1);
+
+
 }
 
 BOOST_AUTO_TEST_CASE( constructor ){
