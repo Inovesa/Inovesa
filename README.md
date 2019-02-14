@@ -20,6 +20,7 @@ is a good starting point.
 [![Coverage Status](https://coveralls.io/repos/github/Inovesa/Inovesa/badge.svg?branch=develop)](https://coveralls.io/github/Inovesa/Inovesa)
 [![Code quality alerts](https://img.shields.io/lgtm/alerts/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/alerts/)
 [![Code quality grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/context:cpp)
+[![License: GPLv3](https://img.shields.io/github/license/Inovesa/Inovesa.svg)](https://github.com/Inovesa/Inovesa/blob/master/LICENSE)
 
 
 Installation
