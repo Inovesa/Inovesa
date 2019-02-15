@@ -3,6 +3,7 @@
 #include <boost/algorithm/string.hpp>
 #include <vector>
 
+#define INOVESA_ALLOW_PS_RESET 1
 
 #include "HelperFunctions.hpp"
 
@@ -46,7 +47,7 @@ BOOST_AUTO_TEST_CASE(inovesa_version) {
 }
 
 BOOST_AUTO_TEST_CASE(status_string) {
-    vfps::PhaseSpace::setSize(32,1);
+    vfps::PhaseSpace::resetSize(32,1);
     auto ps = std::make_shared<vfps::PhaseSpace>(-12,12,1,-32,32,2,nullptr,1,1);
 
     (*ps)[0][16][16] = 10;
