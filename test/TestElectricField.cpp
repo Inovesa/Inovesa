@@ -10,12 +10,34 @@
 #include "Z/ConstImpedance.hpp"
 
 
+struct ElectricFieldFixture {
+    ElectricFieldFixture()
+     : buckets(1, 0)
+     , ps(std::make_shared<vfps::PhaseSpace>(
+              -12,12,3,-12,12,4,nullptr,1,1))
+     , z(std::make_shared<vfps::ConstImpedance>(n, 1e9, 1))
+     , f(ps, z, buckets, 0, nullptr, 1e6, 0.1,
+         1e-3, 1e9, 1e3, 1e-3)
+    {
+    }
 
-BOOST_AUTO_TEST_SUITE( ElectricField )
+    static constexpr uint32_t n = 32;
+
+    std::vector<uint32_t> buckets;
+
+    std::shared_ptr<vfps::PhaseSpace> ps;
+
+    std::shared_ptr<vfps::ConstImpedance> z;
+
+    vfps::ElectricField f;
+};
+
+
+constexpr uint32_t ElectricFieldFixture::n;
+
+BOOST_FIXTURE_TEST_SUITE( ElectricField, ElectricFieldFixture )
 
 BOOST_AUTO_TEST_CASE( constructors ){
-    constexpr uint32_t n = 32;
-
     vfps::PhaseSpace::resetSize(n,1);
 
     auto ps1 = std::make_shared<vfps::PhaseSpace>(
@@ -24,12 +46,12 @@ BOOST_AUTO_TEST_CASE( constructors ){
 
     std::vector<uint32_t> buckets(1, 0);
 
-    vfps::ElectricField f(ps1,z1, buckets, 0, nullptr, 1e6, 0.1,
+    vfps::ElectricField f1(ps1,z1, buckets, 0, nullptr, 1e6, 0.1,
                           1e-3, 1e9, 1e3, 1e-3);
 
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(f.getBuckets().data(),
-                                  f.getBuckets().data()+f.getBuckets().size(),
+    BOOST_CHECK_EQUAL_COLLECTIONS(f1.getBuckets().data(),
+                                  f1.getBuckets().data()+f1.getBuckets().size(),
                                   buckets.data(),
                                   buckets.data()+buckets.size());
 
