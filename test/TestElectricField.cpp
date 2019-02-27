@@ -13,12 +13,14 @@
 struct ElectricFieldFixture {
     ElectricFieldFixture()
      : buckets(1, 0)
-     , ps(std::make_shared<vfps::PhaseSpace>(
-              -12,12,3,-12,12,4,nullptr,1,1))
-     , z(std::make_shared<vfps::ConstImpedance>(n, 1e9, 1))
-     , f(ps, z, buckets, 0, nullptr, 1e6, 0.1,
-         1e-3, 1e9, 1e3, 1e-3)
     {
+        vfps::PhaseSpace::resetSize(n,1);
+
+        ps = std::make_shared<vfps::PhaseSpace>(-12,12,3,-12,12,4,nullptr,1,1);
+        z = std::make_shared<vfps::ConstImpedance>(n, 1e9, 1);
+
+        f = std::make_shared<vfps::ElectricField>(
+                    ps, z, buckets, 0, nullptr, 1e6, 0.1, 1e-3, 1e9, 1e3, 1e-3);
     }
 
     static constexpr uint32_t n = 32;
@@ -29,7 +31,7 @@ struct ElectricFieldFixture {
 
     std::shared_ptr<vfps::ConstImpedance> z;
 
-    vfps::ElectricField f;
+    std::shared_ptr<vfps::ElectricField> f;
 };
 
 
