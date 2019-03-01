@@ -295,7 +295,7 @@ vfps::ElectricField::~ElectricField() noexcept
     }
 }
 
-vfps::csrpower_t* vfps::ElectricField::updateCSR(const frequency_t cutoff)
+const vfps::csrpower_t *vfps::ElectricField::updateCSR(const frequency_t cutoff)
 {
     #if INOVESA_USE_CLFFT == 1
     if (_oclh) {

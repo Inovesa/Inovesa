@@ -137,7 +137,7 @@ public:
      *
      * relies on an up-t date PhaseSpace::_projection[0]
      */
-    csrpower_t* updateCSR(const frequency_t cutoff);
+    const csrpower_t* updateCSR(const frequency_t cutoff);
 
     const std::vector<uint32_t> &getBuckets() const
         { return _bucket; }

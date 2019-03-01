@@ -438,7 +438,6 @@ int main(int argc, char** argv)
      * When memory usage is crytical, it might be worth to change this
      * to two grids (only).
      */
-
     PhaseSpace::setSize(ps_bins, nbunches);
 
      /* This first grid (grid_t1) will be initialized and
@@ -459,7 +458,6 @@ int main(int argc, char** argv)
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        PhaseSpace::setSize(ps_bins, bunches.size());
         grid_t1.reset(new PhaseSpace( qmin,qmax,bl,pmin,pmax,dE
                                     , oclh, Qb,Ib,bunches,zoom));
     } else {
