@@ -33,7 +33,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
 
 
             genCode4Rotation();
-            _cl_prog  = OCLH::prepareCLProg(_cl_code);
+            _cl_prog  = _oclh->prepareCLProg(_cl_code);
 
             applySM = cl::Kernel(_cl_prog, "applyRotation");
             applySM.setArg(0, _in->data_buf);
@@ -50,16 +50,16 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
             }
         }
         #if INOVESA_USE_OPENCL == 1
-        if (OCLH::active) {
-            _sm_buf = cl::Buffer(OCLH::context,
+        if (_oclh) {
+            _sm_buf = cl::Buffer(_oclh->context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                  sizeof(hi)*_ip*_rotmapsize,
                                  _hinfo);
             if (_clamp) {
                 if (it == InterpolationType::cubic) {
-                    if (_rotmapsize == _size) {
+                    if (_rotmapsize == PhaseSpace::nxy) {
                         genCode4SM4sat();
-                        _cl_prog  = OCLH::prepareCLProg(_cl_code);
+                        _cl_prog  = _oclh->prepareCLProg(_cl_code);
 
                         applySM = cl::Kernel(_cl_prog, "applySM4sat");
                         applySM.setArg(0, _in->data_buf);
@@ -69,7 +69,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                 }
             } else {
                 genCode4SM1D();
-                _cl_prog  = OCLH::prepareCLProg(_cl_code);
+                _cl_prog  = _oclh->prepareCLProg(_cl_code);
 
                 applySM = cl::Kernel(_cl_prog, "applySM1D");
                 applySM.setArg(0, _in->data_buf);
@@ -97,16 +97,16 @@ vfps::RotationMap::~RotationMap() noexcept
 void vfps::RotationMap::apply()
 {
     #if INOVESA_USE_OPENCL == 1
-    if (OCLH::active) {
+    if (_oclh) {
         #if INOVESA_SYNC_CL == 1
         _in->syncCLMem(clCopyDirection::cpu2dev);
         #endif // INOVESA_SYNC_CL
         if (_rotmapsize == 0) {
              // stay away from mesh borders
-            OCLH::enqueueNDRangeKernel( applySM
+            _oclh->enqueueNDRangeKernel( applySM
                                       , cl::NDRange(1,1)
                                       , cl::NDRange(_xsize-_it+1,_ysize-_it+1)
-                                      #ifdef INOVESA_ENABLE_CLPROFILING
+                                      #if INOVESA_ENABLE_CLPROFILING == 1
                                       , cl::NullRange
                                       , nullptr
                                       , nullptr
@@ -114,10 +114,10 @@ void vfps::RotationMap::apply()
                                       #endif // INOVESA_ENABLE_CLPROFILING
                                       );
         } else {
-            OCLH::enqueueNDRangeKernel( applySM
+            _oclh->enqueueNDRangeKernel( applySM
                                       , cl::NullRange
                                       , cl::NDRange(_rotmapsize)
-                                      #ifdef INOVESA_ENABLE_CLPROFILING
+                                      #if INOVESA_ENABLE_CLPROFILING == 1
                                       , cl::NullRange
                                       , nullptr
                                       ,nullptr
@@ -125,7 +125,7 @@ void vfps::RotationMap::apply()
                                       #endif // INOVESA_ENABLE_CLPROFILING
                                       );
         }
-        OCLH::enqueueBarrier();
+        _oclh->enqueueBarrier();
         #ifdef INOVESA_SYNC_CL
         _out->syncCLMem(clCopyDirection::dev2cpu);
         #endif // INOVESA_SYNC_CL
@@ -279,20 +279,6 @@ void vfps::RotationMap::genCode4SM4sat()
         _cl_code += R"(
             data_t ceil=0.0;
             data_t flor=1.0;
-        )";
-    }
-    #if FXP_FRACPART < 31
-    if (std::is_same<vfps::meshdata_t,vfps::fixp32>::value) {
-        _cl_code += R"(
-            data_t ceil=INT_MIN;
-            data_t flor=INT_MAX;
-        )";
-    }
-    #endif
-    if (std::is_same<vfps::meshdata_t,vfps::fixp64>::value) {
-        _cl_code += R"(
-            data_t ceil=LONG_MIN;
-            data_t flor=LONG_MAX;
         )";
     }
     _cl_code += R"(

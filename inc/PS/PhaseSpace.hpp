@@ -375,14 +375,29 @@ public:
 protected:
     static bool _firstinit;
 
+    /**
+     * @brief _nmeshcellsX number of cells for position axis
+     */
     static meshindex_t _nmeshcellsX;
 
+    /**
+     * @brief _nmeshcellsY number of cells for energy axis
+     */
     static meshindex_t _nmeshcellsY;
 
+    /**
+     * @brief _nbunches number of bunches (phase spaces)
+     */
     static meshindex_t _nbunches;
 
+    /**
+     * @brief _nmeshcells number of cells for one phase space
+     */
     static meshindex_t _nmeshcells;
 
+    /**
+     * @brief _totalmeshcells accumuated number of cells for all phase spaces
+     */
     static meshindex_t _totalmeshcells;
 
 protected:
@@ -395,7 +410,7 @@ protected:
     const std::vector<integral_t> _filling_set;
 
     /**
-     * @brief _bunchpopulation: normalized bunch charges as they are
+     * @brief _filling: normalized bunch charges as they are
      *
      * ideally, this is the same as _filling_set
      */
@@ -474,7 +489,7 @@ public:
 
     cl::Buffer projectionX_clbuf;
 
-    cl::Buffer bunchpop_buf;
+    cl::Buffer filling_buf;
 
 private:
     cl::Program _clProgProjX;

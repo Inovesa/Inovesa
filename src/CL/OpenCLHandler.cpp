@@ -115,8 +115,7 @@ cl::Program OCLH::prepareCLProg(std::string code)
         throw e;
         #endif
     }
-
-return p;
+    return p;
 }
 
 #if INOVESA_ENABLE_CLPROFILING == 1

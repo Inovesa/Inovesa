@@ -69,8 +69,8 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     try {
         data_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                            sizeof(meshdata_t)*_nbunches*_nmeshcellsX*_nmeshcellsY,
-                           _data());
+                            sizeof(meshdata_t)*_totalmeshcells,
+                           _data.data());
         #if INOVESA_USE_OPENGL == 1
         if (_oclh->OpenGLSharing()) {
             glGenBuffers(1, &projectionX_glbuf);
@@ -89,10 +89,10 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
                         _nmeshcellsX*sizeof(decltype(_projection)::value_type),
                         _projection[0].data());
         }
-        bunchpop_buf = cl::Buffer( _oclh->context
+        filling_buf = cl::Buffer( _oclh->context
                                  , CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR
                                  , _nbunches*sizeof(integral_t)
-                                 , _bunchpopulation.data());
+                                 , _filling.data());
         ws_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                             sizeof(decltype(_ws)::value_type)*_nmeshcellsX,
@@ -110,7 +110,7 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         _clKernIntegral.setArg(0, projectionX_clbuf);
         _clKernIntegral.setArg(1, ws_buf);
         _clKernIntegral.setArg(2, _nmeshcellsX);
-        _clKernIntegral.setArg(3, bunchpop_buf);
+        _clKernIntegral.setArg(3, filling_buf);
     } catch (cl::Error &e) {
         std::cerr << "Error: " << e.what() << std::endl
                   << "Shutting down OpenCL." << std::endl;
@@ -298,7 +298,7 @@ void vfps::PhaseSpace::updateYProjection() {
     #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueReadBuffer
-            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data());
+            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data.data());
     }
     #endif
     for (size_t n=0; n < _nbunches; n++) {
@@ -337,7 +337,7 @@ const std::vector<vfps::integral_t>& vfps::PhaseSpace::normalize()
     if (_oclh) {
         _oclh->enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
-             sizeof(meshdata_t)*_nmeshcells,_data());
+             sizeof(meshdata_t)*_nmeshcells,_data.data());
     }
     #endif // INOVESA_USE_OPENCL
     return _filling;
@@ -357,16 +357,16 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
     case OCLH::clCopyDirection::cpu2dev:
         _oclh->enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
-             sizeof(meshdata_t)*_nmeshcells,_data(),nullptr,evt);
+             sizeof(meshdata_t)*_nmeshcells,_data.data(),nullptr,evt);
         break;
     case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer
-            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data());
+            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data.data());
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
                                 , sizeof(projection_t)*_nmeshcellsX
                                 , _projection[0],nullptr,evt);
         _oclh->enqueueReadBuffer
-            (bunchpop_buf,CL_TRUE,0,sizeof(integral_t),&_bunchpopulation,
+            (filling_buf,CL_TRUE,0,sizeof(integral_t),&_filling,
             nullptr,evt
             #if INOVESA_ENABLE_CLPROFILING == 1
             , syncPSEvents.get()
