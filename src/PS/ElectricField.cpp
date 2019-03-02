@@ -39,9 +39,9 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
   , _formfactorrenorm(ps->getDelta(0)*ps->getDelta(0))
   , factor4WattPerHertz(2*impedance->factor4Ohms*ps->current*ps->current/f_rev)
   , factor4Watts(factor4WattPerHertz*_axis_freq.scale("Hertz"))
-  , _csrintensity(Array::array1<csrpower_t>(_nbunches))
-  , _csrspectrum(Array::array2<csrpower_t>(_nbunches,_nmax))
-  , _isrspectrum(Array::array2<csrpower_t>(_nbunches,_nmax))
+  , _csrintensity(boost::extents[_nbunches])
+  , _csrspectrum(boost::extents[_nbunches][_nmax])
+  , _isrspectrum(boost::extents[_nbunches][_nmax])
   , _impedance(impedance)
   , _oclh(oclh)
   , _wakefunction(nullptr)
@@ -51,7 +51,7 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
   #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
   , wakepotential_glbuf(0)
   #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
-  , _wakepotential(Array::array2<meshaxis_t>(PhaseSpace::nb,PhaseSpace::nx))
+  , _wakepotential(boost::extents[PhaseSpace::nb][PhaseSpace::nx])
   , _fft_wakelosses(nullptr)
   #if INOVESA_USE_CLFFT == 1
   , _wakescaling(_oclh ? wakescalining : wakescalining/_nmax )
@@ -118,7 +118,6 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
                  , Ib*dt*physcons::c/ps->getScale(0,"Meter")/(ps->getDelta(1)*sigmaE*E0)
                  )
 {
-    _wakepotential = new meshaxis_t[PhaseSpace::nx];
     #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         #if INOVESA_USE_OPENGL == 1
@@ -320,8 +319,8 @@ const vfps::csrpower_t *vfps::ElectricField::updateCSR(const frequency_t cutoff)
         #endif // INOVESA_USE_OPENCL
         {
             // copy bunch profile to be padded
-            const vfps::projection_t* bp = _phasespace->getProjection(0)[n];
-            std::copy_n(bp,PhaseSpace::nx,_bp_padded);
+            auto bp = _phasespace->getProjection(0)[n];
+            std::copy_n(bp.origin(),PhaseSpace::nx,_bp_padded);
 
             //FFT charge density
             fft_execute(_fft_bunchprofile);
@@ -376,9 +375,9 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     #endif // INOVESA_USE_OPENCL
     {
         // copy bunch profiles to have correct padding
-        const vfps::projection_t* bp= _phasespace->getProjection(0);
+        auto bp= _phasespace->getProjection(0);
         for (uint32_t b=0; b<PhaseSpace::nb; b++) {
-            std::copy_n( bp+b*PhaseSpace::nx
+            std::copy_n( bp.origin()+b*PhaseSpace::nx
                        , PhaseSpace::nx,_bp_padded+_bucket[b]*_spacing_bins);
         }
 
@@ -416,7 +415,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         #endif // INOVESA_USE_CLFFT
         #endif // INOVESA_USE_OPENCL
     }
-    return _wakepotential;
+    return _wakepotential.data();
 }
 
 #if INOVESA_USE_OPENCL == 1

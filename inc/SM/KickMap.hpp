@@ -54,6 +54,9 @@ public:
 protected:
     /**
      * @brief _offset by one kick in units of mesh points
+     *
+     * if kick is different for every bunch,
+     * vector is used like a C-style ND array
      */
     std::vector<meshaxis_t> _offset;
 

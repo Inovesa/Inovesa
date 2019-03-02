@@ -8,11 +8,11 @@
 #pragma once
 
 #include <algorithm>
+#include <boost/multi_array.hpp>
 #include <fftw3.h>
 #include <memory>
 #include <sstream>
 
-#include "Array.h"
 #include "defines.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/Ruler.hpp"
@@ -292,17 +292,17 @@ private:
     /**
      * @brief _csrintensity dimensions: bunch
      */
-    Array::array1<csrpower_t> _csrintensity;
+    boost::multi_array<csrpower_t,1> _csrintensity;
 
     /**
      * @brief _csrspectrum dimensions: bunch, frequency
      */
-    Array::array2<csrpower_t> _csrspectrum;
+    boost::multi_array<csrpower_t,2> _csrspectrum;
 
     /**
      * @brief _isrspectrum dimensions: bunch, frequency
      */
-    Array::array2<csrpower_t> _isrspectrum;
+    boost::multi_array<csrpower_t,2> _isrspectrum;
 
     const std::shared_ptr<Impedance> _impedance;
 
@@ -368,7 +368,7 @@ private:
 
     #endif // INOVESA_USE_OPENCL
 
-    Array::array2<meshaxis_t> _wakepotential;
+    boost::multi_array<meshaxis_t,2> _wakepotential;
 
     fft_plan _fft_wakelosses;
 
