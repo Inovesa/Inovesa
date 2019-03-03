@@ -42,6 +42,9 @@ public:
     const inline meshaxis_t* getForce() const
         { return _offset.data(); }
 
+    inline void swapForce(std::vector<meshaxis_t>& offset)
+        { _offset.swap(offset); updateSM(); }
+
 public:
     void apply() override;
 
