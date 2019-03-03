@@ -55,8 +55,12 @@ protected:
     /**
      * @brief _offset by one kick in units of mesh points
      *
-     * if kick is different for every bunch,
-     * vector is used like a C-style ND array
+     * If kick is different for every bunch,
+     * vector is used like a C-style ND array.
+     *
+     * @todo: On the long run, a multi_array should be used.
+     * If the kick is the same for every bunch,
+     * the according dimentsion miht have just one entry.
      */
     std::vector<meshaxis_t> _offset;
 
