@@ -187,6 +187,7 @@ ELSE()
 ENDIF()
 
 ## OpenGL (optional)
+set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL QUIET)
 find_package(GLEW QUIET)
 find_package(GLFW QUIET)
