@@ -198,8 +198,8 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_map ){
                           static_cast<vfps::meshdata_t>(1e-5));
     }
 
-    vfps::PhaseSpace::Position p0{0,0};
-    auto p1 = rm.apply(p0);
+    vfps::PhaseSpace::Position p1{0,0};
+    rm.applyTo(p1);
 
     // expected result from the above operation
     vfps::PhaseSpace::Position p2{3,0};

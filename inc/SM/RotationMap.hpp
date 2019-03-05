@@ -61,7 +61,7 @@ public:
      *
      * @param pos position (in x/y coordinates)
      */
-    PhaseSpace::Position apply(const PhaseSpace::Position pos) const override;
+    void applyTo(PhaseSpace::Position& pos) const override;
 
 private:
     const uint32_t _rotmapsize;

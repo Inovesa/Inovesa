@@ -250,8 +250,7 @@ void vfps::KickMap::apply()
     }
 }
 
-vfps::PhaseSpace::Position
-vfps::KickMap::apply(PhaseSpace::Position pos) const
+void vfps::KickMap::applyTo(PhaseSpace::Position& pos) const
 {
     if (_kickdirection == Axis::x) {
         meshindex_t yi;
@@ -274,7 +273,6 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
         pos.y = std::max(static_cast<meshaxis_t>(1),
                      std::min(pos.y,static_cast<meshaxis_t>(_meshsize_kd-1)));
     }
-    return pos;
 }
 
 #if INOVESA_USE_OPENCL == 1

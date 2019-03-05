@@ -1021,13 +1021,13 @@ int main(int argc, char** argv)
                                rotations),false,updatetime);
         }
         wm->apply();
-        wm->applyTo(trackme);
+        wm->applyToAll(trackme);
         rfm->apply();
-        rfm->applyTo(trackme);
+        rfm->applyToAll(trackme);
         drm->apply();
-        drm->applyTo(trackme);
+        drm->applyToAll(trackme);
         fpm->apply();
-        fpm->applyTo(trackme);
+        fpm->applyToAll(trackme);
 
         // udate for next time step
         grid_t1->updateXProjection();
