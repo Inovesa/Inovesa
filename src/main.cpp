@@ -993,7 +993,7 @@ int main(int argc, char** argv)
                     psv->createTexture(grid_t1);
                 }
                 if (bpv != nullptr && !bpv->getBufferShared()) {
-                    bpv->update(grid_t1->getProjection(0));
+                    bpv->update(grid_t1->getProjection(0).origin());
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
