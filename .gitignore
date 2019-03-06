@@ -9,6 +9,9 @@ InovesaConfig.hpp
 *.fftw
 *.pyc
 
+# documentation
+doc/
+
 # files created by/for other applications
 .vs/
 Win32/
