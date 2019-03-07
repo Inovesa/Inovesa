@@ -31,6 +31,8 @@ const std::string inovesa_version(
         const std::string branch = GIT_BRANCH,
         const std::string commit = GIT_COMMIT);
 
+bool isOfFileType(std::string ending, std::string fname);
+
 const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,
                                 float total_rotations);

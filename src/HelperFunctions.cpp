@@ -186,3 +186,14 @@ uint64_t vfps::upper_power_of_two(uint64_t v)
     return v;
 }
 
+/**
+ * @brief checks file ending
+ * @param ending
+ * @param fname
+ * @return
+ */
+bool vfps::isOfFileType(std::string ending, std::string fname)
+{
+    return ( fname.size() > ending.size() &&
+        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
+}
