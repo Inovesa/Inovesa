@@ -9,7 +9,10 @@
 
 #include "HelperFunctions.hpp"
 
-
+/**
+ * @brief copyright_notice creates a (static) copyright notice
+ * @return string containing copyright information
+ */
 const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
@@ -41,6 +44,19 @@ const std::string vfps::copyright_notice() noexcept {
     return rv;
 }
 
+/**
+ * @brief inovesa_version
+ * @param verbose
+ * @return
+ *
+ * For branches leading to a release and for releases,
+ * external applications rely on the format of the output
+ * to determine the Inovesa feature level.
+ * So, the string will always begin with "v{major}.{minor}"
+ * followed by either ".{fix}" for releases
+ * or " {descriptor}" for pre-releas versions.
+ * Development versions do not have to follow this convention.
+ */
 const std::string vfps::inovesa_version(const bool verbose,
                                         const int_fast16_t v_mayor,
                                         const int_fast16_t v_minor,
@@ -110,8 +126,13 @@ const std::string vfps::inovesa_version(const bool verbose,
     return sstream.str();
 }
 
-
-
+/**
+ * @brief status_string gives status information
+ * @param ps PhaseSpace to consider
+ * @param roatation prited in string
+ * @param total_rotations printed in string
+ * @return the status string (contains no newlines)
+ */
 const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
                                       float roatation,
                                       float total_rotations)
@@ -136,6 +157,13 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
     return status.str();
 }
 
+/**
+ * @brief upper_power_of_two round up to the next 2**n
+ * @param v number to round up
+ * @return w with \f$ 2^{n-1} < w <= 2^n \f$
+ *
+ * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+ */
 uint64_t vfps::upper_power_of_two(uint64_t v)
 {
     v--;
