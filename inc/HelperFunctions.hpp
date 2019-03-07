@@ -16,7 +16,7 @@
 
 /** \file HelperFunctions.hpp
  *  \brief Definitions of helper functions
-*/
+ */
 
 namespace vfps
 {

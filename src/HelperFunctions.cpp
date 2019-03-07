@@ -9,6 +9,10 @@
 
 #include "HelperFunctions.hpp"
 
+/** \file HelperFunctions.cpp
+ *  \brief Implementations of helper functions
+ */
+
 /**
  * @brief copyright_notice creates a (static) copyright notice
  * @return string containing copyright information
@@ -47,6 +51,11 @@ const std::string vfps::copyright_notice() noexcept {
 /**
  * @brief inovesa_version
  * @param verbose
+ * @param v_mayor (default defined by CMake)
+ * @param v_minor (default defined by CMake)
+ * @param v_fix (default defined by CMake)
+ * @param branch (default defined by CMake)
+ * @param commit (default defined by CMake)
  * @return
  *
  * For branches leading to a release and for releases,
