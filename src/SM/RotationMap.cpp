@@ -171,17 +171,16 @@ void vfps::RotationMap::apply()
     }
 }
 
-vfps::PhaseSpace::Position
-vfps::RotationMap::apply(const PhaseSpace::Position pos) const
+void vfps::RotationMap::applyTo(PhaseSpace::Position& pos) const
 {
-    PhaseSpace::Position rv;
-    rv.x = _cos_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
+    PhaseSpace::Position tmp;
+    tmp.x = _cos_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
          + _sin_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
          + _axis[0]->zerobin();
-    rv.y = _cos_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
+    tmp.y = _cos_dt*meshaxis_t(pos.y-_axis[1]->zerobin())
          - _sin_dt*meshaxis_t(pos.x-_axis[0]->zerobin())
          + _axis[1]->zerobin();
-    return rv;
+    pos = tmp;
 }
 
 void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,

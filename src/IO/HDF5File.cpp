@@ -389,17 +389,17 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
 
     if (at != AppendType::PhaseSpace) {
         _appendData(_timeAxis,&t);
-        _appendData(_bunchProfile,ps.getProjection(0).data());
-        _appendData(_bunchLength,ps.getBunchLength());
+        _appendData(_bunchProfile,ps.getProjection(0).origin());
+        _appendData(_bunchLength,ps.getBunchLength().origin());
         {
         auto mean_q = ps.getMoment(0,0);
-        _appendData(_bunchPosition,mean_q.data());
+        _appendData(_bunchPosition,mean_q.origin());
         }
-        _appendData(_energyProfile,ps.getProjection(1).data());
-        _appendData(_energySpread,ps.getEnergySpread());
+        _appendData(_energyProfile,ps.getProjection(1).origin());
+        _appendData(_energySpread,ps.getEnergySpread().origin());
         {
         auto mean_E = ps.getMoment(1,0);
-        _appendData(_energyAverage,mean_E.data());
+        _appendData(_energyAverage,mean_E.origin());
         }
         {
         _appendData(_bunchPopulation,ps.getBunchPopulation().data());

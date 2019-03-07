@@ -993,7 +993,7 @@ int main(int argc, char** argv)
                     psv->createTexture(grid_t1);
                 }
                 if (bpv != nullptr && !bpv->getBufferShared()) {
-                    bpv->update(grid_t1->getProjection(0));
+                    bpv->update(grid_t1->getProjection(0).origin());
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
@@ -1021,13 +1021,13 @@ int main(int argc, char** argv)
                                rotations),false,updatetime);
         }
         wm->apply();
-        wm->applyTo(trackme);
+        wm->applyToAll(trackme);
         rfm->apply();
-        rfm->applyTo(trackme);
+        rfm->applyToAll(trackme);
         drm->apply();
-        drm->applyTo(trackme);
+        drm->applyToAll(trackme);
         fpm->apply();
-        fpm->applyTo(trackme);
+        fpm->applyToAll(trackme);
 
         // udate for next time step
         grid_t1->updateXProjection();

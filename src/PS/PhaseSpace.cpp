@@ -7,6 +7,7 @@
 
 #include "PS/PhaseSpace.hpp"
 
+#include <iostream>
 #include <numeric>
 #include <stdexcept>
 
@@ -27,10 +28,10 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
   , _filling_set(filling.begin(),filling.end())
   , _filling(std::vector<integral_t>(_nbunches))
   , _integral(1)
-  , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
+  , _projection(boost::extents[2U][_nbunches][_nmeshcellsX])
   , _data(boost::extents[_nbunches][_nmeshcellsX][_nmeshcellsY])
-  , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
-  , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
+  , _moment(boost::extents[2U][4U][_nbunches])
+  , _rms(boost::extents[2U][_nbunches])
   , _ws(simpsonWeights())
   , _oclh(nullptr) // OpenCL will be disabled during dirst initialization steps
   #if INOVESA_USE_OPENGL == 1

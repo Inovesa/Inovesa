@@ -42,10 +42,13 @@ public:
     const inline meshaxis_t* getForce() const
         { return _offset.data(); }
 
+    inline void swapForce(std::vector<meshaxis_t>& offset)
+        { _offset.swap(offset); updateSM(); }
+
 public:
     void apply() override;
 
-    PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
+    void applyTo(PhaseSpace::Position& pos) const override;
 
     #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir);
@@ -54,6 +57,13 @@ public:
 protected:
     /**
      * @brief _offset by one kick in units of mesh points
+     *
+     * If kick is different for every bunch,
+     * vector is used like a C-style ND array.
+     *
+     * @todo: On the long run, a multi_array should be used.
+     * If the kick is the same for every bunch,
+     * the according dimentsion miht have just one entry.
      */
     std::vector<meshaxis_t> _offset;
 

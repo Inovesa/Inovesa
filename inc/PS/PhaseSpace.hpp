@@ -31,8 +31,6 @@ namespace vfps {
         class PhaseSpace; // forward declaration
 }
 
-#include "Array.h"
-
 #include "CL/OpenCLHandler.hpp"
 #include "defines.hpp"
 #include "Ruler.hpp"
@@ -180,15 +178,14 @@ public:
                          , const uint_fast8_t m) const
         { return _moment[x][m]; }
 
-    inline const meshaxis_t* getBunchLength() const
+    inline auto getBunchLength() const
         { return _rms[0]; }
 
-    inline const meshaxis_t* getEnergySpread() const
+    inline auto getEnergySpread() const
         { return _rms[1]; }
 
 
-    inline const Array::array2<projection_t>
-    getProjection(const uint_fast8_t x) const
+    inline auto getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
     /**
@@ -426,7 +423,7 @@ protected:
     /**
      * @brief _projection dimensions are orientation, bunch, x/y grid cell
      */
-    Array::array3<projection_t> _projection;
+    boost::multi_array<projection_t,3> _projection;
 
     /**
      * @brief _data dimensions are: bunch, x coordinate, y coordinate
@@ -447,7 +444,7 @@ protected:
      *
      * n: bunch number
      */
-    Array::array3<meshaxis_t> _moment;
+    boost::multi_array<meshaxis_t,3> _moment;
 
 
     /**
@@ -458,7 +455,7 @@ protected:
      *
      * n: bunch number
      */
-    Array::array2<meshaxis_t> _rms;
+    boost::multi_array<meshaxis_t,2> _rms;
 
     /**
      * @brief _ws weights for Simpson integration

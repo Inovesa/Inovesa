@@ -109,10 +109,11 @@ void vfps::SourceMap::apply()
     }
 }
 
-void vfps::SourceMap::applyTo(std::vector<vfps::PhaseSpace::Position> &particles)
+void vfps::SourceMap::applyToAll(
+        std::vector<vfps::PhaseSpace::Position> &particles)
 {
     for (PhaseSpace::Position& particle : particles) {
-        particle = apply(particle);
+        applyTo(particle);
     }
 }
 

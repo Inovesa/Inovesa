@@ -210,9 +210,7 @@ void vfps::FokkerPlanckMap::apply()
         }
     }
 }
-
-vfps::PhaseSpace::Position
-vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
+void vfps::FokkerPlanckMap::applyTo(PhaseSpace::Position &pos) const
 {
     switch (_fptrack){
     case FPTracking::none:
@@ -266,6 +264,5 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
         pos.y -= pos.y*_dampdecr+_normdist(_prng);
         break;
     }
-    return pos;
 }
 

@@ -208,12 +208,13 @@ void vfps::KickMap::apply()
                         hi h = _hinfo[y*_ip+j];
                         // the min makes sure not to have out of bounds accesses
                         // casting is to be sure about overflow behaviour
-                        const meshindex_t xs = std::min(
-                             static_cast<meshindex_t>(_meshsize_pd-1),
-                             static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
-                                                    - static_cast<int32_t>(_meshsize_pd/2)));
-                        value += data_in[offs+xs*_meshsize_pd+y]
-                              * static_cast<meshdata_t>(h.weight);
+                        const meshindex_t xs = static_cast<meshindex_t>(
+                                    static_cast<int32_t>(x+h.index)
+                                    - static_cast<int32_t>(_meshsize_pd/2));
+                        if (xs < _meshsize_pd) {
+                            value += data_in[offs+xs*_meshsize_pd+y]
+                                  * static_cast<meshdata_t>(h.weight);
+                        }
                     }
                     data_out[offs+x*_meshsize_pd+y] = value;
                 }
@@ -231,11 +232,13 @@ void vfps::KickMap::apply()
                         hi h = _hinfo[offs2+x*_ip+j];
                         // the min makes sure not to have out of bounds accesses
                         // casting is to be sure about overflow behaviour
-                        const meshindex_t ys = std::min(
-                            static_cast<meshindex_t>(_meshsize_kd-1),
-                            static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
-                                                   - static_cast<int32_t>(_meshsize_kd/2)));
-                        value += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+                        const meshindex_t ys = static_cast<meshindex_t>(
+                                    static_cast<int32_t>(y+h.index)
+                                    - static_cast<int32_t>(_meshsize_kd/2));
+                        if (ys < _meshsize_pd) {
+                            value += data_in[offs+ys]
+                                  * static_cast<meshdata_t>(h.weight);
+                        }
                     }
                     data_out[offs+y] = value;
                 }
@@ -247,8 +250,7 @@ void vfps::KickMap::apply()
     }
 }
 
-vfps::PhaseSpace::Position
-vfps::KickMap::apply(PhaseSpace::Position pos) const
+void vfps::KickMap::applyTo(PhaseSpace::Position& pos) const
 {
     if (_kickdirection == Axis::x) {
         meshindex_t yi;
@@ -271,7 +273,6 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
         pos.y = std::max(static_cast<meshaxis_t>(1),
                      std::min(pos.y,static_cast<meshaxis_t>(_meshsize_kd-1)));
     }
-    return pos;
 }
 
 #if INOVESA_USE_OPENCL == 1

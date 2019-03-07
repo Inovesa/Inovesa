@@ -58,9 +58,8 @@ public:
     /**
      * @brief applyTo does nothing
      */
-    inline PhaseSpace::Position
-    apply(const PhaseSpace::Position pos) const override
-        { return pos; }
+    void applyTo(PhaseSpace::Position& pos) const override
+        { return; }
 };
 
 }

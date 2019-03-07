@@ -81,11 +81,14 @@ void vfps::WakeFunctionMap::update()
     #endif // INOVESA_USE_OPENCL
     _in->integrate();
     integral_t charge = _in->getIntegral();
-    const integral_t* density = _in->getProjection(0);
-    for (unsigned int i=0;i<_xsize;i++) {
-        _offset[i] = 0;
-        for (unsigned int j=0;j<_xsize;j++) {
-            _offset[i] += meshaxis_t(density[j]/charge*_wakefunction[_xsize+i-j]);
+    auto density = _in->getProjection(0);
+    for(uint32_t b=0; b<PhaseSpace::nb; b++) {
+        for (unsigned int i=0;i<_xsize;i++) {
+            _offset[b*_xsize+i] = 0;
+            for (unsigned int j=0;j<_xsize;j++) {
+                _offset[b*_xsize+i] += meshaxis_t(density[b][j]/charge
+                                            *_wakefunction[_xsize+i-j]);
+            }
         }
     }
     updateSM();
