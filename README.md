@@ -17,6 +17,7 @@ is a good starting point.
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
 [![Inovesa build status](https://travis-ci.com/Inovesa/Inovesa.svg?branch=develop)](https://travis-ci.com/Inovesa/Inovesa/branches)
+[![Documentation](https://codedocs.xyz/Inovesa/Inovesa.svg)](https://codedocs.xyz/Inovesa/Inovesa/)
 [![Coverage Status](https://coveralls.io/repos/github/Inovesa/Inovesa/badge.svg?branch=develop)](https://coveralls.io/github/Inovesa/Inovesa)
 [![Code quality alerts](https://img.shields.io/lgtm/alerts/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/alerts/)
 [![Code quality grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/context:cpp)
