@@ -14,7 +14,7 @@
 
 #include "PS/PhaseSpace.hpp"
 
-/** \file HelperFunctions.hpp
+/** \file
  *  \brief Definitions of helper functions
  */
 

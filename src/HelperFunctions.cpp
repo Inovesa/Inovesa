@@ -9,7 +9,7 @@
 
 #include "HelperFunctions.hpp"
 
-/** \file HelperFunctions.cpp
+/** \file
  *  \brief Implementations of helper functions
  */
 

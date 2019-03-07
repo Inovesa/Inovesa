@@ -15,6 +15,14 @@
 
 //#define INOVESA_SYNC_CL
 
+
+/** \file
+ *  \brief global definitions
+ */
+
+/** \namespace vfps
+ *  \brief namespace Vlasov-Fokker-Planck solver
+ */
 namespace vfps
 {
 // has to be uint32_t (same as cl_uint) for OpenCL support
