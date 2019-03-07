@@ -239,6 +239,21 @@ vfps::ProgramOptions::ProgramOptions() :
     _visibleopts.add(_commandlineopts);
 }
 
+/**
+ * @brief parse parse command line parameters
+ * @param argc argument count (handed over from main)
+ * @param argv argument values (handed over from main)
+ * @return Run simulation?
+ *
+ * Function will return true, except in cases where it is undesired that the
+ * simulation is run. This is the case when an error occurs or if one of the
+ * following command line parameters is present:
+ * - `help`
+ * - `copyright`
+ * - `version`
+ * - `buildinfo`
+ * - `cldev < 0`
+ */
 bool vfps::ProgramOptions::parse(int ac, char** av)
 {
     po::store(po::parse_command_line(ac, av, _commandlineopts), _vm);
@@ -310,6 +325,12 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
     return true;
 }
 
+/**
+ * @brief save settings to a configutation file
+ * @param fname file name to use for saving
+ *
+ * @todo ignore members of _compatopts
+ */
 void vfps::ProgramOptions::save(std::string fname)
 {
     std::ofstream ofs(fname.c_str());
