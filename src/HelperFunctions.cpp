@@ -14,15 +14,13 @@ const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
-    rv+="Copyright (c) 2012-2018 Patrik Schönfeldt\n"
+    rv+="Copyright (c) 2012-2019 Patrik Schönfeldt\n"
         "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
         "Copyright (c) 2017-2018 Johannes Schestag\n"
         "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 2017 Julian Gethmann\n"
         "Copyright (c) 2017 Matthias Blaicher\n"
-        "Copyright (c) 1997-2016 John C. Bowman,\n"
-        "\tUniversity of Alberta (Array class)\n"
         #if INOVESA_USE_OPENGL == 1
         "Copyright (c) 2014-2015 Nathaniel J. Smith, Stefan van der Walt\n"
         "\t (Magma color code)\n"
