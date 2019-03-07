@@ -169,7 +169,7 @@ const std::string vfps::status_string(std::shared_ptr<PhaseSpace> ps,
 /**
  * @brief upper_power_of_two round up to the next \f$ 2^n \f$
  * @param v number to round up
- * @return \f$ w\f$ with \f$ v \le w = 2^n \f$
+ * @return \f$ w\f$ with \f$ 2^{n-1} < v \le w = 2^n \f$
  *
  * see http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
  */
