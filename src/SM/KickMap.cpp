@@ -7,7 +7,24 @@
 
 #include "SM/KickMap.hpp"
 
-vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
+
+/** \file
+ *  \brief implementation of class KickMap
+ */
+
+/**
+ * @brief vfps::KickMap::KickMap
+ * @param in source
+ * @param out target
+ * @param xsize number of horizontal grid cells
+ * @param ysize number of vertical grid cells
+ * @param nbunches number of bunches
+ * @param it number of points used for 1D interpolation
+ * @param interpol_clamp clamp values after interpoltion
+ * @param kd direction of kick
+ * @param oclh pointer to OpenCL handler
+ */
+vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
                       , std::shared_ptr<PhaseSpace> out
                       , const meshindex_t xsize
                       , const meshindex_t ysize
@@ -162,6 +179,9 @@ vfps::KickMap::KickMap(std::shared_ptr<PhaseSpace> in
 #endif // INOVESA_USE_OPENCL
 }
 
+/**
+ * @brief saves timings if profiling is enabled
+ */
 vfps::KickMap::~KickMap() noexcept
 #if INOVESA_ENABLE_CLPROFILING == 1
 {
@@ -171,6 +191,9 @@ vfps::KickMap::~KickMap() noexcept
     = default;
 #endif // INOVESA_ENABLE_CLPROFILING
 
+/**
+ * @brief vfps::KickMap::apply implements vfps::SourceMap::apply
+ */
 void vfps::KickMap::apply()
 {
     #if INOVESA_USE_OPENCL == 1
@@ -250,6 +273,13 @@ void vfps::KickMap::apply()
     }
 }
 
+/**
+ * @brief vfps::KickMap::applyTo implements vfps::SourceMap::applyTo
+ * @param pos
+ *
+ * Coordinates in _offset are defined for backward mapping but this function
+ * does foreward mapping. So the shift is inverted.
+ */
 void vfps::KickMap::applyTo(PhaseSpace::Position& pos) const
 {
     if (_kickdirection == Axis::x) {
@@ -304,6 +334,11 @@ void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
 }
 #endif // INOVESA_USE_OPENCL
 
+/**
+ * @brief updateSM
+ *
+ * does nothing when OpenCL is used
+ */
 void vfps::KickMap::updateSM()
 {
     if (_oclh == nullptr) {

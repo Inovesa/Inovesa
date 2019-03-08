@@ -9,6 +9,10 @@
 
 #include "SM/SourceMap.hpp"
 
+/** \file
+ *  \brief definitions of class KickMap
+ */
+
 namespace vfps
 {
 
@@ -39,10 +43,18 @@ public:
     ~KickMap() noexcept override;
 
 public:
+    /**
+     * @brief getForce
+     * @return pointer to beginning of _offset
+     */
     const inline meshaxis_t* getForce() const
         { return _offset.data(); }
 
-    inline void swapForce(std::vector<meshaxis_t>& offset)
+    /**
+     * @brief swapForce allows to replace _offset
+     * @param offset
+     */
+    inline void swapOffset(std::vector<meshaxis_t>& offset)
         { _offset.swap(offset); updateSM(); }
 
 public:
@@ -61,7 +73,7 @@ protected:
      * If kick is different for every bunch,
      * vector is used like a C-style ND array.
      *
-     * @todo: On the long run, a multi_array should be used.
+     * @todo On the long run, a multi_array should be used.
      * If the kick is the same for every bunch,
      * the according dimentsion miht have just one entry.
      */
@@ -100,11 +112,6 @@ protected:
      */
     uint32_t _lastbunch;
 
-    /**
-     * @brief updateSM
-     *
-     * does nothing when OpenCL is used
-     */
     void updateSM();
 };
 
