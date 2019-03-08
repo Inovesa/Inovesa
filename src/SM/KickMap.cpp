@@ -16,9 +16,6 @@
  * @brief vfps::KickMap::KickMap
  * @param in source
  * @param out target
- * @param xsize number of horizontal grid cells
- * @param ysize number of vertical grid cells
- * @param nbunches number of bunches
  * @param it number of points used for 1D interpolation
  * @param interpol_clamp clamp values after interpoltion
  * @param kd direction of kick
@@ -26,27 +23,26 @@
  */
 vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
                       , std::shared_ptr<PhaseSpace> out
-                      , const meshindex_t xsize
-                      , const meshindex_t ysize
-                      , const meshindex_t nbunches
                       , const InterpolationType it
                       , const bool interpol_clamp
                       , const Axis kd
                       , oclhptr_t oclh
                       )
-  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1
-             , kd==Axis::x?ysize*nbunches*it:xsize*nbunches*it
+  : SourceMap( in,out,kd==Axis::x?1:PhaseSpace::nx,
+               kd==Axis::x?PhaseSpace::ny:1
+             , kd==Axis::x?PhaseSpace::ny*PhaseSpace::nb*it:
+                           PhaseSpace::nx*PhaseSpace::nb*it
              , it,it,oclh),
     _kickdirection(kd),
-    _meshsize_kd(kd==Axis::x?xsize:ysize)
-  , _meshsize_pd(kd==Axis::x?ysize:xsize)
-  , _lastbunch(nbunches-1)
+    _meshsize_kd(kd==Axis::x?PhaseSpace::nx:PhaseSpace::ny)
+  , _meshsize_pd(kd==Axis::x?PhaseSpace::ny:PhaseSpace::nx)
+  , _lastbunch(PhaseSpace::nb-1)
 {
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
     // explicitly state that product should fit into meshindex_t
-    _offset.resize(static_cast<meshindex_t>(_meshsize_pd*nbunches),
+    _offset.resize(static_cast<meshindex_t>(_meshsize_pd*PhaseSpace::nb),
                    static_cast<meshaxis_t>(0));
     #if INOVESA_INIT_KICKMAP == 1
     for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {

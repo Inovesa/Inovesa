@@ -19,7 +19,7 @@ vfps::DriftMap::DriftMap( std::shared_ptr<PhaseSpace> in
                         , const bool interpol_clamp
                         , oclhptr_t oclh
                         )
-  : KickMap( in,out,xsize,ysize,1U,it,interpol_clamp,Axis::x,oclh)
+  : KickMap( in,out,it,interpol_clamp,Axis::x,oclh)
 {
     for(meshindex_t y=0; y<_ysize; y++) {
         _offset[y] = 0;

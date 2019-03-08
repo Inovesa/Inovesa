@@ -9,14 +9,12 @@
 
 vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
-                                        , const vfps::meshindex_t xsize
-                                        , const vfps::meshindex_t ysize
                                         , ElectricField* field
                                         , const InterpolationType it
                                         , bool interpol_clamp
                                         , oclhptr_t oclh
                                         )
-  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp,oclh
+  : WakeKickMap( in,out,it,interpol_clamp,oclh
                #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
                , field->wakepotential_glbuf
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL

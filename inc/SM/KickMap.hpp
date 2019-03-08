@@ -33,8 +33,6 @@ public:
 
 public:
     KickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
-           , const meshindex_t xsize, const meshindex_t ysize
-           , const meshindex_t nbunches
            , const InterpolationType it, const bool interpol_clamp
            , const Axis kd
            , oclhptr_t oclh
@@ -51,7 +49,7 @@ public:
         { return _offset.data(); }
 
     /**
-     * @brief swapForce allows to replace _offset
+     * @brief swapOffset allows to replace _offset
      * @param offset
      */
     inline void swapOffset(std::vector<meshaxis_t>& offset)

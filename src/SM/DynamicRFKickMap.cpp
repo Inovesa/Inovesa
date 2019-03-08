@@ -56,8 +56,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const bool interpol_clamp
                                         , oclhptr_t oclh
                                         )
-  : RFKickMap( in,out,xsize,ysize
-             , revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
+  : RFKickMap( in,out,revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
   , _phasenoise(phasespread/std::sqrt(revolutionpart))
   , _amplnoise(amplspread/std::sqrt(revolutionpart))
   , _modampl(modampl)

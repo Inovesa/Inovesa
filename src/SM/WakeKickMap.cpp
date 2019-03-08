@@ -9,8 +9,6 @@
 
 vfps::WakeKickMap::WakeKickMap( std::shared_ptr<PhaseSpace> in
                               , std::shared_ptr<PhaseSpace> out
-                              , const meshindex_t xsize
-                              , const meshindex_t ysize
                               , const InterpolationType it
                               , const bool interpol_clamp
                               , oclhptr_t oclh
@@ -18,7 +16,7 @@ vfps::WakeKickMap::WakeKickMap( std::shared_ptr<PhaseSpace> in
                               , cl_GLuint glbuf
                               #endif // INOVESA_USE_OPENCL an INOVESA_USE_OPENGL
                               )  :
-    KickMap( in,out,xsize,ysize,PhaseSpace::nb,it,interpol_clamp,Axis::y,oclh)
+    KickMap( in,out,it,interpol_clamp,Axis::y,oclh)
     #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
     , _offset_glbuf(glbuf)
     #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL

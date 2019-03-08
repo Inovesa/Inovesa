@@ -41,11 +41,10 @@ BOOST_AUTO_TEST_CASE( kickmap_x ){
                                                   buckets,1);
 
     vfps::KickMap km(
-                ps1,ps2,4,4,buckets.size(),
-                vfps::SourceMap::InterpolationType::linear,false,
+                ps1,ps2,vfps::SourceMap::InterpolationType::linear,false,
                 vfps::KickMap::Axis::x,nullptr);
 
-    km.swapForce(offset);
+    km.swapOffset(offset);
 
     km.apply();
     km.applyToAll(pos);
@@ -94,11 +93,10 @@ BOOST_AUTO_TEST_CASE( kickmap_x_overflow ){
                                                   buckets,1);
 
     vfps::KickMap km(
-                ps1,ps2,4,4,buckets.size(),
-                vfps::SourceMap::InterpolationType::linear,false,
+                ps1,ps2,vfps::SourceMap::InterpolationType::linear,false,
                 vfps::KickMap::Axis::x,nullptr);
 
-    km.swapForce(offset);
+    km.swapOffset(offset);
 
     km.apply();
     km.applyToAll(pos);
@@ -146,11 +144,10 @@ BOOST_AUTO_TEST_CASE( kickmap_y ){
                                                   buckets,1);
 
     vfps::KickMap km(
-                ps1,ps2,4,4,buckets.size(),
-                vfps::SourceMap::InterpolationType::linear,false,
+                ps1,ps2,vfps::SourceMap::InterpolationType::linear,false,
                 vfps::KickMap::Axis::y,nullptr);
 
-    km.swapForce(offset);
+    km.swapOffset(offset);
 
     km.apply();
     km.applyToAll(pos);

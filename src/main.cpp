@@ -613,18 +613,13 @@ int main(int argc, char** argv)
     } else {
         if (linearRF) {
             Display::printText("Building static, linear RFKickMap.");
-            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_bins,ps_bins
-                                   , angle, f_RF
-                                   , interpolationtype,interpol_clamp
-                                   , oclh
-                                   ));
+            rfm.reset(new RFKickMap( grid_t2, grid_t1, angle, f_RF,
+                                     interpolationtype,interpol_clamp, oclh ));
         } else {
             Display::printText("Building static, nonlinear RFKickMap.");
-            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_bins,ps_bins
-                                   , revolutionpart, V_eff, f_RF, V0
-                                   , interpolationtype,interpol_clamp
-                                   , oclh
-                                   ));
+            rfm.reset(new RFKickMap( grid_t2, grid_t1, revolutionpart, V_eff,
+                                     f_RF, V0 , interpolationtype,
+                                     interpol_clamp , oclh ));
         }
     }
     { // context of information printing, not needed in the program
@@ -732,11 +727,8 @@ int main(int argc, char** argv)
     std::string wakefile = opts.getWakeFile();
     if (wakefile.size() > 4) {
         Display::printText("Reading WakeFunction from "+wakefile+".");
-        wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_bins,ps_bins
-                                 , wakefile,E0,sE,Ib,dt
-                                 , interpolationtype,interpol_clamp
-                                 , oclh
-                                 );
+        wfm = new WakeFunctionMap( grid_t1,grid_t2, wakefile,E0,sE,Ib,dt,
+                                   interpolationtype,interpol_clamp,oclh);
         wkm = wfm;
     } else {
         if (wake_impedance != nullptr) {
@@ -749,11 +741,8 @@ int main(int argc, char** argv)
                                           );
 
             Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap( grid_t1,grid_t2,ps_bins,ps_bins
-                                      , wake_field ,interpolationtype
-                                      , interpol_clamp
-                                      , oclh
-                                      );
+            wkm = new WakePotentialMap( grid_t1,grid_t2,wake_field,
+                                        interpolationtype,interpol_clamp,oclh);
         }
     }
     if (wkm != nullptr) {

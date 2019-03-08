@@ -25,8 +25,7 @@ namespace vfps
 class WakeKickMap : public KickMap
 {
 public:
-    WakeKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
-               , const meshindex_t xsize, const meshindex_t ysize
+    WakeKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
                , const InterpolationType it, const bool interpol_clamp
                , oclhptr_t oclh
                #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1

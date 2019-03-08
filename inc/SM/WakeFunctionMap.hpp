@@ -22,7 +22,6 @@ public:
 
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
-                   , const meshindex_t xsize, const meshindex_t ysize
                    , const std::string fname
                    , const double sigmaE, const double E0
                    , const double Ib, const double dt
@@ -33,7 +32,6 @@ public:
 
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
-                   , const meshindex_t xsize, const meshindex_t ysize
                    , const ElectricField* csr
                    , const InterpolationType it
                    , const bool interpol_clamp
@@ -62,21 +60,8 @@ private:
 
 
 private:
-    /**
-     * @brief WakeFunctionMap
-     * @param in
-     * @param out
-     * @param xsize
-     * @param ysize
-     * @param it
-     * @param interpol_clamp
-     * @param oclh
-     *
-     * @todo currently broken when used with CL/GL sharing
-     */
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
-                   , const meshindex_t xsize, const meshindex_t ysize
                    , const InterpolationType it, bool interpol_clamp
                    , oclhptr_t oclh
                    );
