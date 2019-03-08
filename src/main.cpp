@@ -54,6 +54,17 @@ void SIGINT_handler(int) {
 }
 #endif // INOVESA_ENABLE_INTERRUPT
 
+/**
+ * @file
+ * @brief main Inovesa file
+ */
+
+/**
+ * @brief main
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char** argv)
 {
     /*
@@ -682,7 +693,7 @@ int main(int argc, char** argv)
         Display::printText("... damping beta: " +sstream.str());
     } else {
         Display::printText("Fokker-Planck-Term is neglected.");
-        fpm = new Identity(grid_t3,grid_t1,ps_bins,ps_bins, oclh);
+        fpm = new Identity(grid_t3,grid_t1,oclh);
     }
 
 
@@ -748,7 +759,7 @@ int main(int argc, char** argv)
     if (wkm != nullptr) {
         wm = wkm;
     } else {
-        wm = new Identity( grid_t1,grid_t2,ps_bins,ps_bins,oclh);
+        wm = new Identity( grid_t1,grid_t2,oclh);
     }
 
     /* Load coordinates for particle tracking.

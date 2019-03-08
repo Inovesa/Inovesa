@@ -17,10 +17,9 @@ class Identity : public SourceMap
 public:
     Identity( std::shared_ptr<PhaseSpace> in
             , std::shared_ptr<PhaseSpace> out
-            , const meshindex_t xsize, const meshindex_t ysize
             , oclhptr_t oclh
             )
-  : SourceMap( in, out, xsize, ysize, 0, 0, oclh)
+  : SourceMap( in, out, PhaseSpace::nx, PhaseSpace::ny, 0, 0, oclh)
 {}
 
     ~Identity() noexcept override;
