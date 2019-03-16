@@ -33,7 +33,7 @@ Details can be found at the corresponding [Inovesa Wiki page](https://github.com
 ### Mandatory Dependencies
 * [cmake](https://cmake.org/) (Version 3.1 or later)
 * C++ 14 compatible compiler (e.g. [g++](https://gcc.gnu.org/) 5.0 or later, [clang](http://clang.llvm.org/) 3.5 or later)
-* [boost](http://www.boost.org/) (boost-system, boost-filesystem, boost-program-options)
+* [boost](http://www.boost.org/) (boost-filesystem, boost-multi-array, boost-program-options, boost-system)
 * [FFTW](http://fftw.org/) (Version 3)
 
 ### Optional Dependencies
