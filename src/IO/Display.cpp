@@ -1,6 +1,6 @@
 /******************************************************************************
  * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
+ * Copyright (c) 2014-2019: Patrik Schönfeldt                                 *
  * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
  *                                                                            *
  * This file is part of Inovesa.                                              *
@@ -34,10 +34,13 @@ std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
     const std::time_t start_ctime
             = std::chrono::system_clock::to_time_t(Display::start_time);
     std::stringstream sstream;
-    sstream << std::ctime(&start_ctime);
+    char timestr[64];
+    if(std::strftime( timestr, sizeof(timestr), "%FT%T%z",
+                      std::localtime(&start_ctime))) {
+        sstream << timestr;
+    }
 
     std::string timestring = sstream.str();
-    timestring.resize(timestring.size()-1);
 
     if (!ofname.empty()) {
         Display::logfile.open(ofname+".log");
