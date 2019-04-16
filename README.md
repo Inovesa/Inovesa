@@ -45,7 +45,6 @@ Details can be found at the corresponding [Inovesa Wiki page](https://github.com
 * [clFFT](https://github.com/clMathLibraries/clFFT) (for faster FFT using parallelization)
 
 
-
 Publications
 ------------
 

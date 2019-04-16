@@ -21,10 +21,9 @@ std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
     const std::time_t start_ctime
             = std::chrono::system_clock::to_time_t(Display::start_time);
     std::stringstream sstream;
-    sstream << std::ctime(&start_ctime);
+    sstream << std::put_time(std::localtime(&start_ctime),"%FT%T%z");
 
     std::string timestring = sstream.str();
-    timestring.resize(timestring.size()-1);
 
     if (!ofname.empty()) {
         Display::logfile.open(ofname+".log");
