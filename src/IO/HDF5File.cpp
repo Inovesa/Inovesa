@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrick Schreiber
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #if INOVESA_USE_HDF5 == 1
