@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
  * Copyright (c) Johannes Schestag
- * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrik SchÃ¶nfeldt
  * Copyright (c) Karlsruhe Institute of Technology
  */
 
