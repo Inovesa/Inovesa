@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -17,10 +16,9 @@ class Identity : public SourceMap
 public:
     Identity( std::shared_ptr<PhaseSpace> in
             , std::shared_ptr<PhaseSpace> out
-            , const meshindex_t xsize, const meshindex_t ysize
             , oclhptr_t oclh
             )
-  : SourceMap( in, out, xsize, ysize, 0, 0, oclh)
+  : SourceMap( in, out, PhaseSpace::nx, PhaseSpace::ny, 0, 0, oclh)
 {}
 
     ~Identity() noexcept override;

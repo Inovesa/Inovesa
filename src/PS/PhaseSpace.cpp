@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Tobias Boltz
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "PS/PhaseSpace.hpp"
@@ -84,11 +84,12 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         } else
         #endif // INOVESA_USE_OPENGL
         {
+            // _projection is used for _projection[0]
             projectionX_clbuf = cl::Buffer(
                         _oclh->context,
                         CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                         _nmeshcellsX*sizeof(decltype(_projection)::value_type),
-                        _projection[0].data());
+                        _projection.data());
         }
         filling_buf = cl::Buffer( _oclh->context
                                  , CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR
@@ -218,9 +219,10 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
     if (axis == 0) {
         #if INOVESA_USE_OPENCL == 1
         if (_oclh) {
+        // _projection is used for _projection[0]
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
                                 , sizeof(projection_t)*_nmeshcellsX
-                                , _projection[0]);
+                                , _projection.data());
         }
         #endif
     }
@@ -364,9 +366,10 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
     case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer
             (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data.data());
+        // _projection is used for _projection[0]
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
                                 , sizeof(projection_t)*_nmeshcellsX
-                                , _projection[0],nullptr,evt);
+                                , _projection.data(),nullptr,evt);
         _oclh->enqueueReadBuffer
             (filling_buf,CL_TRUE,0,sizeof(integral_t),&_filling,
             nullptr,evt

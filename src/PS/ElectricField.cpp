@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "PS/ElectricField.hpp"
@@ -124,15 +123,17 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
         if (_oclh->OpenGLSharing()) {
             glGenBuffers(1, &wakepotential_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,wakepotential_glbuf);
-            glBufferData( GL_ARRAY_BUFFER, PhaseSpace::nx*sizeof(*_wakepotential)
+            glBufferData( GL_ARRAY_BUFFER,
+                          PhaseSpace::nx*sizeof(decltype(_wakepotential)::value_type)
                         , 0, GL_DYNAMIC_DRAW);
             wakepotential_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
                                              , wakepotential_glbuf);
         } else
         #endif // INOVESA_USE_OPENGL
         {
-            wakepotential_clbuf = cl::Buffer( _oclh->context, CL_MEM_READ_WRITE
-                                           , sizeof(*_wakepotential)*PhaseSpace::nx);
+            wakepotential_clbuf = cl::Buffer(
+                        _oclh->context, CL_MEM_READ_WRITE,
+                        sizeof(decltype(_wakepotential)::value_type)*PhaseSpace::nx);
         }
     #ifndef INOVESA_USE_CLFFT
     }
@@ -436,8 +437,8 @@ void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
                                        sizeof(*_wakepotential_padded)*_nmax,
                                        _wakepotential_padded);
         _oclh->enqueueWriteBuffer(wakepotential_clbuf,CL_TRUE,0,
-                                       sizeof(*_wakepotential)*PhaseSpace::nx,
-                                       _wakepotential);
+                                       sizeof(decltype(_wakepotential)::value_type)*PhaseSpace::nx,
+                                       _wakepotential.data());
         break;
     case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer(_bp_padded_buf,CL_TRUE,0,
@@ -452,8 +453,8 @@ void vfps::ElectricField::syncCLMem(OCLH::clCopyDirection dir)
                                       sizeof(*_wakepotential_padded)*_nmax,
                                       _wakepotential_padded);
         _oclh->enqueueReadBuffer(wakepotential_clbuf,CL_TRUE,0,
-                                      sizeof(*_wakepotential)*PhaseSpace::nx,
-                                      _wakepotential);
+                                      sizeof(decltype(_wakepotential)::value_type)*PhaseSpace::nx,
+                                      _wakepotential.data());
         break;
     }
     }

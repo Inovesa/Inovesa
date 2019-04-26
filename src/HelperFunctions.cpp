@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik SchÃ¶nfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include <boost/config.hpp>
@@ -21,7 +20,7 @@ const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
-    rv+="Copyright (c) 2012-2019 Patrik Schönfeldt\n"
+    rv+="Copyright (c) 2012-2019 Patrik SchÃ¶nfeldt\n"
         "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
         "Copyright (c) 2017-2018 Johannes Schestag\n"
         "Copyright (c) 2017 Tobias Boltz\n"

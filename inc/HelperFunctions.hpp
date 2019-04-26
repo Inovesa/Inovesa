@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
 
+#include <ctime>
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -32,6 +32,26 @@ const std::string inovesa_version(
         const std::string commit = GIT_COMMIT);
 
 bool isOfFileType(std::string ending, std::string fname);
+
+/**
+ * @brief localtime threading-save wrapper for std::localtime
+ * @param time time stamp to convert
+ * @return struct holdig calendar date and time
+ */
+inline std::tm localtime(std::time_t time)
+{
+    std::tm bt {};
+    #if defined(__STDC_LIB_EXT1__) // C++11 extension for safe alternatives
+    localtime_s(&bt, &time);
+    #elif defined(__unix__)
+    localtime_r(&time, &bt); // unix "restartable" multi-threading alternative
+    #else // fallback if no thread-safe alternative exists
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+    bt = *std::localtime(&time);
+    #endif
+    return bt;
+}
 
 const std::string status_string(std::shared_ptr<PhaseSpace> ps,
                                 float roatation,
