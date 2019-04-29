@@ -19,9 +19,9 @@ The [contibuting file](CONTRIBUTING.md) is a good starting point.
 
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
-[![Inovesa build status (branch: Master)](https://travis-ci.org/Inovesa/Inovesa.svg?branch=master)](https://travis-ci.org/Inovesa/Inovesa/branches)
-[![Coverage Status](https://coveralls.io/repos/github/Inovesa/Inovesa/badge.svg?branch=master)](https://coveralls.io/github/Inovesa/Inovesa?branch=master)
-
+[![Inovesa build status (branch: Master)](https://travis-ci.com/Inovesa/Inovesa.svg?branch=v1.0)](https://travis-ci.com/Inovesa/Inovesa/branches)
+[![Code quality alerts](https://img.shields.io/lgtm/alerts/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/alerts/)
+[![Code quality grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/context:cpp)
 
 Publications
 ------------

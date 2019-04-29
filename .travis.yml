@@ -48,9 +48,3 @@ script: # set correct compiler versions first
   - ./inovesa --buildinfo
   - ./inovesa -T 0.1 -o test.h5
   - ./inovesa -T 0.1 -i test.h5 --CollimatorRadius 0.002 --WallConductivity 3.77e7 --WallSusceptibility 2.1e-5 -o test2.png
-
-
-after_success:
-  - if [ "$CXX" == "g++-5" ]; then coveralls --root . -E ".*CMakeFiles.*"; fi
-
-
