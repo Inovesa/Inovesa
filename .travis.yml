@@ -5,6 +5,8 @@ branches:
   - /.*/
 
 dist: xenial
+services:
+  - xvfb
 
 addons:
   apt:
@@ -24,11 +26,11 @@ addons:
       - libboost-test-dev # for unit tests
 #      - libclfft-dev # optional
       - libfftw3-dev # required
-#      - libglew-dev # optional
-#      - libglfw3-dev # optional
+      - libglew-dev # optional
+      - libglfw3-dev # optional
       - libhdf5-dev # optional
       - libpng++-dev # optional
-#      - libxrandr-dev # optional
+      - libxrandr-dev # optional
 #      - opencl-dev # optional
 
 compiler: # for "matrix builds" testing various configurations
