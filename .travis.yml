@@ -38,9 +38,6 @@ compiler: # for "matrix builds" testing various configurations
 before_install:
   - pip install --user cpp-coveralls
 
-before_install:
-  - pip install --user cpp-coveralls
-
 script: # set correct compiler versions first
   - cppcheck --quiet --error-exitcode=1 .
   - if [ "$CXX" == "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
