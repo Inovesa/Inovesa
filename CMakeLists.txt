@@ -25,7 +25,7 @@ endif()
 
 set (INOVESA_VERSION_MAJOR 1)
 set (INOVESA_VERSION_MINOR 1)
-set (INOVESA_VERSION_FIX -4)
+set (INOVESA_VERSION_FIX 0)
 # pre release numbers:
 # -1: alpha
 # -2: beta
