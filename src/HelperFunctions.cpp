@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * Copyright (c) Patrik SchÃ¶nfeldt
+ * Copyright (c) Patrik Schönfeldt
  * Copyright (c) Karlsruhe Institute of Technology
  */
 
@@ -20,10 +20,10 @@ const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
-    rv+="Copyright (c) 2012-2019 Patrik SchÃ¶nfeldt\n"
-        "Copyright (c) 2014-2018 Karlsruhe Institute of Technology\n"
+    rv+="Copyright (c) 2012-2019 Patrik Schönfeldt\n"
+        "Copyright (c) 2014-2019 Karlsruhe Institute of Technology\n"
+        "Copyright (c) 2017-2019 Tobias Boltz\n"
         "Copyright (c) 2017-2018 Johannes Schestag\n"
-        "Copyright (c) 2017 Tobias Boltz\n"
         "Copyright (c) 2017 Patrick Schreiber\n"
         "Copyright (c) 2017 Julian Gethmann\n"
         "Copyright (c) 2017 Matthias Blaicher\n"
