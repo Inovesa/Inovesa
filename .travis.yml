@@ -4,12 +4,10 @@ branches:
   only:
   - /.*/
 
+dist: xenial
+
 addons:
   apt:
-    sources:
-      - george-edison55-precise-backports
-      - llvm-toolchain-precise-3.8
-      - ubuntu-toolchain-r-test
     packages:
       # compilers and build tools
       - cmake-data
@@ -38,7 +36,7 @@ compiler: # for "matrix builds" testing various configurations
   - gcc
 
 before_install:
-    - pip install --user cpp-coveralls
+  - pip install --user cpp-coveralls
 
 before_install:
   - pip install --user cpp-coveralls
