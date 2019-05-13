@@ -1,0 +1,4 @@
+path_classifiers:
+  test:
+    - exclude: "inc/CL/local_cl.hpp" # copy of third party header
+
