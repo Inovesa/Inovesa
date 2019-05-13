@@ -159,8 +159,12 @@ void vfps::RotationMap::apply()
                     meshdata_t flor=std::numeric_limits<meshdata_t>::max();
                     for (size_t x=1; x<=2; x++) {
                         for (size_t y=1; y<=2; y++) {
-                            ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
-                            flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
+                            ceil = std::max(
+                                ceil, data_in[_hinfo[static_cast<meshindex_t>(
+                                        i*_ip+x*_it+y)].index]);
+                            flor = std::min(
+                                flor, data_in[_hinfo[static_cast<meshindex_t>(
+                                        i*_ip+x*_it+y)].index]);
                         }
                     }
                     data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
