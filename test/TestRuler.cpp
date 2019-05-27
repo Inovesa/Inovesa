@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrik SchÃ¶nfeldt
  */
 
 #include <boost/test/unit_test.hpp>
