@@ -150,10 +150,12 @@ void vfps::Display::printText(std::string txt, bool newline, float silentTime)
                 << " ]: "
                 << txt;
         _lastmessage = now;
-        if (newline) {
-            std::cout << message.str() << std::endl;
-        } else {
-            std::cout << message.str() << "\r";
+        if (!silent_mode) {
+            if (newline) {
+                std::cout << message.str() << std::endl;
+            } else {
+                std::cout << message.str() << "\r";
+            }
         }
         std::cout.flush();
         if (logfile.is_open()) {
@@ -200,6 +202,8 @@ GLFWwindow* vfps::Display::openWindow(uint_fast8_t glversion)
 std::chrono::system_clock::time_point vfps::Display::start_time;
 
 volatile bool vfps::Display::abort(false);
+
+volatile bool vfps::Display::silent_mode(false);
 
 std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 

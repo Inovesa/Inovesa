@@ -80,6 +80,8 @@ public:
 
     volatile static bool abort;
 
+    volatile static bool silent_mode;
+
 public:
     Display() = delete;
 

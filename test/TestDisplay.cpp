@@ -31,7 +31,9 @@ BOOST_AUTO_TEST_CASE( DisplayException ){
 }
 
 BOOST_AUTO_TEST_CASE( MakeDisplay ) {
+    vfps::Display::silent_mode = true;
     BOOST_CHECK_NO_THROW(vfps::make_display("foo.conf",false));
+    vfps::Display::silent_mode = false;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
