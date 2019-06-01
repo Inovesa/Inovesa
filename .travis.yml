@@ -36,7 +36,7 @@ compiler: # for "matrix builds" testing various configurations
 
 env:
   global:
-    - DCMAKE_BUILD_TYPE=Release
+    - CMAKE_BUILD_TYPE=Release
   matrix:
     - INOVESA_USE_OPENCL=0 INOVESA_USE_OPENGL=0
     - INOVESA_USE_OPENCL=0 INOVESA_USE_OPENGL=1
@@ -47,7 +47,7 @@ script: # set correct compiler versions first
   - cppcheck --quiet --error-exitcode=1 .
   - if [ "$CXX" == "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
   - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
-  - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DINOVESA_USE_OPENCL=${INOVESA_USE_OPENCL} -DINOVESA_USE_OPENGL=${INOVESA_USE_OPENGL} .
+  - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DINOVESA_ENFORCE_OPENCL=${INOVESA_USE_OPENCL} -DINOVESA_ENFORCE_OPENGL=${INOVESA_USE_OPENGL} .
   - cmake --build .
   - ./inovesa --buildinfo
   - ./inovesa -T 0.1 -o test.h5
