@@ -47,7 +47,6 @@ Publications
 *   The fundamental working principle (v1.0) and example numerical studies can be found in the [first paper on Inovesa][1].
 *   The features added in v1.1 are described in a [paper on modeling synchrotron motion][2]
 
-
 ### Example results
 *   Analysis of [bunch profiles using machine learning][3] (Inovesa v1.0)
 *   Studies of [phase shift][4] (Inovesa v1.0)
