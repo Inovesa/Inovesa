@@ -4,12 +4,10 @@ branches:
   only:
   - /.*/
 
+dist: xenial
+
 addons:
   apt:
-    sources:
-      - george-edison55-precise-backports
-      - llvm-toolchain-precise-3.8
-      - ubuntu-toolchain-r-test
     packages:
       # compilers and build tools
       - cmake-data
