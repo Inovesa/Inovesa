@@ -30,7 +30,7 @@ addons:
       - libhdf5-dev # optional
       - libpng++-dev # optional
       - libxrandr-dev # optional
-      - opencl-dev # optional
+      - ocl-icd-opencl-dev # optional
 
 compiler: # for "matrix builds" testing various configurations
   - clang
