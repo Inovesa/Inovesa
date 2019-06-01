@@ -28,7 +28,7 @@ public:
                , const InterpolationType it, const bool interpol_clamp
                , oclhptr_t oclh
                #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
-               , cl_GLuint glbuf
+               , vfps::clgluint glbuf
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
 
@@ -37,20 +37,13 @@ public:
 public:
     virtual void update()=0;
 
-
-#if (INOVESA_USE_OPENGL == 1) && (INOVESA_USE_OPENCL == 1)
-    cl_GLuint getGLBuffer() const
+#if INOVESA_USE_OPENGL == 1
+    vfps::clgluint getGLBuffer() const
         { return _offset_glbuf; }
 
 protected:
-    cl_GLuint _offset_glbuf;
-#elif INOVESA_USE_OPENGL == 1
-    GLuint getGLBuffer() const
-        { return _offset_glbuf; }
-
-protected:
-    GLuint _offset_glbuf;
-#endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
+    vfps::clgluint _offset_glbuf;
+#endif // INOVESA_USE_OPENGL
 };
 
 } // namespace VFPS
