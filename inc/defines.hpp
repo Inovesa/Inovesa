@@ -13,12 +13,11 @@
 
 #include "InovesaConfig.hpp"
 
-//#define INOVESA_SYNC_CL
-
 namespace vfps
 {
 // has to be uint32_t (same as cl_uint) for OpenCL support
 typedef uint32_t meshindex_t;
+
 
 /* currently all of the below types have to be the same
  * use this to switch them all */

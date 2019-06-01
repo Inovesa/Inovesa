@@ -30,7 +30,7 @@ public:
                , const InterpolationType it, const bool interpol_clamp
                , oclhptr_t oclh
                #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
-               , cl_GLuint glbuf
+               , vfps::clgluint glbuf
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                );
 
@@ -40,11 +40,11 @@ public:
     virtual void update()=0;
 
 #if INOVESA_USE_OPENGL == 1
-    cl_GLuint getGLBuffer() const
+    vfps::clgluint getGLBuffer() const
         { return _offset_glbuf; }
 
 protected:
-    cl_GLuint _offset_glbuf;
+    vfps::clgluint _offset_glbuf;
 
 #endif // INOVESA_USE_OPENGL
 };
