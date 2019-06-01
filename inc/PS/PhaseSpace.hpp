@@ -358,13 +358,13 @@ private:
     oclhptr_t _oclh;
 
 public:
-    #if INOVESA_USE_OPENCL == 1
     #if INOVESA_USE_OPENGL == 1
     /**
      * @brief projectionX_glbuf will only be allocated during CL/GL sharing
      */
-    cl_GLuint projectionX_glbuf;
+    vfps::clgluint projectionX_glbuf;
     #endif // INOVESA_USE_OPENGL
+    #if INOVESA_USE_OPENCL == 1
 
     cl::Buffer data_buf;
 
