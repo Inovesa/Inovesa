@@ -28,31 +28,31 @@ In general, CMake will check whether build requirenmens are met.
 Details can be found at the corresponding [Inovesa Wiki page](https://github.com/Inovesa/Inovesa/wiki/Installation).
 
 ### Mandatory Dependencies
-* [cmake](https://cmake.org/) (Version 3.1 or later)
-* C++ 14 compatible compiler (e.g. [g++](https://gcc.gnu.org/) 5.0 or later, [clang](http://clang.llvm.org/) 3.5 or later)
-* [boost](http://www.boost.org/) (boost-filesystem, boost-multi-array, boost-program-options, boost-system)
-* [FFTW](http://fftw.org/) (Version 3)
+*   [cmake](https://cmake.org/) (Version 3.1 or later)
+*   C++ 14 compatible compiler (e.g. [g++](https://gcc.gnu.org/) 5.0 or later, [clang](http://clang.llvm.org/) 3.5 or later)
+*   [boost](http://www.boost.org/) (boost-filesystem, boost-multi-array, boost-program-options, boost-system)
+*   [FFTW](http://fftw.org/) (Version 3)
 
 ### Optional Dependencies
-* [GLEW](https://www.opengl.org/sdk/libs/GLEW/) (for GUI support)
-* [GLFW](http://www.glfw.org/) (for GUI support)
-* [HDF5](https://www.hdfgroup.org/downloads/hdf5/) (to write out data)
-* [PNG++](http://www.nongnu.org/pngpp/) (for PNG support)
-* [OpenCL](https://www.khronos.org/opencl/) (>=1.1, for parallelization)
-* [clFFT](https://github.com/clMathLibraries/clFFT) (for faster FFT using parallelization)
+*   [GLEW](https://www.opengl.org/sdk/libs/GLEW/) (for GUI support)
+*   [GLFW](http://www.glfw.org/) (for GUI support)
+*   [HDF5](https://www.hdfgroup.org/downloads/hdf5/) (to write out data)
+*   [PNG++](http://www.nongnu.org/pngpp/) (for PNG support)
+*   [OpenCL](https://www.khronos.org/opencl/) (>=1.1, for parallelization)
+*   [clFFT](https://github.com/clMathLibraries/clFFT) (for faster FFT using parallelization)
 
 Publications
 ------------
 ### Background on the implementation
-* The fundamental working principle (v1.0) and example numerical studies can be found in the [first paper on Inovesa][1].
-* The features added in v1.1 are described in a [paper on modeling synchrotron motion][2]
+*   The fundamental working principle (v1.0) and example numerical studies can be found in the [first paper on Inovesa][1].
+*   The features added in v1.1 are described in a [paper on modeling synchrotron motion][2]
 
 
 ### Example results
-* Analysis of [bunch profiles using machine learning][3] (Inovesa v1.0)
-* Studies of [phase shift][4] (Inovesa v1.0)
-* A wide [range of applications][5] (Inovesa v1.0)
-* [Emitted synchrotron radiation][6] at different wavelengths (Inovesa v1.0)
+*   Analysis of [bunch profiles using machine learning][3] (Inovesa v1.0)
+*   Studies of [phase shift][4] (Inovesa v1.0)
+*   A wide [range of applications][5] (Inovesa v1.0)
+*   [Emitted synchrotron radiation][6] at different wavelengths (Inovesa v1.0)
 
 ### Citing Inovesa
 We use the zenodo project to get a DOI for each version. So, when you use

@@ -4,11 +4,11 @@
 
 ## Contributors
 In chronological order of first contribution:
-* Miriam Brosi
-* Johannes L. Steinmann
-* Tobias Boltz
-* Patrick Schreiber
-* Matthias Blaicher
-* Julian Gethmann
-* Johannes Schestagi
+*   Miriam Brosi
+*   Johannes L. Steinmann
+*   Tobias Boltz
+*   Patrick Schreiber
+*   Matthias Blaicher
+*   Julian Gethmann
+*   Johannes Schestag
 

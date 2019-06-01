@@ -28,15 +28,15 @@ feel free to contact [the maintainer](CONTRIBUTORS.md#maintainer).
 Note: One month of coding can save you one day of propper planning.
 
 ## Documentation
-* For every task or feature, there should be at least one
-small HOWTO describing a (the intended) way to use it.
-If you miss something, please ask.
-Users are also welcomed to write their own HOWTOs and tutorials
-(we will probably link them).
-* Abstract functionality can be documented,
-but it is also possible to just refer to scientific publications.
-* Implementation details should be documeted in the code,
-either explicitly or by ticking to the programming guidelines.
-(At the moment, the latter are not named explicitly.
-This is subject to be improved in a future release of this document.)
+*   For every task or feature, there should be at least one
+    small HOWTO describing a (the intended) way to use it.
+    If you miss something, please ask.
+    Users are also welcomed to write their own HOWTOs and tutorials
+    (we will probably link them).
+*   Abstract functionality can be documented,
+    but it is also possible to just refer to scientific publications.
+*   Implementation details should be documeted in the code,
+    either explicitly or by ticking to the programming guidelines.
+    (At the moment, the latter are not named explicitly.
+    This is subject to be improved in a future release of this document.)
 
