@@ -475,13 +475,8 @@ public:
      * if CL/GL sharing is enabled. Else, it will just hold
      * 0 and allocation is left to the Inovesa displaying system.
      */
-    #if INOVESA_USE_OPENCL == 1
-    cl_GLuint projectionX_glbuf;
-    #else // INOVESA_USE_OPENCL != 1
-    GLuint projectionX_glbuf;
-    #endif // INOVESA_USE_OPENCL != 1
-    #endif // INOVESA_USE_OPENGL == 1
-
+    vfps::clgluint projectionX_glbuf;
+    #endif // INOVESA_USE_OPENGL
 
     #if INOVESA_USE_OPENCL == 1
     cl::Buffer data_buf;

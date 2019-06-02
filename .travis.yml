@@ -4,12 +4,10 @@ branches:
   only:
   - /.*/
 
+dist: xenial
+
 addons:
   apt:
-    sources:
-      - george-edison55-precise-backports
-      - llvm-toolchain-precise-3.8
-      - ubuntu-toolchain-r-test
     packages:
       # compilers and build tools
       - cmake-data
@@ -24,14 +22,14 @@ addons:
       - libboost-filesystem-dev # required
       - libboost-program-options-dev # required
       - libboost-test-dev # for unit tests
-#      - libclfft-dev # optional
+      - libclfft-dev # optional
       - libfftw3-dev # required
-#      - libglew-dev # optional
-#      - libglfw3-dev # optional
+      - libglew-dev # optional
+      - libglfw3-dev # optional
       - libhdf5-dev # optional
       - libpng++-dev # optional
-#      - libxrandr-dev # optional
-#      - opencl-dev # optional
+      - libxrandr-dev # optional
+      - ocl-icd-opencl-dev # optional
 
 compiler: # for "matrix builds" testing various configurations
   - clang
@@ -40,11 +38,20 @@ compiler: # for "matrix builds" testing various configurations
 before_install:
   - pip install --user cpp-coveralls
 
+env:
+  global:
+    - CMAKE_BUILD_TYPE=Release
+  matrix:
+    - INOVESA_USE_OPENCL=0 INOVESA_USE_OPENGL=0
+    - INOVESA_USE_OPENCL=0 INOVESA_USE_OPENGL=1
+    - INOVESA_USE_OPENCL=1 INOVESA_USE_OPENGL=0
+    - INOVESA_USE_OPENCL=1 INOVESA_USE_OPENGL=1
+
 script: # set correct compiler versions first
   - cppcheck --quiet --error-exitcode=1 .
   - if [ "$CXX" == "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
   - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
-  - cmake -DCMAKE_BUILD_TYPE=Release -DCOVERAGE=1 .
+  - cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCOVERAGE=1 .
   - cmake --build .
   - ./inovesa-test
 

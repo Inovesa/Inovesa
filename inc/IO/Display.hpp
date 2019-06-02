@@ -31,7 +31,7 @@
 #endif // INOVESA_USE_OPENGL
 #include <vector>
 
-#ifdef INOVESA_USE_OPENCL == 1
+#if INOVESA_USE_OPENCL == 1
 #include "CL/OpenCLHandler.hpp"
 #endif
 
@@ -39,15 +39,6 @@
 #include "IO/GUI/GUIElement.hpp"
 
 namespace vfps {
-
-// shared OpenCL OpenGL pointer with automatic fallback
-#if INOVESA_USE_OPENGL == 1
-#if INOVESA_USE_OPENCL == 1
-typedef cl_GLuint clgluint;
-#else
-typedef GLuint clgluint;
-#endif
-#endif
 
 class Display;
 
