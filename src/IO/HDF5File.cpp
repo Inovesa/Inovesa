@@ -162,10 +162,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _timeAxis.dataset.createAttribute("Turn",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axis_t_turns);
 
-    _bunchPopulation.dataset.createAttribute("Ampere",_bunchPopulation.datatype,
-            H5::DataSpace()).write(_bunchPopulation.datatype,&(ps->current));
-    _bunchPopulation.dataset.createAttribute("Coulomb",_bunchPopulation.datatype,
-            H5::DataSpace()).write(_bunchPopulation.datatype,&(ps->charge));
+    _bunchPopulation.dataset.createAttribute("Ampere",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->current));
+    _bunchPopulation.dataset.createAttribute("Coulomb",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->charge));
 
     // actual data
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis0" );
