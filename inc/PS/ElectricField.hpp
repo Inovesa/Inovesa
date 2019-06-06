@@ -260,12 +260,12 @@ public:
     /**
      * @brief OhmsPerHertz includes factor 2 to use positive frequencies only
      */
-    const csrpower_t factor4WattPerHertz;
+    const double factor4WattPerHertz;
 
     /**
      * @brief factor4Watts includes factor 2 to use positive frequencies only
      */
-    const csrpower_t factor4Watts;
+    const double factor4Watts;
 
 private:
 

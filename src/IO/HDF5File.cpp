@@ -232,7 +232,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
         _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR/Spectrum/axis0" );
         _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSR/Spectrum/axis1" );
 
-        _csrIntensity.dataset.createAttribute("WattPerHertz",H5::PredType::IEEE_F64LE,
+        _csrSpectrum.dataset.createAttribute("WattPerHertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                        &ef->factor4WattPerHertz);
 
