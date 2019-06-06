@@ -858,7 +858,7 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_OPENCL
 
-    #if INOVESA_USE_OPENCL == 1 || INOVESA_USE_OPENGL == 1
+    #if INOVESA_USE_HDF5 == 1 || INOVESA_USE_OPENGL == 1
     // Number of steps when writeout happend
     uint32_t outstepnr=0;
     #endif
@@ -922,8 +922,10 @@ int main(int argc, char** argv)
                     hdf_file->appendRFKicks(drfm->getPastModulation());
                 }
             }
-            outstepnr++;
             #endif // INOVESA_USE_HDF5
+            #if INOVESA_USE_HDF5 == 1 || INOVESA_USE_OPENGL == 1
+            outstepnr++;
+            #endif
             #if INOVESA_USE_OPENGL == 1
             if (display != nullptr) {
                 if (psv != nullptr) {
