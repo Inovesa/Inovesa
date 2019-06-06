@@ -242,7 +242,10 @@ int main(int argc, char** argv)
 
     const double dt = 1.0/(fs*steps);
     const double revolutionpart = f_rev*dt;
+
+    #if INOVESA_USE_HDF5 == 1
     const double t_sync = 1.0/fs;
+    #endif
 
     const double padding =std::max(opts.getPadding(),1.0);
     const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
@@ -295,11 +298,14 @@ int main(int argc, char** argv)
      * Only some part has its own context because information will go to      *
      * the results file.                                                      *
      **************************************************************************/
-    double shield = 0;
-    double Ith = 0;
-    double S_csr = 0;
-
+    #if INOVESA_USE_HDF5 == 0
     { // context of information printing, not needed in the program
+    #endif
+    double shield = 0;
+    double S_csr = 0;
+    #if INOVESA_USE_HDF5 == 1
+    { // context of information printing, not needed in the program
+    #endif
     if (gap!=0) {
         if (gap>0) {
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
@@ -309,7 +315,7 @@ int main(int argc, char** argv)
                            * std::pow(dE*fs/f_rev,2)/V_eff/harmonic_number
                            * std::pow(bl/R_bend,1./3.);
 
-        Ith = Inorm * (0.5+0.34*shield);
+        double Ith = Inorm * (0.5+0.34*shield);
 
         S_csr = Ib/Inorm;
 
@@ -852,11 +858,10 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_OPENCL
 
-    /*
-     * main simulation loop
-     * (everything inside this loop will be run a multitude of times)
-     */
+    #if INOVESA_USE_OPENCL == 1 || INOVESA_USE_OPENGL == 1
+    // Number of steps when writeout happend
     uint32_t outstepnr=0;
+    #endif
 
     /*
      * Will count steps in the main simulation loop,
@@ -864,6 +869,10 @@ int main(int argc, char** argv)
      */
     uint32_t simulationstep = 0;
 
+    /*
+     * main simulation loop
+     * (everything inside this loop will be run a multitude of times)
+     */
     while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection
