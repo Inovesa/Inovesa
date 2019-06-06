@@ -162,10 +162,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _timeAxis.dataset.createAttribute("Turn",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&axis_t_turns);
 
-    _bunchPopulation.dataset.createAttribute("Ampere",_bunchPopulation.datatype,
-            H5::DataSpace()).write(_bunchPopulation.datatype,&(ps->current));
-    _bunchPopulation.dataset.createAttribute("Coulomb",_bunchPopulation.datatype,
-            H5::DataSpace()).write(_bunchPopulation.datatype,&(ps->charge));
+    _bunchPopulation.dataset.createAttribute("Ampere",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->current));
+    _bunchPopulation.dataset.createAttribute("Coulomb",H5::PredType::IEEE_F64LE,
+            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->charge));
 
     // actual data
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis0" );
@@ -232,7 +232,7 @@ vfps::HDF5File::HDF5File(const std::string filename,
         _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/CSR/Spectrum/axis0" );
         _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_f", "/CSR/Spectrum/axis1" );
 
-        _csrIntensity.dataset.createAttribute("WattPerHertz",H5::PredType::IEEE_F64LE,
+        _csrSpectrum.dataset.createAttribute("WattPerHertz",H5::PredType::IEEE_F64LE,
                 H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                        &ef->factor4WattPerHertz);
 
@@ -256,12 +256,12 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/PhaseSpace/axis1" );
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_E", "/PhaseSpace/axis2" );
 
-    _phaseSpace.dataset.createAttribute("AmperePerNBLPerNES",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
-                                   &ps->current);
-    _phaseSpace.dataset.createAttribute("CoulombPerNBLPerNES",H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
-                                   &ps->charge);
+    _phaseSpace.dataset.createAttribute(
+                "AmperePerNBLPerNES",H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &ps->current);
+    _phaseSpace.dataset.createAttribute(
+                "CoulombPerNBLPerNES", H5::PredType::IEEE_F64LE,
+                H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &ps->charge);
 
 
     if (imp != nullptr) {
@@ -279,8 +279,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
         _impedanceReal.dataset.write(imp_real.data(),_impedanceReal.datatype);
         _impedanceImag.dataset.write(imp_imag.data(),_impedanceImag.datatype);
 
-        _file.openGroup("/Impedance/data").createAttribute("Ohm", H5::PredType::IEEE_F64LE,
-            H5::DataSpace()).write(H5::PredType::IEEE_F64LE, &(imp->factor4Ohms));
+        _file.openGroup("/Impedance/data").createAttribute(
+                    "Ohm", H5::PredType::IEEE_F64LE,
+                    H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
+                                           &(imp->factor4Ohms));
     }
 
     if (wfm != nullptr ) {
@@ -313,7 +315,8 @@ vfps::HDF5File::HDF5File(const std::string filename,
     const hsize_t ver_string_dim(ver_string.size());
     H5::DataSpace ver_string_dspace(1,&ver_string_dim);
     H5::DataSet ver_string_dset = _file.createDataSet
-                    ("/Info/Inovesa_build", H5::PredType::C_S1,ver_string_dspace);
+                    ("/Info/Inovesa_build", H5::PredType::C_S1,
+                     ver_string_dspace);
     ver_string_dset.write(ver_string.c_str(),H5::PredType::C_S1);
     }
 }
