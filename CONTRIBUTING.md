@@ -33,10 +33,8 @@ Note: One month of coding can save you one day of propper planning.
     If you miss something, please ask.
     Users are also welcomed to write their own HOWTOs and tutorials
     (we will probably link them).
-    
 *   Abstract functionality can be documented,
     but it is also possible to just refer to scientific publications.
-    
 *   Implementation details should be documeted in the code,
     either explicitly or by ticking to the programming guidelines.
     (At the moment, the latter are not named explicitly.
