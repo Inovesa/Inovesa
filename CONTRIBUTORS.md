@@ -1,6 +1,6 @@
 # Contributions to Inovesa
 ## Maintainer
-*   Patrik Schönfeldt <mailto:patrik.schoenfeldt@alumni.kit.edu>
+*   Patrik Schönfeldt (<mailto:patrik.schoenfeldt@alumni.kit.edu>)
 
 ## Contributors
 In chronological order of first contribution:
@@ -11,4 +11,3 @@ In chronological order of first contribution:
 *   Matthias Blaicher
 *   Julian Gethmann
 *   Johannes Schestag
-
