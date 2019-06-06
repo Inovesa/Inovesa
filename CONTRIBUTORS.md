@@ -1,6 +1,6 @@
 # Contributions to Inovesa
 ## Maintainer
-* Patrik Schönfeldt <patrik.schoenfeldt@alumni.kit.edu>
+*   Patrik Schönfeldt <mailto:patrik.schoenfeldt@alumni.kit.edu>
 
 ## Contributors
 In chronological order of first contribution:
