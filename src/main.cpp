@@ -209,10 +209,11 @@ int main(int argc, char** argv)
 
     // non-zero f_s will be used, zero implies usage of alpha0
     if (fs == 0) {
-        fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_RF/(two_pi<double>()*E0));
+        fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_eff
+                             /(two_pi<double>()*E0));
     } else {
         alpha0_tmp = boost::math::sign(fs)*two_pi<double>()*E0
-                   / (harmonic_number*V_RF)*std::pow(fs/f_rev,2);
+                   / (harmonic_number*V_eff)*std::pow(fs/f_rev,2);
     }
 
     const meshaxis_t alpha0 = alpha0_tmp;
