@@ -78,8 +78,6 @@ public:
 
     ~OCLH();
 
-    void teardownCLEnvironment(cl::Error& e);
-
      static void listCLDevices();
 
     cl::Context context;

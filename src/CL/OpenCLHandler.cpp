@@ -165,7 +165,7 @@ OCLH::~OCLH()
     #if INOVESA_ENABLE_CLPROFILING == 1
     saveProfilingInfo("inovesa-timings.txt");
     #else
-    OCLH::queue.finish();
+    queue.finish();
     #endif
 
     #if INOVESA_USE_CLFFT == 1

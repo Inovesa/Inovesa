@@ -21,7 +21,7 @@ public:
 
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
-                   , const std::string fname
+                   , const std::string& fname
                    , const double sigmaE, const double E0
                    , const double Ib, const double dt
                    , const InterpolationType it
@@ -55,13 +55,14 @@ private:
      * @brief _wakeFromFile reads in a file and scales wake to internal units
      * @param fname file name to read wake from
      */
-    void _wakeFromFile(const std::string fname, const double scaling);
+    void _wakeFromFile(const std::string& fname, const double scaling);
 
 
 private:
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
-                   , const InterpolationType it, bool interpol_clamp
+                   , const InterpolationType it
+                   , bool interpol_clamp
                    , oclhptr_t oclh
                    );
 

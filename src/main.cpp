@@ -226,10 +226,11 @@ int main(int argc, char** argv)
 
     // non-zero f_s will be used, zero implies usage of alpha0
     if (fs == 0) {
-        fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_RF/(two_pi<double>()*E0));
+        fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_eff
+                             /(two_pi<double>()*E0));
     } else {
         alpha0_tmp = boost::math::sign(fs)*two_pi<double>()*E0
-                   / (harmonic_number*V_RF)*std::pow(fs/f_rev,2);
+                   / (harmonic_number*V_eff)*std::pow(fs/f_rev,2);
     }
 
     const meshaxis_t alpha0 = alpha0_tmp;
@@ -290,7 +291,10 @@ int main(int argc, char** argv)
 
     const double dt = 1.0/(fs*steps);
     const double revolutionpart = f_rev*dt;
+
+    #if INOVESA_USE_HDF5 == 1
     const double t_sync = 1.0/fs;
+    #endif
 
     // number of phace spaces that would fit in the bunch spacing
     const double spacing_ps = (bunchspacing*physcons::c/bl/pqsize);
@@ -361,9 +365,7 @@ int main(int argc, char** argv)
      * the results file.                                                      *
      **************************************************************************/
     double shield = 0;
-    double Ith = 0;
     double S_csr = 0;
-
     { // context of information printing, not needed in the program
     if (gap!=0) {
         if (gap>0) {
@@ -374,7 +376,7 @@ int main(int argc, char** argv)
                            * std::pow(dE*fs/f_rev,2)/V_eff/harmonic_number
                            * std::pow(bl/R_bend,1./3.);
 
-        Ith = Inorm * (0.5+0.34*shield);
+        double Ith = Inorm * (0.5+0.34*shield);
 
         S_csr = Ib/Inorm;
 
@@ -664,7 +666,7 @@ int main(int argc, char** argv)
     const std::vector<meshaxis_t> alpha {{ angle,alpha1/alpha0*angle
                                           , alpha2/alpha0*angle }};
 
-    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,ps_bins,ps_bins, alpha
+    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,alpha
                                         , E0,interpolationtype,interpol_clamp
                                         , oclh );
 
@@ -924,11 +926,10 @@ int main(int argc, char** argv)
     }
     #endif // INOVESA_USE_OPENCL
 
-    /*
-     * main simulation loop
-     * (everything inside this loop will be run a multitude of times)
-     */
+    #if INOVESA_USE_HDF5 == 1 || INOVESA_USE_OPENGL == 1
+    // Number of steps when writeout happend
     uint32_t outstepnr=0;
+    #endif
 
     /*
      * Will count steps in the main simulation loop,
@@ -936,6 +937,10 @@ int main(int argc, char** argv)
      */
     uint32_t simulationstep = 0;
 
+    /*
+     * main simulation loop
+     * (everything inside this loop will be run a multitude of times)
+     */
     while (simulationstep<laststep && !Display::abort) {
         if (wkm != nullptr) {
             // works on XProjection
@@ -985,8 +990,10 @@ int main(int argc, char** argv)
                     hdf_file->appendRFKicks(drfm->getPastModulation());
                 }
             }
-            outstepnr++;
             #endif // INOVESA_USE_HDF5
+            #if INOVESA_USE_HDF5 == 1 || INOVESA_USE_OPENGL == 1
+            outstepnr++;
+            #endif
             #if INOVESA_USE_OPENGL == 1
             if (display != nullptr) {
                 if (psv != nullptr) {

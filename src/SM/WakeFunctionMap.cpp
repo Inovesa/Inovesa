@@ -40,7 +40,7 @@ vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
 
 vfps::WakeFunctionMap::WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                                       , std::shared_ptr<PhaseSpace> out
-                                      , const std::string fname
+                                      , const std::string& fname
                                       , const double sigmaE
                                       , const double E0
                                       , const double Ib
@@ -99,7 +99,7 @@ void vfps::WakeFunctionMap::update()
     updateSM();
 }
 
-void vfps::WakeFunctionMap::_wakeFromFile(const std::string fname,
+void vfps::WakeFunctionMap::_wakeFromFile(const std::string& fname,
                                           const double scaling)
 {
     std::ifstream ifs;
