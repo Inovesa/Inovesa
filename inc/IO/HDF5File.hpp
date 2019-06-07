@@ -69,7 +69,7 @@ public:
         All, Defaults, PhaseSpace
     };
 
-    void appendRFKicks(const std::vector<std::array<vfps::meshaxis_t,2>> kicks);
+    void appendRFKicks(const std::vector<std::array<vfps::meshaxis_t,2>>& kicks);
 
     void appendTracks(const std::vector<PhaseSpace::Position> &p);
 

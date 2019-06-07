@@ -23,7 +23,7 @@ public:
     WakeFunctionMap( std::shared_ptr<PhaseSpace> in
                    , std::shared_ptr<PhaseSpace> out
                    , const meshindex_t xsize, const meshindex_t ysize
-                   , const std::string fname
+                   , const std::string& fname
                    , const double sigmaE, const double E0
                    , const double Ib, const double dt
                    , const InterpolationType it
