@@ -127,7 +127,7 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
-                            , const std::vector<integral_t> filling
+                            , const std::vector<integral_t>& filling
                             , const double zoom
                             , const meshdata_t* data
                             ) :

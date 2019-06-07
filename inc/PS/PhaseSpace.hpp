@@ -68,7 +68,7 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<integral_t> filling={1}
+              , const std::vector<integral_t>& filling={1}
               , const double zoom=1
               , const meshdata_t* data = nullptr
               );
