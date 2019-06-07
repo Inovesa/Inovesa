@@ -449,17 +449,6 @@ int main(int argc, char** argv)
     }
     } // end of context of information printing
 
-
-    /*
-     * There are three phase space grids:
-     * grid_t1, grid_t2, and grid_t3
-     * This will allow to work with odd and even numbers of SourceMaps
-     * f(x,y,t) -> f(x,y,t+dt) with fixed source and destination.
-     * When memory usage is crytical, it might be worth to change this
-     * to two grids (only).
-     */
-    PhaseSpace::setSize(ps_bins, nbunches);
-
      /* This first grid (grid_t1) will be initialized and
      * copied for the other ones.
      */
@@ -474,6 +463,16 @@ int main(int argc, char** argv)
      * at some point.
      */
     if (startdistfile.empty()) {
+        /*
+         * There are three phase space grids:
+         * grid_t1, grid_t2, and grid_t3
+         * This will allow to work with odd and even numbers of SourceMaps
+         * f(x,y,t) -> f(x,y,t+dt) with fixed source and destination.
+         * When memory usage is crytical, it might be worth to change this
+         * to two grids (only).
+         */
+        PhaseSpace::setSize(ps_bins, nbunches);
+
         if (ps_bins == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
@@ -499,13 +498,7 @@ int main(int argc, char** argv)
                                     , Qb,Ib,bl,dE);
 
             if (grid_t1 == nullptr) {
-                return EXIT_SUCCESS;
-            }
-
-            if (ps_bins != PhaseSpace::nx ) {
-                std::cerr << startdistfile
-                          << " does not match set GridSize." << std::endl;
-
+                std::cerr << "Error reading " << startdistfile << std::endl;
                 return EXIT_SUCCESS;
             }
         } else

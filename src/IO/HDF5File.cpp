@@ -10,6 +10,22 @@
 
 #include "HelperFunctions.hpp"
 
+namespace vfps {
+class HDF5FileException
+{
+public:
+    explicit HDF5FileException(const std::string& msg) : _msg(msg) {}
+
+    const char* what() const noexcept;
+
+private:
+    const std::string _msg;
+};
+} // namespace vfps
+
+const char* vfps::HDF5FileException::what() const noexcept
+    { return _msg.c_str(); }
+
 vfps::HDF5File::HDF5File(const std::string& filename,
                          const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
@@ -469,7 +485,7 @@ vfps::HDF5File::readPhaseSpace( std::string fname
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    std::vector<integral_t> filling = {{ 1.0 }};
+    std::vector<integral_t> filling = {1.0};
 
     PhaseSpace::setSize(ps_size, filling.size());
 
@@ -478,7 +494,11 @@ vfps::HDF5File::readPhaseSpace( std::string fname
                                           , oclh
                                           , Qb,Ib_unscaled,filling,1
                                           );
-    ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
+    if (PhaseSpace::nxyb == ps_space.getSelectNpoints()) {
+        ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
+    } else {
+        throw HDF5FileException("Unexpected data size.");
+    }
 
     return ps;
 }
