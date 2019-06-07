@@ -298,14 +298,9 @@ int main(int argc, char** argv)
      * Only some part has its own context because information will go to      *
      * the results file.                                                      *
      **************************************************************************/
-    #if INOVESA_USE_HDF5 == 0
-    { // context of information printing, not needed in the program
-    #endif
     double shield = 0;
     double S_csr = 0;
-    #if INOVESA_USE_HDF5 == 1
     { // context of information printing, not needed in the program
-    #endif
     if (gap!=0) {
         if (gap>0) {
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
