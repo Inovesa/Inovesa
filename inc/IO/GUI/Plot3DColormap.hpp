@@ -19,9 +19,9 @@ namespace vfps
 class Plot3DColormap : public GUIElement
 {
 public:
-    Plot3DColormap(vfps::meshdata_t maxvalue=1);
+    explicit Plot3DColormap(vfps::meshdata_t maxvalue=1);
 
-    ~Plot3DColormap() noexcept;
+    ~Plot3DColormap() noexcept override;
 
     void createTexture(std::shared_ptr<PhaseSpace> mesh);
 

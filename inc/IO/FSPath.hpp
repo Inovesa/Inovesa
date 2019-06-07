@@ -22,7 +22,7 @@ class FSPath
 public:
     FSPath() = delete;
 
-    FSPath(std::string path);
+    explicit FSPath(std::string path);
 
     /**
      * @brief append

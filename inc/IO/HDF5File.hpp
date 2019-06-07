@@ -34,7 +34,7 @@ public:
      * @param nparticles
      * @param t_sync
      */
-    HDF5File(const std::string filename,
+    HDF5File(const std::string& filename,
              const std::shared_ptr<PhaseSpace> ps,
              const ElectricField* ef,
              const std::shared_ptr<Impedance> imp,

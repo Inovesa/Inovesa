@@ -10,7 +10,7 @@
 
 #include "HelperFunctions.hpp"
 
-vfps::HDF5File::HDF5File(const std::string filename,
+vfps::HDF5File::HDF5File(const std::string& filename,
                          const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
                          const std::shared_ptr<Impedance> imp,

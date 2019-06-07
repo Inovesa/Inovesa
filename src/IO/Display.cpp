@@ -72,7 +72,6 @@ vfps::Display::Display(uint_fast8_t glversion)
     if( _window == nullptr ) {
         glfwTerminate();
         throw DisplayException("Failed to initialize GLFW.");
-        return;
     }
     glfwMakeContextCurrent(_window);
     #endif // GLFW3
@@ -194,7 +193,7 @@ GLFWwindow* vfps::Display::openWindow(uint_fast8_t glversion)
         title+=" (GL3)";
         break;
     }
-    return glfwCreateWindow( 512, 512, title.c_str(), NULL, NULL);
+    return glfwCreateWindow( 512, 512, title.c_str(), nullptr, nullptr);
 }
 #endif // INOVESA_USE_OPENGL
 

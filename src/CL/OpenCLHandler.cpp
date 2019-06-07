@@ -111,7 +111,7 @@ cl::Program OCLH::prepareCLProg(std::string code)
                   << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device)
                   << std::endl;
         #if DEBUG == 1
-        throw e;
+        throw;
         #endif
     }
     return p;

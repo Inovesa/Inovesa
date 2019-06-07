@@ -14,11 +14,11 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
+vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
-                            , const std::vector<integral_t> filling
+                            , const std::vector<integral_t>& filling
                             , const double zoom
                             , const meshdata_t* data
                             )

@@ -12,7 +12,7 @@
 
 vfps::ProgramOptions::ProgramOptions() :
     _configfile("default.cfg"),
-    I_b({{3e-3f}}),
+    I_b({3e-3f}),
     _physopts("Physical Parameters for Simulation"),
     _proginfoopts("Program Information"),
     _programopts_cli("General Program Parameters"),
@@ -395,7 +395,7 @@ void vfps::ProgramOptions::save(std::string fname)
 #if INOVESA_USE_HDF5 == 1
 void vfps::ProgramOptions::save(vfps::HDF5File* file)
 {
-    for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); it++ ) {
+    for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); ++it ) {
         if (!it->second.value().empty()) {
             if (it->second.value().type() == typeid(double)) {
                 double data = _vm[it->first].as<double>();

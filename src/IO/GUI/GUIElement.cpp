@@ -13,16 +13,19 @@
 class ShaderException : public std::exception
 {
 public:
-    ShaderException(const std::string msg) :
-        _msg(msg)
-                {}
+    explicit ShaderException(const std::string& msg) :
+        _msg(msg) {}
 
-        const char* what() const noexcept
-        { return _msg.c_str(); }
+    const char* what() const noexcept;
 
 private:
     std::string _msg;
 };
+
+const char* ShaderException::what() const noexcept
+{
+    return _msg.c_str();
+}
 
 vfps::GUIElement::GUIElement(bool buffer_shared)
  : buffer_shared(buffer_shared)

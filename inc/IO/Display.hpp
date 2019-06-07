@@ -44,7 +44,7 @@ class Display;
 
 class DisplayException : public std::exception {
 public:
-    DisplayException(std::string msg) : _msg(msg){}
+    explicit DisplayException(std::string msg) : _msg(msg){}
 
     const char* what() const noexcept override;
 
@@ -98,7 +98,7 @@ public:
      * @brief Display initializes OpenGL
      * @param glversion
      */
-    Display(uint_fast8_t glversion);
+    explicit Display(uint_fast8_t glversion);
     #endif // INOVESA_USE_OPENGL
 
     /**

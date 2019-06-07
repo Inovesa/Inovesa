@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrik SchÃ¶nfeldt
  */
 
 #define BOOST_TEST_DYN_LINK

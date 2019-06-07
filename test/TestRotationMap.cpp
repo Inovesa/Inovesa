@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrik SchÃ¶nfeldt
  */
 
 #include <boost/test/unit_test.hpp>
@@ -148,11 +148,6 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_nomap ){
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
                                           0.0, 0.3, 0.7, 0.0,
                                           0.0, 0.7, 0.3, 0.0,
-                                          0.0, 0.0, 0.0, 0.0 }};
-
-    std::vector<vfps::meshdata_t> data2{{ 0.0, 0.0, 0.0, 0.0,
-                                          0.0, 0.7, 0.3, 0.0,
-                                          0.0, 0.3, 0.7, 0.0,
                                           0.0, 0.0, 0.0, 0.0 }};
 
     auto ps1 = std::make_shared<vfps::PhaseSpace>(-1,1,2,-1,1,4,nullptr,1,1,
