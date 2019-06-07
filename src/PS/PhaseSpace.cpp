@@ -137,13 +137,14 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
 {
 }
 
-vfps::PhaseSpace::PhaseSpace( meshaxis_t qmin, meshaxis_t qmax, double qscale
+vfps::PhaseSpace::PhaseSpace(meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , meshaxis_t pmin, meshaxis_t pmax, double pscale
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
-                            , const std::vector<integral_t> filling
-                            , const double zoom, const meshdata_t* data
+                            , const std::vector<integral_t>& filling
+                            , const double zoom
+                            , const meshdata_t* data
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,
                 {{"Meter",qscale}}))

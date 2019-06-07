@@ -38,7 +38,7 @@ OCLH::OCLH( uint32_t device, bool glsharing)
                 context = cl::Context( CL_DEVICE_TYPE_ALL
                                      , properties(p,ogl_sharing).data());
             } else {
-                throw e;
+                throw;
             }
         }
         _devices = context.getInfo<CL_CONTEXT_DEVICES>();

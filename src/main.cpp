@@ -361,13 +361,20 @@ int main(int argc, char** argv)
 
     /**************************************************************************
      * Up next: Printing information (dynamics estimation) for upcoming run.  *
-     * Only some part has its own context because information will go to      *
-     * the results file.                                                      *
-     **************************************************************************/
+     * Not everything is in printing context because some information will go *
+     * to the results file (if HDF5 is active).                               *
+     *************************************************************************/
+    #if INOVESA_USE_HDF5 == 1
     double shield = 0;
     double S_csr = 0;
+    #endif
     { // context of information printing, not needed in the program
     if (gap!=0) {
+        #if INOVESA_USE_HDF5 == 0
+        double shield = 0;
+        double S_csr = 0;
+        #endif
+
         if (gap>0) {
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }

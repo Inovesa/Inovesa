@@ -44,12 +44,12 @@ class Display;
 
 class DisplayException : public std::exception {
 public:
-    explicit DisplayException(std::string msg) : _msg(msg){}
+    explicit DisplayException(const std::string& msg) : _msg(msg){}
 
     const char* what() const noexcept override;
 
 private:
-    std::string _msg;
+    const std::string _msg;
 };
 
 /**
