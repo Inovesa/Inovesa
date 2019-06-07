@@ -30,7 +30,7 @@ public:
     Ruler() = delete;
 
     Ruler(meshindex_t steps, ruler_t min, ruler_t max
-          , std::map<std::string,double> scale)
+          , const std::map<std::string,double>& scale)
       : _steps(steps)
       , _max(max)
       , _min(min)

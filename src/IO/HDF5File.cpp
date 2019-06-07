@@ -339,7 +339,7 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
 }
 
 void vfps::HDF5File::appendRFKicks(
-        const std::vector<std::array<vfps::meshaxis_t,2>> kicks)
+        const std::vector<std::array<vfps::meshaxis_t,2>>& kicks)
 {
     _appendData(_dynamicRFKick,kicks.data(),kicks.size());
 }
