@@ -13,7 +13,11 @@ BOOST_AUTO_TEST_SUITE( OpenCLHandler )
 #if INOVESA_USE_OPENCL == 1
 
 BOOST_AUTO_TEST_CASE( list_devices ){
+    auto stdbuffer = std::cout.rdbuf();
+    std::stringstream sstream;
+    std::cout.rdbuf(sstream.rdbuf());
     BOOST_CHECK_NO_THROW(OCLH::listCLDevices());
+    std::cout.rdbuf(stdbuffer);
 }
 
 #endif // INOVESA_USE_OPENCL
