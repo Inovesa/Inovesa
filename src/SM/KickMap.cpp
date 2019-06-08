@@ -229,7 +229,7 @@ void vfps::KickMap::apply()
                         const meshindex_t xs = static_cast<meshindex_t>(
                                     static_cast<int32_t>(x+h.index)
                                     - static_cast<int32_t>(_meshsize_pd/2));
-                        if (xs < _meshsize_pd) {
+                        if (xs < static_cast<meshindex_t>(_meshsize_pd)) {
                             value += data_in[offs+xs*_meshsize_pd+y]
                                   * static_cast<meshdata_t>(h.weight);
                         }
@@ -253,7 +253,7 @@ void vfps::KickMap::apply()
                         const meshindex_t ys = static_cast<meshindex_t>(
                                     static_cast<int32_t>(y+h.index)
                                     - static_cast<int32_t>(_meshsize_kd/2));
-                        if (ys < _meshsize_pd) {
+                        if (ys < static_cast<meshindex_t>(_meshsize_pd)) {
                             value += data_in[offs+ys]
                                   * static_cast<meshdata_t>(h.weight);
                         }

@@ -15,7 +15,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
                                const meshaxis_t angle,
                                const InterpolationType it,
                                const bool interpol_clamped,
-                               const size_t rotmapsize,
+                               const meshindex_t rotmapsize,
                                oclhptr_t oclh) :
     SourceMap( in,out,xsize,ysize,size_t(rotmapsize)*it*it,it*it,it,oclh),
     _rotmapsize(rotmapsize),
@@ -142,7 +142,8 @@ void vfps::RotationMap::apply()
                     genHInfo(q_i,p_i,&(_hinfo[0]));
                     for (uint_fast8_t j=0; j<_ip; j++) {
                         hi h = _hinfo[j];
-                        data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+                        data_out[i] += data_in[h.index]
+                                    * static_cast<meshdata_t>(h.weight);
                     }
                 }
             }
@@ -151,16 +152,19 @@ void vfps::RotationMap::apply()
                 data_out[i] = 0;
                 for (uint_fast8_t j=0; j<_ip; j++) {
                     hi h = _hinfo[i*_ip+j];
-                    data_out[i] += data_in[h.index]*static_cast<meshdata_t>(h.weight);
+                    data_out[i] += data_in[h.index]
+                                * static_cast<meshdata_t>(h.weight);
                 }
                 if (_clamp) {
                     // handle overshooting
                     meshdata_t ceil=std::numeric_limits<meshdata_t>::min();
                     meshdata_t flor=std::numeric_limits<meshdata_t>::max();
-                    for (size_t x=1; x<=2; x++) {
-                        for (size_t y=1; y<=2; y++) {
-                            ceil = std::max(ceil,data_in[_hinfo[i*_ip+x*_it+y].index]);
-                            flor = std::min(flor,data_in[_hinfo[i*_ip+x*_it+y].index]);
+                    for (meshindex_t x=1; x<=2; x++) {
+                        for (meshindex_t y=1; y<=2; y++) {
+                            ceil = std::max(
+                                ceil, data_in[_hinfo[i*_ip+x*_it+y].index]);
+                            flor = std::min(
+                                flor, data_in[_hinfo[i*_ip+x*_it+y].index]);
                         }
                     }
                     data_out[i] = std::max(std::min(ceil,data_out[i]),flor);
@@ -212,8 +216,8 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
     interpol_t yf = std::modf(y1r, &y1r);
 
     // new coordinates integer parts
-    meshindex_t x1 = x1r;
-    meshindex_t y1 = y1r;
+    meshindex_t x1 = static_cast<meshindex_t>(x1r);
+    meshindex_t y1 = static_cast<meshindex_t>(y1r);
 
     if (x1 <  _xsize && y1 < _ysize) {
         // create vectors containing interpolation coefficiants

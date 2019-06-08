@@ -32,7 +32,7 @@ namespace vfps
  * It should be the single point in the program where Impedances are created.
  * As such, it provides a shortcut to common cases.
  */
-std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs
+std::unique_ptr<Impedance> makeImpedance( const size_t nfreqs
                                         , oclhptr_t oclh
                                         , const frequency_t fmax
                                         , const double R_bend
@@ -42,7 +42,7 @@ std::unique_ptr<Impedance> makeImpedance(const size_t nfreqs
                                         , const double s = 0
                                         , const double xi = 0
                                         , const double inner_coll_radius = 0
-                                        , const std::string impedance_file = ""
+                                        , const std::string& impedance_file = ""
                                         );
 
 } // namespace vfps

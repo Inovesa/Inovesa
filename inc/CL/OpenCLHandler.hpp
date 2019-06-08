@@ -8,6 +8,29 @@
 
 #include <memory>
 
+#if INOVESA_USE_OPENGL == 1
+#include <GL/glew.h>
+#endif // INOVESA_USE_OPENGL
+
+#if INOVESA_USE_OPENCL == 1
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_MINIMUM_OPENCL_VERSION 110
+#define CL_HPP_TARGET_OPENCL_VERSION 120
+
+#include "CL/local_cl.hpp"
+#endif // INOVESA_USE_OPENCL
+
+// shared OpenCL OpenGL pointer with automatic fallback
+#if INOVESA_USE_OPENGL == 1
+namespace vfps{
+#if INOVESA_USE_OPENCL == 1
+typedef cl_GLuint clgluint;
+#else
+typedef GLuint clgluint;
+#endif // INOVESA_USE_OPENCL
+} // namespace vfps
+#endif // INOVESA_USE_OPENGL
+
 // negation for preprocessor to have short alternative on top
 #if !(INOVESA_USE_OPENCL == 1)
 typedef std::nullptr_t oclhptr_t;
@@ -15,14 +38,6 @@ typedef std::nullptr_t oclhptr_t;
 
 class OCLH;
 typedef std::shared_ptr<OCLH> oclhptr_t;
-
-#include <GL/glew.h>
-
-#define CL_HPP_ENABLE_EXCEPTIONS
-#define CL_HPP_MINIMUM_OPENCL_VERSION 110
-#define CL_HPP_TARGET_OPENCL_VERSION 120
-
-#include "CL/local_cl.hpp"
 
 #if INOVESA_ENABLE_CLPROFILING == 1
 #include "CL/CLProfiler.hpp"
@@ -62,8 +77,6 @@ public:
     cl::Program prepareCLProg(std::string);
 
     ~OCLH();
-
-    void teardownCLEnvironment(cl::Error& e);
 
      static void listCLDevices();
 

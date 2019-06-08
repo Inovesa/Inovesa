@@ -38,7 +38,7 @@ OCLH::OCLH( uint32_t device, bool glsharing)
                 context = cl::Context( CL_DEVICE_TYPE_ALL
                                      , properties(p,ogl_sharing).data());
             } else {
-                throw e;
+                throw;
             }
         }
         _devices = context.getInfo<CL_CONTEXT_DEVICES>();
@@ -111,7 +111,7 @@ cl::Program OCLH::prepareCLProg(std::string code)
                   << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device)
                   << std::endl;
         #if DEBUG == 1
-        throw e;
+        throw;
         #endif
     }
     return p;
@@ -165,7 +165,7 @@ OCLH::~OCLH()
     #if INOVESA_ENABLE_CLPROFILING == 1
     saveProfilingInfo("inovesa-timings.txt");
     #else
-    OCLH::queue.finish();
+    queue.finish();
     #endif
 
     #if INOVESA_USE_CLFFT == 1

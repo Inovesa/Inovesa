@@ -26,7 +26,7 @@ endif()
 ## end of user configuration
 
 set (INOVESA_VERSION_MAJOR 1)
-set (INOVESA_VERSION_MINOR 1)
+set (INOVESA_VERSION_MINOR 2)
 set (INOVESA_VERSION_FIX -1)
 # pre release numbers:
 # -1: alpha
@@ -161,6 +161,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
 ## OpenCL (optional)
+IF((NOT DEFINED ENV{INOVESA_USE_OPENCL}) OR ("$ENV{INOVESA_USE_OPENCL}" EQUAL 1))
 find_package(OpenCL ${QUIET})
 IF(OPENCL_FOUND)
     add_definitions( -DINOVESA_USE_OPENCL=1)
@@ -176,18 +177,19 @@ IF(OPENCL_FOUND)
     ELSE()
         add_definitions( -DINOVESA_USE_CLFFT=0)
     ENDIF()
-    IF((DEFINED CMAKE_BUILD_TYPE) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-        # Enable OpenCL profiling
-        add_definitions(-DINOVESA_ENABLE_CLPROFILING=1)
-    ELSE()
+    IF((NOT DEFINED INOVESA_ENABLE_CLPROFILING))
         add_definitions(-DINOVESA_ENABLE_CLPROFILING=0)
     ENDIF()
 ELSE()
     add_definitions( -DINOVESA_USE_OPENCL=0)
     MESSAGE ("Did not find OpenCL. Will compile without OpenCL support.")
 ENDIF()
+ELSE()
+    MESSAGE ("Excluded OpenCL. Will compile without OpenCL support.")
+ENDIF()
 
 ## OpenGL (optional)
+IF((NOT DEFINED ENV{INOVESA_USE_OPENGL}) OR ("$ENV{INOVESA_USE_OPENGL}" EQUAL 1))
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL ${QUIET})
 find_package(GLEW ${QUIET})
@@ -203,6 +205,9 @@ IF((OPENGL_FOUND) AND (GLEW_FOUND) AND (GLFW_FOUND))
 ELSE()
     add_definitions(-DINOVESA_USE_OPENGL=0)
     MESSAGE ("Did not find OpenGL. Will compile without OpenGL support.")
+ENDIF()
+ELSE()
+    MESSAGE ("Excluded OpenGL. Will compile without OpenGL support.")
 ENDIF()
 
 ## Boost (needed)
@@ -245,6 +250,12 @@ ENDIF()
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
+foreach(size 64 128 256)
+  install(FILES misc/inovesa-logo_${size}.png
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${size}x${size}/apps"
+      RENAME inovesa.png)
+endforeach()
+install(FILES misc/inovesa.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
 
 #Setup CMake to run tests
 enable_testing()

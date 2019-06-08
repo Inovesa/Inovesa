@@ -55,7 +55,7 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<integral_t> filling={{1}}
+              , const std::vector<integral_t>& filling={1}
               , const double zoom=1
               , const meshdata_t *data = nullptr
               );
@@ -68,7 +68,7 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<integral_t> filling={{1}}
+              , const std::vector<integral_t>& filling={1}
               , const double zoom=1
               , const meshdata_t* data = nullptr
               );
@@ -85,7 +85,7 @@ public:
               , oclhptr_t oclh
               , const double beam_charge
               , const double beam_current
-              , const std::vector<integral_t> filling={{1}}
+              , const std::vector<integral_t>& filling={1}
               , const double zoom=1
               , const meshdata_t* data = nullptr
               );
@@ -475,13 +475,8 @@ public:
      * if CL/GL sharing is enabled. Else, it will just hold
      * 0 and allocation is left to the Inovesa displaying system.
      */
-    #if INOVESA_USE_OPENCL == 1
-    cl_GLuint projectionX_glbuf;
-    #else // INOVESA_USE_OPENCL != 1
-    GLuint projectionX_glbuf;
-    #endif // INOVESA_USE_OPENCL != 1
-    #endif // INOVESA_USE_OPENGL == 1
-
+    vfps::clgluint projectionX_glbuf;
+    #endif // INOVESA_USE_OPENGL
 
     #if INOVESA_USE_OPENCL == 1
     cl::Buffer data_buf;

@@ -29,7 +29,7 @@ vfps::makeImpedance( const size_t nfreqs
                    , const double s
                    , const double xi
                    , const double inner_coll_radius
-                   , const std::string impedance_file
+                   , const std::string& impedance_file
                    )
 {
     auto f0 = physcons::c/(two_pi<double>()*R_bend);

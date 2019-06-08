@@ -31,6 +31,10 @@
 #endif // INOVESA_USE_OPENGL
 #include <vector>
 
+#if INOVESA_USE_OPENCL == 1
+#include "CL/OpenCLHandler.hpp"
+#endif
+
 #include "PS/PhaseSpace.hpp"
 #include "IO/GUI/GUIElement.hpp"
 
@@ -40,12 +44,12 @@ class Display;
 
 class DisplayException : public std::exception {
 public:
-    DisplayException(std::string msg) : _msg(msg){}
+    explicit DisplayException(const std::string& msg) : _msg(msg){}
 
     const char* what() const noexcept override;
 
 private:
-    std::string _msg;
+    const std::string _msg;
 };
 
 /**
@@ -96,7 +100,7 @@ public:
      * @brief Display initializes OpenGL
      * @param glversion
      */
-    Display(uint_fast8_t glversion);
+    explicit Display(uint_fast8_t glversion);
     #endif // INOVESA_USE_OPENGL
 
     /**

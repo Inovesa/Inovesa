@@ -14,11 +14,11 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
+vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
-                            , const std::vector<integral_t> filling
+                            , const std::vector<integral_t>& filling
                             , const double zoom
                             , const meshdata_t* data
                             )
@@ -127,7 +127,7 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
-                            , const std::vector<integral_t> filling
+                            , const std::vector<integral_t>& filling
                             , const double zoom
                             , const meshdata_t* data
                             ) :
@@ -137,13 +137,14 @@ vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
 {
 }
 
-vfps::PhaseSpace::PhaseSpace( meshaxis_t qmin, meshaxis_t qmax, double qscale
+vfps::PhaseSpace::PhaseSpace(meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , meshaxis_t pmin, meshaxis_t pmax, double pscale
                             , oclhptr_t oclh
                             , const double beam_charge
                             , const double beam_current
-                            , const std::vector<integral_t> filling
-                            , const double zoom, const meshdata_t* data
+                            , const std::vector<integral_t>& filling
+                            , const double zoom
+                            , const meshdata_t* data
                             )
   : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,
                 {{"Meter",qscale}}))
@@ -371,7 +372,7 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
                                 , sizeof(projection_t)*_nmeshcellsX
                                 , _projection.data(),nullptr,evt);
         _oclh->enqueueReadBuffer
-            (filling_buf,CL_TRUE,0,sizeof(integral_t),&_filling,
+            (filling_buf,CL_TRUE,0,sizeof(integral_t),_filling.data(),
             nullptr,evt
             #if INOVESA_ENABLE_CLPROFILING == 1
             , syncPSEvents.get()

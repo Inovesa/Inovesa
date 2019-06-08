@@ -47,8 +47,6 @@ BOOST_AUTO_TEST_CASE( home_finder ){
 }
 
 BOOST_AUTO_TEST_CASE( datapath ){
-    const std::string homepath(vfps::FSPath::expand_user("~/.local/share"));
-
     // save environment variable
     char const * datapath_ptr = std::getenv("XDG_DATA_HOME");
     const std::string datapath_orig(datapath_ptr ? datapath_ptr : "");

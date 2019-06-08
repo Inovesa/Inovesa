@@ -69,8 +69,8 @@ const std::string vfps::inovesa_version(const bool verbose,
                                         const int_fast16_t v_mayor,
                                         const int_fast16_t v_minor,
                                         const int_fast16_t v_fix,
-                                        const std::string branch,
-                                        const std::string commit) {
+                                        const std::string& branch,
+                                        const std::string& commit) {
     std::stringstream sstream;
     if (branch.empty() || branch == "master" || branch.front()=='v') {
         // version number release branches (and releases)

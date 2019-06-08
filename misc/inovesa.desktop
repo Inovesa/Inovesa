@@ -1,0 +1,6 @@
+Type=Application
+Name=Inovesa
+Exec=inovesa
+Icon=inovesa.png
+Terminal=True
+

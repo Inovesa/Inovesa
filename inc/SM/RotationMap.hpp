@@ -41,7 +41,7 @@ public:
                 std::shared_ptr<PhaseSpace> out,
                 const meshindex_t xsize, const meshindex_t ysize,
                 const meshaxis_t angle, const InterpolationType it,
-                const bool interpol_clamped, const size_t rotmapsize,
+                const bool interpol_clamped, const meshindex_t rotmapsize,
                 oclhptr_t oclh);
 
     #if INOVESA_ENABLE_CLPROFILING == 1
@@ -63,7 +63,7 @@ public:
     void applyTo(PhaseSpace::Position& pos) const override;
 
 private:
-    const uint32_t _rotmapsize;
+    const meshindex_t _rotmapsize;
 
     const bool _clamp;
 
