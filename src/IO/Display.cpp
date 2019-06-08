@@ -10,11 +10,9 @@
 #include "IO/Display.hpp"
 
 
-std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
-                                                  #if INOVESA_USE_OPENGL == 1
-                                                  , bool gui
-                                                  , uint_fast8_t glversion
-                                                  #endif // INOVESA_USE_OPENGL
+std::unique_ptr<vfps::Display> vfps::make_display( std::string ofname
+                                                 , bool gui
+                                                 , uint_fast8_t glversion
                                                  )
 {
     std::time_t start_ctime
