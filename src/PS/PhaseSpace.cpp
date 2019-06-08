@@ -372,7 +372,7 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
                                 , sizeof(projection_t)*_nmeshcellsX
                                 , _projection.data(),nullptr,evt);
         _oclh->enqueueReadBuffer
-            (filling_buf,CL_TRUE,0,sizeof(integral_t),&_filling,
+            (filling_buf,CL_TRUE,0,sizeof(integral_t),_filling.data(),
             nullptr,evt
             #if INOVESA_ENABLE_CLPROFILING == 1
             , syncPSEvents.get()
