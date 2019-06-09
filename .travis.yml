@@ -34,8 +34,8 @@ addons:
       - libxrandr-dev # optional
       - ocl-icd-opencl-dev # optional
 
-compiler: # for "matrix builds" testing various configurations
-  - clang
+compiler: # uncomment both for "matrix builds"
+#  - clang
   - gcc
 
 before_install:
