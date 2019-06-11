@@ -30,7 +30,6 @@ vfps::HDF5File::HDF5File(const std::string& filename,
                          const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
                          const std::shared_ptr<Impedance> imp,
-                         const WakeFunctionMap* wfm,
                          const size_t nparticles,
                          const double t_sync,
                          const double f_rev)
@@ -148,11 +147,6 @@ vfps::HDF5File::HDF5File(const std::string& filename,
                                                  , {{_impSize}}
                                                  , {{std::min( 4097U,_impSize)}}
                                                  , {{_impSize}}))
-  , _wakeFunction(_makeDatasetInfo<1,meshaxis_t>("/WakeFunction/data"
-                                                 , {{2*_psSizeX}}
-                                                 , {{std::min( 4097U
-                                                             , 2U*_psSizeX)}}
-                                                 , {{2*_psSizeX}}))
   , _ps(ps)
 {
     // Axis
@@ -319,11 +313,6 @@ vfps::HDF5File::HDF5File(const std::string& filename,
                     "Ohm", H5::PredType::IEEE_F64LE,
                     H5::DataSpace()).write(H5::PredType::IEEE_F64LE,
                                            &(imp->factor4Ohms));
-    }
-
-    if (wfm != nullptr ) {
-        _wakeFunction.dataset.write( wfm->getWakeFunction()
-                                   , _wakeFunction.datatype);
     }
 
     // save Inovesa version

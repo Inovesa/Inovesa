@@ -69,7 +69,6 @@ set(SRC_LIST
   ./src/SM/SourceMap.cpp
   ./src/SM/WakeKickMap.cpp
   ./src/SM/WakePotentialMap.cpp
-  ./src/SM/WakeFunctionMap.cpp
   ./src/Z/CollimatorImpedance.cpp
   ./src/Z/ConstImpedance.cpp
   ./src/Z/Impedance.cpp
@@ -107,7 +106,6 @@ set(INC_LIST
   ./inc/SM/SourceMap.hpp
   ./inc/SM/WakePotentialMap.hpp
   ./inc/SM/WakeKickMap.hpp
-  ./inc/SM/WakeFunctionMap.hpp
   ./inc/Z/CollimatorImpedance.hpp
   ./inc/Z/ConstImpedance.hpp
   ./inc/Z/Impedance.hpp

@@ -22,7 +22,6 @@
 #include "SM/DriftMap.hpp"
 #include "SM/RFKickMap.hpp"
 #include "SM/DynamicRFKickMap.hpp"
-#include "SM/WakeFunctionMap.hpp"
 #include "SM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
@@ -735,30 +734,19 @@ int main(int argc, char** argv)
 
     // depending if working time or frequency domain, only one might be used
     WakeKickMap* wkm = nullptr;
-    WakeFunctionMap* wfm = nullptr;
 
-    std::string wakefile = opts.getWakeFile();
-    if (wakefile.size() > 4) {
-        Display::printText("Reading WakeFunction from "+wakefile+".");
-        wfm = new WakeFunctionMap( grid_t1,grid_t2, wakefile,E0,sE,Ib,dt,
-                                   interpolationtype,interpol_clamp,oclh);
-        wkm = wfm;
-    } else {
-        if (wake_impedance != nullptr) {
-            Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField( grid_t1,wake_impedance
-                                          , buckets, spacing_bins
-                                          , oclh
-                                          , f_rev
-                                          , revolutionpart, Ib,E0,sE,dt
-                                          );
+    if (wake_impedance != nullptr) {
+        Display::printText("Calculating WakePotential.");
+        wake_field = new ElectricField( grid_t1,wake_impedance
+                                      , buckets, spacing_bins
+                                      , oclh
+                                      , f_rev
+                                      , revolutionpart, Ib,E0,sE,dt
+                                      );
 
-            Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap( grid_t1,grid_t2,wake_field,
-                                        interpolationtype,interpol_clamp,oclh);
-        }
-    }
-    if (wkm != nullptr) {
+        Display::printText("Building WakeKickMap.");
+        wkm = new WakePotentialMap( grid_t1,grid_t2,wake_field,
+                                    interpolationtype,interpol_clamp,oclh);
         wm = wkm;
     } else {
         wm = new Identity( grid_t1,grid_t2,oclh);
@@ -850,7 +838,7 @@ int main(int argc, char** argv)
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         try {
             hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
-                                    wfm,trackme.size(), t_sync,f_rev);
+                                    trackme.size(), t_sync,f_rev);
             Display::printText("Will save results to \""+ofname+"\".");
             opts.save(hdf_file);
             hdf_file->addParameterToGroup("/Info","CSRStrength",

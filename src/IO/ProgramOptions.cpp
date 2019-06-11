@@ -106,8 +106,6 @@ vfps::ProgramOptions::ProgramOptions() :
         ("RFPhaseModFrequency",
             po::value<double>(&rf_phase_mod_frequency)->default_value(0),
             "Accelerating voltage phase modulation frequency (Hz)")
-        ("WakeFunction,w", po::value<std::string>(&_wakefile),
-            "File containing wake function.")
     ;
     _programopts_file.add_options()
         ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),

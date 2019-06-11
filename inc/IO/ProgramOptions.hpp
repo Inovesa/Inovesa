@@ -82,9 +82,6 @@ public:
     inline auto getForceRun() const
         { return _forcerun; }
 
-    inline auto getWakeFile() const
-        { return _wakefile; }
-
 public:
     inline auto getGridSize() const
         { return meshsize; }
@@ -236,8 +233,6 @@ private: // program parameters
     bool _verbose;
 
     bool _forcerun;
-
-    std::string _wakefile;
 
 private: // simulation parameters
     uint32_t meshsize;
