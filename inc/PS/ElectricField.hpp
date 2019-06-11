@@ -80,30 +80,6 @@ public:
                  , const double sigmaE, const double dt
                  );
 
-    /**
-     * @brief ElectricField (unmaintained) constructor for use of wake function
-     * @param phasespace this electric field is assigned to
-     * @param impedance to use for electric field calculation
-     * @param Ib bunch current [A]
-     * @param bl natural rms bunch length [m]
-     * @param E0 beam energy [eV]
-     * @param sigmaE normalized energy spread [1]
-     * @param frev revolution frequency [Hz]
-     * @param dt time step [s]
-     * @param fs synchrotron frequency [Hz]
-     * @param nmax
-     */
-    ElectricField(std::shared_ptr<PhaseSpace> ps
-                 , std::shared_ptr<Impedance> impedance
-                 , const std::vector<uint32_t> &bucketnumber
-                 , const meshindex_t spacing_bins
-                 , oclhptr_t oclh
-                 , const double f_rev
-                 , const double Ib, const double E0
-                 , const double sigmaE, const double dt, const double rbend
-                 , const double fs, const size_t nmax
-                 );
-
     ~ElectricField() noexcept;
 
     inline const csrpower_t* getCSRPower() const

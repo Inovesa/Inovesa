@@ -203,68 +203,6 @@ vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
     }
 }
 
-// (unmaintained) constructor for use of wake function
-vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
-                                  , const std::shared_ptr<Impedance> impedance
-                                  , const std::vector<uint32_t> &bucketnumber
-                                  , const meshindex_t spacing_bins
-                                  , oclhptr_t oclh
-                                  , const double f_rev
-                                  , const double Ib, const double E0
-                                  , const double sigmaE, const double dt
-                                  , const double rbend, const double fs
-                                  , const size_t nmax)
-  : ElectricField( ps,impedance, bucketnumber, spacing_bins
-                 , oclh
-                 , f_rev,dt*physcons::c/(2*pi<double>()*rbend))
-{
-    _wakefunction = new meshaxis_t[2*PhaseSpace::nx];
-    fftw_complex* z_fftw = fftw_alloc_complex(nmax);
-    fftw_complex* zcsrf_fftw = fftw_alloc_complex(nmax);
-    fftw_complex* zcsrb_fftw = fftw_alloc_complex(nmax); //for wake
-    impedance_t* z = reinterpret_cast<impedance_t*>(z_fftw);
-    impedance_t* zcsrf = reinterpret_cast<impedance_t*>(zcsrf_fftw);
-    impedance_t* zcsrb = reinterpret_cast<impedance_t*>(zcsrb_fftw);
-
-     const double g = - Ib*physcons::c*ps->getDelta(1)*dt
-                    / (2*pi<double>()*fs*sigmaE*E0)/(pi<double>()*rbend);
-
-
-    std::copy_n(_impedance->data(),std::min(nmax,_impedance->nFreqs()),z);
-    if (_impedance->nFreqs() < nmax) {
-        std::stringstream wavenumbers;
-        wavenumbers << "(Known: n=" <<_impedance->nFreqs()
-                    << ", needed: N=" << nmax << ")";
-        Display::printText("Warning: Unknown impedance for high wavenumbers. "
-                           +wavenumbers.str());
-        std::fill_n(&z[_impedance->nFreqs()],nmax-_impedance->nFreqs(),
-                    impedance_t(0));
-    }
-
-    fft_plan p3 = prepareFFT( nmax, z, zcsrf, fft_direction::forward );
-    fft_plan p4 = prepareFFT( nmax, z, zcsrb, fft_direction::backward);
-
-    fft_execute(p3);
-    fft_destroy_plan(p3);
-    fft_execute(p4);
-    fft_destroy_plan(p4);
-
-    /* This method works like a DFT of Z with Z(-n) = Z*(n).
-     *
-     * the element _wakefunction[PhaseSpace::nx] represents the self interaction
-     * set this element (q==0) to zero to make the function anti-semetric
-     */
-    _wakefunction[0] = 0;
-    for (size_t i=0; i< PhaseSpace::nx; i++) {
-        // zcsrf[0].real() == zcsrb[0].real(), see comment above
-        _wakefunction[PhaseSpace::nx-i] = g * zcsrf[i].real();
-        _wakefunction[PhaseSpace::nx+i] = g * zcsrb[i].real();
-    }
-    fftw_free(z_fftw);
-    fftw_free(zcsrf_fftw);
-    fftw_free(zcsrb_fftw);
-}
-
 vfps::ElectricField::~ElectricField() noexcept
 {
     delete [] _wakefunction;

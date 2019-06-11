@@ -17,7 +17,7 @@
 #include "PS/ElectricField.hpp"
 #include "Z/Impedance.hpp"
 #include "PS/PhaseSpace.hpp"
-#include "SM/WakeFunctionMap.hpp"
+#include "SM/WakeKickMap.hpp"
 
 namespace vfps {
 
@@ -38,7 +38,6 @@ public:
              const std::shared_ptr<PhaseSpace> ps,
              const ElectricField* ef,
              const std::shared_ptr<Impedance> imp,
-             const WakeFunctionMap *wfm,
              const size_t nparticles,
              const double t_sync,
              const double f_rev);
@@ -178,8 +177,6 @@ private: // values for phase space axis
 
     DatasetInfo<1> _impedanceReal;
     DatasetInfo<1> _impedanceImag;
-
-    DatasetInfo<1> _wakeFunction;
 
 private:
     template <int rank, typename datatype>
