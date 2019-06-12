@@ -26,23 +26,32 @@ vfps::ProgramOptions::ProgramOptions() :
         ("buildinfo", "print information on current build")
     ;
     _physopts.add_options()
-        ("alpha0", po::value<double>(&alpha0)->default_value(4e-3,"4e-3"),
+        ("alpha0", po::value<decltype(alpha0)>(
+             &alpha0)->default_value(static_cast<decltype(alpha0)>
+                                     (4e-3f), "4e-3"),
             "Linear Momentum compaction factor (1)")
-        ("alpha1", po::value<double>(&alpha1)->default_value(0),
+        ("alpha1", po::value<decltype(alpha1)>(
+             &alpha1)->default_value(0),
             "Quadratic Momentum compaction factor (1)")
-        ("alpha2", po::value<double>(&alpha2)->default_value(0),
+        ("alpha2", po::value<decltype(alpha2)>(
+             &alpha2)->default_value(0),
             "Cubic Momentum compaction factor (1)")
-        ("SynchrotronFrequency,f", po::value<double>(&f_s)->default_value(0,"(ignore)"),
+        ("SynchrotronFrequency,f", po::value<decltype(f_s)>(
+             &f_s)->default_value(0, "(ignore)"),
             "Synchrotron frequency (Hz), "
             "will overwrite alpha0 when set to a value different from 0")
-        ("RevolutionFrequency,F",po::value<double>(&f0)->default_value(9e6,"9e6"),
+        ("RevolutionFrequency,F",po::value<decltype(f0)>(
+             &f0)->default_value(static_cast<decltype(f0)>(9e6), "9e6"),
             "Revolution frequency (Hz)")
-        ("DampingTime,d", po::value<double>(&t_d)->default_value(-1),
+        ("DampingTime,d", po::value<decltype(t_d)>(
+             &t_d)->default_value(-1),
             "Damping time (s), "
             "<0: calculate based on other parameters")
-        ("HarmonicNumber,H", po::value<double>(&H)->default_value(50),
+        ("HarmonicNumber,H", po::value<decltype(H)>(
+             &H)->default_value(50),
             "Harmonic Number (1)")
-        ("InitialDistFile,i", po::value<std::string>(&_startdistfile),
+        ("InitialDistFile,i", po::value<decltype(_startdistfile)>(
+             &_startdistfile),
             "might be:\n"
             #if INOVESA_USE_HDF5 == 1
             "\tInovesa result file (.hdf5, .h5)\n"
@@ -52,177 +61,234 @@ vfps::ProgramOptions::ProgramOptions() :
             #endif // INOVESA_USE_PNG
             "\ttext file (.txt) w/ particle coordinates\n"
             "\t'/dev/null' to explicitly state no read-in")
-        ("InitialDistStep",po::value<int64_t>(&_startdiststep)->default_value(-1),
+        ("InitialDistStep",po::value<decltype(_startdiststep)>(
+             &_startdiststep)->default_value(-1),
             "Select step of HDF5 file for initial distribution")
-        ("InitialDistZoom",po::value<double>(&zoom)->default_value(1),
+        ("InitialDistZoom",po::value<decltype(zoom)>(
+             &zoom)->default_value(1),
             "Magnification for generation of initial distribution")
-        ("BunchCurrent,I", po::value<std::vector<integral_t>>(&I_b)->multitoken(),
+        ("BunchCurrent,I", po::value<std::vector<integral_t>>(
+             &I_b)->multitoken(),
             "Bunch currents (A)\n"
             " 0: empty bucket (long gap)\n"
             ">0: bucket containing electrons")
-        ("BendingRadius,R", po::value<double>(&r_bend)->default_value(-1),
+        ("BendingRadius,R", po::value<decltype(r_bend)>(
+             &r_bend)->default_value(-1),
             "Bending radius of accelerator (m)\n"
             "negative: calculate from RevolutionFrequency")
-        ("BeamEnergy,E", po::value<double>(&E_0)->default_value(1.3e9,"1.3e9"),
+        ("BeamEnergy,E", po::value<decltype(E_0)>(
+             &E_0)->default_value(1.3e9,"1.3e9"),
             "Beam energy (eV)")
-        ("BeamEnergySpread,e", po::value<double>(&s_E)->default_value(4.7e-4,"4.7e-4"),
+        ("BeamEnergySpread,e", po::value<decltype(s_E)>(
+             &s_E)->default_value(4.7e-4,"4.7e-4"),
             "Natural energy spread (relative)")
-        ("Impedance,Z", po::value<std::string>(&_impedancefile),
+        ("Impedance,Z", po::value<std::string>(
+             &_impedancefile),
             "File containing impedance information.")
-        ("VacuumGap,G", po::value<double>(&g)->default_value(0.03,"0.03"),
+        ("VacuumGap,G", po::value<decltype(g)>(
+             &g)->default_value(0.03,"0.03"),
             "Full height of vacuum chamber (m)\n"
             "<0: free space CSR\n"
             " 0: no CSR\n"
             ">0: parallel plates CSR\n"
             "(|G| is used as size of the beam pipe for other impedances)")
-        ("UseCSR", po::value<bool>(&use_csr)->default_value(true),
+        ("UseCSR", po::value<bool>(
+             &use_csr)->default_value(true),
             "Switch to turn off CSR for VacuumGap != 0")
-        ("CollimatorRadius", po::value<double>(&collimator)->default_value(0),
+        ("CollimatorRadius", po::value<decltype(collimator)>(
+             &collimator)->default_value(0),
             "Radius of collimator opening (m)\n"
             "<=0: no collimator")
-        ("WallConductivity", po::value<double>(&s_c)->default_value(0),
+        ("WallConductivity", po::value<decltype(s_c)>(
+             &s_c)->default_value(0),
             "Conductivity of the vacuum pipe (S/m)\n"
             "<=0: perfect conductor")
-        ("WallSusceptibility", po::value<double>(&xi_wall)->default_value(0),
+        ("WallSusceptibility", po::value<decltype(xi_wall)>(
+             &xi_wall)->default_value(0),
             "Magnetic susceptibility of the vacuum pipe (1)\n"
             "<-1: -1")
-        ("CutoffFreq", po::value<double>(&f_c)->default_value(23e9,"23e9"),
+        ("CutoffFreq", po::value<decltype(f_c)>(
+             &f_c)->default_value(static_cast<decltype(f_c)>(23e9),"23e9"),
             "Beamline cutoff frequency (Hz)")
         ("AcceleratingVoltage,V",
-            po::value<double>(&V_RF)->default_value(1e6,"1e6"),
+            po::value<decltype(V_RF)>(
+             &V_RF)->default_value(static_cast<decltype(V_RF)>(1e6),"1e6"),
             "Accelerating Voltage (V) for one revolution")
         ("LinearRF",
-            po::value<bool>(&linearRF)->default_value(true),
+            po::value<decltype(linearRF)>(
+             &linearRF)->default_value(true),
             "Use linear model for accelerating voltage (experimental)")
         ("RFAmplitudeSpread",
-            po::value<double>(&rf_amplitude_spread)->default_value(0),
+            po::value<decltype(rf_amplitude_spread)>(
+             &rf_amplitude_spread)->default_value(0),
             "Relative accelerating voltage amplitude spread per turn")
         ("RFPhaseSpread",
-            po::value<double>(&rf_phase_spread)->default_value(0),
+            po::value<decltype(rf_phase_spread)>(
+             &rf_phase_spread)->default_value(0),
             "Absolute accelerating voltage phase spread per turn (degree)")
         ("RFPhaseModAmplitude",
-            po::value<double>(&rf_phase_mod_amplitude)->default_value(0),
+            po::value<decltype(rf_phase_mod_amplitude)>(
+             &rf_phase_mod_amplitude)->default_value(0),
             "Accelerating voltage phase modulation amplitude (degree)")
         ("RFPhaseModFrequency",
-            po::value<double>(&rf_phase_mod_frequency)->default_value(0),
+            po::value<decltype(rf_phase_mod_frequency)>(
+             &rf_phase_mod_frequency)->default_value(0),
             "Accelerating voltage phase modulation frequency (Hz)")
     ;
     _programopts_file.add_options()
-        ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
+        ("cldev", po::value<decltype(_cldevice)>(
+             &_cldevice)->default_value(0),
             "OpenCL device to use\n('-1' lists available devices)")
-        ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
+        ("ForceOpenGLVersion", po::value<decltype(_glversion)>(
+             &_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(false),
+        ("gui,g", po::value<decltype(_showphasespace)>(
+             &_showphasespace)->default_value(false),
             "Show phase space view")
         ("output,o",
-            po::value<std::string>(&_outfile),
+            po::value<decltype(_outfile)>(
+             &_outfile),
             "name of file to safe results.")
-        ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
+        ("outstep,n", po::value<decltype(outsteps)>(
+             &outsteps)->default_value(100),
             "Save results every n steps.")
         ("SavePhaseSpace",
-            po::value<decltype(_savephasespace)>
-                (&_savephasespace)->default_value(0),
+            po::value<decltype(_savephasespace)>(
+             &_savephasespace)->default_value(0),
             "save every n's outstep's phase space to HDF5 file")
         ("tracking",
-            po::value<std::string>(&_trackingfile)->default_value(""),
+            po::value<decltype(_trackingfile)>(
+             &_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(false),
+        ("verbose,v", po::value<bool>(
+             &_verbose)->default_value(false),
             "print information more detailed")
-        ("run_anyway", po::value<bool>(&_forcerun)->default_value(false),
+        ("run_anyway", po::value<bool>(
+             &_forcerun)->default_value(false),
             "set to omit consistency check for parameters")
     ;
     _programopts_cli.add_options()
-            ("cldev", po::value<int32_t>(&_cldevice)->default_value(0),
+            ("cldev", po::value<decltype(_cldevice)>(
+                 &_cldevice)->default_value(0),
         #if INOVESA_USE_OPENCL == 1
             "OpenCL device to use\n('-1' lists available devices)")
         #else // not INOVESA_USE_OPENCL
             "(ignored in this build)")
         #endif // INOVESA_USE_OPENCL
-        ("config,c", po::value<std::string>(&_configfile),
+        ("config,c", po::value<decltype(_configfile)>(
+             &_configfile),
             "name of a file containing a configuration.")
-        ("ForceOpenGLVersion", po::value<int>(&_glversion)->default_value(2),
+        ("ForceOpenGLVersion", po::value<decltype(_glversion)>(
+             &_glversion)->default_value(2),
             "Force OpenGL version")
-        ("gui,g", po::value<bool>(&_showphasespace)->default_value(true)->implicit_value(true),
+        ("gui,g", po::value<decltype(_showphasespace)>(
+             &_showphasespace)->default_value(true)->implicit_value(true),
             "Show phase space view")
         ("output,o",
-            po::value<std::string>(&_outfile),
+            po::value<std::string>(
+             &_outfile),
             "name of file to safe results.")
-        ("outstep,n", po::value<uint32_t>(&outsteps)->default_value(100),
+        ("outstep,n", po::value<decltype(outsteps)>(
+             &outsteps)->default_value(100),
             "Save results every n steps.")
         ("SavePhaseSpace",
-            po::value<decltype(_savephasespace)>
-                (&_savephasespace)->default_value(0),
+            po::value<decltype(_savephasespace)>(
+             &_savephasespace)->default_value(0),
             "save every n's outstep's phase space to HDF5 file")
         ("tracking",
-            po::value<std::string>(&_trackingfile)->default_value(""),
+            po::value<decltype(_trackingfile)>(
+             &_trackingfile)->default_value(""),
             "file containing starting positions (grid points)"
             "of particles to be (pseudo-) tracked")
-        ("verbose,v", po::value<bool>(&_verbose)->default_value(false)->implicit_value(true),
+        ("verbose,v", po::value<decltype(_verbose)>(
+             &_verbose)->default_value(false)->implicit_value(true),
             "print information more detailed")
-        ("run_anyway", po::value<bool>(&_forcerun)->default_value(false)->implicit_value(true),
+        ("run_anyway", po::value<decltype(_forcerun)>(
+             &_forcerun)->default_value(false)->implicit_value(true),
             "set to omit consistency check for parameters")
     ;
     _simulopts.add_options()
-        ("StepsPerTs,N", po::value<uint32_t>(&steps_per_Ts)->default_value(1000),
+        ("StepsPerTs,N", po::value<decltype(steps_per_Ts)>(
+             &steps_per_Ts)->default_value(1000),
             "Simulation steps for one synchrotron period")
-        ("StepsPerRevolution", po::value<double>(&steps_per_Trev)->default_value(0),
+        ("StepsPerRevolution", po::value<decltype(steps_per_Trev)>(
+             &steps_per_Trev)->default_value(0),
             "Simulation steps for one revolution (overwrites StepsPerTs)")
-        ("padding,p", po::value<double>(&padding)->default_value(8.0),
+        ("padding,p", po::value<decltype(padding)>(
+             &padding)->default_value(static_cast<decltype(padding)>(8.0)),
             "Factor for zero padding of single bunch profile(s)")
-        ("RoundPadding", po::value<bool>(&roundpadding)->default_value(true),
+        ("RoundPadding", po::value<decltype(roundpadding)>(
+             &roundpadding)->default_value(true),
             "Always do zero padding up to 2 to the power of N")
-        ("PhaseSpaceSize,P", po::value<double>(&pq_size)->default_value(12),
+        ("PhaseSpaceSize,P", po::value<decltype(pq_size)>(
+             &pq_size)->default_value(12),
             "Size of phase space")
-        ("PhaseSpaceShiftX",po::value<double>(&meshshiftx)->default_value(0),
+        ("PhaseSpaceShiftX",po::value<decltype(meshshiftx)>(
+             &meshshiftx)->default_value(0),
             "Shift grid by X mesh points")
-        ("PhaseSpaceShiftY",po::value<double>(&meshshifty)->default_value(0),
+        ("PhaseSpaceShiftY",po::value<decltype(meshshifty)>(
+             &meshshifty)->default_value(0),
             "Shift grid by Y mesh points")
-        ("RenormalizeCharge",po::value<int32_t>(&renormalize)->default_value(0),
+        ("RenormalizeCharge",po::value<decltype(renormalize)>(
+             &renormalize)->default_value(0),
             ">0: renormalize charge every n-th simulation step\n"
             " 0: do just one initial renormalization\n"
             "<0: no renormalization")
-        ("FPType", po::value<uint32_t>(&fptype)->default_value(3),
+        ("FPType", po::value<decltype(fptype)>(
+             &fptype)->default_value(3),
             "Used implementation for Fokker-Planck term\n"
             " 0: No Fokker-Planck term\n"
             " 1: Only damping\n"
             " 2: Only diffusion\n"
             " 3: Full")
-        ("FPTrack", po::value<uint32_t>(&fptrack)->default_value(3),
+        ("FPTrack", po::value<decltype(fptrack)>(
+             &fptrack)->default_value(3),
             "Used implementation for FP term in tracking\n"
             " 0: No Fokker-Planck term\n"
             " 1: Approximation overweighting damping\n"
             " 2: Approximation overweighting diffusion\n"
             " 3: Stochastic")
-        ("GridSize,s", po::value<uint32_t>(&meshsize)->default_value(256),
+        ("GridSize,s", po::value<decltype(meshsize)>(
+             &meshsize)->default_value(256),
             "Number of mesh points per dimension")
-        ("rotations,T", po::value<double>(&rotations)->default_value(5),
+        ("rotations,T", po::value<decltype(rotations)>(
+             &rotations)->default_value(5),
             "Simulated time (in number of synchrotron periods)")
-        ("derivation",po::value<uint32_t>(&deriv_type)->default_value(4u),
+        ("derivation",po::value<decltype(deriv_type)>(
+             &deriv_type)->default_value(4u),
             "Number of grid points to be used to numerically find derivative")
-        ("InterpolationPoints",po::value<uint32_t>(&interpol_type)->default_value(4u),
+        ("InterpolationPoints",po::value<decltype(interpol_type)>(
+             &interpol_type)->default_value(4u),
             "Number of grid points to be used for interpolation")
-        ("InterpolateClamped",po::value<bool>(&interpol_clamp)->default_value(false),
-            "Restrict result of interpolation to the values of the neighboring grid points")
+        ("InterpolateClamped",po::value<decltype(interpol_clamp)>(
+             &interpol_clamp)->default_value(false),
+            "Restrict result of interpolation to the"
+            "values of the neighboring grid points")
     ;
     _compatopts_ignore.add_options()
-        ("HaissinskiIterations",po::value<uint32_t>(&_hi)->default_value(0),
+        ("HaissinskiIterations",po::value<decltype(_hi)>(
+             &_hi)->default_value(0),
             "(currently ignored)")
-        ("InitialDistParam",po::value<uint32_t>(&_hi)->default_value(0),
+        ("InitialDistParam",po::value<decltype(_hi)>(
+             &_hi)->default_value(0),
             "(currently ignored)")
-        ("RotationType", po::value<uint32_t>(&rotationtype),
+        ("RotationType", po::value<decltype(rotationtype)>(
+             &rotationtype),
             "compatibility (ignored)")
-        ("SaveSourceMap",
-            po::value<bool>(&_savesourcemap),
+        ("SaveSourceMap", po::value<decltype(_savesourcemap)>(
+             &_savesourcemap),
             "compatibility (ignored)")
     ;
     _compatopts_alias.add_options()
-        ("RFVoltage",
-            po::value<double>(&V_RF),
+        ("RFVoltage", po::value<decltype(V_RF)>(
+             &V_RF),
             "compatibility naming for AcceleratingVoltage")
-        ("SyncFreq", po::value<double>(&f_s),
+        ("SyncFreq", po::value<decltype(f_s)>(
+             &f_s),
             "(compatibility naming for SynchrotronFrequency)")
-        ("steps", po::value<uint32_t>(&steps_per_Ts),
+        ("steps", po::value<decltype(steps_per_Ts)>(
+             &steps_per_Ts),
             "(compatibility naming for StepsPerTs)")
     ;
     _compatopts.add(_compatopts_ignore);
@@ -297,7 +363,8 @@ bool vfps::ProgramOptions::parse(int ac, char** av)
                 store(parse_config_file(ifs, _cfgfileopts), _vm);
                 notify(_vm);
                 if(_vm.count("SyncFreq")) {
-                    _vm.at("SynchrotronFrequency").value() = _vm["SyncFreq"].value();
+                    _vm.at("SynchrotronFrequency").value()
+                            = _vm["SyncFreq"].value();
                 }
                 notify(_vm);
             }
@@ -349,12 +416,16 @@ void vfps::ProgramOptions::save(std::string fname)
         ){
             continue;
         } else
-        if (it->first == "alpha0" && f_s != 0.0) {
+        if (it->first == "alpha0" && f_s != 0) {
             ofs << "alpha0=0" << std::endl;
             continue;
         } else
         if (!it->second.value().empty()) {
-            if (it->second.value().type() == typeid(double)) {
+            if (it->second.value().type() == typeid(float)) {
+                ofs << it->first << '='
+                    << _vm[it->first].as<float>()
+                    << std::endl;
+            } else if (it->second.value().type() == typeid(double)) {
                 ofs << it->first << '='
                     << _vm[it->first].as<double>()
                     << std::endl;
@@ -395,7 +466,11 @@ void vfps::ProgramOptions::save(vfps::HDF5File* file)
 {
     for (po::variables_map::iterator it=_vm.begin(); it != _vm.end(); ++it ) {
         if (!it->second.value().empty()) {
-            if (it->second.value().type() == typeid(double)) {
+            if (it->second.value().type() == typeid(float)) {
+                float data = _vm[it->first].as<float>();
+                file->addParameterToGroup("/Info/Parameters",it->first,
+                                          H5::PredType::IEEE_F32LE,&data);
+            } else if (it->second.value().type() == typeid(double)) {
                 double data = _vm[it->first].as<double>();
                 file->addParameterToGroup("/Info/Parameters",it->first,
                                           H5::PredType::IEEE_F64LE,&data);

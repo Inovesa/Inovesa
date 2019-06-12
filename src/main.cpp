@@ -135,7 +135,7 @@ int main(int argc, char** argv)
         display = make_display( ofname );
     }
 
-    oclhptr_t oclh;
+    oclhptr_t oclh(nullptr);
 
     #if INOVESA_USE_OPENCL == 1
     if (cldev > 0) {
