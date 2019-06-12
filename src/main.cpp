@@ -251,14 +251,14 @@ int main(int argc, char** argv)
      * Eumeration is inverse to x coordinates (physical z position)
      * because smaller numbers should come first (physical time axis).
      */
-    std::vector<uint32_t> buckets;
+    std::vector<uint32_t> bucketnumbers;
 
     // the normalized bunch currents (without empty buckets)
     std::vector<integral_t> bunches;
 
     for (uint32_t i=0; i<filling.size(); i++) {
         if (filling[i] > 0) {
-            buckets.push_back(filling.size()-1-i);
+            bucketnumbers.push_back(filling.size()-1-i);
             bunches.emplace_back(filling[i]);
         }
     }
@@ -720,7 +720,8 @@ int main(int argc, char** argv)
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field( grid_t1,rdtn_impedance,buckets,0 // no spacing
+    ElectricField rdtn_field( grid_t1,rdtn_impedance,bucketnumbers
+                            , 0 // no spacing
                             , oclh
                             , f_rev,revolutionpart);
 
@@ -739,7 +740,7 @@ int main(int argc, char** argv)
     if (wake_impedance != nullptr) {
         Display::printText("Calculating WakePotential.");
         wake_field = new ElectricField( grid_t1,wake_impedance
-                                      , buckets, spacing_bins
+                                      , bucketnumbers, spacing_bins
                                       , oclh
                                       , f_rev
                                       , revolutionpart, Ib,E0,sE,dt
