@@ -235,13 +235,13 @@ private: // program parameters
     bool _forcerun;
 
 private: // simulation parameters
-    uint32_t meshsize;
+    meshindex_t meshsize;
     uint32_t outsteps;
     double padding;
     bool roundpadding;
-    double pq_size;
-    double meshshiftx;
-    double meshshifty;
+    meshaxis_t pq_size;
+    meshaxis_t meshshiftx;
+    meshaxis_t meshshifty;
     uint32_t steps_per_Ts;
     double steps_per_Trev;
     int32_t renormalize;
@@ -279,7 +279,7 @@ private: // phsical parameters
     double collimator;
     double s_c;
     double xi_wall;
-    double H;
+    frequency_t H;
     std::vector<integral_t> I_b;
     double t_d;
     double r_bend;

@@ -171,15 +171,15 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    const meshindex_t ps_bins = opts.getGridSize();
-    const double pqsize = opts.getPhaseSpaceSize();
-    const double qcenter = -opts.getPSShiftX()*pqsize/(ps_bins-1);
-    const double pcenter = -opts.getPSShiftY()*pqsize/(ps_bins-1);
-    const double pqhalf = pqsize/2;
-    const double qmax = qcenter + pqhalf;
-    const double qmin = qcenter - pqhalf;
-    const double pmax = pcenter + pqhalf;
-    const double pmin = pcenter - pqhalf;
+    const auto ps_bins = opts.getGridSize();
+    const auto pqsize = opts.getPhaseSpaceSize();
+    const auto qcenter = -opts.getPSShiftX()*pqsize/(ps_bins-1);
+    const auto pcenter = -opts.getPSShiftY()*pqsize/(ps_bins-1);
+    const auto pqhalf = pqsize/2;
+    const auto qmax = qcenter + pqhalf;
+    const auto qmin = qcenter - pqhalf;
+    const auto pmax = pcenter + pqhalf;
+    const auto pmin = pcenter - pqhalf;
 
     // relative energy spread
     const auto sE = opts.getEnergySpread();
@@ -220,11 +220,11 @@ int main(int argc, char** argv)
 
     const double V_eff = std::sqrt(V_RF*V_RF-V0*V0);
 
-    double fs = opts.getSyncFreq();
+    auto fs = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
     // non-zero f_s will be used, zero implies usage of alpha0
-    if (fs == 0) {
+    if (std::fpclassify(fs) == FP_ZERO) {
         fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_eff
                              /(two_pi<double>()*E0));
     } else {
@@ -238,7 +238,8 @@ int main(int argc, char** argv)
 
 
     // natural RMS bunch length (m)
-    const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
+    const double bl = physcons::c*dE/harmonic_number
+            /std::pow(f_rev,2.0)/V_eff*fs;
 
     // filling pattern, first as individual bunch currents
     std::vector<integral_t> filling = opts.getBunchCurrents();
@@ -368,7 +369,7 @@ int main(int argc, char** argv)
     double S_csr = 0;
     #endif
     { // context of information printing, not needed in the program
-    if (gap!=0) {
+    if (std::fpclassify(gap) == FP_ZERO) {
         #if INOVESA_USE_HDF5 == 0
         double shield = 0;
         double S_csr = 0;
@@ -427,7 +428,7 @@ int main(int argc, char** argv)
         sstream << std::scientific << fs;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
-        if (opts.getStepsPerTrev() == 0) {
+        if (std::fpclassify(opts.getStepsPerTrev()) == FP_ZERO) {
             sstream.str("");
             sstream << std::fixed << 1/revolutionpart;
             Display::printText("Doing " +sstream.str()+

@@ -416,7 +416,7 @@ void vfps::ProgramOptions::save(std::string fname)
         ){
             continue;
         } else
-        if (it->first == "alpha0" && f_s != 0) {
+        if (it->first == "alpha0" && std::fpclassify(f_s) == FP_ZERO) {
             ofs << "alpha0=0" << std::endl;
             continue;
         } else
