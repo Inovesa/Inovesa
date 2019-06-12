@@ -398,7 +398,8 @@ const vfps::meshindex_t& vfps::PhaseSpace::nxyb
 void vfps::PhaseSpace::setSize(const meshindex_t x,
                                const meshindex_t b )
 {
-    if (vfps::PhaseSpace::_firstinit) {
+    if (vfps::PhaseSpace::_firstinit)
+    {
         vfps::PhaseSpace::_firstinit = false;
         vfps::PhaseSpace::_nmeshcellsX = x;
         vfps::PhaseSpace::_nmeshcellsY = x;
