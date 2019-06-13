@@ -357,7 +357,8 @@ void vfps::ElectricField::padBunchProfiles()
     auto bp= _phasespace->getProjection(0);
     for (uint32_t b=0; b<PhaseSpace::nb; b++) {
         std::copy_n( bp.origin()+b*PhaseSpace::nx
-                   , PhaseSpace::nx,_bp_padded+_bucket[b]*_spacing_bins);
+                   , PhaseSpace::nx
+                   , _bp_padded+_bucket[b]*_spacing_bins);
     }
 }
 

@@ -5,7 +5,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/mpl/vector.hpp>
-
 #include <vector>
 
 #define INOVESA_ALLOW_PS_RESET 1
@@ -28,21 +27,26 @@ struct ElectricFieldFixture {
         }
         constexpr double bunchspacing = 4.0;
 
-        size_t spaced_bins = static_cast<size_t>(
-                    std::ceil(n*buckets.size()*bunchspacing));
+        spacing_bins = static_cast<size_t>(std::ceil(n*bunchspacing));
 
-        vfps::PhaseSpace::resetSize(n,1);
+        spaced_bins = spacing_bins * filling.size();
+
+        vfps::PhaseSpace::resetSize(n,bunches.size());
 
         ps = std::make_shared<vfps::PhaseSpace>(
                     -12,12,3,-12,12,4,nullptr,1,1,bunches);
         z = std::make_shared<vfps::ConstImpedance>(spaced_bins, 1e9, 1);
 
         f = std::make_shared<vfps::ElectricField>(
-                    ps, z, buckets, 0, nullptr,
+                    ps, z, buckets, spacing_bins, nullptr,
                     1e6, 0.1, 1e-3, 1e9, 1e3, 1e-3);
     }
 
     static constexpr uint32_t n = 32;
+
+    size_t spaced_bins;
+
+    size_t spacing_bins;
 
     std::vector<uint32_t> buckets;
 
@@ -59,33 +63,48 @@ struct ElectricFieldFixture {
 
 constexpr uint32_t ElectricFieldFixture::n;
 
-struct ElectricFieldFixture1 : public ElectricFieldFixture{
-    ElectricFieldFixture1()
-      : ElectricFieldFixture(std::vector<vfps::integral_t>{1.0})
-    {}
+struct filling {
+    explicit filling(std::vector<vfps::integral_t> pattern)
+      : pattern(pattern) {}
+
+    std::vector<vfps::integral_t> pattern;
 };
 
-struct ElectricFieldFixture2 : public ElectricFieldFixture{
-    ElectricFieldFixture2()
-      : ElectricFieldFixture(std::vector<vfps::integral_t>{0.75, 0, 0.25})
-    {}
+struct filling1 : public filling {
+    filling1() : filling({1.0}) {}
 };
 
-typedef boost::mpl::vector<ElectricFieldFixture1,
-                           ElectricFieldFixture2
-                          > ElectricFieldFixtures;
+struct filling2 : public filling {
+    filling2() : filling({0.75, 0, 0.25}) {}
+};
+
+typedef boost::mpl::vector<filling1,
+                           filling2
+                          > filling_patterns;
 
 
 BOOST_AUTO_TEST_SUITE( ElectricField )
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(constructors , T, ElectricFieldFixtures, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(constructors , T, filling_patterns, T)
 {
-    BOOST_CHECK_EQUAL_COLLECTIONS(T::f->getBuckets().data(),
-                                  T::f->getBuckets().data()
-                                  +T::f->getBuckets().size(),
-                                  T::buckets.data(),
-                                  T::buckets.data()
-                                  +T::buckets.size());
+    ElectricFieldFixture eff(T::pattern);
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(eff.f->getBuckets().data(),
+                                  eff.f->getBuckets().data()
+                                  +eff.f->getBuckets().size(),
+                                  eff.buckets.data(),
+                                  eff.buckets.data()
+                                  +eff.buckets.size());
+}
+
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
+{
+    ElectricFieldFixture eff(T::pattern);
+
+    eff.ps->updateXProjection();
+    eff.f->padBunchProfiles();
+
+    // TODO: Add actual test
 }
 
 BOOST_AUTO_TEST_SUITE_END()
