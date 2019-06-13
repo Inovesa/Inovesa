@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE( constructors ){
 
     vfps::Impedance z2(z1);
 
+    BOOST_CHECK_EQUAL(z1.getRuler(), z2.getRuler());
     BOOST_CHECK_EQUAL(z2[0],static_cast<vfps::impedance_t>(0));
     BOOST_CHECK_EQUAL(z2[5],j);
 }
@@ -57,6 +58,7 @@ BOOST_AUTO_TEST_CASE( addition ){
     vfps::Impedance z1(zv1, 1e9);
     vfps::Impedance z2(zv2, 1e9);
     vfps::Impedance z3(n,1e9);
+
     z3 = z1 + z2;
 
     BOOST_CHECK_EQUAL(z1.nFreqs(), n);
