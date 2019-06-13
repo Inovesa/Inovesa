@@ -21,6 +21,8 @@ BOOST_AUTO_TEST_CASE( constructors ){
 
     vfps::ConstImpedance z1(n, 1e9, Z);
 
+    BOOST_CHECK_EQUAL(z1.nFreqs(), n);
+
     BOOST_CHECK_EQUAL_COLLECTIONS(zv1.data(),zv1.data()+zv1.size(),
                                   z1.data(),z1.data()+n);
 }

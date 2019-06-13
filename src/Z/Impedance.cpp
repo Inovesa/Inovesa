@@ -7,6 +7,7 @@
 #include "Z/Impedance.hpp"
 
 #include <fstream>
+#include <iostream>
 
 vfps::Impedance::Impedance(const Impedance &other)
   : Impedance( Ruler<frequency_t>(other._axis),other._data, other._oclh)
@@ -94,12 +95,16 @@ std::vector<vfps::impedance_t> vfps::Impedance::readData(std::string fname)
     std::vector<vfps::impedance_t> rv;
     std::ifstream is(fname);
     size_t lineno;
-    double real;
-    double imag;
+    size_t old_lineno(std::numeric_limits<size_t>::max());
+    frequency_t real;
+    frequency_t imag;
 
     while(is.good()) {
         is >> lineno >> real >> imag;
-        rv.push_back(impedance_t(real,imag));
+        if (lineno != old_lineno) {
+            rv.push_back(impedance_t(real,imag));
+        }
+        old_lineno = lineno;
     }
     return rv;
 }
