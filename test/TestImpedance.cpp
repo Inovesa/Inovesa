@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE( constructors ){
 
     vfps::Impedance z2(z1);
 
-    BOOST_CHECK_EQUAL(z1.getRuler(), z2.getRuler());
+    BOOST_CHECK(z1.getRuler()->operator ==(*z2.getRuler()));
     BOOST_CHECK_EQUAL(z2[0],static_cast<vfps::impedance_t>(0));
     BOOST_CHECK_EQUAL(z2[5],j);
 }
