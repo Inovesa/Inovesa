@@ -134,6 +134,12 @@ public:
      */
     meshaxis_t* wakePotential();
 
+    /**
+     * @brief padBunchProfiles copies bunch profiles to have correct padding
+
+     */
+    void padBunchProfiles();
+
     inline integral_t* getPaddedProfile() const
         { return _bp_padded; }
 

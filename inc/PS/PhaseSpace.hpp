@@ -188,9 +188,7 @@ public:
         { return _projection[x]; }
 
     /**
-     * @brief updateXProjection
-     *
-     * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
+     * @brief updateXProjection updates longitudinal bunch profiles
      */
     void updateXProjection();
 
