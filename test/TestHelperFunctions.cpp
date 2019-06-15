@@ -76,4 +76,12 @@ BOOST_AUTO_TEST_CASE( upper_power_of_two ){
     BOOST_CHECK_EQUAL(vfps::upper_power_of_two(9),16);
 }
 
+BOOST_AUTO_TEST_CASE(filetype) {
+    BOOST_CHECK(vfps::isOfFileType("bar","foo.bar"));
+    BOOST_CHECK(vfps::isOfFileType(".bar","foo.bar"));
+    BOOST_CHECK(vfps::isOfFileType("bar","foo.ba") == false);
+    BOOST_CHECK(vfps::isOfFileType("bar","ba") == false);
+    BOOST_CHECK(vfps::isOfFileType("ar","foo.bar") == false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
