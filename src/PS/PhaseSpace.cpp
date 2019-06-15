@@ -445,7 +445,7 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
     for(meshindex_t i=0; i<maxi; i++){
         _projection[axis][bunch][i]
-                = boost::math::constants::one_div_root_two_pi<double>()
+                = boost::math::constants::one_div_root_two_pi<integral_t>()
                 * std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
 }

@@ -7,6 +7,9 @@
 #include <boost/mpl/vector.hpp>
 #include <vector>
 
+#include <boost/math/constants/constants.hpp>
+using boost::math::constants::one_div_root_two_pi;
+
 #define INOVESA_ALLOW_PS_RESET 1
 
 #include "defines.hpp"
@@ -59,9 +62,14 @@ struct ElectricFieldFixture {
     std::shared_ptr<vfps::ConstImpedance> z;
 
     std::shared_ptr<vfps::ElectricField> f;
+
+    static constexpr vfps::integral_t zoom = 1.0;
+    static constexpr vfps::integral_t zoom2 = zoom*zoom;
 };
 
 constexpr uint32_t ElectricFieldFixture::n;
+constexpr vfps::integral_t ElectricFieldFixture::zoom;
+constexpr vfps::integral_t ElectricFieldFixture::zoom2;
 
 struct filling {
     explicit filling(std::vector<vfps::integral_t> pattern)
@@ -104,7 +112,31 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
     eff.ps->updateXProjection();
     eff.f->padBunchProfiles();
 
-    // TODO: Add actual test
+    std::vector<vfps::integral_t> correct_solution(eff.spaced_bins,0);
+    size_t bucket(0);
+    vfps::meshindex_t x(0);
+    auto axis = eff.ps->getAxis(0);
+    /* Time and space coordinates are anti-parallel.
+     * As pattern is in time but grid is in space,
+     * we have to interate reversed.
+     */
+    for(auto norm = T::pattern.rbegin(); norm != T::pattern.rend(); ++norm)
+    {
+        x = bucket*eff.spacing_bins;
+        for (vfps::meshindex_t x_bucket=0; x_bucket<eff.n;
+             x_bucket++, x++) {
+            correct_solution[x]
+                  =  *norm * one_div_root_two_pi<vfps::integral_t>()
+                  * std::exp((-0.5)*axis->at(x_bucket)
+                             * axis->at(x_bucket)/eff.zoom2);
+        }
+        bucket++;
+    }
+
+    auto test_solution = eff.f->getPaddedProfile();
+    for (size_t x=0; x<eff.spaced_bins; x++) {
+        BOOST_CHECK_CLOSE(correct_solution[x], test_solution[x], 1e-4);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
