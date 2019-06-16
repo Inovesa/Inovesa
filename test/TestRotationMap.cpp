@@ -20,12 +20,12 @@ BOOST_AUTO_TEST_CASE( linear_noclamp_map ){
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
-                                          0.0, 0.3, 0.7, 0.0,
+                                          0.0, 0.3, 0.5, 0.0,
                                           0.0, 0.7, 0.3, 0.0,
                                           0.0, 0.0, 0.0, 0.0 }};
 
     std::vector<vfps::meshdata_t> data2{{ 0.0, 0.0, 0.0, 0.0,
-                                          0.0, 0.7, 0.3, 0.0,
+                                          0.0, 0.5, 0.3, 0.0,
                                           0.0, 0.3, 0.7, 0.0,
                                           0.0, 0.0, 0.0, 0.0 }};
 

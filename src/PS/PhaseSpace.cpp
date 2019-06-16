@@ -398,7 +398,8 @@ const vfps::meshindex_t& vfps::PhaseSpace::nxyb
 void vfps::PhaseSpace::setSize(const meshindex_t x,
                                const meshindex_t b )
 {
-    if (vfps::PhaseSpace::_firstinit) {
+    if (vfps::PhaseSpace::_firstinit)
+    {
         vfps::PhaseSpace::_firstinit = false;
         vfps::PhaseSpace::_nmeshcellsX = x;
         vfps::PhaseSpace::_nmeshcellsY = x;
@@ -444,7 +445,7 @@ void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
     for(meshindex_t i=0; i<maxi; i++){
         _projection[axis][bunch][i]
-                = boost::math::constants::one_div_root_two_pi<double>()
+                = boost::math::constants::one_div_root_two_pi<integral_t>()
                 * std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
 }

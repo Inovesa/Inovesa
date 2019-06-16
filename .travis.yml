@@ -6,6 +6,9 @@ branches:
 
 dist: xenial
 
+services:
+  - xvfb
+
 addons:
   apt:
     packages:
@@ -31,8 +34,8 @@ addons:
       - libxrandr-dev # optional
       - ocl-icd-opencl-dev # optional
 
-compiler: # for "matrix builds" testing various configurations
-  - clang
+compiler: # uncomment both for "matrix builds"
+#  - clang
   - gcc
 
 before_install:
@@ -57,4 +60,5 @@ script: # set correct compiler versions first
 
 
 after_success:
-  - if [ "$CXX" == "g++-5" ]; then coveralls --root . -e test -E ".*CMakeFiles.*"; fi
+  - if [ "$CXX" == "g++-5" ]; then coveralls --gcov-options '\-lp' --root . -e test -E ".*CMakeFiles.*"; fi
+

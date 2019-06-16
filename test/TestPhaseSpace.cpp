@@ -142,6 +142,13 @@ BOOST_AUTO_TEST_CASE( swap ){
                                   ps2.getData(),ps2.getData()+data1.size());
     BOOST_CHECK_EQUAL_COLLECTIONS(data2.data(),data2.data()+data2.size(),
                                   ps1.getData(),ps1.getData()+data2.size());
+
+    // swap back using class member swap
+    ps1.swap(ps2);
+    BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
+                                  ps1.getData(),ps1.getData()+data1.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(data2.data(),data2.data()+data2.size(),
+                                  ps2.getData(),ps2.getData()+data2.size());
 }
 
 BOOST_AUTO_TEST_CASE( assign ){

@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         display = make_display( ofname );
     }
 
-    oclhptr_t oclh;
+    oclhptr_t oclh(nullptr);
 
     #if INOVESA_USE_OPENCL == 1
     if (cldev > 0) {
@@ -163,15 +163,15 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    const meshindex_t ps_bins = opts.getGridSize();
-    const double pqsize = opts.getPhaseSpaceSize();
-    const double qcenter = -opts.getPSShiftX()*pqsize/(ps_bins-1);
-    const double pcenter = -opts.getPSShiftY()*pqsize/(ps_bins-1);
-    const double pqhalf = pqsize/2;
-    const double qmax = qcenter + pqhalf;
-    const double qmin = qcenter - pqhalf;
-    const double pmax = pcenter + pqhalf;
-    const double pmin = pcenter - pqhalf;
+    const auto ps_bins = opts.getGridSize();
+    const auto pqsize = opts.getPhaseSpaceSize();
+    const auto qcenter = -opts.getPSShiftX()*pqsize/(ps_bins-1);
+    const auto pcenter = -opts.getPSShiftY()*pqsize/(ps_bins-1);
+    const auto pqhalf = pqsize/2;
+    const auto qmax = qcenter + pqhalf;
+    const auto qmin = qcenter - pqhalf;
+    const auto pmax = pcenter + pqhalf;
+    const auto pmin = pcenter - pqhalf;
 
     // relative energy spread
     const auto sE = opts.getEnergySpread();
@@ -212,11 +212,11 @@ int main(int argc, char** argv)
 
     const double V_eff = std::sqrt(V_RF*V_RF-V0*V0);
 
-    double fs = opts.getSyncFreq();
+    auto fs = opts.getSyncFreq();
     meshaxis_t alpha0_tmp = opts.getAlpha0();
 
     // non-zero f_s will be used, zero implies usage of alpha0
-    if (fs == 0) {
+    if (std::fpclassify(fs) == FP_ZERO) {
         fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_eff
                              /(two_pi<double>()*E0));
     } else {
@@ -230,7 +230,8 @@ int main(int argc, char** argv)
 
 
     // natural RMS bunch length (m)
-    const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
+    const double bl = physcons::c*dE/harmonic_number
+            /std::pow(f_rev,2.0)/V_eff*fs;
 
     // filling pattern, first as individual bunch currents
     std::vector<integral_t> filling = opts.getBunchCurrents();
@@ -242,14 +243,14 @@ int main(int argc, char** argv)
      * Eumeration is inverse to x coordinates (physical z position)
      * because smaller numbers should come first (physical time axis).
      */
-    std::vector<uint32_t> buckets;
+    std::vector<uint32_t> bucketnumbers;
 
     // the normalized bunch currents (without empty buckets)
     std::vector<integral_t> bunches;
 
     for (uint32_t i=0; i<filling.size(); i++) {
         if (filling[i] > 0) {
-            buckets.push_back(filling.size()-1-i);
+            bucketnumbers.push_back(filling.size()-1-i);
             bunches.emplace_back(filling[i]);
         }
     }
@@ -360,7 +361,7 @@ int main(int argc, char** argv)
     double S_csr = 0;
     #endif
     { // context of information printing, not needed in the program
-    if (gap!=0) {
+    if (std::fpclassify(gap) == FP_ZERO) {
         #if INOVESA_USE_HDF5 == 0
         double shield = 0;
         double S_csr = 0;
@@ -419,7 +420,7 @@ int main(int argc, char** argv)
         sstream << std::scientific << fs;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
-        if (opts.getStepsPerTrev() == 0) {
+        if (std::fpclassify(opts.getStepsPerTrev()) == FP_ZERO) {
             sstream.str("");
             sstream << std::fixed << 1/revolutionpart;
             Display::printText("Doing " +sstream.str()+
@@ -711,7 +712,8 @@ int main(int argc, char** argv)
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field( grid_t1,rdtn_impedance,buckets,0 // no spacing
+    ElectricField rdtn_field( grid_t1,rdtn_impedance,bucketnumbers
+                            , 0 // no spacing
                             , oclh
                             , f_rev,revolutionpart);
 
@@ -730,7 +732,7 @@ int main(int argc, char** argv)
     if (wake_impedance != nullptr) {
         Display::printText("Calculating WakePotential.");
         wake_field = new ElectricField( grid_t1,wake_impedance
-                                      , buckets, spacing_bins
+                                      , bucketnumbers, spacing_bins
                                       , oclh
                                       , f_rev
                                       , revolutionpart, Ib,E0,sE,dt

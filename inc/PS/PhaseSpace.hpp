@@ -188,9 +188,7 @@ public:
         { return _projection[x]; }
 
     /**
-     * @brief updateXProjection
-     *
-     * @todo make ready for arbitrary meshdata_t (currently hardcoded to float)
+     * @brief updateXProjection updates longitudinal bunch profiles
      */
     void updateXProjection();
 
@@ -360,10 +358,12 @@ public:
 
     /**
      * @brief setSize one-time setter for sizes
-     * @param x
-     * @param b
+     * @param x number of grid cells in x (and y) directions
+     * @param b number of bunches
      *
      * As all grids have to have the same size, it is set globally.
+     *
+     * Support for non-quadratic grids is considered for a future release.
      */
     static void setSize(const meshindex_t x,
                         const meshindex_t b);

@@ -72,7 +72,7 @@ public:
      * @param device
      * @param glsharing needs to be implemented
      */
-    OCLH( uint32_t device, bool glsharing=false);
+    explicit OCLH( uint32_t device, bool glsharing=false);
 
     cl::Program prepareCLProg(std::string);
 

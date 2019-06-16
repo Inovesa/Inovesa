@@ -313,12 +313,7 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
     }
     #endif // INOVESA_USE_OPENCL
     {
-        // copy bunch profiles to have correct padding
-        auto bp= _phasespace->getProjection(0);
-        for (uint32_t b=0; b<PhaseSpace::nb; b++) {
-            std::copy_n( bp.origin()+b*PhaseSpace::nx
-                       , PhaseSpace::nx,_bp_padded+_bucket[b]*_spacing_bins);
-        }
+        padBunchProfiles();
 
         /* Fourier transorm bunch profile (_bp_padded),
          * result will be saved to _formfactor.
@@ -355,6 +350,16 @@ vfps::meshaxis_t *vfps::ElectricField::wakePotential()
         #endif // INOVESA_USE_OPENCL
     }
     return _wakepotential.data();
+}
+
+void vfps::ElectricField::padBunchProfiles()
+{
+    auto bp= _phasespace->getProjection(0);
+    for (uint32_t b=0; b<PhaseSpace::nb; b++) {
+        std::copy_n( bp.origin()+b*PhaseSpace::nx
+                   , PhaseSpace::nx
+                   , _bp_padded+_bucket[b]*_spacing_bins);
+    }
 }
 
 #if INOVESA_USE_OPENCL == 1

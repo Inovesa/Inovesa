@@ -228,20 +228,20 @@ private: // program parameters
 
     std::string _configfile;
 
-    int32_t _glversion;
+    uint_fast8_t _glversion;
 
     bool _verbose;
 
     bool _forcerun;
 
 private: // simulation parameters
-    uint32_t meshsize;
+    meshindex_t meshsize;
     uint32_t outsteps;
     double padding;
     bool roundpadding;
-    double pq_size;
-    double meshshiftx;
-    double meshshifty;
+    meshaxis_t pq_size;
+    meshaxis_t meshshiftx;
+    meshaxis_t meshshifty;
     uint32_t steps_per_Ts;
     double steps_per_Trev;
     int32_t renormalize;
@@ -254,9 +254,9 @@ private: // simulation parameters
     bool interpol_clamp;
 
 private: // phsical parameters
-    double alpha0;
-    double alpha1;
-    double alpha2;
+    meshaxis_t alpha0;
+    meshaxis_t alpha1;
+    meshaxis_t alpha2;
 
     double rf_phase_spread;
     double rf_amplitude_spread;
@@ -272,14 +272,14 @@ private: // phsical parameters
      * @brief zoom initial distribution
      */
     double zoom;
-    double f_c;
-    double f_s;
-    double f0;
+    frequency_t f_c;
+    frequency_t f_s;
+    frequency_t f0;
     double g;
     double collimator;
     double s_c;
     double xi_wall;
-    double H;
+    frequency_t H;
     std::vector<integral_t> I_b;
     double t_d;
     double r_bend;

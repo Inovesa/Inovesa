@@ -68,11 +68,9 @@ private:
  * just initialize the log, print some status information, or do nothing
  * but to return a nullptr.
  */
-std::unique_ptr<Display> make_display(std::string ofname
-                                      #if INOVESA_USE_OPENGL == 1
-                                      , bool gui=false
-                                      , uint_fast8_t glversion=0
-                                      #endif // INOVESA_USE_OPENGL
+std::unique_ptr<Display> make_display( std::string ofname
+                                     , bool gui=false
+                                     , uint_fast8_t glversion=0
                                      );
 
 class Display
@@ -87,6 +85,8 @@ public:
     static std::chrono::system_clock::time_point start_time;
 
     volatile static bool abort;
+
+    volatile static bool silent_mode;
 
 public:
     Display() = delete;

@@ -32,18 +32,22 @@ public:
 
     /**
      * @brief ElectricField minimal constructor, will not offer wake function
-     * @param phasespace this electric field is assigned to
+     * @param ps this electric field is assigned to
      * @param impedance to use for electric field calculation
-     * @param revolutionpart
+     * @param bucketnumbers of buckets contained in ps
+     * @param spacing_bins number of grid points between bunch centers
+     *        (including grind points covered by phase space grid)
+     * @param f_rev revolution frequency
+     * @param revolutionpart part of one revolution covered by one time step
      * @param wakescaling scaling of wakepotential
      *        (As being part of fourier transform,
-     *         delta t and delta f will be automatically taken into account.
+     *         delta t and delta f will be automatically taken into account.)
      *
      * Use other constructors when you want to use wake function or potential.
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
-                  const std::vector<uint32_t> &bucketnumber,
+                  const std::vector<uint32_t> &bucketnumbers,
                   const meshindex_t spacing_bins,
                   oclhptr_t oclh,
                   const double f_rev,
@@ -129,6 +133,12 @@ public:
      * relies on an up to date PhaseSpace::_projection[axis]
      */
     meshaxis_t* wakePotential();
+
+    /**
+     * @brief padBunchProfiles copies bunch profiles to have correct padding
+
+     */
+    void padBunchProfiles();
 
     inline integral_t* getPaddedProfile() const
         { return _bp_padded; }

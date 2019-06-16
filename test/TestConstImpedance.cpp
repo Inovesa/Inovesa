@@ -6,7 +6,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include<vector>
-#include <iostream>
 
 #include "defines.hpp"
 #include "Z/ConstImpedance.hpp"
@@ -20,6 +19,8 @@ BOOST_AUTO_TEST_CASE( constructors ){
     zv1.resize(n,0);
 
     vfps::ConstImpedance z1(n, 1e9, Z);
+
+    BOOST_CHECK_EQUAL(z1.nFreqs(), n);
 
     BOOST_CHECK_EQUAL_COLLECTIONS(zv1.data(),zv1.data()+zv1.size(),
                                   z1.data(),z1.data()+n);
