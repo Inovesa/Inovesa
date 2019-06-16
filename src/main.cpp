@@ -45,14 +45,6 @@ using boost::math::constants::two_pi;
 
 using namespace vfps;
 
-#if INOVESA_ENABLE_INTERRUPT == 1
-#include<csignal> // for SIGINT handling
-
-void SIGINT_handler(int) {
-    Display::abort = true;
-}
-#endif // INOVESA_ENABLE_INTERRUPT
-
 /**
  * @file
  * @brief main Inovesa file
@@ -76,7 +68,7 @@ int main(int argc, char** argv)
 
     #if INOVESA_ENABLE_INTERRUPT == 1
     //Install signal handler for SIGINT
-    signal(SIGINT, SIGINT_handler);
+    signal(SIGINT, Display::SIGINT_handler);
     #endif // INOVESA_ENABLE_INTERRUPT
 
     /*
