@@ -17,6 +17,10 @@
 #include <memory>
 #include <type_traits>
 
+#if INOVESA_ENABLE_INTERRUPT == 1
+#include<csignal> // for SIGINT handling
+#endif
+
 #if INOVESA_USE_OPENGL == 1
 
 // Include GLEW
@@ -105,6 +109,12 @@ public:
      * @brief ~Display() terminats OpenGL (if used)
      */
     ~Display() noexcept;
+
+    #if INOVESA_ENABLE_INTERRUPT == 1
+    static void SIGINT_handler(int) {
+        Display::abort = true;
+    }
+    #endif // INOVESA_ENABLE_INTERRUPT
 
     #if INOVESA_USE_OPENGL == 1
     void addElement(std::shared_ptr<GUIElement> newitem);
