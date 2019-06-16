@@ -34,10 +34,12 @@ struct ElectricFieldFixture {
 
         spaced_bins = spacing_bins * filling.size();
 
-        vfps::PhaseSpace::resetSize(n,bunches.size());
+        vfps::PhaseSpace::resetSize(n, bunches.size());
 
         ps = std::make_shared<vfps::PhaseSpace>(
                     -12,12,3,-12,12,4,nullptr,1,1,bunches);
+
+        // impedance with constant value of 1
         z = std::make_shared<vfps::ConstImpedance>(spaced_bins, 1e9, 1);
 
         f = std::make_shared<vfps::ElectricField>(
@@ -136,6 +138,33 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
     auto test_solution = eff.f->getPaddedProfile();
     for (size_t x=0; x<eff.spaced_bins; x++) {
         BOOST_CHECK_CLOSE(correct_solution[x], test_solution[x], 1e-4);
+    }
+}
+
+
+/**
+ * @brief WakePotential test
+ *
+ * TODO: check for all bunches
+ * TODO: check normalization
+ */
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
+{
+    ElectricFieldFixture eff(T::pattern);
+
+    eff.ps->updateXProjection();
+    eff.f->padBunchProfiles();
+
+    auto padded_profile = eff.f->getPaddedProfile();
+    auto wake_potential = eff.f->wakePotential();
+
+    for (size_t x=0; x<eff.n; x++) {
+        /* Shapes of profile and wake potential (DFT forth and back)
+         * should match, as constant 1 is used as impedance.
+         */
+        BOOST_CHECK_SMALL(wake_potential[x]/wake_potential[eff.n/2]
+                          -padded_profile[x]/padded_profile[eff.n/2],
+                          static_cast<vfps::integral_t>(1e-6));
     }
 }
 
