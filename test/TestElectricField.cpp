@@ -135,7 +135,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
         bucket++;
     }
 
-    auto test_solution = eff.f->getPaddedProfile();
+    auto test_solution = eff.f->getPaddedBunchProfiles();
     for (size_t x=0; x<eff.spaced_bins; x++) {
         BOOST_CHECK_CLOSE(correct_solution[x], test_solution[x], 1e-4);
     }
@@ -145,7 +145,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
 /**
  * @brief WakePotential test
  *
- * TODO: check for all bunches
  * TODO: check normalization
  */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
@@ -154,17 +153,20 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
 
     eff.ps->updateXProjection();
     eff.f->padBunchProfiles();
+    eff.f->wakePotential();
 
-    auto padded_profile = eff.f->getPaddedProfile();
-    auto wake_potential = eff.f->wakePotential();
+    auto padded_profile = eff.ps->getProjection(0);
+    auto wake_potential = eff.f->getWakePotentials();
 
-    for (size_t x=0; x<eff.n; x++) {
-        /* Shapes of profile and wake potential (DFT forth and back)
-         * should match, as constant 1 is used as impedance.
-         */
-        BOOST_CHECK_SMALL(wake_potential[x]/wake_potential[eff.n/2]
-                          -padded_profile[x]/padded_profile[eff.n/2],
-                          static_cast<vfps::integral_t>(1e-6));
+    for (vfps::meshindex_t b=0; b<vfps::PhaseSpace::nb;b++) {
+        for (vfps::meshindex_t x=0; x<eff.n; x++) {
+            /* Shapes of profile and wake potential (DFT forth and back)
+             * should match, as constant 1 is used as impedance.
+             */
+            BOOST_CHECK_SMALL(wake_potential[b][x]/wake_potential[b][eff.n/2]
+                              -padded_profile[b][x]/padded_profile[b][eff.n/2],
+                              static_cast<vfps::integral_t>(1e-6));
+        }
     }
 }
 

@@ -140,10 +140,13 @@ public:
      */
     void padBunchProfiles();
 
-    inline integral_t* getPaddedProfile() const
+    inline integral_t* getPaddedBunchProfiles() const
         { return _bp_padded; }
 
-    inline meshaxis_t* getPaddedWakepotential() const
+    inline const auto& getWakePotentials() const
+        { return _wakepotential; }
+
+    inline meshaxis_t* getPaddedWakePotential() const
         { return _wakepotential_padded; }
 
 
@@ -272,8 +275,6 @@ public:
     const double factor4Watts;
 
 private:
-
-
     /**
      * @brief _csrintensity dimensions: bunch
      */
