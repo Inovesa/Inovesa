@@ -145,7 +145,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
 /**
  * @brief WakePotential test
  *
- * TODO: check normalization
+ * @todo check normalization
  */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
 {
