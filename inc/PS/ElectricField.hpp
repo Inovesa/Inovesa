@@ -8,11 +8,11 @@
 
 #include <algorithm>
 #include <boost/multi_array.hpp>
-#include <fftw3.h>
 #include <memory>
 #include <sstream>
 
 #include "defines.hpp"
+#include "FFTWWrapper.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/Ruler.hpp"
 #include "Z/Impedance.hpp"
@@ -21,9 +21,6 @@
 #include "IO/Display.hpp"
 
 namespace vfps {
-
-typedef fftwf_plan fft_plan;
-typedef fftwf_complex fft_complex;
 
 class ElectricField
 {
@@ -157,94 +154,6 @@ public:
 public:
     const double volts;
 
-private: // wrappers for FFTW
-    enum class fft_direction : uint_fast8_t {
-        forward, backward
-    };
-
-    fft_complex* fft_alloc_complex(size_t n);
-    integral_t* fft_alloc_real(size_t n);
-
-    /**
-     * @brief fft_cleanup to be implemented
-     */
-    void fft_cleanup(){}
-
-    inline void fft_destroy_plan(fftw_plan plan)
-        { fftw_destroy_plan(plan); }
-    inline void fft_destroy_plan(fftwf_plan plan)
-        { fftwf_destroy_plan(plan); }
-
-    inline void fft_execute(const fftw_plan plan)
-        { fftw_execute(plan); }
-    inline void fft_execute(const fftwf_plan plan)
-        { fftwf_execute(plan); }
-
-    inline void fft_free(double* addr)
-        { fftw_free(addr); }
-    inline void fft_free(float* addr)
-        { fftwf_free(addr); }
-
-    inline void fft_free(fftw_complex* addr)
-        { fftw_free(addr); }
-    inline void fft_free(fftwf_complex* addr)
-        { fftwf_free(addr); }
-
-    inline fftw_plan prepareFFT(size_t n, double* in, std::complex<double>* out)
-        {return prepareFFT(n,in, reinterpret_cast<fftw_complex*>(out)); }
-
-    fftw_plan prepareFFT(size_t n, double* in, fftw_complex* out);
-
-    inline fftwf_plan prepareFFT(size_t n, float* in, std::complex<float>* out)
-        {return prepareFFT(n,in, reinterpret_cast<fftwf_complex*>(out)); }
-
-    /**
-     * @brief prepareFFT real to complex (Hermitian) FFT, "forward"
-     * @param n
-     * @param in
-     * @param out
-     * @return
-     */
-    fftwf_plan prepareFFT(size_t n, float* in, fftwf_complex* out);
-
-    inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in, float* out)
-        {return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in), out); }
-
-    /**
-     * @brief prepareFFT Hermitian (complex) to real FFT, "backward"
-     * @param n
-     * @param in
-     * @param out
-     * @return
-     */
-    fftwf_plan prepareFFT(size_t n, fftwf_complex* in, float* out);
-
-    inline fftw_plan prepareFFT(size_t n, std::complex<double>* in,
-                                std::complex<double>* out,
-                                fft_direction direction)
-        { return prepareFFT(n,reinterpret_cast<fftw_complex*>(in),
-                            reinterpret_cast<fftw_complex*>(out),direction); }
-
-    /**
-     * @brief prepareFFT (unmaintained for C2C FFT)
-     */
-    fftw_plan prepareFFT(size_t n, fftw_complex *in,
-                         fftw_complex *out,
-                         fft_direction direction);
-
-    inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in,
-                                std::complex<float>* out,
-                                fft_direction direction)
-        { return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in),
-                            reinterpret_cast<fftwf_complex*>(out),direction); }
-
-    /**
-     * @brief prepareFFT (unmaintained for C2C FFT)
-     */
-    fftwf_plan prepareFFT(size_t n, fftwf_complex* in,
-                          fftwf_complex* out,
-                          fft_direction direction);
-
 private:
     const uint32_t _nbunches;
 
@@ -302,7 +211,7 @@ private:
 
     impedance_t* _formfactor;
 
-    fft_complex* _formfactor_fft;
+    fft::complex* _formfactor_fft;
 
     oclhptr_t _oclh;
 
@@ -313,7 +222,7 @@ private:
     cl::Kernel _clKernWakelosses;
     #endif // INOVESA_USE_OPENCL
 
-    fft_plan _fft_bunchprofile;
+    fft::plan _fft_bunchprofile;
 
     #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_bunchprofile;
@@ -323,7 +232,7 @@ private:
 
     impedance_t* _wakelosses;
 
-    fft_complex* _wakelosses_fft;
+    fft::complex* _wakelosses_fft;
 
     #if INOVESA_USE_CLFFT == 1
     cl::Buffer _wakelosses_buf;
@@ -356,7 +265,7 @@ private:
 
     boost::multi_array<meshaxis_t,2> _wakepotential;
 
-    fft_plan _fft_wakelosses;
+    fft::plan _fft_wakelosses;
 
     #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_wakelosses;
