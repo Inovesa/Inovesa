@@ -363,6 +363,13 @@ private:
     #endif // INOVESA_USE_CLFFT
 
     const meshdata_t _wakescaling;
+
+public:
+    /**
+     * @brief getWakeScaling getter function for scaling factor
+     */
+    auto getWakeScaling() const
+        { return _wakescaling; }
 };
 
 } // namespace vfps

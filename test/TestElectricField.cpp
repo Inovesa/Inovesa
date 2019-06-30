@@ -144,8 +144,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
 
 /**
  * @brief WakePotential test
- *
- * @todo check normalization
  */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
 {
@@ -157,14 +155,15 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
 
     auto padded_profile = eff.ps->getProjection(0);
     auto wake_potential = eff.f->getWakePotentials();
+    auto scaling = eff.f->getWakeScaling();
 
     for (vfps::meshindex_t b=0; b<vfps::PhaseSpace::nb;b++) {
         for (vfps::meshindex_t x=0; x<eff.n; x++) {
             /* Shapes of profile and wake potential (DFT forth and back)
              * should match, as constant 1 is used as impedance.
              */
-            BOOST_CHECK_SMALL(wake_potential[b][x]/wake_potential[b][eff.n/2]
-                              -padded_profile[b][x]/padded_profile[b][eff.n/2],
+            BOOST_CHECK_SMALL(wake_potential[b][x]
+                              -padded_profile[b][x]*scaling,
                               static_cast<vfps::integral_t>(1e-6));
         }
     }
