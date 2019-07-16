@@ -16,6 +16,7 @@ using boost::math::constants::one_div_root_two_pi;
 #include "PS/ElectricField.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "Z/ConstImpedance.hpp"
+#include "Z/FreeSpaceCSR.hpp"
 
 
 struct ElectricFieldFixture {
@@ -143,9 +144,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
 
 
 /**
- * @brief WakePotential test
+ * @brief wake_potential test
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(wake_potential , T, filling_patterns, T)
 {
     ElectricFieldFixture eff(T::pattern);
 
@@ -167,6 +168,22 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(WakePotential , T, filling_patterns, T)
                               static_cast<vfps::integral_t>(1e-6));
         }
     }
+}
+
+/**
+ * @brief forward_wake test whether FS impedance just influences forward wake
+ */
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
+{
+    ElectricFieldFixture eff(T::pattern);
+
+    boost::multi_array<vfps::projection_t,3> projection;
+
+    /*
+    eff.ps->setProjection(profiles);
+    eff.f->padBunchProfiles();
+    eff.f->wakePotential();
+    */
 }
 
 BOOST_AUTO_TEST_SUITE_END()

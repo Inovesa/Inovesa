@@ -187,6 +187,10 @@ public:
     inline auto getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
+    inline void setProjection(
+            const boost::multi_array<projection_t,3>& projection)
+        { _projection = projection; }
+
     /**
      * @brief updateXProjection updates longitudinal bunch profiles
      */
