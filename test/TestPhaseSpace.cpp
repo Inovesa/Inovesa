@@ -14,6 +14,25 @@
 
 BOOST_AUTO_TEST_SUITE( PhaseSpace )
 
+BOOST_AUTO_TEST_CASE( projection_setter ){
+    vfps::PhaseSpace::resetSize(3,1);
+
+    // initializing constructor (default data)
+    vfps::PhaseSpace ps1(-12,12,3,-12,12,4,nullptr,1,1);
+
+    boost::multi_array<vfps::projection_t,1>
+            x_set(boost::extents[vfps::PhaseSpace::nx]);
+
+    ps1.setProjection(0, 0, x_set);
+
+    auto x_get = ps1.getProjection(0, 0);
+
+    for (auto i=0U; i<3U; i++) {
+        BOOST_CHECK_CLOSE(x_get[i],x_set[i],
+                          static_cast<vfps::integral_t>(0.1f));
+    }
+}
+
 BOOST_AUTO_TEST_CASE( one_bucket ){
     vfps::PhaseSpace::resetSize(32,1);
     // initializing constructor (default data)

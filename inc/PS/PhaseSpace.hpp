@@ -131,7 +131,7 @@ public:
      * @param x which axis? (0 -> x or 1 -> y)
      * @return reference to the Axis describing mesh in x direction
      */
-    inline const meshRuler_ptr getAxis(const uint_fast8_t x) const
+    inline meshRuler_ptr getAxis(const uint_fast8_t x) const
     { return _axis[x]; }
 
     /**
@@ -150,7 +150,7 @@ public:
      */
     void integrate();
 
-    inline const std::vector<integral_t> getBunchPopulation() const
+    inline std::vector<integral_t> getBunchPopulation() const
         { return _filling; }
 
     inline auto getSetBunchPopulation() const
@@ -187,9 +187,19 @@ public:
     inline auto getProjection(const uint_fast8_t x) const
         { return _projection[x]; }
 
+    inline auto getProjection(const uint_fast8_t x,
+                              const size_t b) const
+        { return _projection[x][b]; }
+
     inline void setProjection(
             const boost::multi_array<projection_t,3>& projection)
         { _projection = projection; }
+
+    inline void setProjection(
+            const uint_fast8_t axis,
+            const size_t bunch,
+            const boost::multi_array<projection_t,1>& projection)
+        { _projection[axis][bunch] = projection; }
 
     /**
      * @brief updateXProjection updates longitudinal bunch profiles
@@ -519,15 +529,15 @@ private:
      * @param axis
      * @param zoom
      */
-    void gaus(const uint_fast8_t axis,
-              const meshindex_t bunch,
-              const double zoom);
+    boost::multi_array<projection_t,1> gaus(
+            const uint_fast8_t axis,
+            const double zoom);
 
     /**
      * @brief simpsonWeights helper function to allow for const _ws
      * @return
      */
-    const std::vector<meshdata_t> simpsonWeights();
+    std::vector<meshdata_t> simpsonWeights();
 };
 
 void swap(PhaseSpace& first, PhaseSpace& second) noexcept;
