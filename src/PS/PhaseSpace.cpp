@@ -54,7 +54,7 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
     } else {
         for (meshindex_t  n=0; n<_nbunches; n++) {
             setProjection(0, n, gaus(0, zoom)); // creates gaussian for x axis
-            setProjection(0, n, gaus(1, zoom)); // creates gaussian for y axis
+            setProjection(1, n, gaus(1, zoom)); // creates gaussian for y axis
         }
 
         createFromProjections();
