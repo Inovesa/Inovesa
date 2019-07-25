@@ -15,6 +15,25 @@ namespace vfps
 {
 
 /**
+ * @brief wrapper for Windows compatibility of setenv
+ *
+ * @param name
+ * @param value
+ * @param overwrite
+ */
+int setenv(const char* name, const char* value, int overwrite);
+
+
+/**
+ * @brief wrapper for Windows compatibility of unsetenv
+ *
+ * @param name
+ * @param value
+ * @param overwrite
+ */
+int unsetenv(const char* name);
+
+/**
  * @brief The FSPath class wraps full paths to files and directories.
  */
 class FSPath

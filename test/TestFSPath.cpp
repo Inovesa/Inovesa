@@ -5,12 +5,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdlib>
 #include <vector>
-#include <stdlib.h>
 
 #include "defines.hpp"
 #include "IO/FSPath.hpp"
-
 
 BOOST_AUTO_TEST_SUITE( FSPath )
 
@@ -30,20 +29,20 @@ BOOST_AUTO_TEST_CASE( home_finder ){
 
 
     // find in HOME
-    setenv("HOME",homepath.c_str(), 0);
-    unsetenv("USERPROFILE");
+    vfps::setenv("HOME",homepath.c_str(), 0);
+    vfps::unsetenv("USERPROFILE");
     BOOST_CHECK_NO_THROW(homepath = vfps::FSPath::expand_user("~"));
     BOOST_CHECK_EQUAL(vfps::FSPath::validateDirectory(homepath), false);
 
     // find in USERPROFILE
-    setenv("USERPROFILE",homepath.c_str(), 0);
-    unsetenv("HOME");
+    vfps::setenv("USERPROFILE",homepath.c_str(), 0);
+	vfps::unsetenv("HOME");
     BOOST_CHECK_NO_THROW(homepath = vfps::FSPath::expand_user("~"));
     BOOST_CHECK_EQUAL(vfps::FSPath::validateDirectory(homepath), false);
 
     // restore environment variables
-    setenv("HOME",homepath_orig.c_str(), 1);
-    setenv("USERPROFILE",userprof_orig.c_str(), 1);
+    vfps::setenv("HOME",homepath_orig.c_str(), 1);
+    vfps::setenv("USERPROFILE",userprof_orig.c_str(), 1);
 }
 
 BOOST_AUTO_TEST_CASE( datapath ){
@@ -66,7 +65,7 @@ BOOST_AUTO_TEST_CASE( datapath ){
 
 
     // find with XDG_DATA_HOME set
-    setenv("XDG_DATA_HOME",datapath.c_str(), 1);
+    vfps::setenv("XDG_DATA_HOME",datapath.c_str(), 1);
     BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
@@ -76,7 +75,7 @@ BOOST_AUTO_TEST_CASE( datapath ){
                 cmpstring.data()+cmpstring.size());
 
     // find without XDG_DATA_HOME set
-    unsetenv("XDG_DATA_HOME");
+    vfps::unsetenv("XDG_DATA_HOME");
     BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_CASE( datapath ){
                 cmpstring.data()+cmpstring.size());
 
     // restore environment variable
-    setenv("XDG_DATA_HOME",datapath_orig.c_str(), 1);
+    vfps::setenv("XDG_DATA_HOME",datapath_orig.c_str(), 1);
 
 
 }

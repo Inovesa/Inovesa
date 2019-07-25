@@ -8,6 +8,31 @@
 
 #include "IO/FSPath.hpp"
 
+int vfps::setenv(const char* name, const char* value, int overwrite)
+{
+	int errcode = 0;
+	if (!overwrite) {
+		size_t envsize = 0;
+		errcode = getenv_s(&envsize, NULL, 0, name);
+		if (errcode || envsize) return errcode;
+	}
+	#ifdef WIN32
+	return _putenv_s(name, value);
+	#else
+	return std::setenv(name, value);
+	#endif
+}
+
+int vfps::unsetenv(const char* name)
+{
+	int errcode = 0;
+	#ifdef WIN32
+	return _putenv_s(name, "");
+	#else
+	return std::unsetenv(name);
+	#endif
+}
+
 vfps::FSPath::FSPath(std::string path)
   : _path(expand_user(path))
 {
