@@ -144,10 +144,8 @@ include_directories(./inc)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# workaround CMake bug (e.g. in MacOS)
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
-endif()
+# workaround CMake bug where previous definition is ignored
+set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
 # workaround problem in boost with g++
 IF( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
