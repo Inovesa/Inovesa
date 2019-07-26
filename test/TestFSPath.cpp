@@ -11,6 +11,28 @@
 #include "defines.hpp"
 #include "IO/FSPath.hpp"
 
+#if WIN32 == 1
+extern "C" {
+int setenv(const char *name, const char *value, int overwrite)
+{
+    int errcode = 0;
+    if (!overwrite) {
+        size_t envsize = 0;
+        errcode = getenv_s(&envsize, NULL, 0, name);
+        if (errcode || envsize) {
+	    return errcode;
+	}
+    }
+    _putenv_s(name. value);
+}
+
+int unsetenv(const char *name)
+{
+    setenv(name, "", 0);
+}
+}
+#endif
+
 BOOST_AUTO_TEST_SUITE( FSPath )
 
 BOOST_AUTO_TEST_CASE( home_finder ){
@@ -29,20 +51,20 @@ BOOST_AUTO_TEST_CASE( home_finder ){
 
 
     // find in HOME
-    vfps::setenv("HOME",homepath.c_str(), 0);
-    vfps::unsetenv("USERPROFILE");
+    setenv("HOME",homepath.c_str(), 0);
+    unsetenv("USERPROFILE");
     BOOST_CHECK_NO_THROW(homepath = vfps::FSPath::expand_user("~"));
     BOOST_CHECK_EQUAL(vfps::FSPath::validateDirectory(homepath), false);
 
     // find in USERPROFILE
-    vfps::setenv("USERPROFILE",homepath.c_str(), 0);
-	vfps::unsetenv("HOME");
+    setenv("USERPROFILE",homepath.c_str(), 0);
+    unsetenv("HOME");
     BOOST_CHECK_NO_THROW(homepath = vfps::FSPath::expand_user("~"));
     BOOST_CHECK_EQUAL(vfps::FSPath::validateDirectory(homepath), false);
 
     // restore environment variables
-    vfps::setenv("HOME",homepath_orig.c_str(), 1);
-    vfps::setenv("USERPROFILE",userprof_orig.c_str(), 1);
+    setenv("HOME",homepath_orig.c_str(), 1);
+    setenv("USERPROFILE",userprof_orig.c_str(), 1);
 }
 
 BOOST_AUTO_TEST_CASE( datapath ){
@@ -65,7 +87,7 @@ BOOST_AUTO_TEST_CASE( datapath ){
 
 
     // find with XDG_DATA_HOME set
-    vfps::setenv("XDG_DATA_HOME",datapath.c_str(), 1);
+    setenv("XDG_DATA_HOME",datapath.c_str(), 1);
     BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
@@ -75,7 +97,7 @@ BOOST_AUTO_TEST_CASE( datapath ){
                 cmpstring.data()+cmpstring.size());
 
     // find without XDG_DATA_HOME set
-    vfps::unsetenv("XDG_DATA_HOME");
+    unsetenv("XDG_DATA_HOME");
     BOOST_CHECK_NO_THROW(datapath = vfps::FSPath::datapath());
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
@@ -85,7 +107,7 @@ BOOST_AUTO_TEST_CASE( datapath ){
                 cmpstring.data()+cmpstring.size());
 
     // restore environment variable
-    vfps::setenv("XDG_DATA_HOME",datapath_orig.c_str(), 1);
+    setenv("XDG_DATA_HOME",datapath_orig.c_str(), 1);
 
 
 }
