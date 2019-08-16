@@ -228,10 +228,9 @@ int main(int argc, char** argv)
                    / (harmonic_number*V_eff)*std::pow(fs/f_rev,2);
     }
 
-    const meshaxis_t alpha0 = static_cast<meshaxis_t>(alpha0_tmp);
-    const meshaxis_t alpha1 = opts.getAlpha1();
-    const meshaxis_t alpha2 = opts.getAlpha2();
-
+    std::vector<meshaxis_t> alpha{{ static_cast<meshaxis_t>(alpha0_tmp),
+                                    opts.getAlpha1(),
+                                    opts.getAlpha2()}};
 
     // natural RMS bunch length (m)
     const double bl = physcons::c*dE/harmonic_number
@@ -646,27 +645,21 @@ int main(int argc, char** argv)
     Display::printText("... with synchronous phase at "+sstream.str());
     } // context of information printing
 
+    const std::vector<meshaxis_t> slip {{ angle,alpha[1]/alpha[0]*angle,
+                                            alpha[2]/alpha[0]*angle }};
+
+    while ( !alpha.empty() && std::fpclassify(alpha.back()) == FP_ZERO ) {
+        alpha.pop_back();
+    }
+
     Display::printText("Building DriftMap with");
-    sstream.str("");
-    sstream << "... alpha0 = " << alpha0;
-    Display::printText(sstream.str());
-    if (std::fpclassify(alpha1) == FP_NORMAL
-        || std::fpclassify(alpha2) == FP_NORMAL) {
+    for (std::size_t n=0; n<alpha.size(); n++) {
         sstream.str("");
-        sstream << "... alpha1 = " << alpha1;
-        Display::printText(sstream.str());
-    }
-    if (std::fpclassify(alpha2) == FP_NORMAL) {
-        sstream.str("");
-        sstream << "... alpha2 = " << alpha2;
+        sstream << "... alpha" << n << "= " << alpha[n];
         Display::printText(sstream.str());
     }
 
-
-    const std::vector<meshaxis_t> alpha {{ angle,alpha1/alpha0*angle
-                                          , alpha2/alpha0*angle }};
-
-    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,alpha
+    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,slip
                                         , E0,interpolationtype,interpol_clamp
                                         , oclh );
 
