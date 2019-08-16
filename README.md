@@ -52,12 +52,14 @@ Publications
 *   Studies of [phase shift][4] (Inovesa v1.0)
 *   A wide [range of applications][5] (Inovesa v1.0)
 *   [Emitted synchrotron radiation][6] at different wavelengths (Inovesa v1.0)
+*   Simultaneous development of [bunch profile and emitted CSR][7] (Inovesa v1.0)
 
 ### Citing Inovesa
 We use the zenodo project to get a DOI for each version. So, when you use
 Inovesa to obtain your simulation results, you can
 [search zenodo for the right citation of your Inovesa version](https://zenodo.org/search?page=1&size=20&q=conceptrecid:597356&all_versions&sort=-version)
 to directly point to that specific version.
+To reference specific features, please refer to the corresponding describing paper named above.
 
 [1]: https://journals.aps.org/prab/abstract/10.1103/PhysRevAccelBeams.20.030704 "Parallelized Vlasov-Fokker-Planck solver for desktop personal computers"
 [2]: http://iopscience.iop.org/article/10.1088/1742-6596/1067/6/062025/meta "Elaborated Modeling of Synchrotron Motion in Vlasov-Fokker-Planck Solvers"
@@ -65,3 +67,4 @@ to directly point to that specific version.
 [4]: https://doi.org/10.18429/JACoW-IPAC2018-WEPAL028 "Study of the Influence of the CSR Impedance on the Synchronous Phase Shift at KARA"
 [5]: https://doi.org/10.5445/ir/1000084466 "Simulation and measurement of the dynamics of ultra-short electron bunch profiles for the generation of coherent THz radiation"
 [6]: https://doi.org/10.1103/PhysRevAccelBeams.21.110705 "Continuous bunch-by-bunch spectroscopic investigation of the microbunching instability"
+[7]: https://www.nature.com/articles/s41598-019-45024-2 "From self-organization in relativistic electron bunches to coherent synchrotron light: observation using a photonic time-stretch digitizer"
