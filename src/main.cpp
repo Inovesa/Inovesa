@@ -579,8 +579,10 @@ int main(int argc, char** argv)
     // RF map
     std::shared_ptr<DynamicRFKickMap> drfm;
     std::shared_ptr<SourceMap> rfm;
-    if ( rf_phase_noise != 0 || rf_ampl_noise != 0
-      || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
+    if ( std::fpclassify(rf_phase_noise) == FP_NORMAL
+         || std::fpclassify(rf_ampl_noise) == FP_NORMAL
+         || (std::fpclassify(rf_mod_ampl) == FP_NORMAL
+             && std::fpclassify(rf_mod_step) == FP_NORMAL)) {
         if (linearRF) {
             Display::printText("Building dynamic, linear RFKickMap...");
 
@@ -605,11 +607,12 @@ int main(int argc, char** argv)
 
         sstream.str("");
         sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;
-        if (rf_phase_noise != 0) {
+        if (std::fpclassify(rf_phase_noise) == FP_NORMAL) {
             Display::printText("...including phase noise (spread: "
                                + sstream.str()+" s)");
         }
-        if (rf_mod_ampl != 0 && rf_mod_step != 0) {
+        if (std::fpclassify(rf_mod_ampl) == FP_NORMAL
+                && std::fpclassify(rf_mod_step) == FP_NORMAL) {
             sstream.str("");
             sstream << "...including phase modulation ("
                     << opts.getRFPhaseModFrequency()/fs
@@ -647,12 +650,13 @@ int main(int argc, char** argv)
     sstream.str("");
     sstream << "... alpha0 = " << alpha0;
     Display::printText(sstream.str());
-    if (alpha1 != 0) {
+    if (std::fpclassify(alpha1) == FP_NORMAL
+        || std::fpclassify(alpha2) == FP_NORMAL) {
         sstream.str("");
         sstream << "... alpha1 = " << alpha1;
         Display::printText(sstream.str());
     }
-    if (alpha2 != 0) {
+    if (std::fpclassify(alpha2) == FP_NORMAL) {
         sstream.str("");
         sstream << "... alpha2 = " << alpha2;
         Display::printText(sstream.str());
