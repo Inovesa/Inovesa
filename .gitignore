@@ -1,5 +1,5 @@
 # files created here if CMake is run in source directory
-CMakeLists.txt.user
+CMakeLists.txt.user*
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake

@@ -14,6 +14,7 @@ namespace fs = boost::filesystem;
 namespace vfps
 {
 
+
 /**
  * @brief The FSPath class wraps full paths to files and directories.
  */

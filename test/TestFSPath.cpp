@@ -5,12 +5,33 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdlib>
 #include <vector>
-#include <stdlib.h>
 
 #include "defines.hpp"
 #include "IO/FSPath.hpp"
 
+#if WIN32 == 1
+extern "C" {
+int setenv(const char *name, const char *value, int overwrite)
+{
+    int errcode = 0;
+    if (!overwrite) {
+        size_t envsize = 0;
+        errcode = getenv_s(&envsize, NULL, 0, name);
+        if (errcode || envsize) {
+	    return errcode;
+	}
+    }
+    _putenv_s(name. value);
+}
+
+int unsetenv(const char *name)
+{
+    setenv(name, "", 0);
+}
+}
+#endif
 
 BOOST_AUTO_TEST_SUITE( FSPath )
 
