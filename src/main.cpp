@@ -55,6 +55,10 @@ using namespace vfps;
  * @param argc
  * @param argv
  * @return
+ *
+ * To minimize the effect of rounding errors, some one-time caculations that
+ * are done at startup are hardcoded to be performed using double precision,
+ * regardless of the definition of meshaxis_t.
  */
 int main(int argc, char** argv)
 {
@@ -190,14 +194,14 @@ int main(int argc, char** argv)
     const auto use_set_bend = (opts.getBendingRadius()>0);
 
     // revolution frequency (in Hz)
-    const auto f_rev = opts.getRevolutionFrequency();
+    const auto f_rev = static_cast<double>(opts.getRevolutionFrequency());
 
     const auto R_bend = use_set_bend
             ? opts.getBendingRadius()
             : physcons::c/(two_pi<double>()*f_rev);
 
     const frequency_t fc = opts.getCutoffFrequency();
-    const auto harmonic_number = opts.getHarmonicNumber();
+    const auto harmonic_number = static_cast<double>(opts.getHarmonicNumber());
     const auto f_RF = f_rev*harmonic_number;
     const auto bunchspacing = 1.0/(f_RF);
     const auto gap = opts.getVacuumChamberGap();
@@ -212,19 +216,19 @@ int main(int argc, char** argv)
 
     const double V_eff = std::sqrt(V_RF*V_RF-V0*V0);
 
-    auto fs = opts.getSyncFreq();
-    meshaxis_t alpha0_tmp = opts.getAlpha0();
+    auto fs = static_cast<double>(opts.getSyncFreq());
+    auto alpha0_tmp = static_cast<double>(opts.getAlpha0());
 
     // non-zero f_s will be used, zero implies usage of alpha0
     if (std::fpclassify(fs) == FP_ZERO) {
         fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_eff
-                             /(two_pi<double>()*E0));
+                            /(two_pi<double>()*E0));
     } else {
         alpha0_tmp = boost::math::sign(fs)*two_pi<double>()*E0
                    / (harmonic_number*V_eff)*std::pow(fs/f_rev,2);
     }
 
-    const meshaxis_t alpha0 = alpha0_tmp;
+    const meshaxis_t alpha0 = static_cast<meshaxis_t>(alpha0_tmp);
     const meshaxis_t alpha1 = opts.getAlpha1();
     const meshaxis_t alpha2 = opts.getAlpha2();
 
@@ -237,7 +241,7 @@ int main(int argc, char** argv)
     std::vector<integral_t> filling = opts.getBunchCurrents();
 
     // number of total buckets (including in the simulation empty ones)
-    const uint32_t nbuckets = filling.size();
+    const auto nbuckets = static_cast<uint32_t>(filling.size());
 
     /* Buckets that actually hold bunches.
      * Eumeration is inverse to x coordinates (physical z position)
@@ -273,7 +277,7 @@ int main(int argc, char** argv)
             ? opts.getStepsPerTrev()*f_rev/fs
             : std::max(opts.getStepsPerTsync(),1u);
     const auto outstep = opts.getOutSteps();
-    const float rotations = opts.getNRotations();
+    const auto rotations = static_cast<float>(opts.getNRotations());
 
     const auto calc_damp = E0*physcons::e/W0/f_rev;
 
