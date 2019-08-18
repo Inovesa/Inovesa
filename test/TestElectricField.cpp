@@ -20,8 +20,12 @@ using boost::math::constants::one_div_root_two_pi;
 
 
 struct ElectricFieldFixture {
-    explicit ElectricFieldFixture(std::vector<vfps::integral_t> filling)
-      : filling(filling)
+    explicit ElectricFieldFixture(std::vector<vfps::integral_t> filling,
+                                  vfps::impedance_t Z)
+      : spacing_bins(static_cast<size_t>(std::ceil(n*bunchspacing)))
+      , spaced_bins(spacing_bins * filling.size())
+      , filling(filling)
+      , z(std::make_shared<vfps::ConstImpedance>(spaced_bins, 1e9, Z))
     {
         for (uint32_t i=0; i<filling.size(); i++) {
             if (filling[i] > 0) {
@@ -29,30 +33,25 @@ struct ElectricFieldFixture {
                 bunches.emplace_back(filling[i]);
             }
         }
-        constexpr double bunchspacing = 4.0;
 
-        spacing_bins = static_cast<size_t>(std::ceil(n*bunchspacing));
-
-        spaced_bins = spacing_bins * filling.size();
-
-        vfps::PhaseSpace::resetSize(n, bunches.size());
+        vfps::PhaseSpace::resetSize(
+                    n, static_cast<vfps::meshindex_t>(bunches.size()));
 
         ps = std::make_shared<vfps::PhaseSpace>(
                     -12,12,3,-12,12,4,nullptr,1,1,bunches);
-
-        // impedance with constant value of 1
-        z = std::make_shared<vfps::ConstImpedance>(spaced_bins, 1e9, 1);
 
         f = std::make_shared<vfps::ElectricField>(
                     ps, z, buckets, spacing_bins, nullptr,
                     1e6, 0.1, 1e-3, 1e9, 1e3, 1e-3);
     }
 
-    static constexpr uint32_t n = 32;
+    static constexpr float bunchspacing = 8.0;
 
-    size_t spaced_bins;
+    static constexpr uint32_t n = 128;
 
     size_t spacing_bins;
+
+    size_t spaced_bins;
 
     std::vector<uint32_t> buckets;
 
@@ -62,7 +61,7 @@ struct ElectricFieldFixture {
 
     std::shared_ptr<vfps::PhaseSpace> ps;
 
-    std::shared_ptr<vfps::ConstImpedance> z;
+    std::shared_ptr<vfps::Impedance> z;
 
     std::shared_ptr<vfps::ElectricField> f;
 
@@ -98,7 +97,7 @@ BOOST_AUTO_TEST_SUITE( ElectricField )
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(constructors , T, filling_patterns, T)
 {
-    ElectricFieldFixture eff(T::pattern);
+    ElectricFieldFixture eff(T::pattern, 1);
 
     BOOST_CHECK_EQUAL_COLLECTIONS(eff.f->getBuckets().data(),
                                   eff.f->getBuckets().data()
@@ -110,9 +109,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(constructors , T, filling_patterns, T)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
 {
-    ElectricFieldFixture eff(T::pattern);
+    ElectricFieldFixture eff(T::pattern, 1);
 
-    eff.ps->updateXProjection();
     eff.f->padBunchProfiles();
 
     std::vector<vfps::integral_t> correct_solution(eff.spaced_bins,0);
@@ -148,9 +146,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
  */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(wake_potential , T, filling_patterns, T)
 {
-    ElectricFieldFixture eff(T::pattern);
+    ElectricFieldFixture eff(T::pattern, 1);
 
-    eff.ps->updateXProjection();
     eff.f->padBunchProfiles();
     eff.f->wakePotential();
 
@@ -170,20 +167,53 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(wake_potential , T, filling_patterns, T)
     }
 }
 
+#if INOVESA_ENABLE_INTRGRATION_TEST == 1
 /**
- * @brief forward_wake test whether FS impedance just influences forward wake
+ * @brief forward_wake test whether FS CSR just influences forward wake
+ *
+ * This is actually ore of an integration test.
  */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
 {
-    ElectricFieldFixture eff(T::pattern);
+    ElectricFieldFixture eff(T::pattern, 0);
 
-    boost::multi_array<vfps::projection_t,3> projection;
+    eff.z->operator+=(vfps::FreeSpaceCSR(eff.spaced_bins, 1e6, 1e12));
 
-    /*
-    eff.ps->setProjection(profiles);
+    // original profiles
     eff.f->padBunchProfiles();
     eff.f->wakePotential();
-    */
+
+    boost::multi_array<vfps::projection_t,2> profile_orig
+            = eff.ps->getProjection(0);
+    auto wakepot_orig = eff.f->getWakePotentials();
+
+    // apply changes only in the second half
+    constexpr vfps::meshindex_t change_from = eff.n/2;
+
+    // modified profiles
+    boost::multi_array<vfps::projection_t,2> profile_mod(profile_orig);
+    for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
+        auto delta = static_cast<vfps::projection_t>(0.1)
+                     * profile_mod[b][change_from];
+        profile_mod[b][change_from] += delta;
+        profile_mod[b][change_from+1] -= delta;
+        eff.ps->setProjection(0,b,profile_mod[b]);
+    }
+    eff.f->padBunchProfiles();
+    eff.f->wakePotential();
+    auto wakepot_mod = eff.f->getWakePotentials();
+
+    for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
+        for (vfps::meshindex_t x = 0; x < vfps::PhaseSpace::nx; x++) {
+            std::cout << b << '\t'
+                      << eff.z->operator[](x).real() << '\t'
+                      << profile_orig[b][x] << '\t'
+                      << wakepot_orig[b][x] << '\t'
+                      << profile_mod[b][x] << '\t'
+                      << wakepot_mod[b][x] << std::endl;
+        }
+    }
 }
+#endif // INOVESA_ENABLE_INTRGRATION_TEST
 
 BOOST_AUTO_TEST_SUITE_END()
