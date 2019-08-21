@@ -47,7 +47,7 @@ struct ElectricFieldFixture {
 
     static constexpr float bunchspacing = 8.0;
 
-    static constexpr uint32_t n = 128;
+    static constexpr uint32_t n = 32;
 
     size_t spacing_bins;
 
@@ -124,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
     for(auto norm = T::pattern.rbegin(); norm != T::pattern.rend(); ++norm)
     {
         x = bucket*eff.spacing_bins;
-        for (vfps::meshindex_t x_bucket=0; x_bucket<eff.n;
+        for (vfps::meshindex_t x_bucket(0); x_bucket<eff.n;
              x_bucket++, x++) {
             correct_solution[x]
                   =  *norm * one_div_root_two_pi<vfps::integral_t>()
@@ -167,7 +167,6 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(wake_potential , T, filling_patterns, T)
     }
 }
 
-#if INOVESA_ENABLE_INTRGRATION_TEST == 1
 /**
  * @brief forward_wake test whether FS CSR just influences forward wake
  *
@@ -195,8 +194,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
     for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
         auto delta = static_cast<vfps::projection_t>(0.1)
                      * profile_mod[b][change_from];
-        profile_mod[b][change_from] += delta;
-        profile_mod[b][change_from+1] -= delta;
+        profile_mod[b][change_from] -= delta;
+        profile_mod[b][change_from+1] += delta;
+        profile_mod[b][change_from+2] += delta;
+        profile_mod[b][change_from+3] -= delta;
         eff.ps->setProjection(0,b,profile_mod[b]);
     }
     eff.f->padBunchProfiles();
@@ -204,16 +205,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
     auto wakepot_mod = eff.f->getWakePotentials();
 
     for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
-        for (vfps::meshindex_t x = 0; x < vfps::PhaseSpace::nx; x++) {
-            std::cout << b << '\t'
-                      << eff.z->operator[](x).real() << '\t'
-                      << profile_orig[b][x] << '\t'
-                      << wakepot_orig[b][x] << '\t'
-                      << profile_mod[b][x] << '\t'
-                      << wakepot_mod[b][x] << std::endl;
+        for (vfps::meshindex_t x = 0; x < change_from; x++) {
+            BOOST_CHECK_SMALL(wakepot_orig[b][x]-wakepot_mod[b][x],
+                              static_cast<vfps::integral_t>(1e-7));
         }
     }
 }
-#endif // INOVESA_ENABLE_INTRGRATION_TEST
 
 BOOST_AUTO_TEST_SUITE_END()
