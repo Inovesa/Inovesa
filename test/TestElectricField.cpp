@@ -170,7 +170,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(wake_potential , T, filling_patterns, T)
 /**
  * @brief forward_wake test whether FS CSR just influences forward wake
  *
- * This is actually ore of an integration test.
+ * This is actually more of a test of the properties of FreeSpaceCSR.
  */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
 {
