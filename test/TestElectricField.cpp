@@ -189,11 +189,18 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
     // apply changes only in the second half
     constexpr vfps::meshindex_t change_from = eff.n/2;
 
+    constexpr vfps::projection_t change_magnitude = 0.1;
+
+    // changes greater change_epsilon are considered accepptable
+    constexpr vfps::projection_t change_epsilon = 1e-10;
+
+    // changes greater change_limit are considered an error
+    constexpr vfps::projection_t change_limit = 2e-8;
+
     // modified profiles
     boost::multi_array<vfps::projection_t,2> profile_mod(profile_orig);
     for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
-        auto delta = static_cast<vfps::projection_t>(0.1)
-                     * profile_mod[b][change_from];
+        auto delta = change_magnitude * profile_mod[b][change_from];
         profile_mod[b][change_from] -= delta;
         profile_mod[b][change_from+1] += delta;
         profile_mod[b][change_from+2] += delta;
@@ -205,9 +212,28 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
     auto wakepot_mod = eff.f->getWakePotentials();
 
     for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
-        for (vfps::meshindex_t x = 0; x < change_from; x++) {
-            BOOST_CHECK_SMALL(wakepot_orig[b][x]-wakepot_mod[b][x],
-                              static_cast<vfps::integral_t>(1e-7));
+        vfps::projection_t change_max = 0;
+        vfps::meshindex_t x=0;
+	while (x < eff.n) {
+            vfps::projection_t change = wakepot_orig[b][x]-wakepot_mod[b][x];
+            change_max = std::max(change_max, std::abs(change));
+            x++;
+        }
+        BOOST_CHECK_SMALL(change_limit, change_max);
+
+	x=0;
+        while (x < change_from) {
+            vfps::projection_t change = wakepot_orig[b][x]-wakepot_mod[b][x];
+            std::stringstream msg;
+            msg << "Deviation of " << 100*change/std::abs(wakepot_orig[b][x])
+                << " % in WakePotential at "
+                << "b=" << b << ", x=" << x
+                << ". (Deviation shoud not start before x="
+		<< change_from << ".)";
+            BOOST_WARN_MESSAGE(std::abs(change) < change_epsilon,
+                               msg.str());
+            BOOST_CHECK_SMALL(change, change_limit);
+            x++;
         }
     }
 }
