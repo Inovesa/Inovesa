@@ -5,7 +5,7 @@
  */
 
 #if INOVESA_USE_PNG == 1
-#include <png++/png.hpp>
+#include <OpenImageIO/imageio.h>
 #endif
 #include <iterator>
 
@@ -16,7 +16,7 @@
 
 #if INOVESA_USE_HDF5 == 1
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
+vfps::makePSFromHDF5( const std::string fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                     , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                     , oclhptr_t oclh
@@ -53,8 +53,10 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
 }
 #endif // INOVESA_USE_HDF5
 
+
+#if INOVESA_USE_PNG == 1
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromPNG( std::string fname
+vfps::makePSFromPNG( const std::string fname
                    , meshaxis_t qmin, meshaxis_t qmax
                    , meshaxis_t pmin, meshaxis_t pmax
                    , oclhptr_t oclh
@@ -63,33 +65,27 @@ vfps::makePSFromPNG( std::string fname
                    , double qscale, double pscale
                    )
 {
-    #if INOVESA_USE_PNG == 1
     // load pattern to start with
-    png::image<png::gray_pixel_16> image;
-    try {
-        image.read(fname);
-    } catch ( const png::std_error &e ) {
-        std::cerr << e.what() << std::endl;
-    } catch ( const png::error &e ) {
-        std::cerr << "Problem loading " << fname
-                  << ": " << e.what() << std::endl;
-    } catch (...) {
-        std::cerr << "Error loading initial distribution from \""
-                  << fname << "\".";
-    }
+    auto image = OIIO::ImageInput::open(fname);
 
-    if (image.get_width() == image.get_height()) {
-        meshindex_t ps_size = image.get_height();
+    const auto& spec = image->spec();
+
+    if (spec.width == spec.height) {
+        meshindex_t ps_size = spec.height;
 
         std::vector<meshdata_t> data(static_cast<meshindex_t>(ps_size*ps_size));
+        std::vector<uint16_t> pixels(ps_size*ps_size);
+
+        image->read_image(OIIO::TypeDesc::UINT16, pixels.data());
+        image->close();
 
         for (unsigned int x=0; x<ps_size; x++) {
             for (unsigned int y=0; y<ps_size; y++) {
-                data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+                data[x*ps_size+y] = pixels[(ps_size-y-1)*ps_size+x]/float(UINT16_MAX);
             }
         }
 
-        std::vector<integral_t> filling = {{ 1.0 }};
+        std::vector<integral_t> filling = { 1.0 };
         PhaseSpace::setSize(ps_size, filling.size());
         auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                               , pmin, pmax, pscale
@@ -112,19 +108,19 @@ vfps::makePSFromPNG( std::string fname
         std::cerr << "Phase space has to be quadratic. Please adjust "
                   << fname << std::endl;
     }
-#endif // INOVESA_USE_PNG
     return nullptr;
 }
+#endif // INOVESA_USE_PNG
 
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromTXT(std::string fname, int64_t ps_size
+vfps::makePSFromTXT(const std::string fname, int64_t ps_size
                    , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                    , oclhptr_t oclh
                    , const double beam_charge, const double beam_current
                    , double qscale, double pscale)
 {
-    std::vector<integral_t> filling = {{ 1.0 }};
+    std::vector<integral_t> filling = { 1.0 };
     PhaseSpace::setSize(ps_size, filling.size());
     auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                           , pmin, pmax, pscale

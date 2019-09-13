@@ -14,7 +14,7 @@
 namespace vfps {
 
 #if INOVESA_USE_HDF5 == 1
-std::unique_ptr<PhaseSpace> makePSFromHDF5( std::string fname
+std::unique_ptr<PhaseSpace> makePSFromHDF5( const std::string fname
                                           , int64_t startdiststep
                                           , meshaxis_t qmin, meshaxis_t qmax
                                           , meshaxis_t pmin, meshaxis_t pmax
@@ -25,7 +25,7 @@ std::unique_ptr<PhaseSpace> makePSFromHDF5( std::string fname
                                           );
 #endif // INOVESA_USE_HDF5
 
-std::unique_ptr<PhaseSpace> makePSFromPNG( std::string fname
+std::unique_ptr<PhaseSpace> makePSFromPNG( const std::string fname
                                          , meshaxis_t qmin, meshaxis_t qmax
                                          , meshaxis_t pmin, meshaxis_t pmax
                                          , oclhptr_t oclh
@@ -34,7 +34,7 @@ std::unique_ptr<PhaseSpace> makePSFromPNG( std::string fname
                                          , double xscale, double yscale
                                          );
 
-std::unique_ptr<PhaseSpace> makePSFromTXT( std::string fname, int64_t ps_size
+std::unique_ptr<PhaseSpace> makePSFromTXT( const std::string fname, int64_t ps_size
                                          , meshaxis_t qmin, meshaxis_t qmax
                                          , meshaxis_t pmin, meshaxis_t pmax
                                          , oclhptr_t oclh

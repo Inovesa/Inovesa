@@ -34,7 +34,7 @@
 #include <iomanip>
 #include <iostream>
 #if INOVESA_USE_PNG == 1
-#include <png++/png.hpp>
+#include <OpenImageIO/imageio.h>
 #endif
 #include <memory>
 #include <sstream>
@@ -45,7 +45,7 @@ using boost::math::constants::two_pi;
 
 using namespace vfps;
 
-/**
+/**++/
  * @file
  * @brief main Inovesa file
  */
@@ -1085,16 +1085,25 @@ int main(int argc, char** argv)
         for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
             maxval = std::max(val[i],maxval);
         }
-        png::image< png::gray_pixel_16 > png_file(ps_bins, ps_bins);
-        for (unsigned int x=0; x<ps_bins; x++) {
-            for (unsigned int y=0; y<ps_bins; y++) {
-                png_file[ps_bins-y-1][x]=
-                        static_cast<png::gray_pixel_16>(
+        auto png_file = OIIO::ImageOutput::create(ofname);
+        std::vector<uint16_t> png_pixels(PhaseSpace::nxy);
+        constexpr uint_fast8_t png_channels = 1;
+        OIIO::ImageSpec spec(static_cast<int>(PhaseSpace::nx),
+                             static_cast<int>(PhaseSpace::ny),
+                             png_channels,
+                             OIIO::TypeDesc::UINT16);
+        png_file->open(ofname, spec);
+
+        for (unsigned int x=0; x<PhaseSpace::nx; x++) {
+            for (unsigned int y=0; y<PhaseSpace::ny; y++) {
+                png_pixels[(ps_bins-y-1)*ps_bins+x]
+                        = static_cast<uint16_t>(
                             std::max((*grid_t1)[0][x][y],meshdata_t(0))
                             /maxval*float(UINT16_MAX));
             }
         }
-        png_file.write(ofname);
+
+        png_file->write_image(OIIO::TypeDesc::UINT16, png_pixels.data());
     }
     #endif
 
