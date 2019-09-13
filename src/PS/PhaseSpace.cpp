@@ -53,8 +53,8 @@ vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
         std::copy(data,data+_totalmeshcells,_data.data());
     } else {
         for (meshindex_t  n=0; n<_nbunches; n++) {
-            gaus(0,n,zoom); // creates gaussian for x axis
-            gaus(1,n,zoom); // creates gaussian for y axis
+            setProjection(0, n, gaus(0, zoom)); // creates gaussian for x axis
+            setProjection(1, n, gaus(1, zoom)); // creates gaussian for y axis
         }
 
         createFromProjections();
@@ -437,20 +437,22 @@ void vfps::PhaseSpace::createFromProjections()
     normalize();
 }
 
-void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
-                            const meshindex_t bunch,
-                            const double zoom)
+boost::multi_array<vfps::projection_t, 1> vfps::PhaseSpace::gaus(
+        const uint_fast8_t axis,
+        const double zoom)
 {
     const double zoom2=zoom*zoom;
     const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+
+    boost::multi_array<vfps::projection_t,1> rv(boost::extents[maxi]);
     for(meshindex_t i=0; i<maxi; i++){
-        _projection[axis][bunch][i]
-                = boost::math::constants::one_div_root_two_pi<integral_t>()
-                * std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
+        rv[i] = boost::math::constants::one_div_root_two_pi<integral_t>()
+              * std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
+    return rv;
 }
 
-const std::vector<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
+std::vector<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
 {
     std::vector<vfps::meshdata_t> rv(_nmeshcellsX);
     const integral_t ca = 3.;

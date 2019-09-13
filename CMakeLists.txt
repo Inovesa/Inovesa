@@ -79,6 +79,7 @@ set(SRC_LIST
   ./src/Z/FreeSpaceCSR.cpp
   ./src/Z/ParallelPlatesCSR.cpp
   ./src/Z/ResistiveWall.cpp
+  ./src/FFTWWrapper.cpp
   ./src/HelperFunctions.cpp
 )
 
@@ -116,6 +117,7 @@ set(INC_LIST
   ./inc/Z/FreeSpaceCSR.hpp
   ./inc/Z/ParallelPlatesCSR.hpp
   ./inc/Z/ResistiveWall.hpp
+  ./inc/FFTWWrapper.hpp
   ./inc/HelperFunctions.hpp
   ./inc/defines.hpp
 )

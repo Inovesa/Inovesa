@@ -36,4 +36,21 @@ BOOST_AUTO_TEST_CASE( MakeDisplay ) {
     vfps::Display::silent_mode = false;
 }
 
+BOOST_AUTO_TEST_CASE( AbortHandling ) {
+    // abourt shoud be initialized with false
+    constexpr auto original_state = false;
+    BOOST_CHECK(vfps::Display::abort == original_state);
+
+    // SIGINT_handler sets abort to true
+    BOOST_CHECK_NO_THROW(vfps::Display::SIGINT_handler(SIGINT));
+    BOOST_CHECK(vfps::Display::abort);
+
+    // calling multiple times does not change this again
+    BOOST_CHECK_NO_THROW(vfps::Display::SIGINT_handler(SIGINT));
+    BOOST_CHECK(vfps::Display::abort);
+
+    // restore original value (falce)
+    vfps::Display::abort = original_state;
+}
+
 BOOST_AUTO_TEST_SUITE_END()

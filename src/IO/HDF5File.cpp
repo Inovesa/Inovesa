@@ -365,8 +365,8 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
 
 void vfps::HDF5File::appendPadded(const vfps::ElectricField *ef)
 {
-    _appendData(_paddedProfile,ef->getPaddedProfile());
-    _appendData(_paddedPotential,ef->getPaddedWakepotential());
+    _appendData(_paddedProfile,ef->getPaddedBunchProfiles());
+    _appendData(_paddedPotential,ef->getPaddedWakePotential());
 }
 
 void vfps::HDF5File::appendRFKicks(

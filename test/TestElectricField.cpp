@@ -16,11 +16,16 @@ using boost::math::constants::one_div_root_two_pi;
 #include "PS/ElectricField.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "Z/ConstImpedance.hpp"
+#include "Z/FreeSpaceCSR.hpp"
 
 
 struct ElectricFieldFixture {
-    explicit ElectricFieldFixture(std::vector<vfps::integral_t> filling)
-      : filling(filling)
+    explicit ElectricFieldFixture(std::vector<vfps::integral_t> filling,
+                                  vfps::impedance_t Z)
+      : spacing_bins(static_cast<size_t>(std::ceil(n*bunchspacing)))
+      , spaced_bins(spacing_bins * filling.size())
+      , filling(filling)
+      , z(std::make_shared<vfps::ConstImpedance>(spaced_bins, 1e9, Z))
     {
         for (uint32_t i=0; i<filling.size(); i++) {
             if (filling[i] > 0) {
@@ -28,28 +33,25 @@ struct ElectricFieldFixture {
                 bunches.emplace_back(filling[i]);
             }
         }
-        constexpr double bunchspacing = 4.0;
 
-        spacing_bins = static_cast<size_t>(std::ceil(n*bunchspacing));
-
-        spaced_bins = spacing_bins * filling.size();
-
-        vfps::PhaseSpace::resetSize(n,bunches.size());
+        vfps::PhaseSpace::resetSize(
+                    n, static_cast<vfps::meshindex_t>(bunches.size()));
 
         ps = std::make_shared<vfps::PhaseSpace>(
                     -12,12,3,-12,12,4,nullptr,1,1,bunches);
-        z = std::make_shared<vfps::ConstImpedance>(spaced_bins, 1e9, 1);
 
         f = std::make_shared<vfps::ElectricField>(
                     ps, z, buckets, spacing_bins, nullptr,
                     1e6, 0.1, 1e-3, 1e9, 1e3, 1e-3);
     }
 
+    static constexpr float bunchspacing = 8.0;
+
     static constexpr uint32_t n = 32;
 
-    size_t spaced_bins;
-
     size_t spacing_bins;
+
+    size_t spaced_bins;
 
     std::vector<uint32_t> buckets;
 
@@ -59,7 +61,7 @@ struct ElectricFieldFixture {
 
     std::shared_ptr<vfps::PhaseSpace> ps;
 
-    std::shared_ptr<vfps::ConstImpedance> z;
+    std::shared_ptr<vfps::Impedance> z;
 
     std::shared_ptr<vfps::ElectricField> f;
 
@@ -95,7 +97,7 @@ BOOST_AUTO_TEST_SUITE( ElectricField )
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(constructors , T, filling_patterns, T)
 {
-    ElectricFieldFixture eff(T::pattern);
+    ElectricFieldFixture eff(T::pattern, 1);
 
     BOOST_CHECK_EQUAL_COLLECTIONS(eff.f->getBuckets().data(),
                                   eff.f->getBuckets().data()
@@ -107,9 +109,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(constructors , T, filling_patterns, T)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
 {
-    ElectricFieldFixture eff(T::pattern);
+    ElectricFieldFixture eff(T::pattern, 1);
 
-    eff.ps->updateXProjection();
     eff.f->padBunchProfiles();
 
     std::vector<vfps::integral_t> correct_solution(eff.spaced_bins,0);
@@ -123,7 +124,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
     for(auto norm = T::pattern.rbegin(); norm != T::pattern.rend(); ++norm)
     {
         x = bucket*eff.spacing_bins;
-        for (vfps::meshindex_t x_bucket=0; x_bucket<eff.n;
+        for (vfps::meshindex_t x_bucket(0); x_bucket<eff.n;
              x_bucket++, x++) {
             correct_solution[x]
                   =  *norm * one_div_root_two_pi<vfps::integral_t>()
@@ -133,9 +134,107 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(padding , T, filling_patterns, T)
         bucket++;
     }
 
-    auto test_solution = eff.f->getPaddedProfile();
+    auto test_solution = eff.f->getPaddedBunchProfiles();
     for (size_t x=0; x<eff.spaced_bins; x++) {
         BOOST_CHECK_CLOSE(correct_solution[x], test_solution[x], 1e-4);
+    }
+}
+
+
+/**
+ * @brief wake_potential test
+ */
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(wake_potential , T, filling_patterns, T)
+{
+    ElectricFieldFixture eff(T::pattern, 1);
+
+    eff.f->padBunchProfiles();
+    eff.f->wakePotential();
+
+    auto padded_profile = eff.ps->getProjection(0);
+    auto wake_potential = eff.f->getWakePotentials();
+    auto scaling = eff.f->getWakeScaling();
+
+    for (vfps::meshindex_t b=0; b<vfps::PhaseSpace::nb;b++) {
+        for (vfps::meshindex_t x=0; x<eff.n; x++) {
+            /* Shapes of profile and wake potential (DFT forth and back)
+             * should match, as constant 1 is used as impedance.
+             */
+            BOOST_CHECK_SMALL(wake_potential[b][x]
+                              -padded_profile[b][x]*scaling,
+                              static_cast<vfps::integral_t>(1e-6));
+        }
+    }
+}
+
+/**
+ * @brief forward_wake test whether FS CSR just influences forward wake
+ *
+ * This is actually more of a test of the properties of FreeSpaceCSR.
+ */
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(forward_wake, T, filling_patterns, T)
+{
+    ElectricFieldFixture eff(T::pattern, 0);
+
+    eff.z->operator+=(vfps::FreeSpaceCSR(eff.spaced_bins, 1e6, 1e12));
+
+    // original profiles
+    eff.f->padBunchProfiles();
+    eff.f->wakePotential();
+
+    boost::multi_array<vfps::projection_t,2> profile_orig
+            = eff.ps->getProjection(0);
+    auto wakepot_orig = eff.f->getWakePotentials();
+
+    // apply changes only in the second half
+    constexpr vfps::meshindex_t change_from = eff.n/2;
+
+    constexpr vfps::projection_t change_magnitude = 0.1;
+
+    // changes greater change_epsilon are considered accepptable
+    constexpr vfps::projection_t change_epsilon = 1e-10;
+
+    // changes greater change_limit are considered an error
+    constexpr vfps::projection_t change_limit = 2e-8;
+
+    // modified profiles
+    boost::multi_array<vfps::projection_t,2> profile_mod(profile_orig);
+    for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
+        auto delta = change_magnitude * profile_mod[b][change_from];
+        profile_mod[b][change_from] -= delta;
+        profile_mod[b][change_from+1] += delta;
+        profile_mod[b][change_from+2] += delta;
+        profile_mod[b][change_from+3] -= delta;
+        eff.ps->setProjection(0,b,profile_mod[b]);
+    }
+    eff.f->padBunchProfiles();
+    eff.f->wakePotential();
+    auto wakepot_mod = eff.f->getWakePotentials();
+
+    for (vfps::meshindex_t b = 0; b < vfps::PhaseSpace::nb; b++) {
+        vfps::projection_t change_max = 0;
+        vfps::meshindex_t x=0;
+	while (x < eff.n) {
+            vfps::projection_t change = wakepot_orig[b][x]-wakepot_mod[b][x];
+            change_max = std::max(change_max, std::abs(change));
+            x++;
+        }
+        BOOST_CHECK_SMALL(change_limit, change_max);
+
+	x=0;
+        while (x < change_from) {
+            vfps::projection_t change = wakepot_orig[b][x]-wakepot_mod[b][x];
+            std::stringstream msg;
+            msg << "Deviation of " << 100*change/std::abs(wakepot_orig[b][x])
+                << " % in WakePotential at "
+                << "b=" << b << ", x=" << x
+                << ". (Deviation shoud not start before x="
+		<< change_from << ".)";
+            BOOST_WARN_MESSAGE(std::abs(change) < change_epsilon,
+                               msg.str());
+            BOOST_CHECK_SMALL(change, change_limit);
+            x++;
+        }
     }
 }
 
