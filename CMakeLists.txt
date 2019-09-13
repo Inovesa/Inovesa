@@ -249,7 +249,7 @@ IF(OPENIMAGEIO_FOUND)
     MESSAGE ("Found OpenImageIO. Will add image I/O support.")
 ELSE()
     add_definitions( -DINOVESA_USE_PNG=0)
-    MESSAGE ("Did not find PNG++. Will compile without PNG support.")
+    MESSAGE ("Did not find OpenImageIO. Will compile without PNG support.")
 ENDIF()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})

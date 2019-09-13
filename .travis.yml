@@ -30,7 +30,7 @@ addons:
       - libglew-dev # optional
       - libglfw3-dev # optional
       - libhdf5-dev # optional
-      - libpng++-dev # optional
+      - libopenimageio-dev # optional
       - libxrandr-dev # optional
       - ocl-icd-opencl-dev # optional
 
