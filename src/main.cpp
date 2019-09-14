@@ -33,9 +33,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#if INOVESA_USE_PNG == 1
-#include <OpenImageIO/imageio.h>
-#endif
 #include <memory>
 #include <sstream>
 
@@ -1080,30 +1077,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_HDF5
     #if INOVESA_USE_PNG == 1
     if ( isOfFileType(".png",ofname)) {
-        meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-        meshdata_t* val = grid_t1->getData();
-        for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
-            maxval = std::max(val[i],maxval);
-        }
-        auto png_file = OIIO::ImageOutput::create(ofname);
-        std::vector<uint16_t> png_pixels(PhaseSpace::nxy);
-        constexpr uint_fast8_t png_channels = 1;
-        OIIO::ImageSpec spec(static_cast<int>(PhaseSpace::nx),
-                             static_cast<int>(PhaseSpace::ny),
-                             png_channels,
-                             OIIO::TypeDesc::UINT16);
-        png_file->open(ofname, spec);
-
-        for (unsigned int x=0; x<PhaseSpace::nx; x++) {
-            for (unsigned int y=0; y<PhaseSpace::ny; y++) {
-                png_pixels[(ps_bins-y-1)*ps_bins+x]
-                        = static_cast<uint16_t>(
-                            std::max((*grid_t1)[0][x][y],meshdata_t(0))
-                            /maxval*float(UINT16_MAX));
-            }
-        }
-
-        png_file->write_image(OIIO::TypeDesc::UINT16, png_pixels.data());
+        saveToImage(grid_t1, ofname);
     }
     #endif
 
