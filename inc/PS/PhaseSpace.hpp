@@ -209,12 +209,12 @@ public:
     void updateYProjection();
 
     /**
-     * @brief normalize
+     * @brief short hand for integrate followed by normalize
      * @return integral before normalization
      *
      * @todo: Use OpenCL
      *
-     * normalize() does neither recompute the integral nor sets it to 1
+     * relies on up-to-date _projection[0
      */
     inline const std::vector<integral_t>& integrateAndNormalize() {
         integrate();

@@ -95,7 +95,7 @@ vfps::makePSFromPNG( const std::string fname
                                               , data.data());
         // normalize integral to 1
         ps->updateXProjection();
-        ps->normalize();
+        ps->integrateAndNormalize();
 
         #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
