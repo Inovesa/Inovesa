@@ -477,8 +477,14 @@ int main(int argc, char** argv)
         #if INOVESA_USE_PNG == 1
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
-            grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
-                                   , oclh, Qb,Ib,bl,dE);
+            grid_t1 = makePSFromPNG( startdistfile,
+                                     qmin, qmax, bl,
+                                     pmin, pmax, dE,
+                                     oclh, Qb, Ib);
+
+            std::stringstream msg;
+            msg << "Read phase space (a=" << vfps::PhaseSpace::nx << " px).";
+            Display::printText(msg.str());
         } else
         #endif // INOVESA_USE_PNG
         #if INOVESA_USE_HDF5 == 1
@@ -1079,26 +1085,14 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_HDF5
     #if INOVESA_USE_PNG == 1
     if ( isOfFileType(".png",ofname)) {
-        meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-        meshdata_t* val = grid_t1->getData();
-        for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
-            maxval = std::max(val[i],maxval);
-        }
-        png::image< png::gray_pixel_16 > png_file(ps_bins, ps_bins);
-        for (unsigned int x=0; x<ps_bins; x++) {
-            for (unsigned int y=0; y<ps_bins; y++) {
-                png_file[ps_bins-y-1][x]=
-                        static_cast<png::gray_pixel_16>(
-                            std::max((*grid_t1)[0][x][y],meshdata_t(0))
-                            /maxval*float(UINT16_MAX));
-            }
-        }
-        png_file.write(ofname);
+        savePSToPNG(*grid_t1, ofname);
     }
     #endif
 
     // Print the last status.
-    Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
+    Display::printText(status_string(
+                           grid_t1, static_cast<float>(
+                               simulationstep)/steps, rotations));
 
     delete wake_field;
 

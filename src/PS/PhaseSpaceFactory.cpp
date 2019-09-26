@@ -16,7 +16,7 @@
 
 #if INOVESA_USE_HDF5 == 1
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
+vfps::makePSFromHDF5(const std::string& fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                     , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                     , oclhptr_t oclh
@@ -54,13 +54,12 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
 #endif // INOVESA_USE_HDF5
 
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromPNG( std::string fname
-                   , meshaxis_t qmin, meshaxis_t qmax
-                   , meshaxis_t pmin, meshaxis_t pmax
+vfps::makePSFromPNG(const std::string& fname
+                   , meshaxis_t qmin, meshaxis_t qmax, double qscale
+                   , meshaxis_t pmin, meshaxis_t pmax, double pscale
                    , oclhptr_t oclh
                    , const double beam_charge
                    , const double beam_current
-                   , double qscale, double pscale
                    )
 {
     #if INOVESA_USE_PNG == 1
@@ -106,7 +105,6 @@ vfps::makePSFromPNG( std::string fname
         #endif // INOVESA_USE_OPENCL
         std::stringstream imgsize;
         imgsize << ps_size;
-        Display::printText("Read phase space (a="+imgsize.str()+" px).");
         return ps;
     } else {
         std::cerr << "Phase space has to be quadratic. Please adjust "
@@ -174,3 +172,26 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
     #endif // INOVESA_USE_OPENCL
     return ps;
 }
+
+#if INOVESA_USE_PNG == 1
+void vfps::savePSToPNG(const PhaseSpace& ps,
+                       const std::string& ofname)
+{
+    meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+    auto val = ps.getData();
+    for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
+        maxval = std::max(val[i],maxval);
+    }
+    png::image< png::gray_pixel_16 > png_file(PhaseSpace::nx,
+                                              PhaseSpace::ny);
+    for (unsigned int x=0; x<PhaseSpace::nx; x++) {
+        for (unsigned int y=0; y<PhaseSpace::ny; y++) {
+            png_file[PhaseSpace::ny-y-1][x]=
+                    static_cast<png::gray_pixel_16>(
+                        std::max(ps[0][x][y], meshdata_t(0))
+                        /maxval*float(UINT16_MAX));
+        }
+    }
+    png_file.write(ofname);
+}
+#endif // INOVESA_USE_PNG
