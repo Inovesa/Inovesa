@@ -111,6 +111,9 @@ public:
     inline auto operator [] (const unsigned int i)
     { return _data[i]; }
 
+    inline auto operator [] (const unsigned int i) const
+    { return _data[i]; }
+
     inline meshaxis_t getDelta(const uint_fast8_t x) const
     { return _axis[x]->delta(); }
 

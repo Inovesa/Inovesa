@@ -477,8 +477,14 @@ int main(int argc, char** argv)
         #if INOVESA_USE_PNG == 1
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
-            grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
-                                   , oclh, Qb,Ib,bl,dE);
+            grid_t1 = makePSFromPNG( startdistfile,
+                                     qmin, qmax, bl,
+                                     pmin, pmax, dE,
+                                     oclh, Qb, Ib);
+
+            std::stringstream msg;
+            msg << "Read phase space (a=" << vfps::PhaseSpace::nx << " px).";
+            Display::printText(msg.str());
         } else
         #endif // INOVESA_USE_PNG
         #if INOVESA_USE_HDF5 == 1
@@ -1082,7 +1088,9 @@ int main(int argc, char** argv)
     #endif
 
     // Print the last status.
-    Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
+    Display::printText(status_string(
+                           grid_t1, static_cast<float>(
+                               simulationstep)/steps, rotations));
 
     delete wake_field;
 
