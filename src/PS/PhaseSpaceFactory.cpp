@@ -179,12 +179,11 @@ void vfps::saveToImage( const PhaseSpace& ps,
         maxval = std::max(val[i],maxval);
     }
 
-    std::unique_ptr<OIIO::ImageOutput> out
-	    = OIIO::ImageOutput::create(ofname);
+    std::unique_ptr<OIIO::ImageOutput> out(OIIO::ImageOutput::create(ofname));
 
     constexpr uint_fast8_t channels = 1;
     OIIO::ImageSpec spec( PhaseSpace::nx, PhaseSpace::ny,
-		          channels, OIIO::TypeDesc::UINT16);
+                          channels, OIIO::TypeDesc::UINT16);
     
     std::vector<uint16_t>  pixels(PhaseSpace::nxy);
     
