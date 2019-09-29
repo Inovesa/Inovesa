@@ -64,32 +64,37 @@ vfps::makePSFromPNG( const std::string& fname
                    , const double beam_current
                    )
 {
+    // currently, only single bunch is supported
+    const std::vector<integral_t> filling = { 1.0 };
+
     // load pattern to start with
     auto image = OIIO::ImageInput::open(fname);
 
     const auto& spec = image->spec();
 
     if (spec.width == spec.height) {
-        meshindex_t ps_size = spec.height;
 
-        std::vector<meshdata_t> data(static_cast<meshindex_t>(ps_size*ps_size));
-        std::vector<uint16_t> pixels(ps_size*ps_size);
+        PhaseSpace::setSize(static_cast<meshindex_t>(spec.height),
+                            static_cast<meshindex_t>(filling.size()));
+
+        std::vector<meshdata_t> data(PhaseSpace::nxyb);
+        std::vector<uint16_t> pixels(PhaseSpace::nxyb);
 
         image->read_image(OIIO::TypeDesc::UINT16, pixels.data());
         image->close();
 
-        for (unsigned int x=0; x<ps_size; x++) {
-            for (unsigned int y=0; y<ps_size; y++) {
-                data[x*ps_size+y] = pixels[(ps_size-y-1)*ps_size+x]/float(UINT16_MAX);
+        for (unsigned int x=0; x<PhaseSpace::nx; x++) {
+            for (unsigned int y=0; y<PhaseSpace::ny; y++) {
+                data[x*PhaseSpace::ny+y]
+                        = pixels[(PhaseSpace::ny-y-1)
+                        * PhaseSpace::nx+x]/float(UINT16_MAX);
             }
         }
 
-        std::vector<integral_t> filling = { 1.0 };
-        PhaseSpace::setSize(ps_size, filling.size());
         auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                               , pmin, pmax, pscale
                                               , oclh
-                                              , beam_charge,beam_current
+                                              , beam_charge, beam_current
                                               , filling, 1
                                               , data.data());
         // normalize integral to 1
@@ -99,8 +104,6 @@ vfps::makePSFromPNG( const std::string& fname
         #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
-        std::stringstream imgsize;
-        imgsize << ps_size;
         return ps;
     } else {
         std::cerr << "Phase space has to be quadratic. Please adjust "
