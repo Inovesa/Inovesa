@@ -5,7 +5,7 @@
  */
 
 #if INOVESA_USE_PNG == 1
-#include <png++/png.hpp>
+#include <OpenImageIO/imageio.h>
 #endif
 #include <iterator>
 
@@ -16,7 +16,7 @@
 
 #if INOVESA_USE_HDF5 == 1
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
+vfps::makePSFromHDF5( const std::string& fname, int64_t startdiststep
                     , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                     , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                     , oclhptr_t oclh
@@ -53,78 +53,76 @@ vfps::makePSFromHDF5(std::string fname, int64_t startdiststep
 }
 #endif // INOVESA_USE_HDF5
 
+
+#if INOVESA_USE_PNG == 1
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromPNG( std::string fname
-                   , meshaxis_t qmin, meshaxis_t qmax
-                   , meshaxis_t pmin, meshaxis_t pmax
+vfps::makePSFromPNG( const std::string& fname
+                   , meshaxis_t qmin, meshaxis_t qmax, double qscale
+                   , meshaxis_t pmin, meshaxis_t pmax, double pscale
                    , oclhptr_t oclh
                    , const double beam_charge
                    , const double beam_current
-                   , double qscale, double pscale
                    )
 {
-    #if INOVESA_USE_PNG == 1
+    // currently, only single bunch is supported
+    const std::vector<integral_t> filling = { 1.0 };
+
     // load pattern to start with
-    png::image<png::gray_pixel_16> image;
-    try {
-        image.read(fname);
-    } catch ( const png::std_error &e ) {
-        std::cerr << e.what() << std::endl;
-    } catch ( const png::error &e ) {
-        std::cerr << "Problem loading " << fname
-                  << ": " << e.what() << std::endl;
-    } catch (...) {
-        std::cerr << "Error loading initial distribution from \""
-                  << fname << "\".";
-    }
+    auto image = OIIO::ImageInput::open(fname);
 
-    if (image.get_width() == image.get_height()) {
-        meshindex_t ps_size = image.get_height();
+    const auto& spec = image->spec();
 
-        std::vector<meshdata_t> data(static_cast<meshindex_t>(ps_size*ps_size));
+    if (spec.width == spec.height) {
 
-        for (unsigned int x=0; x<ps_size; x++) {
-            for (unsigned int y=0; y<ps_size; y++) {
-                data[x*ps_size+y] = image[ps_size-y-1][x]/float(UINT16_MAX);
+        PhaseSpace::setSize(static_cast<meshindex_t>(spec.height),
+                            static_cast<meshindex_t>(filling.size()));
+
+        std::vector<meshdata_t> data(PhaseSpace::nxyb);
+        std::vector<uint16_t> pixels(PhaseSpace::nxyb);
+
+        image->read_image(OIIO::TypeDesc::UINT16, pixels.data());
+        image->close();
+
+        for (unsigned int x=0; x<PhaseSpace::nx; x++) {
+            for (unsigned int y=0; y<PhaseSpace::ny; y++) {
+                data[x*PhaseSpace::ny+y]
+                        = pixels[(PhaseSpace::ny-y-1)
+                        * PhaseSpace::nx+x]/float(UINT16_MAX);
             }
         }
 
-        std::vector<integral_t> filling = {{ 1.0 }};
-        PhaseSpace::setSize(ps_size, filling.size());
         auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                               , pmin, pmax, pscale
                                               , oclh
-                                              , beam_charge,beam_current
+                                              , beam_charge, beam_current
                                               , filling, 1
                                               , data.data());
         // normalize integral to 1
         ps->updateXProjection();
-        ps->normalize();
+        ps->integrateAndNormalize();
 
         #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
         #endif // INOVESA_USE_OPENCL
-        std::stringstream imgsize;
-        imgsize << ps_size;
-        Display::printText("Read phase space (a="+imgsize.str()+" px).");
         return ps;
     } else {
         std::cerr << "Phase space has to be quadratic. Please adjust "
                   << fname << std::endl;
     }
-#endif // INOVESA_USE_PNG
     return nullptr;
 }
+#endif // INOVESA_USE_PNG
 
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromTXT(std::string fname, int64_t ps_size
+vfps::makePSFromTXT( const std::string& fname
+                   , int64_t ps_size
                    , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                    , oclhptr_t oclh
                    , const double beam_charge, const double beam_current
                    , double qscale, double pscale)
 {
-    std::vector<integral_t> filling = {{ 1.0 }};
+    std::vector<integral_t> filling = { 1.0 };
     PhaseSpace::setSize(ps_size, filling.size());
     auto ps = std::make_unique<PhaseSpace>( qmin, qmax, qscale
                                           , pmin, pmax, pscale
@@ -174,3 +172,36 @@ vfps::makePSFromTXT(std::string fname, int64_t ps_size
     #endif // INOVESA_USE_OPENCL
     return ps;
 }
+
+#if INOVESA_USE_PNG == 1
+void vfps::saveToImage( const PhaseSpace& ps,
+                        const std::string& ofname)
+{
+    meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+    auto val = ps.getData();
+    for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
+        maxval = std::max(val[i],maxval);
+    }
+
+    std::unique_ptr<OIIO::ImageOutput> out(OIIO::ImageOutput::create(ofname));
+
+    constexpr uint_fast8_t channels = 1;
+    OIIO::ImageSpec spec( PhaseSpace::nx, PhaseSpace::ny,
+                          channels, OIIO::TypeDesc::UINT16);
+    
+    std::vector<uint16_t>  pixels(PhaseSpace::nxy);
+    
+    for (unsigned int x=0; x<PhaseSpace::nx; x++) {
+        for (unsigned int y=0; y<PhaseSpace::ny; y++) {
+            pixels[(PhaseSpace::ny-y-1)*PhaseSpace::nx+x]=
+                    static_cast<uint16_t>(
+                        std::max(ps[0][x][y], meshdata_t(0))
+                        /maxval*float(UINT16_MAX));
+        }
+    }
+    out->open(ofname, spec);
+    out->write_image(OIIO::TypeDesc::UINT16, pixels.data());
+    out->close();
+}
+#endif // INOVESA_USE_PNG
+

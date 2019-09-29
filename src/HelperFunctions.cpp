@@ -5,6 +5,9 @@
  */
 
 #include <boost/config.hpp>
+#if INOVESA_USE_PNG == 1
+#include <OpenImageIO/imageio.h>
+#endif // INOVESA_USE_PNG
 
 #include "HelperFunctions.hpp"
 
@@ -201,3 +204,38 @@ bool vfps::isOfFileType(std::string ending, std::string fname)
     return ( fname.size() > ending.size() &&
         std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
 }
+
+#if INOVESA_USE_PNG == 1
+void vfps::saveToImage(std::shared_ptr<PhaseSpace> ps, std::string ofname)
+{
+    meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
+    meshdata_t* val = ps->getData();
+    for (meshindex_t i=0; i < PhaseSpace::nxyb; i++) {
+        maxval = std::max(val[i],maxval);
+    }
+    auto png_file = OIIO::ImageOutput::create(ofname);
+    std::vector<uint16_t> png_pixels(PhaseSpace::nxyb);
+    constexpr uint_fast8_t png_channels = 1;
+    OIIO::ImageSpec spec(static_cast<int>(PhaseSpace::nx),
+                         static_cast<int>(PhaseSpace::nb)
+                         *static_cast<int>(PhaseSpace::ny),
+                         png_channels,
+                         OIIO::TypeDesc::UINT16);
+    png_file->open(ofname, spec);
+
+    for (unsigned int b=0; b<PhaseSpace::nb; b++) {
+        for (unsigned int x=0; x<PhaseSpace::nx; x++) {
+            for (unsigned int y=0; y<PhaseSpace::ny; y++) {
+                png_pixels[ b*PhaseSpace::nxy
+                          + (PhaseSpace::nx-y-1)*PhaseSpace::ny
+                          + x ]
+                        = static_cast<uint16_t>(
+                            std::max((*ps)[b][x][y], static_cast<meshdata_t>(0))
+                            /maxval*static_cast<float>(UINT16_MAX));
+            }
+        }
+    }
+
+    png_file->write_image(OIIO::TypeDesc::UINT16, png_pixels.data());
+}
+#endif // INOVESA_USE_PNG

@@ -11,6 +11,7 @@
 
 #include "defines.hpp"
 #include "PS/PhaseSpace.hpp"
+#include "PS/PhaseSpaceFactory.hpp"
 
 BOOST_AUTO_TEST_SUITE( PhaseSpace )
 
@@ -201,5 +202,32 @@ BOOST_AUTO_TEST_CASE( assign ){
     BOOST_CHECK_EQUAL_COLLECTIONS(data1.data(),data1.data()+data1.size(),
                                   ps2.getData(),ps2.getData()+ps2.nxyb);
 }
+
+#if INOVESA_USE_PNG == 1
+BOOST_AUTO_TEST_CASE( save_reload ){
+    vfps::PhaseSpace::resetSize(128,1);
+
+    const std::string fname("foo.png");
+
+    vfps::PhaseSpace ps1(-6, 6, 2,
+                         -6, 6, 4,
+                         nullptr, 1, 1);
+    ps1.normalize();
+
+    vfps::saveToImage(ps1, fname);
+
+    vfps::PhaseSpace::resetSize();
+    auto ps2 = vfps::makePSFromPNG(fname,
+                                   -6, 6, 2,
+                                   -6, 6, 4,
+                                   nullptr, 1, 1);
+
+    auto data1 = ps1.getData();
+    auto data2 = ps2->getData();
+    for (vfps::meshindex_t n=0; n < vfps::PhaseSpace::nxyb; n++) {
+        BOOST_CHECK_SMALL(data1[n] - data2[n], 2e-5f);
+    }
+}
+#endif // INOVESA_USE_PNG
 
 BOOST_AUTO_TEST_SUITE_END()
