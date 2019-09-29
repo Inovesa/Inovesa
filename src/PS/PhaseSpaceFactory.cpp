@@ -111,7 +111,8 @@ vfps::makePSFromPNG( const std::string& fname
 #endif // INOVESA_USE_PNG
 
 std::unique_ptr<vfps::PhaseSpace>
-vfps::makePSFromTXT(const std::string fname, int64_t ps_size
+vfps::makePSFromTXT( const std::string& fname
+                   , int64_t ps_size
                    , vfps::meshaxis_t qmin, vfps::meshaxis_t qmax
                    , vfps::meshaxis_t pmin, vfps::meshaxis_t pmax
                    , oclhptr_t oclh

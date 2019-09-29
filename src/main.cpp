@@ -42,7 +42,7 @@ using boost::math::constants::two_pi;
 
 using namespace vfps;
 
-/**++/
+/**
  * @file
  * @brief main Inovesa file
  */

@@ -41,7 +41,8 @@ std::unique_ptr<PhaseSpace> makePSFromPNG(const std::string& fname
 void saveToImage( const PhaseSpace& ps,
                   const std::string& ofname);
 
-std::unique_ptr<PhaseSpace> makePSFromTXT( const std::string fname, int64_t ps_size
+std::unique_ptr<PhaseSpace> makePSFromTXT( const std::string& fname
+                                         , int64_t ps_size
                                          , meshaxis_t qmin, meshaxis_t qmax
                                          , meshaxis_t pmin, meshaxis_t pmax
                                          , oclhptr_t oclh
