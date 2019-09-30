@@ -212,7 +212,6 @@ BOOST_AUTO_TEST_CASE( save_reload ){
     vfps::PhaseSpace ps1(-6, 6, 2,
                          -6, 6, 4,
                          nullptr, 1, 1);
-    ps1.normalize();
 
     vfps::saveToImage(ps1, fname);
 
@@ -222,11 +221,22 @@ BOOST_AUTO_TEST_CASE( save_reload ){
                                    -6, 6, 4,
                                    nullptr, 1, 1);
 
+
+    BOOST_CHECK_CLOSE(ps1.getBunchPopulation()[0],
+            ps1.getSetBunchPopulation()[0],
+            static_cast<vfps::integral_t>(2e-5f));
+    BOOST_CHECK_CLOSE(ps2->getBunchPopulation()[0],
+            ps2->getSetBunchPopulation()[0],
+            static_cast<vfps::integral_t>(2e-5f));
+
+    // we check for the maximum deviation to avoid error message spam
     auto data1 = ps1.getData();
     auto data2 = ps2->getData();
+    auto max_deviation = static_cast<vfps::meshdata_t>(0);
     for (vfps::meshindex_t n=0; n < vfps::PhaseSpace::nxyb; n++) {
-        BOOST_CHECK_SMALL(data1[n] - data2[n], 2e-5f);
+        max_deviation = std::max(std::abs(data1[n]-data2[n]),max_deviation);
     }
+    BOOST_CHECK_SMALL(max_deviation, 2e-5f);
 }
 #endif // INOVESA_USE_PNG
 

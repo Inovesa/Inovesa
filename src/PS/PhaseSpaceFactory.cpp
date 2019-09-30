@@ -86,8 +86,7 @@ vfps::makePSFromPNG( const std::string& fname
         for (unsigned int x=0; x<PhaseSpace::nx; x++) {
             for (unsigned int y=0; y<PhaseSpace::ny; y++) {
                 data[x*PhaseSpace::ny+y]
-                        = pixels[(PhaseSpace::ny-y-1)
-                        * PhaseSpace::nx+x]/float(UINT16_MAX);
+                        = pixels[(PhaseSpace::ny-y-1) * PhaseSpace::nx+x];
             }
         }
 
@@ -100,6 +99,11 @@ vfps::makePSFromPNG( const std::string& fname
         // normalize integral to 1
         ps->updateXProjection();
         ps->integrateAndNormalize();
+
+        // recalculate projections for normalized density
+        ps->updateXProjection();
+        ps->updateYProjection();
+        ps->integrate();
 
         #if INOVESA_USE_OPENCL == 1
         ps->syncCLMem(OCLH::clCopyDirection::cpu2dev);
@@ -195,8 +199,8 @@ void vfps::saveToImage( const PhaseSpace& ps,
         for (unsigned int y=0; y<PhaseSpace::ny; y++) {
             pixels[(PhaseSpace::ny-y-1)*PhaseSpace::nx+x]=
                     static_cast<uint16_t>(
-                        std::max(ps[0][x][y], meshdata_t(0))
-                        /maxval*float(UINT16_MAX));
+                        std::max(ps[0][x][y], static_cast<meshdata_t>(0))
+                        /maxval*std::numeric_limits<uint16_t>::max());
         }
     }
     out->open(ofname, spec);
