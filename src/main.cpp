@@ -703,7 +703,7 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance( (filling.size()>0)? spaced_bins : padded_bins
+            = vfps::makeImpedance( (filling.size()>1)? spaced_bins : padded_bins
                                  , oclh
                                  , fmax,R_bend,f_rev,gap,use_csr
                                  , s,xi,collimator_radius,impedance_file);
@@ -719,7 +719,7 @@ int main(int argc, char** argv)
     ElectricField rdtn_field( grid_t1,rdtn_impedance,bucketnumbers
                             , 0 // no spacing
                             , oclh
-                            , f_rev,revolutionpart);
+                            , f_rev, revolutionpart);
 
     /**************************************************************************
      * Part modeling the self-interaction of the electron-bunch.              *
@@ -742,7 +742,7 @@ int main(int argc, char** argv)
                                       , revolutionpart, Ib,E0,sE,dt
                                       );
 
-        Display::printText("Building WakeKickMap.");
+        Display::printText("Building WakePotentialMap.");
         wkm = new WakePotentialMap( grid_t1,grid_t2,wake_field,
                                     interpolationtype,interpol_clamp,oclh);
         wm = wkm;
