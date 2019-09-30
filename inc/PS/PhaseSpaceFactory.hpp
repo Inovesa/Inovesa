@@ -26,6 +26,22 @@ std::unique_ptr<PhaseSpace> makePSFromHDF5( const std::string& fname
 #endif // INOVESA_USE_HDF5
 
 #if INOVESA_USE_PNG == 1
+/**
+ * @brief makePSFromPNG
+ * @param fname file name to load phase space from
+ * @param qmin (see PhaseSpace)
+ * @param qmax (see PhaseSpace)
+ * @param xscale (see PhaseSpace)
+ * @param pmin (see PhaseSpace)
+ * @param pmax (see PhaseSpace)
+ * @param yscale (see PhaseSpace)
+ * @param oclh (see PhaseSpace)
+ * @param beam_charge (see PhaseSpace)
+ * @param beam_current (see PhaseSpace)
+ * @return pointer to loaded (and re-normalized) PhaseSpace
+ *
+ * @todo Add support for multi-bunch.
+ */
 std::unique_ptr<PhaseSpace> makePSFromPNG(const std::string& fname
                                          , meshaxis_t qmin, meshaxis_t qmax
                                          , double xscale
