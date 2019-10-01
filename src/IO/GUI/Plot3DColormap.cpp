@@ -1,29 +1,17 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2014-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifdef INOVESA_USE_OPENGL
+#if INOVESA_USE_OPENGL == 1
 
 #include "IO/GUI/Plot3DColormap.hpp"
 
-vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue) :
-    maxValue(maxvalue)
+vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue)
+  : GUIElement(false)
+  , maxValue(maxvalue)
 {
     // Create GLSL code
     switch (glversion) {
@@ -187,13 +175,10 @@ void vfps::Plot3DColormap::delTexture()
 
 void vfps::Plot3DColormap::draw()
 {
-	// Use our shader
-	glUseProgram(programID);
+    glUseProgram(programID);
 
-	// Bind our texture in Texture Unit 0
-	glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
-    // Set "textureSampler3DCM" sampler to user Texture Unit 0
     glUniform1i(textureSampler, 0);
 
     glEnableVertexAttribArray(position);
@@ -205,7 +190,7 @@ void vfps::Plot3DColormap::draw()
     glVertexAttribPointer(vertexUV,2,GL_FLOAT,GL_FALSE,0,nullptr);
 
 
-    glDrawArrays(GL_TRIANGLES, 0, 2*3);// 2*3 indices starting at 0
+    glDrawArrays(GL_TRIANGLES, 0, 2*3);
 
     glDisableVertexAttribArray(position);
     glDisableVertexAttribArray(vertexUV);

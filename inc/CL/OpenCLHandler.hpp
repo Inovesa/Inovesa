@@ -1,45 +1,51 @@
-/******************************************************************************
- * Inovesa - Inovesa Numerical Optimized Vlasov-Equation Solver Application   *
- * Copyright (c) 2012-2018: Patrik Schönfeldt                                 *
- * Copyright (c) 2014-2018: Karlsruhe Institute of Technology                 *
- *                                                                            *
- * This file is part of Inovesa.                                              *
- * Inovesa is free software: you can redistribute it and/or modify            *
- * it under the terms of the GNU General Public License as published by       *
- * the Free Software Foundation, either version 3 of the License, or          *
- * (at your option) any later version.                                        *
- *                                                                            *
- * Inovesa is distributed in the hope that it will be useful,                 *
- * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              *
- * GNU General Public License for more details.                               *
- *                                                                            *
- * You should have received a copy of the GNU General Public License          *
- * along with Inovesa.  If not, see <http://www.gnu.org/licenses/>.           *
- ******************************************************************************/
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * This file is part of Inovesa (github.com/Inovesa/Inovesa).
+ * It's copyrighted by the contributors recorded
+ * in the version control history of the file.
+ */
 
-#ifndef OPENCLHANDLER_HPP
-#define OPENCLHANDLER_HPP
-#ifdef INOVESA_USE_OPENCL
+#pragma once
 
-enum class clCopyDirection {
-    cpu2dev,
-    dev2cpu
-};
+#include <memory>
 
+#if INOVESA_USE_OPENGL == 1
 #include <GL/glew.h>
+#endif // INOVESA_USE_OPENGL
 
+#if INOVESA_USE_OPENCL == 1
 #define CL_HPP_ENABLE_EXCEPTIONS
 #define CL_HPP_MINIMUM_OPENCL_VERSION 110
 #define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_TARGET_OPENCL_VERSION 120
 
 #include "CL/local_cl.hpp"
+#endif // INOVESA_USE_OPENCL
 
-#ifdef INOVESA_ENABLE_CLPROFILING
+// shared OpenCL OpenGL pointer with automatic fallback
+#if INOVESA_USE_OPENGL == 1
+namespace vfps{
+#if INOVESA_USE_OPENCL == 1
+typedef cl_GLuint clgluint;
+#else
+typedef GLuint clgluint;
+#endif // INOVESA_USE_OPENCL
+} // namespace vfps
+#endif // INOVESA_USE_OPENGL
+
+// negation for preprocessor to have short alternative on top
+#if !(INOVESA_USE_OPENCL == 1)
+typedef std::nullptr_t oclhptr_t;
+#else
+
+class OCLH;
+typedef std::shared_ptr<OCLH> oclhptr_t;
+
+#if INOVESA_ENABLE_CLPROFILING == 1
 #include "CL/CLProfiler.hpp"
 #endif
 
-#ifdef INOVESA_USE_CLFFT
+#if INOVESA_USE_CLFFT == 1
 #include <clFFT.h>
 #endif // INOVESA_USE_CLFFT
 
@@ -58,73 +64,82 @@ enum class clCopyDirection {
 class OCLH
 {
 public:
+    enum class clCopyDirection {
+        cpu2dev,
+        dev2cpu
+    };
+
     /**
      * @brief prepareCLEnvironment
      * @param device
      * @param glsharing needs to be implemented
      */
-    static void prepareCLEnvironment( uint32_t device
-                                    #ifdef INOVESA_USE_OPENGL
-                                    , bool glsharing
-                                    #endif
-                                    );
+    OCLH( uint32_t device, bool glsharing=false);
 
-    static cl::Program prepareCLProg(std::string);
+    cl::Program prepareCLProg(std::string);
 
-    static void teardownCLEnvironment();
+    ~OCLH();
 
-    static void teardownCLEnvironment(cl::Error& e);
+     static void listCLDevices();
 
-    static void listCLDevices();
+    cl::Context context;
 
-    static bool active;
-
-    static cl::Context context;
+    /**
+     * @brief OpenGLSharing
+     * @return status of OpenGL sharing (always false for build w/o OpenGL)
+     *
+     */
+    bool OpenGLSharing() const
+        { return ogl_sharing; }
 
 private:
-    static cl::vector<cl::Platform> platforms;
+    cl::Platform _platform;
 
-    static cl::vector<cl::Device> devices;
+    cl::vector<cl::Device> _devices;
 
-    static cl_device_type devicetype;
+    cl::Device _device;
+
+    cl_device_type devicetype;
 
     /**
      * @brief command queue for OpenCL
      */
-    static cl::CommandQueue queue;
+    cl::CommandQueue queue;
 
-    #ifdef INOVESA_USE_OPENGL
-    static bool ogl_sharing;
-    #endif // INOVESA_USE_OPENGL
+    bool ogl_sharing;
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    static void saveProfilingInfo(std::string fname);
+    #if INOVESA_ENABLE_CLPROFILING == 1
+    void saveProfilingInfo(std::string fname);
 
-    static std::list<vfps::CLTiming> timingInfo;
+    std::list<vfps::CLTiming> timingInfo;
 
-    static cl::Event init;
+    cl::Event init;
     #endif // INOVESA_ENABLE_CLPROFILING
 
 public:
-    #ifdef INOVESA_USE_CLFFT
-    static inline void
+    #if INOVESA_USE_CLFFT == 1
+    /**
+     * @brief bakeClfftPlan wrapper for clfftBakePlan
+     * @param plHandle
+     */
+    inline void
     bakeClfftPlan(clfftPlanHandle plHandle)
     {
         clfftBakePlan(plHandle,1,&queue(), nullptr, nullptr);
     }
 
-    static inline void
+    inline void
     enqueueDFT(clfftPlanHandle plHandle,
                clfftDirection dir,
                cl::Buffer inputBuffer,
                cl::Buffer outputBuffer)
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         cl::Event* event = new cl::Event();
         timingsDFT.push_back(event);
         #endif // INOVESA_ENABLE_CLPROFILING
         clfftEnqueueTransform(plHandle,dir,1,&queue(),0,nullptr,
-                              #ifdef INOVESA_ENABLE_CLPROFILING
+                              #if INOVESA_ENABLE_CLPROFILING == 1
                               &(*event)(),
                               #else
                               nullptr,
@@ -133,32 +148,32 @@ public:
     }
     #endif // INOVESA_USE_CLFFT
 
-    static inline void
+    inline void
     enqueueBarrier()
     {
-        #ifdef CL_VERSION_1_2
-        OCLH::queue.enqueueBarrierWithWaitList();
-        #else // CL_VERSION_1_2
-        OCLH::queue.enqueueBarrier();
+        #if CL_VERSION_1_2 == 1
+        queue.enqueueBarrierWithWaitList();
+        #elif CL_VERSION_1_1 == 1
+        queue.enqueueBarrier();
         #endif // CL_VERSION_1_2
     }
 
     /**
      * This wrapper function allows to centrally controll queuing kernels.
      */
-    static inline void
+    inline void
     enqueueNDRangeKernel(const cl::Kernel& kernel,
                          const cl::NDRange& offset,
                          const cl::NDRange& global,
                          const cl::NDRange& local = cl::NullRange,
                          const cl::vector<cl::Event>* events = nullptr,
                          cl::Event* event = nullptr
-                         #ifdef INOVESA_ENABLE_CLPROFILING
+                         #if INOVESA_ENABLE_CLPROFILING == 1
                          , cl::vector<cl::Event*>* timings = nullptr
                          #endif // INOVESA_ENABLE_CLPROFILING
                          )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -166,8 +181,8 @@ public:
             timingsExecute.push_back(event);
         } else {
             timings->push_back(event);
-        } // INOVESA_ENABLE_CLPROFILING
-        #endif
+        }
+        #endif // INOVESA_ENABLE_CLPROFILING
         queue.enqueueNDRangeKernel(kernel,offset,global,local,events,event);
 
         enqueueBarrier();
@@ -176,7 +191,7 @@ public:
     /**
      * This wrapper function allows to centrally controll queuing copyBuffer
      */
-    static inline void
+    inline void
     enqueueCopyBuffer(const cl::Buffer& src,
                       const cl::Buffer& dst,
                       cl::size_type src_offset,
@@ -184,12 +199,12 @@ public:
                       cl::size_type size,
                       const cl::vector<cl::Event>* events = nullptr,
                       cl::Event* event = nullptr
-                      #ifdef INOVESA_ENABLE_CLPROFILING
+                      #if INOVESA_ENABLE_CLPROFILING == 1
                       , cl::vector<cl::Event*>* timings = nullptr
                       #endif // INOVESA_ENABLE_CLPROFILING
                       )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -206,7 +221,7 @@ public:
     /**
      * This wrapper function allows to centrally controll queuing readBuffer
      */
-    static inline void
+    inline void
     enqueueReadBuffer(const cl::Buffer& buffer,
                        cl_bool blocking,
                        cl::size_type src_offset,
@@ -214,12 +229,12 @@ public:
                        void* ptr,
                        const cl::vector<cl::Event>* events = nullptr,
                        cl::Event* event = nullptr
-                     #ifdef INOVESA_ENABLE_CLPROFILING
+                     #if INOVESA_ENABLE_CLPROFILING == 1
                      , cl::vector<cl::Event*>* timings = nullptr
                      #endif // INOVESA_ENABLE_CLPROFILING
                      )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -236,7 +251,7 @@ public:
     /**
      * This wrapper function allows to centrally controll queuing writeBuffer
      */
-    static inline void
+    inline void
     enqueueWriteBuffer( const cl::Buffer& buffer
                       , cl_bool blocking
                       , cl::size_type src_offset
@@ -244,12 +259,12 @@ public:
                       , const void* ptr
                       , const cl::vector<cl::Event>* events = nullptr
                       , cl::Event* event = nullptr
-                      #ifdef INOVESA_ENABLE_CLPROFILING
+                      #if INOVESA_ENABLE_CLPROFILING == 1
                       , cl::vector<cl::Event*>* timings = nullptr
                       #endif // INOVESA_ENABLE_CLPROFILING
                       )
     {
-        #ifdef INOVESA_ENABLE_CLPROFILING
+        #if INOVESA_ENABLE_CLPROFILING == 1
         if (event == nullptr) {
             event = new cl::Event();
         }
@@ -263,37 +278,40 @@ public:
                                 events, event);
     }
 
-    static inline void finish()
+    inline void finish()
     {
-        OCLH::queue.finish();
+        queue.finish();
     }
 
-    static inline void flush()
+    inline void flush()
     {
-        OCLH::queue.flush();
+        queue.flush();
     }
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    static void saveTimings(cl::vector<cl::Event *> *evts, std::string name);
+    #if INOVESA_ENABLE_CLPROFILING == 1
+    void saveTimings(cl::vector<cl::Event *> *evts, std::string name);
     #endif // INOVESA_ENABLE_CLPROFILING
 
 private:
-    #ifdef INOVESA_USE_CLFFT
-    static clfftSetupData fft_setup;
+    #if INOVESA_USE_CLFFT == 1
+    clfftSetupData fft_setup;
     #endif // INOVESA_USE_CLFFT
 
-    #ifdef INOVESA_ENABLE_CLPROFILING
-    static cl::vector<cl::Event*> timingsCopy;
-    static cl::vector<cl::Event*> timingsDFT;
-    static cl::vector<cl::Event*> timingsExecute;
-    static cl::vector<cl::Event*> timingsRead;
-    static cl::vector<cl::Event*> timingsWrite;
+    #if INOVESA_ENABLE_CLPROFILING == 1
+    cl::vector<cl::Event*> timingsCopy;
+    cl::vector<cl::Event*> timingsDFT;
+    cl::vector<cl::Event*> timingsExecute;
+    cl::vector<cl::Event*> timingsRead;
+    cl::vector<cl::Event*> timingsWrite;
     #endif // INOVESA_ENABLE_CLPROFILING
 
     static const std::string custom_datatypes;
 
+private: // helper functions
     static std::string datatype_aliases();
+
+    static std::vector<cl_context_properties> properties(cl::Platform& platform,
+                                                         bool glsharing);
 };
 
 #endif // INOVESA_USE_OPENCL
-#endif // OPENCLHANDLER_HPP
