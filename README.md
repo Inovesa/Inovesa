@@ -36,7 +36,7 @@ Details can be found at the corresponding [Inovesa Wiki page](https://github.com
 *   [GLEW](https://www.opengl.org/sdk/libs/GLEW/) (for GUI support)
 *   [GLFW](http://www.glfw.org/) (for GUI support)
 *   [HDF5](https://www.hdfgroup.org/downloads/hdf5/) (to write out data)
-*   [PNG++](http://www.nongnu.org/pngpp/) (for PNG support)
+*   [OpenImageIO](http://www.openimageio.org) (for PNG support)
 *   [OpenCL](https://www.khronos.org/opencl/) (>=1.1, for parallelization)
 *   [clFFT](https://github.com/clMathLibraries/clFFT) (for faster FFT using parallelization)
 
