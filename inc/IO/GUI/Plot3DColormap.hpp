@@ -23,7 +23,8 @@ public:
 
     ~Plot3DColormap() noexcept override;
 
-    void createTexture(std::shared_ptr<PhaseSpace> mesh);
+    void createTexture(const PhaseSpace& mesh,
+                       const meshindex_t bunch=0);
 
     void delTexture();
 
@@ -39,7 +40,7 @@ private:
     GLuint textureID;
     GLuint textureSampler;
 
-    vfps::meshdata_t maxValue;
+    std::vector<vfps::meshdata_t> maxValue;
 
     static constexpr std::array<float,256*3> inferno = {{
                       0.001462f, 0.000466f, 0.013866f,

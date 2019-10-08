@@ -524,10 +524,9 @@ int main(int argc, char** argv)
 
     // find highest peak for display (and information in the log)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-    for (unsigned int x=0; x<ps_bins; x++) {
-        for (unsigned int y=0; y<ps_bins; y++) {
-            maxval = std::max(maxval,(*grid_t1)[0][x][y]);
-        }
+
+    for (vfps::meshindex_t n=0;n<PhaseSpace::nxyb;n++) {
+        maxval = std::max(maxval,grid_t1->getData()[n]);
     }
 
     if (verbose) {
@@ -567,7 +566,7 @@ int main(int argc, char** argv)
         try {
             psv.reset(new Plot3DColormap(maxval));
             display->addElement(psv);
-            psv->createTexture(grid_t1);
+            psv->createTexture(*grid_t1);
             display->draw();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -983,7 +982,7 @@ int main(int argc, char** argv)
             #if INOVESA_USE_OPENGL == 1
             if (display != nullptr) {
                 if (psv != nullptr) {
-                    psv->createTexture(grid_t1);
+                    psv->createTexture(*grid_t1, outstepnr%nbunches);
                 }
                 if (bpv != nullptr && !bpv->getBufferShared()) {
                     bpv->update(grid_t1->getProjection(0).origin());

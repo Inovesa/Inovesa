@@ -10,8 +10,8 @@
 
 vfps::Plot3DColormap::Plot3DColormap(meshdata_t maxvalue)
   : GUIElement(false)
-  , maxValue(maxvalue)
 {
+    maxValue.resize(PhaseSpace::nb, maxvalue);
     // Create GLSL code
     switch (glversion) {
     case 2:
@@ -137,26 +137,29 @@ vfps::Plot3DColormap::~Plot3DColormap() noexcept
 }
 
 
-void vfps::Plot3DColormap::createTexture(std::shared_ptr<vfps::PhaseSpace> mesh)
+void vfps::Plot3DColormap::createTexture(const PhaseSpace& mesh,
+                                         const vfps::meshindex_t bunch)
 {
     glGenTextures (1, &textureID);
-        glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
     glBindTexture(GL_TEXTURE_2D,textureID);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
     size_t npixels = PhaseSpace::nxy;
     float* data = new float[3*npixels];
-    vfps::meshdata_t* meshdata = mesh->getData();
+    auto data_mesh = mesh.getData();
+    auto data_bunch = data_mesh+bunch*npixels;
+    auto norm = maxValue[bunch];
     float newmax=std::numeric_limits<vfps::meshdata_t>::min();
     for (vfps::meshindex_t i=0; i<npixels; i++) {
         // type uint8_t will make shure the indexing (256) works correctly
         uint8_t index = std::min(std::max(0.0f,
-                            static_cast<float>(meshdata[i]/maxValue)),1.0f)*255;
+                            static_cast<float>(data_bunch[i]/norm)),1.0f)*255;
         std::copy_n(&(inferno[3*index]),3,&(data[3*i]));
-        newmax= std::max(newmax,static_cast<float>(meshdata[i]));
-        }
-        maxValue = newmax;
+        newmax= std::max(newmax,static_cast<float>(data_bunch[i]));
+    }
+    maxValue[bunch] = newmax;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
                  PhaseSpace::nx, PhaseSpace::ny,
                  0, GL_RGB, GL_FLOAT, data);
