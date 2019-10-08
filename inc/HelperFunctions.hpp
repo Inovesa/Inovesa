@@ -35,8 +35,8 @@ const std::string inovesa_version(
 bool isOfFileType(std::string ending, std::string fname);
 
 #if INOVESA_USE_PNG == 1
-void saveToImage(std::shared_ptr<vfps::PhaseSpace> ps,
-                 std::string ofname);
+void saveToImage(const PhaseSpace& ps,
+                 const std::string& ofname);
 #endif // INOVESA_USE_PNG
 
 /**

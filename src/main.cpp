@@ -1083,7 +1083,7 @@ int main(int argc, char** argv)
     #endif // INOVESA_USE_HDF5
     #if INOVESA_USE_PNG == 1
     if ( isOfFileType(".png",ofname)) {
-        saveToImage(grid_t1, ofname);
+        saveToImage(*grid_t1, ofname);
     }
     #endif
 

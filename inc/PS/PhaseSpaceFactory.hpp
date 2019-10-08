@@ -53,10 +53,6 @@ std::unique_ptr<PhaseSpace> makePSFromPNG(const std::string& fname
                                          );
 #endif // INOVESA_USE_PNG
 
-
-void saveToImage( const PhaseSpace& ps,
-                  const std::string& ofname);
-
 std::unique_ptr<PhaseSpace> makePSFromTXT( const std::string& fname
                                          , int64_t ps_size
                                          , meshaxis_t qmin, meshaxis_t qmax

@@ -206,36 +206,39 @@ bool vfps::isOfFileType(std::string ending, std::string fname)
 }
 
 #if INOVESA_USE_PNG == 1
-void vfps::saveToImage(std::shared_ptr<PhaseSpace> ps, std::string ofname)
+void vfps::saveToImage( const PhaseSpace& ps,
+                        const std::string& ofname)
 {
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-    meshdata_t* val = ps->getData();
+    auto val = ps.getData();
     for (meshindex_t i=0; i < PhaseSpace::nxyb; i++) {
         maxval = std::max(val[i],maxval);
     }
-    auto png_file = OIIO::ImageOutput::create(ofname);
-    std::vector<uint16_t> png_pixels(PhaseSpace::nxyb);
-    constexpr uint_fast8_t png_channels = 1;
-    OIIO::ImageSpec spec(static_cast<int>(PhaseSpace::nx),
-                         static_cast<int>(PhaseSpace::nb)
-                         *static_cast<int>(PhaseSpace::ny),
-                         png_channels,
-                         OIIO::TypeDesc::UINT16);
-    png_file->open(ofname, spec);
+
+    std::unique_ptr<OIIO::ImageOutput> out(OIIO::ImageOutput::create(ofname));
+
+    constexpr uint_fast8_t channels = 1;
+    OIIO::ImageSpec spec( PhaseSpace::nb*PhaseSpace::nx,
+                          PhaseSpace::ny,
+                          channels,
+                          OIIO::TypeDesc::UINT16);
+
+    std::vector<uint16_t>  pixels(PhaseSpace::nxyb);
 
     for (unsigned int b=0; b<PhaseSpace::nb; b++) {
         for (unsigned int x=0; x<PhaseSpace::nx; x++) {
             for (unsigned int y=0; y<PhaseSpace::ny; y++) {
-                png_pixels[ b*PhaseSpace::nxy
-                          + (PhaseSpace::nx-y-1)*PhaseSpace::ny
-                          + x ]
-                        = static_cast<uint16_t>(
-                            std::max((*ps)[b][x][y], static_cast<meshdata_t>(0))
-                            /maxval*static_cast<float>(UINT16_MAX));
+                pixels[ PhaseSpace::nx*b
+                        + PhaseSpace::nb*PhaseSpace::nx*(PhaseSpace::ny-1-y)
+                        + x ]=
+                        static_cast<uint16_t>(
+                            std::max(ps[b][x][y], static_cast<meshdata_t>(0))
+                            /maxval*std::numeric_limits<uint16_t>::max());
             }
         }
     }
-
-    png_file->write_image(OIIO::TypeDesc::UINT16, png_pixels.data());
+    out->open(ofname, spec);
+    out->write_image(OIIO::TypeDesc::UINT16, pixels.data());
+    out->close();
 }
 #endif // INOVESA_USE_PNG

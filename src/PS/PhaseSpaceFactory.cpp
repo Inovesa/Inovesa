@@ -176,36 +176,3 @@ vfps::makePSFromTXT( const std::string& fname
     #endif // INOVESA_USE_OPENCL
     return ps;
 }
-
-#if INOVESA_USE_PNG == 1
-void vfps::saveToImage( const PhaseSpace& ps,
-                        const std::string& ofname)
-{
-    meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-    auto val = ps.getData();
-    for (meshindex_t i=0; i < PhaseSpace::nxy; i++) {
-        maxval = std::max(val[i],maxval);
-    }
-
-    std::unique_ptr<OIIO::ImageOutput> out(OIIO::ImageOutput::create(ofname));
-
-    constexpr uint_fast8_t channels = 1;
-    OIIO::ImageSpec spec( PhaseSpace::nx, PhaseSpace::ny,
-                          channels, OIIO::TypeDesc::UINT16);
-    
-    std::vector<uint16_t>  pixels(PhaseSpace::nxy);
-    
-    for (unsigned int x=0; x<PhaseSpace::nx; x++) {
-        for (unsigned int y=0; y<PhaseSpace::ny; y++) {
-            pixels[(PhaseSpace::ny-y-1)*PhaseSpace::nx+x]=
-                    static_cast<uint16_t>(
-                        std::max(ps[0][x][y], static_cast<meshdata_t>(0))
-                        /maxval*std::numeric_limits<uint16_t>::max());
-        }
-    }
-    out->open(ofname, spec);
-    out->write_image(OIIO::TypeDesc::UINT16, pixels.data());
-    out->close();
-}
-#endif // INOVESA_USE_PNG
-

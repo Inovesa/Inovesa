@@ -10,6 +10,7 @@
 #define INOVESA_ALLOW_PS_RESET 1
 
 #include "defines.hpp"
+#include "HelperFunctions.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/PhaseSpaceFactory.hpp"
 
