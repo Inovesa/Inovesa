@@ -35,23 +35,6 @@ const std::string inovesa_version(
 bool isOfFileType(std::string ending, std::string fname);
 
 /**
- * @brief saveToImage saves phase spaces to image
- * @param ps phasespace to be saved
- * @param ofname name to save data to (file ending defines type)
- *
- * Known file types are:
- * - PNG
- *
- * Data is saved 1:1 grid-point to pixel,
- * while the horizontal dimension gives space
- * and energy is aligned vertically.
- * Multi-bunch configurations will be saved side by side
- * in the space dimensions without any separation.
- */
-void saveToImage(const PhaseSpace& ps,
-                 const std::string& ofname);
-
-/**
  * @brief localtime threading-save wrapper for std::localtime
  * @param time time stamp to convert
  * @return struct holdig calendar date and time
