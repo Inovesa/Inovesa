@@ -218,7 +218,7 @@ private: // program parameters
 
     bool _savesourcemap;
 
-    bool _showphasespace;
+    uint32_t _showphasespace;
 
     std::string _startdistfile;
 

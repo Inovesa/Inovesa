@@ -143,7 +143,7 @@ vfps::ProgramOptions::ProgramOptions() :
              &_glversion)->default_value(2),
             "Force OpenGL version")
         ("gui,g", po::value<decltype(_showphasespace)>(
-             &_showphasespace)->default_value(false),
+             &_showphasespace)->default_value(0),
             "Show phase space view")
         ("output,o",
             po::value<decltype(_outfile)>(

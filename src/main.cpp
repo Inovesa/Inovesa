@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 	&& cldev >= 0
         #endif // INOVESA_USE_OPENCL
         #if INOVESA_USE_OPENGL == 1
-        && !opts.showPhaseSpace()
+        && opts.showPhaseSpace() > 0
         #endif // INOVESA_USE_OPENGL
        ) {
         std::cout << "Nothing to do. Set at least one of "
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     #if INOVESA_USE_OPENGL == 1
     try {
         display = make_display( ofname
-                              , opts.showPhaseSpace()
+                              , opts.showPhaseSpace() > 0
                               , opts.getOpenGLVersion()
                               );
     } catch (DisplayException& e) {
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
         try {
             oclh = std::make_shared<OCLH>( opts.getCLDevice()-1
                                          #if INOVESA_USE_OPENGL == 1
-                                         , opts.showPhaseSpace()
+                                         , opts.showPhaseSpace() > 0
                                          #endif // INOVESA_USE_OPENGL
                                          );
         } catch (cl::Error& e) {
@@ -257,6 +257,8 @@ int main(int argc, char** argv)
 
     // number of total buckets (including in the simulation empty ones)
     const uint32_t nbunches = bunches.size();
+
+    auto const phasespace2show = (opts.showPhaseSpace()-1u) % nbunches;
 
     // accumulated beam current
     const double Ib = std::accumulate(bunches.begin(),bunches.end(),0.0);
@@ -982,16 +984,17 @@ int main(int argc, char** argv)
             #if INOVESA_USE_OPENGL == 1
             if (display != nullptr) {
                 if (psv != nullptr) {
-                    psv->createTexture(*grid_t1, outstepnr%nbunches);
+                    psv->createTexture(*grid_t1, phasespace2show);
                 }
                 if (bpv != nullptr && !bpv->getBufferShared()) {
-                    bpv->update(grid_t1->getProjection(0).origin());
+                    bpv->update(grid_t1->getProjection(
+                                    0, phasespace2show).origin());
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
                 }
                 if (wpv != nullptr && !wpv->getBufferShared()) {
-                    wpv->update(wkm->getForce());
+                    wpv->update(wkm->getForce()+phasespace2show*PhaseSpace::nx);
                 }
                 if (history != nullptr) {
                     #if INOVESA_USE_HDF5 == 1
@@ -1009,8 +1012,12 @@ int main(int argc, char** argv)
                 }
             }
             #endif // INOVESSA_USE_GUI
-            Display::printText(status_string(grid_t1,static_cast<float>(simulationstep)/steps,
-                               rotations),false,updatetime);
+            Display::printText(
+                        status_string(grid_t1,
+                                      static_cast<float>(simulationstep)
+                                      / static_cast<float>(steps),
+                                      rotations),
+                        false,updatetime);
         }
         wm->apply();
         wm->applyToAll(trackme);
