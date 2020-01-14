@@ -140,7 +140,7 @@ void vfps::RotationMap::apply()
                     meshindex_t i = q_i*_ysize+p_i;
                     data_out[i] = 0;
                     genHInfo(q_i,p_i,&(_hinfo[0]));
-                    for (uint_fast8_t j=0; j<_ip; j++) {
+                    for (decltype(_ip) j=0; j<_ip; j++) {
                         hi h = _hinfo[j];
                         data_out[i] += data_in[h.index]
                                     * static_cast<meshdata_t>(h.weight);
@@ -150,7 +150,7 @@ void vfps::RotationMap::apply()
         } else {
             for (meshindex_t i=0; i< _rotmapsize; i++) {
                 data_out[i] = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
+                for (decltype(_ip) j=0; j<_ip; j++) {
                     hi h = _hinfo[i*_ip+j];
                     data_out[i] += data_in[h.index]
                                 * static_cast<meshdata_t>(h.weight);
@@ -252,7 +252,7 @@ void vfps::RotationMap::genHInfo(vfps::meshindex_t x0,
             }
         }
     } else {
-        for (uint_fast8_t i=0; i<_ip; i++) {
+        for (decltype(_ip) i=0; i<_ip; i++) {
             myhinfo[i] = {0,0};
         }
     }

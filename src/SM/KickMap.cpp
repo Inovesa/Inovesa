@@ -222,7 +222,7 @@ void vfps::KickMap::apply()
             for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
                 for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
                     meshdata_t value = 0;
-                    for (uint_fast8_t j=0; j<_ip; j++) {
+                    for (decltype(_ip) j=0; j<_ip; j++) {
                         hi h = _hinfo[y*_ip+j];
                         // the min makes sure not to have out of bounds accesses
                         // casting is to be sure about overflow behaviour
@@ -246,7 +246,7 @@ void vfps::KickMap::apply()
                 const meshindex_t offs = offs1 + x*_meshsize_kd;
                 for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
                     meshdata_t value = 0;
-                    for (uint_fast8_t j=0; j<_ip; j++) {
+                    for (decltype(_ip) j=0; j<_ip; j++) {
                         hi h = _hinfo[offs2+x*_ip+j];
                         // the min makes sure not to have out of bounds accesses
                         // casting is to be sure about overflow behaviour
