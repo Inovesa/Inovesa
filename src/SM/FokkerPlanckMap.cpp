@@ -4,6 +4,8 @@
  * Copyright (c) Karlsruhe Institute of Technology
  */
 
+#include <type_traits>
+
 #include "SM/FokkerPlanckMap.hpp"
 
 vfps::FokkerPlanckMap::FokkerPlanckMap( std::shared_ptr<PhaseSpace> in
@@ -198,7 +200,7 @@ void vfps::FokkerPlanckMap::apply()
                 const meshindex_t offs = offs1+x*_ysize;
                 for (meshindex_t y=0; y< _ysize; y++) {
                     meshdata_t value = 0;
-                    for (uint_fast8_t j=0; j<_ip; j++) {
+                    for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
                         hi h = _hinfo[y*_ip+j];
                         value += data_in[offs+h.index]
                                          *  static_cast<meshdata_t>(h.weight);
@@ -221,7 +223,7 @@ void vfps::FokkerPlanckMap::applyTo(PhaseSpace::Position &pos) const
                                  , _ysize);
         interpol_t offset = 0;
 
-        for (uint_fast8_t j=0; j<_ip; j++) {
+        for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
             hi h = _hinfo[yi*_ip+j];
             interpol_t dy = static_cast<interpol_t>(yi)
                           - static_cast<interpol_t>(h.index);
@@ -246,7 +248,7 @@ void vfps::FokkerPlanckMap::applyTo(PhaseSpace::Position &pos) const
         interpol_t offset = 0;
         meshdata_t charge = 0;
 
-        for (uint_fast8_t j=0; j<_ip; j++) {
+        for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
             hi h = _hinfo[yi*_ip+j];
             charge += data_in[offs+h.index]*h.weight;
             offset += data_in[offs+h.index]*h.weight
