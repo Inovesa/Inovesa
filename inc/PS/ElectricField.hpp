@@ -40,7 +40,13 @@ public:
      *        (As being part of fourier transform,
      *         delta t and delta f will be automatically taken into account.)
      *
-     * Use other constructors when you want to use wake function or potential.
+     * This minimal ElectricField only gives radiation,
+     * use other constructors when you want to use wake function or potential.
+     *
+     * @todo Having objects of one class that behave differently
+     *       based on the chosen constructor is suboptimal.
+     *       Either, there should be two (sub-) classes or
+     *       this constructor should be deleted.
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
@@ -54,21 +60,25 @@ public:
     /**
      * @brief ElectricField constructor for use of wake potential
      * @param phasespace this electric field is assigned to
-     * @param impedance to use for electric field calculation
-     * @param Ib bunch current [A]
-     * @param E0 beam energy [eV]
-     * @param sigmaE normalized energy spread [1]
-     * @param dt time step [s]
+     * @param impedance to use for electric field calculation \f$Z(f)\f$
+     * @param Ib bunch current \f$I_b\f$ [A]
+     * @param E0 beam energy \f$E_0\f$ [eV]
+     * @param sigmaE normalized energy spread \f$\sigma_E\f$ [1]
+     * @param dt time step \f$\Delta t\f$ [s]
      *
-     * @todo: check whether impedance's frequencies match
+     * @todo add a check whether impedance's frequencies match
+     *       the ones assumed here
      *
      * Internally all physical quantities are used to calculate
      * the wakescalining for ElectricField(PhaseSpace*,Impedance*,meshaxis_t).
      * We have factors of:
-     *   Q_b = Ib/f0 (wake potential is calculated for normalized charge)
-     *   dt*f0 (fraction of one revolution, impedance is for one revolution)
-     *   c/ps->getScale(0) (charge/sigma_z -> current)
-     *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
+     *  - \f$ Q_b = I_b/f_0\f$
+     *    (wake potential is calculated for normalized charge)
+     *  - \f$ \Delta t*f_0 \f$
+     *    fraction of one revolution, as impedance is given for one revolution
+     *  - \f$ c/\sigma_{z,0}\f$ to get current from charge density
+     *  - \f$ (\Delta E*\sigma_E*E_0)^{-1}\f$ to get grid points from
+     *    energy in eV
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
