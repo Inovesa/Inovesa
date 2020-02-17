@@ -233,7 +233,8 @@ vfps::ElectricField::~ElectricField() noexcept
     }
 }
 
-const vfps::csrpower_t *vfps::ElectricField::updateCSR(const frequency_t cutoff)
+const vfps::csrpower_t*
+vfps::ElectricField::updateCSR( const frequency_t cutoff_frequency)
 {
     #if INOVESA_USE_CLFFT == 1
     if (_oclh) {
@@ -268,8 +269,10 @@ const vfps::csrpower_t *vfps::ElectricField::updateCSR(const frequency_t cutoff)
 
         for (unsigned int i=0; i<_nmax; i++) {
             frequency_t renorm(_formfactorrenorm);
-            if (cutoff > 0) {
-                renorm *= (1-std::exp(-std::pow((_axis_freq.scale("Hertz")*_axis_freq[i]/cutoff),2)));
+            if (cutoff_frequency > 0) {
+                renorm *= (1-std::exp(-std::pow((_axis_freq.scale("Hertz")
+                                                 *_axis_freq[i]
+                                                 /cutoff_frequency), 2)));
             }
 
             // norm = squared magnitude

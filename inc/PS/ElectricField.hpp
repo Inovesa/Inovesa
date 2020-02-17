@@ -61,10 +61,10 @@ public:
      * @brief ElectricField constructor for use of wake potential
      * @param phasespace this electric field is assigned to
      * @param impedance to use for electric field calculation \f$Z(f)\f$
-     * @param Ib bunch current \f$I_b\f$ [A]
-     * @param E0 beam energy \f$E_0\f$ [eV]
-     * @param sigmaE normalized energy spread \f$\sigma_E\f$ [1]
-     * @param dt time step \f$\Delta t\f$ [s]
+     * @param Ib bunch current \f$I_b\f$ in A
+     * @param E0 beam energy \f$E_0\f$ in eV
+     * @param sigma_delta normalized energy spread \f$\sigma_\delta\f$
+     * @param dt time step \f$\Delta t\f$ in s
      *
      * @todo add a check whether impedance's frequencies match
      *       the ones assumed here
@@ -74,11 +74,11 @@ public:
      * We have factors of:
      *  - \f$ Q_b = I_b/f_0\f$
      *    (wake potential is calculated for normalized charge)
-     *  - \f$ \Delta t*f_0 \f$
+     *  - \f$ \Delta t \times f_0 \f$
      *    fraction of one revolution, as impedance is given for one revolution
      *  - \f$ c/\sigma_{z,0}\f$ to get current from charge density
-     *  - \f$ (\Delta E*\sigma_E*E_0)^{-1}\f$ to get grid points from
-     *    energy in eV
+     *  - \f$ (\Delta E \times \sigma_\delta \times E_0)^{-1}\f$
+     *    to get grid points from energy in eV
      */
     ElectricField( std::shared_ptr<PhaseSpace> ps
                  , std::shared_ptr<Impedance> impedance
@@ -88,7 +88,7 @@ public:
                  , const double f_rev
                  , const double revolutionpart
                  , const double Ib, const double E0
-                 , const double sigmaE, const double dt
+                 , const double sigma_delta, const double dt
                  );
 
     ~ElectricField() noexcept;
@@ -116,14 +116,17 @@ public:
 
     /**
      * @brief updateCSR
-     * @param cutoff
-     * @return CSR spectrum (getNMax() points)
+     * @param cutoff_frequency \f$f_c\f$ in Hz
+     * @return CSR spectrum \f$P(f)\f$ (getNMax() points)
      *
      * @todo: Use OpenCL for power calculation
      *
      * relies on an up-t date PhaseSpace::_projection[0]
+     *
+     * \f$ P(f) = \Delta f \times \frac{1-\exp[{(f/f_c)^2]}}{(\Delta q)^2}
+     * \times \Re[Z(f)]\times |\tilde{\varrho}|^2 \f$
      */
-    const csrpower_t* updateCSR(const frequency_t cutoff);
+    const csrpower_t* updateCSR(const frequency_t cutoff_frequency);
 
     const std::vector<uint32_t> &getBuckets() const
         { return _bucket; }
