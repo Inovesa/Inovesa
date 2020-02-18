@@ -100,109 +100,6 @@ vfps::ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps
     }
 }
 
-vfps::ElectricField::ElectricField( std::shared_ptr<PhaseSpace> ps
-                                  , const std::shared_ptr<Impedance> impedance
-                                  , const std::vector<uint32_t> &bucketnumber
-                                  , const meshindex_t spacing_bins
-                                  , oclhptr_t oclh
-                                  , const double f_rev
-                                  , const double revolutionpart
-                                  , const double Ib, const double E0
-                                  , const double sigmaE, const double dt
-                                  )
-  : ElectricField( ps,impedance
-                 , bucketnumber, spacing_bins
-                 , oclh
-                 , f_rev,revolutionpart
-                 , Ib*dt*physcons::c/ps->getScale(0,"Meter")/(ps->getDelta(1)*sigmaE*E0)
-                 )
-{
-    #if INOVESA_USE_OPENCL == 1
-    if (_oclh) {
-        #if INOVESA_USE_OPENGL == 1
-        if (_oclh->OpenGLSharing()) {
-            glGenBuffers(1, &wakepotential_glbuf);
-            glBindBuffer(GL_ARRAY_BUFFER,wakepotential_glbuf);
-            glBufferData( GL_ARRAY_BUFFER,
-                          PhaseSpace::nx*sizeof(decltype(_wakepotential)::value_type)
-                        , 0, GL_DYNAMIC_DRAW);
-            wakepotential_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
-                                             , wakepotential_glbuf);
-        } else
-        #endif // INOVESA_USE_OPENGL
-        {
-            wakepotential_clbuf = cl::Buffer(
-                        _oclh->context, CL_MEM_READ_WRITE,
-                        sizeof(decltype(_wakepotential)::value_type)*PhaseSpace::nx);
-        }
-    #ifndef INOVESA_USE_CLFFT
-    }
-    #else // defined INOVESA_USE_CLFFT
-        _wakelosses = new impedance_t[_nmax];
-
-        // second half is initialized because it is not touched elsewhere
-        std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
-
-
-        _wakelosses_buf = cl::Buffer(_oclh->context, CL_MEM_READ_WRITE,
-                                     sizeof(impedance_t)*_nmax);
-        _wakepotential_padded = new meshaxis_t[_nmax];
-        _wakepotential_padded_buf = cl::Buffer(_oclh->context,CL_MEM_READ_WRITE,
-                                        sizeof(*_wakepotential_padded)*_nmax);
-        const size_t nmax = _nmax;
-        clfftCreateDefaultPlan(&_clfft_wakelosses,
-                               _oclh->context(),CLFFT_1D,&nmax);
-        clfftSetPlanPrecision(_clfft_wakelosses,CLFFT_SINGLE);
-        clfftSetLayout(_clfft_wakelosses,
-                       CLFFT_HERMITIAN_INTERLEAVED, CLFFT_REAL);
-        clfftSetResultLocation(_clfft_wakelosses, CLFFT_OUTOFPLACE);
-        _oclh->bakeClfftPlan(_clfft_wakelosses);
-
-        std::string cl_code_wakelosses = R"(
-            __kernel void wakeloss(__global impedance_t* wakelosses,
-                                   const __global impedance_t* impedance,
-                                   const __global impedance_t* formfactor)
-            {
-                const uint n = get_global_id(0);
-                wakelosses[n] = cmult(impedance[n],formfactor[n]);
-            }
-            )";
-
-        _clProgWakelosses = _oclh->prepareCLProg(cl_code_wakelosses);
-        _clKernWakelosses = cl::Kernel(_clProgWakelosses, "wakeloss");
-        _clKernWakelosses.setArg(0, _wakelosses_buf);
-        _clKernWakelosses.setArg(1, _impedance->data_buf);
-        _clKernWakelosses.setArg(2, _formfactor_buf);
-
-        std::string cl_code_wakepotential = R"(
-            __kernel void scalewp(__global data_t* wakepot,
-                                  const data_t scaling,
-                                  const __global data_t* wakepot_padded)
-            {
-                const uint g = get_global_id(0);
-                wakepot[g] = scaling*wakepot_padded[g];
-            }
-            )";
-
-        _clProgScaleWP = _oclh->prepareCLProg(cl_code_wakepotential);
-        _clKernScaleWP = cl::Kernel(_clProgScaleWP, "scalewp");
-        _clKernScaleWP.setArg(0, wakepotential_clbuf);
-        _clKernScaleWP.setArg(1, _wakescaling);
-        _clKernScaleWP.setArg(2, _wakepotential_padded_buf);
-    } else
-    #endif // INOVESA_USE_CLFFT
-    #endif // INOVESA_USE_OPENCL
-    {
-        _wakelosses_fft = fft::fft_alloc_complex(_nmax);
-        _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
-
-        _wakepotential_padded = fft::fft_alloc_real(_nmax);
-
-        _fft_wakelosses = fft::prepareFFT(_nmax,_wakelosses,
-                                     _wakepotential_padded);
-    }
-}
-
 vfps::ElectricField::~ElectricField() noexcept
 {
     delete [] _wakefunction;
@@ -362,6 +259,94 @@ void vfps::ElectricField::padBunchProfiles()
         std::copy_n( bp.origin()+b*PhaseSpace::nx
                    , PhaseSpace::nx
                    , _bp_padded+_bucket[b]*_spacing_bins);
+    }
+}
+
+void vfps::ElectricField::_initWakeLossFFT()
+{
+    #if INOVESA_USE_OPENCL == 1
+    if (_oclh) {
+        #if INOVESA_USE_OPENGL == 1
+        if (_oclh->OpenGLSharing()) {
+            glGenBuffers(1, &wakepotential_glbuf);
+            glBindBuffer(GL_ARRAY_BUFFER,wakepotential_glbuf);
+            glBufferData( GL_ARRAY_BUFFER,
+                          PhaseSpace::nx*sizeof(decltype(_wakepotential)::value_type)
+                        , 0, GL_DYNAMIC_DRAW);
+            wakepotential_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
+                                             , wakepotential_glbuf);
+        } else
+        #endif // INOVESA_USE_OPENGL
+        {
+            wakepotential_clbuf = cl::Buffer(
+                        _oclh->context, CL_MEM_READ_WRITE,
+                        sizeof(decltype(_wakepotential)::value_type)*PhaseSpace::nx);
+        }
+    #ifndef INOVESA_USE_CLFFT
+    }
+    #else // defined INOVESA_USE_CLFFT
+        _wakelosses = new impedance_t[_nmax];
+
+        // second half is initialized because it is not touched elsewhere
+        std::fill_n(_wakelosses+_nmax/2,_nmax/2,0);
+
+
+        _wakelosses_buf = cl::Buffer(_oclh->context, CL_MEM_READ_WRITE,
+                                     sizeof(impedance_t)*_nmax);
+        _wakepotential_padded = new meshaxis_t[_nmax];
+        _wakepotential_padded_buf = cl::Buffer(_oclh->context,CL_MEM_READ_WRITE,
+                                        sizeof(*_wakepotential_padded)*_nmax);
+        const size_t nmax = _nmax;
+        clfftCreateDefaultPlan(&_clfft_wakelosses,
+                               _oclh->context(),CLFFT_1D,&nmax);
+        clfftSetPlanPrecision(_clfft_wakelosses,CLFFT_SINGLE);
+        clfftSetLayout(_clfft_wakelosses,
+                       CLFFT_HERMITIAN_INTERLEAVED, CLFFT_REAL);
+        clfftSetResultLocation(_clfft_wakelosses, CLFFT_OUTOFPLACE);
+        _oclh->bakeClfftPlan(_clfft_wakelosses);
+
+        std::string cl_code_wakelosses = R"(
+            __kernel void wakeloss(__global impedance_t* wakelosses,
+                                   const __global impedance_t* impedance,
+                                   const __global impedance_t* formfactor)
+            {
+                const uint n = get_global_id(0);
+                wakelosses[n] = cmult(impedance[n],formfactor[n]);
+            }
+            )";
+
+        _clProgWakelosses = _oclh->prepareCLProg(cl_code_wakelosses);
+        _clKernWakelosses = cl::Kernel(_clProgWakelosses, "wakeloss");
+        _clKernWakelosses.setArg(0, _wakelosses_buf);
+        _clKernWakelosses.setArg(1, _impedance->data_buf);
+        _clKernWakelosses.setArg(2, _formfactor_buf);
+
+        std::string cl_code_wakepotential = R"(
+            __kernel void scalewp(__global data_t* wakepot,
+                                  const data_t scaling,
+                                  const __global data_t* wakepot_padded)
+            {
+                const uint g = get_global_id(0);
+                wakepot[g] = scaling*wakepot_padded[g];
+            }
+            )";
+
+        _clProgScaleWP = _oclh->prepareCLProg(cl_code_wakepotential);
+        _clKernScaleWP = cl::Kernel(_clProgScaleWP, "scalewp");
+        _clKernScaleWP.setArg(0, wakepotential_clbuf);
+        _clKernScaleWP.setArg(1, _wakescaling);
+        _clKernScaleWP.setArg(2, _wakepotential_padded_buf);
+    } else
+    #endif // INOVESA_USE_CLFFT
+    #endif // INOVESA_USE_OPENCL
+    {
+        _wakelosses_fft = fft::fft_alloc_complex(_nmax);
+        _wakelosses=reinterpret_cast<impedance_t*>(_wakelosses_fft);
+
+        _wakepotential_padded = fft::fft_alloc_real(_nmax);
+
+        _fft_wakelosses = fft::prepareFFT(_nmax,_wakelosses,
+                                     _wakepotential_padded);
     }
 }
 

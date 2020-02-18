@@ -40,13 +40,11 @@ public:
      *        (As being part of fourier transform,
      *         delta t and delta f will be automatically taken into account.)
      *
-     * This minimal ElectricField only gives radiation,
-     * use other constructors when you want to use wake function or potential.
+     * This constructor leaves wakelosses and wakepotential anallocated,
+     * use other constructor when you want to use wake function or potential.
      *
-     * @todo Having objects of one class that behave differently
-     *       based on the chosen constructor is suboptimal.
-     *       Either, there should be two (sub-) classes or
-     *       this constructor should be deleted.
+     * @todo add a check whether impedance's frequencies match
+     *       the ones assumed here
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
@@ -59,18 +57,18 @@ public:
 
     /**
      * @brief ElectricField constructor for use of wake potential
-     * @param phasespace this electric field is assigned to
-     * @param impedance to use for electric field calculation \f$Z(f)\f$
+     * @param ps phasespace this electric field is assigned to
+     * @param impedance to use for electric field calculation \f$Z(f_n)\f$
      * @param Ib bunch current \f$I_b\f$ in A
      * @param E0 beam energy \f$E_0\f$ in eV
      * @param sigma_delta normalized energy spread \f$\sigma_\delta\f$
      * @param dt time step \f$\Delta t\f$ in s
      *
-     * @todo add a check whether impedance's frequencies match
-     *       the ones assumed here
-     *
      * Internally all physical quantities are used to calculate
-     * the wakescalining for ElectricField(PhaseSpace*,Impedance*,meshaxis_t).
+     * the wakescalining for
+     * ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,const std::shared_ptr<Impedance> impedance,const std::vector<uint32_t> &bucketnumbers,const meshindex_t spacing_bins,oclhptr_t oclh,const double f_rev,const meshaxis_t revolutionpart,const meshaxis_t wakescalining)
+     * and initialized wake potential calculation.
+     *
      * We have factors of:
      *  - \f$ Q_b = I_b/f_0\f$
      *    (wake potential is calculated for normalized charge)
@@ -80,16 +78,29 @@ public:
      *  - \f$ (\Delta E \times \sigma_\delta \times E_0)^{-1}\f$
      *    to get grid points from energy in eV
      */
-    ElectricField( std::shared_ptr<PhaseSpace> ps
-                 , std::shared_ptr<Impedance> impedance
-                 , const std::vector<uint32_t> &bucketnumber
-                 , const meshindex_t spacing_bins
-                 , oclhptr_t oclh
-                 , const double f_rev
-                 , const double revolutionpart
-                 , const double Ib, const double E0
-                 , const double sigma_delta, const double dt
-                 );
+    ElectricField( std::shared_ptr<PhaseSpace> ps,
+                   std::shared_ptr<Impedance> impedance,
+                   const std::vector<uint32_t> &bucketnumber,
+                   const meshindex_t spacing_bins,
+                   oclhptr_t oclh,
+                   const double f_rev,
+                   const meshaxis_t revolutionpart,
+                   const double Ib,
+                   const double E0,
+                   const double sigma_delta,
+                   const double dt )
+        : ElectricField( ps,
+                         impedance,
+                         bucketnumber,
+                         spacing_bins,
+                         oclh,
+                         f_rev,
+                         revolutionpart,
+                         Ib*dt*physcons::c/ps->getScale(0,"Meter")
+                            /(ps->getDelta(1)*sigma_delta*E0))
+    {
+        _initWakeLossFFT();
+    }
 
     ~ElectricField() noexcept;
 
@@ -285,6 +296,8 @@ private:
     #endif // INOVESA_USE_CLFFT
 
     const meshdata_t _wakescaling;
+
+    void _initWakeLossFFT();
 
 public:
     /**
