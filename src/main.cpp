@@ -54,9 +54,8 @@ using namespace vfps;
  * \ref md_README.
  *
  * Result files are described at
- * * \ref ResultFormatPNG
- * * \ref ResultFormatHDF5
- *
+ * -   vfps::saveToImage()
+ * -   vfps::HDF5File
  */
 
 /**

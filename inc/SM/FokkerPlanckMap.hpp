@@ -16,7 +16,7 @@ namespace vfps
 /**
  * @brief The FokkerPlanckMap class
  *
- * Heritage information for the FokkerPlanckMap is one dimensional
+ * Source information for the FokkerPlanckMap is one dimensional
  *
  * @todo Padding for faster memory access
  */

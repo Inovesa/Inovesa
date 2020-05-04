@@ -15,8 +15,8 @@
 
 #include "PS/PhaseSpace.hpp"
 
-/** \file
- *  \brief Definitions of helper functions
+/** @file
+ *  @brief Definitions of helper functions
  */
 
 namespace vfps
@@ -40,7 +40,7 @@ bool isOfFileType(std::string ending, std::string fname);
  * @param ofname name to save data to (file ending defines type)
  *
  * Known file types are:
- * -   PNG: \anchor ResultFormatPNG
+ * -   PNG:
  *     In the resulting PNG,
  *     the horizontal dimension gives space (head is to the left),
  *     vertical displacements mean different energies
