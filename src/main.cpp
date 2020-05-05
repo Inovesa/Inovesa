@@ -56,6 +56,7 @@ using namespace vfps;
  * Result files are described at
  * -   vfps::saveToImage()
  * -   vfps::HDF5File
+ * -   vfps::Display::printText() for basic information on the logfile.
  */
 
 /**
