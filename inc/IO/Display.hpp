@@ -123,11 +123,15 @@ public:
     void draw();
 
     /**
-     * @brief printText to stdout and logfile
+     * @brief prints a timestamp followed by a text to both,
+     *        stdout and logfile (if present)
      *
-     * @param txt
-     * @param newline
-     * @param silentTime skip if last printout was less then silentTime s ago
+     * @param txt text to print
+     * @param newline Start new line after printing (true) or print next text on top (false)?
+     *        This is just for printing and has no effect for the logfile.
+     * @param silentTime skip if last printout was less then silentTime seconds ago.
+     *
+     * The timestamp is designed to be in seconds after program start.
      *
      * @todo replace by << operator
      */
