@@ -1,5 +1,5 @@
-Inovesa
-=======
+Inovesa Quick Start
+===================
 Inovesa (Inovesa Numerical Optimized Vlasov Equation Solver Application) is
 a tool developed to simulate the dynamics of an electron bunch in a storage
 ring, including the self-interaction with its own wake field.

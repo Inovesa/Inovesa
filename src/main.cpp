@@ -47,6 +47,18 @@ using namespace vfps;
  * @brief main Inovesa file
  */
 
+/** \mainpage Inovesa Documentation
+ *
+ * Installation hints and references to papers describing concepts
+ * and mathematical background can be found in
+ * \ref md_README.
+ *
+ * Result files are described at
+ * -   vfps::saveToImage()
+ * -   vfps::HDF5File
+ * -   vfps::Display::printText() for basic information on the logfile.
+ */
+
 /**
  * @brief main
  * @param argc

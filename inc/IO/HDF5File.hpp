@@ -19,8 +19,32 @@
 #include "PS/PhaseSpace.hpp"
 #include "SM/WakeKickMap.hpp"
 
+/** @file
+ *  @brief HDF5 result file class definition
+ */
+
 namespace vfps {
 
+    /**
+     * @anchor ResultFormatHDF5
+     *
+     * @brief  HDF5 result file as it is written to disk
+     *
+     * The file is created on construction.
+     * Constant data is already added on construction.
+     * All data that might change during simulation is added later,
+     * the file is (only) prepared so that it can be appended.
+     *
+     * There are axis (named <em>/Infos/AxisValues_...</em>)
+     * and datasets containing the actual data (named <em>.../data</em>).
+     * The latter have links to the corrsponding axis next to them,
+     * that hold information on the dimension of the dataset.
+     *
+     * To avoid slowing down computation, data is saved as a binary copy.
+     * This leaves normalization, units and dimensions untouched.
+     * Conversion to physical units is facilitated by conversion factors,
+     * that are given as attributes to the data frames.
+     */
 class HDF5File
 {
 public:
@@ -33,6 +57,7 @@ public:
      * @param wfm wake
      * @param nparticles
      * @param t_sync
+     * @param f_rev
      */
     HDF5File(const std::string& filename,
              const std::shared_ptr<PhaseSpace> ps,

@@ -15,8 +15,8 @@
 
 #include "PS/PhaseSpace.hpp"
 
-/** \file
- *  \brief Definitions of helper functions
+/** @file
+ *  @brief Definitions of helper functions
  */
 
 namespace vfps
@@ -40,13 +40,15 @@ bool isOfFileType(std::string ending, std::string fname);
  * @param ofname name to save data to (file ending defines type)
  *
  * Known file types are:
- * - PNG
- *
- * Data is saved 1:1 grid-point to pixel,
- * while the horizontal dimension gives space
- * and energy is aligned vertically.
- * Multi-bunch configurations will be saved side by side
- * in the space dimensions without any separation.
+ * -   PNG:
+ *     In the resulting PNG,
+ *     the horizontal dimension gives space (head is to the left),
+ *     vertical displacements mean different energies
+ *     (higher energies to the top).
+ *     Multi-bunch configurations will be saved side by side
+ *     in the space dimensions without any separation.
+ *     The values are normalized so that the highest charge
+ *     density is displayed white.
  */
 void saveToImage(const PhaseSpace& ps,
                  const std::string& ofname);
