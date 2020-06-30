@@ -255,13 +255,6 @@ ENDIF()
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 INSTALL(TARGETS inovesa RUNTIME DESTINATION bin)
-foreach(size 64 128 256)
-  install(FILES misc/inovesa-logo_${size}.png
-      DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${size}x${size}/apps"
-      RENAME inovesa.png)
-endforeach()
-install(FILES misc/inovesa.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
-
 
 find_package(Boost COMPONENTS unit_test_framework ${QUIET})
 IF(Boost_UNIT_TEST_FRAMEWORK_FOUND)
