@@ -262,34 +262,38 @@ foreach(size 64 128 256)
 endforeach()
 install(FILES misc/inovesa.desktop DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
 
-#Setup CMake to run tests
-enable_testing()
 
-#Prep ourselves for compiling boost
-find_package(Boost COMPONENTS unit_test_framework REQUIRED ${QUIET})
-include_directories (${Boost_INCLUDE_DIRS})
+find_package(Boost COMPONENTS unit_test_framework ${QUIET})
+IF(Boost_UNIT_TEST_FRAMEWORK_FOUND)
 
-#I like to keep test files in a separate source directory called test
-file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
+    #Setup CMake to run tests
+    enable_testing()
+    include_directories (${Boost_INCLUDE_DIRS})
+
+    #I like to keep test files in a separate source directory called test
+    file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} test/*.cpp)
 
 
-set(testName inovesa-test)
+    set(testName inovesa-test)
 
-#Add compile target
-add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
+    #Add compile target
+    add_executable(${testName} ${TEST_SRCS} ${SRC_LIST} ${INC_LIST} ${MISC_LIST})
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/impedance.dat
-    ${CMAKE_CURRENT_BINARY_DIR}/impedance.dat COPYONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/impedance.dat
+        ${CMAKE_CURRENT_BINARY_DIR}/impedance.dat COPYONLY)
 
-#link to Boost libraries AND your targets and dependencies
-IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
-    MESSAGE ("Build for coverage information.")
-    target_compile_options(${testName} PRIVATE --coverage)
-    target_link_libraries(${testName} PRIVATE ${Boost_LIBRARIES} ${LIBS} --coverage)
+    #link to Boost libraries AND your targets and dependencies
+    IF(COVERAGE AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"))
+        MESSAGE ("Build for coverage information.")
+        target_compile_options(${testName} PRIVATE --coverage)
+        target_link_libraries(${testName} PRIVATE ${Boost_LIBRARIES} ${LIBS} --coverage)
+    ELSE()
+        target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+    ENDIF()
+
+    #Finally add it to test execution -
+    #Notice the WORKING_DIRECTORY and COMMAND
+    add_test(NAME ${testName} COMMAND ${testName} )
 ELSE()
-    target_link_libraries(${testName} ${Boost_LIBRARIES} ${LIBS})
+    MESSAGE ("Did not find Boost unit_test_framework. Will compile unit tests.")
 ENDIF()
-
-#Finally add it to test execution -
-#Notice the WORKING_DIRECTORY and COMMAND
-add_test(NAME ${testName} COMMAND ${testName} )
