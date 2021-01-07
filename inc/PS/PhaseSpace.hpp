@@ -372,6 +372,8 @@ public:
 
     cl::Buffer bunchpop_buf;
 
+    cl::Buffer integral_buf;
+
 private:
     cl::Program _clProgProjX;
 
@@ -379,7 +381,11 @@ private:
 
     cl::Program _clProgIntegral;
 
+    cl::Program _clProgIntegralSum;
+
     cl::Kernel  _clKernIntegral;
+
+    cl::Kernel  _clKernIntegralSum;
 
     std::unique_ptr<cl::vector<cl::Event*>> xProjEvents;
 
@@ -390,6 +396,8 @@ private:
     cl::Buffer  ws_buf;
 
     static std::string cl_code_integral;
+
+    static std::string cl_code_integral_sum;
 
     static std::string cl_code_projection_x;
 #endif // INOVESA_USE_OPENCL
