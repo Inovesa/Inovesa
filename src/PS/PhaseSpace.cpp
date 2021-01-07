@@ -480,6 +480,7 @@ void vfps::PhaseSpace::createFromProjections()
             }
         }
     }
+    updateXProjection();
     normalize();
 }
 
