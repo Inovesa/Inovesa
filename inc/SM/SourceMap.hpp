@@ -71,6 +71,9 @@ public:
              , oclhptr_t oclh
              );
 
+    /**
+     * @brief ~SourceMap deletes OpenCL events (if INOVESA_ENABLE_CLPROFILING == 1)
+     */
     virtual ~SourceMap() noexcept;
 
     /**
@@ -105,7 +108,7 @@ protected:
     /**
      * @brief _hinfo
      */
-    hi* const _hinfo;
+    std::vector<hi> _hinfo;
 
     /**
      * @brief _xsize horizontal size of the SourceMap (in grid points)

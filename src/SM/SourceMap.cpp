@@ -19,7 +19,7 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
                           )
   : _ip(interpoints)
   , _it(intertype)
-  , _hinfo(new hi[std::max(memsize,static_cast<size_t>(16))])
+  , _hinfo(std::max(memsize,static_cast<size_t>(16)))
   , _xsize(xsize)
   , _ysize(ysize)
   #if INOVESA_ENABLE_CLPROFILING == 1
@@ -51,7 +51,6 @@ vfps::SourceMap::SourceMap( std::shared_ptr<PhaseSpace> in
 
 vfps::SourceMap::~SourceMap() noexcept
 {
-    delete [] _hinfo;
     #if INOVESA_ENABLE_CLPROFILING == 1
     for (auto ev : *applySMEvents) {
         delete ev;
