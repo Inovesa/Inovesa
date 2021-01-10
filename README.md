@@ -53,6 +53,7 @@ Publications
 *   A wide [range of applications][5] (Inovesa v1.0)
 *   [Emitted synchrotron radiation][6] at different wavelengths (Inovesa v1.0)
 *   Simultaneous development of [bunch profile and emitted CSR][7] (Inovesa v1.0)
+*   [Perturbed incoherent synchrotron motion][8] using passive particle tracking (Inovesa v1.1)
 
 ### Citing Inovesa
 We use the zenodo project to get a DOI for each version. So, when you use
@@ -68,3 +69,4 @@ To reference specific features, please refer to the corresponding describing pap
 [5]: https://doi.org/10.5445/ir/1000084466 "Simulation and measurement of the dynamics of ultra-short electron bunch profiles for the generation of coherent THz radiation"
 [6]: https://doi.org/10.1103/PhysRevAccelBeams.21.110705 "Continuous bunch-by-bunch spectroscopic investigation of the microbunching instability"
 [7]: https://www.nature.com/articles/s41598-019-45024-2 "From self-organization in relativistic electron bunches to coherent synchrotron light: observation using a photonic time-stretch digitizer"
+[8]: https://doi.org/10.18429/JACoW-IPAC2019-MOPGW018 "Perturbation of Synchrotron Motion in the Micro-Bunching Instability"
