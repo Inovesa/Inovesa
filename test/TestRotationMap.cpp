@@ -16,7 +16,7 @@
 BOOST_AUTO_TEST_SUITE( RotationMap )
 
 BOOST_AUTO_TEST_CASE( linear_noclamp_map ){
-    std::vector<vfps::integral_t> buckets{{1}};
+    std::vector<vfps::integral_t> buckets{1};
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( linear_noclamp_map ){
 }
 
 BOOST_AUTO_TEST_CASE( linear_offcenter ){
-    std::vector<vfps::integral_t> buckets{{1}};
+    std::vector<vfps::integral_t> buckets{1};
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE( linear_offcenter ){
 }
 
 BOOST_AUTO_TEST_CASE( quadratic_clamp_nomap ){
-    std::vector<vfps::integral_t> buckets{{1}};
+    std::vector<vfps::integral_t> buckets{1};
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE( quadratic_clamp_nomap ){
 }
 
 BOOST_AUTO_TEST_CASE( quadratic_noclamp_nomap ){
-    std::vector<vfps::integral_t> buckets{{1}};
+    std::vector<vfps::integral_t> buckets{1};
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE( quadratic_noclamp_nomap ){
 }
 
 BOOST_AUTO_TEST_CASE( cubic_clamp_nomap ){
-    std::vector<vfps::integral_t> buckets{{1}};
+    std::vector<vfps::integral_t> buckets{1};
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE( cubic_clamp_nomap ){
 }
 
 BOOST_AUTO_TEST_CASE( cubic_clamp_map ){
-    std::vector<vfps::integral_t> buckets{{1}};
+    std::vector<vfps::integral_t> buckets{1};
     vfps::PhaseSpace::resetSize(4,buckets.size());
 
     std::vector<vfps::meshdata_t> data1{{ 0.0, 0.0, 0.0, 0.0,
