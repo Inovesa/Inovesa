@@ -54,7 +54,7 @@ vfps::RotationMap::RotationMap(std::shared_ptr<PhaseSpace> in,
             _sm_buf = cl::Buffer(_oclh->context,
                                  CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                                  sizeof(hi)*_ip*_rotmapsize,
-                                 _hinfo);
+                                 _hinfo.data());
             if (_clamp) {
                 if (it == InterpolationType::cubic) {
                     if (_rotmapsize == PhaseSpace::nxy) {
