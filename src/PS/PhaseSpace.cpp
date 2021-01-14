@@ -532,14 +532,14 @@ std::string vfps::PhaseSpace::cl_code_integral = R"(
     )";
 std::string vfps::PhaseSpace::cl_code_integral_sum = R"(
     __kernel void integralSum(const __global float* bp,
-                           const uint xsize,
-                           __global float* result)
+                              const uint xsize,
+                              __global float result)
     {
         float value = 0;
         for (uint x=0; x< xsize; x++) {
             value += bp[x];
         }
-        *result = value;
+        result = value;
     }
     )";
 
