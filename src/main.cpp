@@ -258,7 +258,10 @@ int main(int argc, char** argv)
     // number of total buckets (including in the simulation empty ones)
     const uint32_t nbunches = bunches.size();
 
+
+    #if INOVESA_USE_OPENGL == 1
     auto const phasespace2show = (opts.showPhaseSpace()-1u) % nbunches;
+    #endif
 
     // accumulated beam current
     const double Ib = std::accumulate(bunches.begin(),bunches.end(),0.0);
