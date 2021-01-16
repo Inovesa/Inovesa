@@ -131,8 +131,13 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         }
         bunchpop_buf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                     _nbunches*sizeof(integral_t),
+                                  _bunchpopulation.data());
+        integral_buf = cl::Buffer(_oclh->context,
+                                     CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(integral_t),
                                   &_integral);
+
         ws_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                             sizeof(meshdata_t)*_nmeshcellsX,
@@ -151,6 +156,13 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         _clKernIntegral.setArg(1, ws_buf);
         _clKernIntegral.setArg(2, _nmeshcellsX);
         _clKernIntegral.setArg(3, bunchpop_buf);
+
+        _clProgIntegralSum = _oclh->prepareCLProg(cl_code_integral_sum);
+        _clKernIntegralSum = cl::Kernel(_clProgIntegralSum, "integralSum");
+        _clKernIntegralSum.setArg(0, bunchpop_buf);
+        _clKernIntegralSum.setArg(1, _nbunches);
+        _clKernIntegralSum.setArg(2, integral_buf);
+
     } catch (cl::Error &e) {
         std::cerr << "Error: " << e.what() << std::endl
                   << "Shutting down OpenCL." << std::endl;
@@ -236,6 +248,18 @@ void vfps::PhaseSpace::integrate()
                                   , integEvents.get()
                                   #endif // INOVESA_ENABLE_CLPROFILING
                                   );
+        _oclh->enqueueBarrier();
+        _oclh->enqueueNDRangeKernel( _clKernIntegralSum
+                                  , cl::NullRange
+                                  , cl::NDRange(1)
+                                  #if INOVESA_ENABLE_CLPROFILING == 1
+                                  , cl::NullRange
+                                  , nullptr
+                                  , nullptr
+                                  , integEvents.get()
+                                  #endif // INOVESA_ENABLE_CLPROFILING
+                                  );
+        _oclh->enqueueBarrier();
     } else
     #endif
     {
@@ -427,7 +451,14 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
                                 , sizeof(projection_t)*nMeshCells(0)
                                 , _projection[0],nullptr,evt);
         _oclh->enqueueReadBuffer
-            (bunchpop_buf,CL_TRUE,0,sizeof(integral_t),&_bunchpopulation,
+            (bunchpop_buf,CL_TRUE,0,sizeof(integral_t)*_nbunches,_bunchpopulation.data(),
+            nullptr,evt
+            #if INOVESA_ENABLE_CLPROFILING == 1
+            , syncPSEvents.get()
+            #endif // INOVESA_ENABLE_CLPROFILING
+            );
+        _oclh->enqueueReadBuffer
+            (integral_buf,CL_TRUE,0,sizeof(integral_t),&_integral,
             nullptr,evt
             #if INOVESA_ENABLE_CLPROFILING == 1
             , syncPSEvents.get()
@@ -449,6 +480,7 @@ void vfps::PhaseSpace::createFromProjections()
             }
         }
     }
+    updateXProjection();
     normalize();
 }
 
@@ -498,6 +530,20 @@ std::string vfps::PhaseSpace::cl_code_integral = R"(
         *result = value;
     }
     )";
+std::string vfps::PhaseSpace::cl_code_integral_sum = R"(
+    __kernel void integralSum(const __global float* bp,
+                           const uint xsize,
+                           __global float* result)
+    {
+        float value = 0;
+        for (uint x=0; x< xsize; x++) {
+            value += bp[x];
+        }
+        *result = value;
+    }
+    )";
+
+
 
 std::string vfps::PhaseSpace::cl_code_projection_x = R"(
      __kernel void projectionX(const __global float* mesh,
