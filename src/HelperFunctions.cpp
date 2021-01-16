@@ -23,15 +23,15 @@ const std::string vfps::copyright_notice() noexcept {
     std::string rv (
         "Inovesa Numerical Optimized Vlasov-Equation Solver Application\n"
         "\n");
-    rv+="Copyright (c) 2012-2020 Patrik Schönfeldt\n"
-        "Copyright (c) 2014-2019 Karlsruhe Institute of Technology\n"
-        "Copyright (c) 2017-2019 Tobias Boltz\n"
-        "Copyright (c) 2017-2018 Johannes Schestag\n"
-        "Copyright (c) 2017 Patrick Schreiber\n"
-        "Copyright (c) 2017 Julian Gethmann\n"
-        "Copyright (c) 2017 Matthias Blaicher\n"
+    rv+="Copyright (c) Patrik Schönfeldt\n"
+        "Copyright (c) Karlsruhe Institute of Technology\n"
+        "Copyright (c) Tobias Boltz\n"
+        "Copyright (c) Johannes Schestag\n"
+        "Copyright (c) Patrick Schreiber\n"
+        "Copyright (c) Julian Gethmann\n"
+        "Copyright (c) Matthias Blaicher\n"
         #if INOVESA_USE_OPENGL == 1
-        "Copyright (c) 2014-2015 Nathaniel J. Smith, Stefan van der Walt\n"
+        "Copyright (c) Nathaniel J. Smith, Stefan van der Walt\n"
         "\t (Magma color code)\n"
         #endif
         "\n"

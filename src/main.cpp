@@ -892,10 +892,16 @@ int main(int argc, char** argv)
     // 1) the integral
     grid_t1->updateXProjection();
     grid_t1->integrate();
+    #if INOVESA_USE_OPENCL == 1
+    if (oclh) {  // Synchronise here since variance uses _integral
+        grid_t1->syncCLMem(OCLH::clCopyDirection::dev2cpu);
+    }
+    #endif
 
     // 2) the energy spread (variance in Y direction)
     grid_t1->updateYProjection();
     grid_t1->variance(1);
+
     Display::printText(status_string(grid_t1,0,rotations),false);
 
     #if INOVESA_USE_HDF5 == 1
