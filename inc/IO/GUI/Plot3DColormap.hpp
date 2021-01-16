@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -20,9 +19,9 @@ namespace vfps
 class Plot3DColormap : public GUIElement
 {
 public:
-    Plot3DColormap(vfps::meshdata_t maxvalue=1);
+    explicit Plot3DColormap(vfps::meshdata_t maxvalue=1);
 
-    ~Plot3DColormap() noexcept;
+    ~Plot3DColormap() noexcept override;
 
     void createTexture(std::shared_ptr<PhaseSpace> mesh);
 

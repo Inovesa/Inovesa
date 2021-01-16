@@ -1,108 +1,68 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Tobias Boltz
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "PS/PhaseSpace.hpp"
 
+#include <iostream>
 #include <numeric>
+#include <stdexcept>
 
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::pi;
 
-vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
+vfps::PhaseSpace::PhaseSpace(std::array<meshRuler_ptr, 2> axis
                             , oclhptr_t oclh
-                            , const double bunch_charge
-                            , const double bunch_current
-                            , const uint32_t nbunches
+                            , const double beam_charge
+                            , const double beam_current
+                            , const std::vector<integral_t>& filling
                             , const double zoom
-                            , meshdata_t* data
+                            , const meshdata_t* data
                             )
   : _axis(axis)
-  , charge(bunch_charge)
-  , current(bunch_current)
-  , _nmeshcellsX(nMeshCells(0))
-  , _nmeshcellsY(nMeshCells(1))
-  , _nbunches(nbunches)
-  , _nmeshcells(_nmeshcellsX*_nmeshcellsY)
-  , _integralmethod(IntegralMethod::simpson)
-  , _bunchpopulation(Array::array1<integral_t>(_nbunches))
-  , _integral(0)
-  , _projection(Array::array3<projection_t>(2U,_nbunches,_nmeshcellsX))
-  , _data(_nbunches,_nmeshcellsX,_nmeshcellsY)
-  , _moment(Array::array3<meshaxis_t>(2U,4U,_nbunches))
-  , _rms(Array::array2<meshaxis_t>(2U,_nbunches))
+  , charge(beam_charge)
+  , current(beam_current)
+  , _filling_set(filling.begin(),filling.end())
+  , _filling(std::vector<integral_t>(_nbunches))
+  , _integral(1)
+  , _projection(boost::extents[2U][_nbunches][_nmeshcellsX])
+  , _data(boost::extents[_nbunches][_nmeshcellsX][_nmeshcellsY])
+  , _moment(boost::extents[2U][4U][_nbunches])
+  , _rms(boost::extents[2U][_nbunches])
   , _ws(simpsonWeights())
   , _oclh(nullptr) // OpenCL will be disabled during dirst initialization steps
-  #if INOVESA_USE_OPENCL == 1 && INOVESA_USE_OPENGL == 1
+  #if INOVESA_USE_OPENGL == 1
   , projectionX_glbuf(0)
-  #endif // INOVESA_USE_OPENCL && INOVESA_USE_OPENGL
+  #endif // INOVESA_USE_OPENGL
   #if INOVESA_ENABLE_CLPROFILING == 1
   , xProjEvents(std::make_unique<cl::vector<cl::Event*>>())
   , integEvents(std::make_unique<cl::vector<cl::Event*>>())
   , syncPSEvents(std::make_unique<cl::vector<cl::Event*>>())
   #endif // INOVESA_ENABLE_CLPROFILING
 {
+
+    if (std::round(1e5*std::accumulate( filling.begin(), filling.end(),
+                                        static_cast<integral_t>(0)))
+            != 1e5) {
+        throw std::invalid_argument("Argument \"filling\" not normalized.");
+    }
     if (data != nullptr) {
-        std::copy(data,data+_data.size(),_data());
+        std::copy(data,data+_totalmeshcells,_data.data());
     } else {
-        for (uint32_t n=0; n<_nbunches; n++) {
-            gaus(0,n,zoom); // creates gaussian for x axis
-            gaus(1,n,zoom); // creates gaussian for y axis
+        for (meshindex_t  n=0; n<_nbunches; n++) {
+            setProjection(0, n, gaus(0, zoom)); // creates gaussian for x axis
+            setProjection(1, n, gaus(1, zoom)); // creates gaussian for y axis
         }
 
         createFromProjections();
     }
 
-    #if INOVESA_CHG_BUNCH == 1
-    std::random_device seed;
-    std::default_random_engine engine(seed());
-
-    std::uniform_real_distribution<> xdist(0.0,1.0);
-    std::normal_distribution<> ydist(0.0,1.0);
-
-
-    constexpr meshindex_t nParticles = UINT32_MAX;
-    constexpr float amplitude = 2.0f;
-    constexpr float pulselen = 1.90e-3f;
-    meshindex_t pulsepix = std::ceil(5*pulselen/2.35f/pmax*ps_size);
-    constexpr float wavelen = 6.42e-5f;
-
-    meshindex_t x = 0;
-    while (x < ps_size/2-pulsepix) {
-        for (meshindex_t y = 0; y < ps_size; y++) {
-            (*mesh)[x][y]
-                =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
-                *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
-        }
-        x++;
-    }
-    while (x < ps_size/2+pulsepix) {
-        meshdata_t weight = std::sqrt(2*pi<meshdata_t>())*ps_size/pmax/nParticles
-                * std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f);
-        for (size_t i=0; i<nParticles; i++) {
-            float xf = x+xdist(engine);
-            float yf = ydist(engine)
-                            + std::exp(-std::pow(xf/(std::sqrt(2)*pulselen/2.35f),2))
-                            * amplitude * std::sin(2*pi<meshdata_t>()*xf/wavelen);
-            meshindex_t y = std::lround((yf/pmax+0.5f)*ps_size);
-            if (y < ps_size) {
-                (*mesh)[x][y] += weight;
-            }
-        }
-        x++;
-    }
-    while (x < ps_size) {
-        for (meshindex_t y = 0; y < ps_size; y++) {
-            (*mesh)[x][y]
-                =    std::exp(-std::pow((float(x)/ps_size-0.5f)*qmax,2.0f)/2.0f)
-                *    std::exp(-std::pow((float(y)/ps_size-0.5f)*pmax,2.0f)/2.0f);
-        }
-        x++;
-    }
-    #endif // INOVESA_CHG_BUNCH
+    updateXProjection();
+    updateYProjection();
+    integrate();
 
     _oclh = oclh; // now, OpenCL can be used
     #if INOVESA_USE_OPENCL == 1
@@ -110,38 +70,40 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
     try {
         data_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                            sizeof(meshdata_t)*_nbunches*nMeshCells(0)*nMeshCells(1),
-                           _data());
+                            sizeof(meshdata_t)*_totalmeshcells,
+                           _data.data());
         #if INOVESA_USE_OPENGL == 1
         if (_oclh->OpenGLSharing()) {
             glGenBuffers(1, &projectionX_glbuf);
             glBindBuffer(GL_ARRAY_BUFFER,projectionX_glbuf);
             glBufferData( GL_ARRAY_BUFFER
-                        , nMeshCells(0)*sizeof(*_projection[0])
+                        , _nmeshcellsX*sizeof(decltype(_projection)::value_type)
                         , 0, GL_DYNAMIC_DRAW);
             projectionX_clbuf = cl::BufferGL( _oclh->context,CL_MEM_READ_WRITE
                                             , projectionX_glbuf);
         } else
         #endif // INOVESA_USE_OPENGL
         {
-            projectionX_clbuf = cl::Buffer(_oclh->context,
-                                     CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                     sizeof(projection_t)*_nmeshcellsX,
-                                     _projection[0]);
+            // _projection is used for _projection[0]
+            projectionX_clbuf = cl::Buffer(
+                        _oclh->context,
+                        CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                        _nmeshcellsX*sizeof(decltype(_projection)::value_type),
+                        _projection.data());
         }
-        bunchpop_buf = cl::Buffer(_oclh->context,
-                                     CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
-                                     _nbunches*sizeof(integral_t),
-                                  _bunchpopulation.data());
+
         integral_buf = cl::Buffer(_oclh->context,
                                      CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
                                      sizeof(integral_t),
                                   &_integral);
-
+        filling_buf = cl::Buffer( _oclh->context
+                                 , CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR
+                                 , _nbunches*sizeof(integral_t)
+                                 , _filling.data());
         ws_buf = cl::Buffer(_oclh->context,
                             CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-                            sizeof(meshdata_t)*_nmeshcellsX,
-                            _ws());
+                            sizeof(decltype(_ws)::value_type)*_nmeshcellsX,
+                            const_cast<decltype(_ws)::value_type*>(_ws.data()));
 
         _clProgProjX  = _oclh->prepareCLProg(cl_code_projection_x);
         _clKernProjX = cl::Kernel(_clProgProjX, "projectionX");
@@ -155,51 +117,52 @@ vfps::PhaseSpace::PhaseSpace( std::array<meshRuler_ptr, 2> axis
         _clKernIntegral.setArg(0, projectionX_clbuf);
         _clKernIntegral.setArg(1, ws_buf);
         _clKernIntegral.setArg(2, _nmeshcellsX);
-        _clKernIntegral.setArg(3, bunchpop_buf);
+        _clKernIntegral.setArg(3, filling_buf);
 
         _clProgIntegralSum = _oclh->prepareCLProg(cl_code_integral_sum);
         _clKernIntegralSum = cl::Kernel(_clProgIntegralSum, "integralSum");
-        _clKernIntegralSum.setArg(0, bunchpop_buf);
+        _clKernIntegralSum.setArg(0, filling_buf);
         _clKernIntegralSum.setArg(1, _nbunches);
         _clKernIntegralSum.setArg(2, integral_buf);
-
     } catch (cl::Error &e) {
         std::cerr << "Error: " << e.what() << std::endl
                   << "Shutting down OpenCL." << std::endl;
         _oclh.reset();
     }
     }
-#endif
+    #endif
 }
 
 vfps::PhaseSpace::PhaseSpace( meshRuler_ptr axis0
                             , meshRuler_ptr axis1
                             , oclhptr_t oclh
-                            , const double bunch_charge
-                            , const double bunch_current
-                            , uint32_t nbunches
+                            , const double beam_charge
+                            , const double beam_current
+                            , const std::vector<integral_t>& filling
                             , const double zoom
-                            , vfps::meshdata_t *data
+                            , const meshdata_t* data
                             ) :
     PhaseSpace( {{axis0,axis1}}
               , oclh
-              , bunch_charge,bunch_current,nbunches,zoom,data)
+              , beam_charge,beam_current,filling,zoom,data)
 {
 }
 
-vfps::PhaseSpace::PhaseSpace(meshindex_t ps_size
-                            , meshaxis_t qmin, meshaxis_t qmax, double qscale
+vfps::PhaseSpace::PhaseSpace(meshaxis_t qmin, meshaxis_t qmax, double qscale
                             , meshaxis_t pmin, meshaxis_t pmax, double pscale
                             , oclhptr_t oclh
-                            , const double bunch_charge
-                            , const double bunch_current
-                            , const uint32_t nbunches
-                            , const double zoom, meshdata_t *data
+                            , const double beam_charge
+                            , const double beam_current
+                            , const std::vector<integral_t>& filling
+                            , const double zoom
+                            , const meshdata_t* data
                             )
-  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,qmin,qmax,{{"Meter",qscale}}))
-              , meshRuler_ptr(new Ruler<meshaxis_t>(ps_size,pmin,pmax,{{"ElectronVolt",pscale}}))
+  : PhaseSpace( meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::nx,qmin,qmax,
+                {{"Meter",qscale}}))
+              , meshRuler_ptr(new Ruler<meshaxis_t>(PhaseSpace::ny,pmin,pmax,
+                {{"ElectronVolt",pscale}}))
               , oclh
-              , bunch_charge,bunch_current, nbunches, zoom, data)
+              , beam_charge,beam_current, filling, zoom, data)
 {}
 
 vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
@@ -207,9 +170,9 @@ vfps::PhaseSpace::PhaseSpace(const vfps::PhaseSpace& other) :
               , other._oclh
               , other.charge
               , other.current
-              , other._nbunches
-              , 1
-              , other._data
+              , other._filling_set
+              , 1 // zoom
+              , other._data.data()
               )
 {
 }
@@ -263,23 +226,14 @@ void vfps::PhaseSpace::integrate()
     } else
     #endif
     {
-    for (uint32_t n=0; n<_nbunches; n++) {
-        switch (_integralmethod) {
-        case IntegralMethod::sum:
-            _bunchpopulation[n] = std::accumulate(_projection[0][n].begin(),
-                                           _projection[0][n].end(),
-                                           static_cast<integral_t>(0));
-            break;
-        case IntegralMethod::simpson:
-            _bunchpopulation[n] = std::inner_product(_projection[0][n].begin(),
-                                              _projection[0][n].end(),
-                                              _ws.begin(),
-                                              static_cast<integral_t>(0));
-            break;
-        }
+    for (meshindex_t n=0; n<_nbunches; n++) {
+        _filling[n] = std::inner_product(_projection[0][n].begin(),
+                                         _projection[0][n].end(),
+                                         _ws.begin(),
+                                         static_cast<integral_t>(0));
     }
-    _integral = std::accumulate( _bunchpopulation.begin()
-                               , _bunchpopulation.end()
+    _integral = std::accumulate( _filling.begin()
+                               , _filling.end()
                                , static_cast<integral_t>(0));
     }
 }
@@ -289,21 +243,25 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
     if (axis == 0) {
         #if INOVESA_USE_OPENCL == 1
         if (_oclh) {
+        // _projection is used for _projection[0]
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
-                                , sizeof(projection_t)*nMeshCells(0)
-                                , _projection[0]);
+                                , sizeof(projection_t)*_nmeshcellsX
+                                , _projection.data());
         }
         #endif
     }
 
-    for (uint32_t n=0; n<_nbunches; n++) {
+    const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+    for (meshindex_t n=0; n<_nbunches; n++) {
         integral_t avg = 0;
-        for (size_t i=0; i<nMeshCells(axis); i++) {
-            avg += _projection[axis][n][i]*_qp(axis,i);
-        }
+        if (_filling_set[n] > 0) {
+            for (size_t i=0; i<maxi; i++) {
+                avg += _projection[axis][n][i]*_qp(axis,i);
+            }
 
-        // _projection is normalized in p/q coordinates with respect to charge
-        avg *= getDelta(axis) / _integral;
+            // _projection is normalized in p/q coordinates with respect to charge
+            avg *= getDelta(axis)/_filling[n];
+        }
 
         _moment[axis][0][n] = avg;
     }
@@ -312,14 +270,18 @@ void vfps::PhaseSpace::average(const uint_fast8_t axis)
 void vfps::PhaseSpace::variance(const uint_fast8_t axis)
 {
     average(axis);
-    for (uint32_t n=0; n<_nbunches; n++) {
+    const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+    for (meshindex_t n=0; n<_nbunches; n++) {
         meshdata_t var = 0;
-        for (size_t i=0; i<nMeshCells(axis); i++) {
-            var += _projection[axis][n][i]*std::pow(_qp(axis,i)-_moment[axis][0][n],2);
-        }
+        if (_filling_set[n] > 0) {
+            for (size_t i=0; i<maxi; i++) {
+                var += _projection[axis][n][i]*std::pow(_qp(axis,i)
+                                                        -_moment[axis][0][n],2);
+            }
 
-        // _projection is normalized in p/q coordinates with respect to charge
-        var *= getDelta(axis) / _integral;
+            // _projection is normalized in p/q coordinates with respect to charge
+            var *= getDelta(axis)/_filling[n];
+        }
 
         _moment[axis][1][n] = var;
         _rms[axis][n] = std::sqrt(var);
@@ -331,8 +293,8 @@ void vfps::PhaseSpace::updateXProjection() {
     if (_oclh) {
         _oclh->enqueueNDRangeKernel(_clKernProjX
                                   , cl::NullRange
-                                  , cl::NDRange(nMeshCells(0))
-                                  # ifdef INOVESA_ENABLE_CLPROFILING
+                                  , cl::NDRange(_nmeshcellsX)
+                                  # if INOVESA_ENABLE_CLPROFILING == 1
                                   , cl::NullRange
                                   , nullptr
                                   , nullptr
@@ -342,36 +304,21 @@ void vfps::PhaseSpace::updateXProjection() {
         _oclh->enqueueBarrier();
         #if INOVESA_SYNC_CL == 1
         _oclh->enqueueReadBuffer(projectionX_buf,CL_TRUE,0,
-                                      sizeof(projection_t)*nMeshCells(0),
+                                      sizeof(projection_t)*_nmeshcellsX,
                                       _projection[0].data());
         #endif
     } else
     #endif
     {
-    switch (_integralmethod) {
-    case IntegralMethod::sum:
         for (size_t n=0; n < _nbunches; n++) {
-            for (size_t x=0; x < nMeshCells(0); x++) {
+            for (size_t x=0; x < _nmeshcellsX; x++) {
                 _projection[0][n][x]
-                        = std::accumulate(_data[n][x].begin(),
-                                          _data[n][x].end(),
-                                          static_cast<integral_t>(0));
-                _projection[0][n][x] /= length(1);
+                      = std::inner_product(_data[n][x].begin(),
+                                           _data[n][x].end(),
+                                           _ws.begin(),
+                                           static_cast<integral_t>(0));
             }
         }
-        break;
-    case IntegralMethod::simpson:
-          for (size_t n=0; n < _nbunches; n++) {
-              for (size_t x=0; x < nMeshCells(0); x++) {
-                  _projection[0][n][x]
-                          = std::inner_product(_data[n][x].begin(),
-                                               _data[n][x].end(),
-                                               _ws.begin(),
-                                               static_cast<integral_t>(0));
-              }
-          }
-          break;
-    }
     }
 }
 
@@ -379,58 +326,54 @@ void vfps::PhaseSpace::updateYProjection() {
     #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueReadBuffer
-            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data());
+            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data.data());
     }
     #endif
-    switch (_integralmethod) {
-    case IntegralMethod::sum:
-        for (size_t n=0; n < _nbunches; n++) {
-            for (size_t y=0; y< nMeshCells(1); y++) {
-                _projection[1][n][y] = 0;
-
-                for (size_t x=0; x< nMeshCells(0); x++) {
-                    _projection[1][n][y] += _data[n][x][y];
-                }
-                _projection[1][n][y] /= length(0);
+    for (size_t n=0; n < _nbunches; n++) {
+        for (size_t y=0; y< _nmeshcellsY; y++) {
+            _projection[1][n][y] = 0;
+            for (size_t x=0; x< _nmeshcellsX; x++) {
+                _projection[1][n][y] += _data[n][x][y]*_ws[x];
             }
         }
-        break;
-    case IntegralMethod::simpson:
-        for (size_t n=0; n < _nbunches; n++) {
-            for (size_t y=0; y< nMeshCells(1); y++) {
-                _projection[1][n][y] = 0;
-                for (size_t x=0; x< nMeshCells(0); x++) {
-                    _projection[1][n][y] += _data[n][x][y]*_ws[x];
-                }
-            }
-        }
-        break;
     }
 }
 
-Array::array1<vfps::integral_t> vfps::PhaseSpace::normalize()
+const std::vector<vfps::integral_t>& vfps::PhaseSpace::normalize()
 {
-    integrate();
-
     #if INOVESA_USE_OPENCL == 1
     syncCLMem(OCLH::clCopyDirection::dev2cpu);
     #endif // INOVESA_USE_OPENCL
 
-    _data /= _integral;
+    for (size_t n=0; n < _nbunches; n++) {
+        if (_filling_set[n] > 0) {
+            for (meshindex_t x = 0; x < _nmeshcellsX; x++) {
+                for (meshindex_t y = 0; y < _nmeshcellsY; y++) {
+                    _data[n][x][y] *= _filling_set[n]/_filling[n];
+                }
+            }
+        } else {
+            for (meshindex_t x = 0; x < _nmeshcellsX; x++) {
+                for (meshindex_t y = 0; y < _nmeshcellsY; y++) {
+                    _data[n][x][y] = 0;
+                }
+            }
+        }
+    }
 
     #if INOVESA_USE_OPENCL == 1
     if (_oclh) {
         _oclh->enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
-             sizeof(meshdata_t)*nMeshCells(),_data());
+             sizeof(meshdata_t)*_nmeshcells,_data.data());
     }
     #endif // INOVESA_USE_OPENCL
-    return _bunchpopulation;
+    return _filling;
 }
 
-vfps::PhaseSpace& vfps::PhaseSpace::operator=(vfps::PhaseSpace other)
+vfps::PhaseSpace& vfps::PhaseSpace::operator =(vfps::PhaseSpace other)
 {
-    swap(*this,other);
+    other.swap(*this);
     return *this;
 }
 
@@ -442,16 +385,17 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
     case OCLH::clCopyDirection::cpu2dev:
         _oclh->enqueueWriteBuffer
             (data_buf,CL_TRUE,0,
-             sizeof(meshdata_t)*nMeshCells(),_data(),nullptr,evt);
+             sizeof(meshdata_t)*_nmeshcells,_data.data(),nullptr,evt);
         break;
     case OCLH::clCopyDirection::dev2cpu:
         _oclh->enqueueReadBuffer
-            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*nMeshCells(),_data());
+            (data_buf,CL_TRUE,0,sizeof(meshdata_t)*_nmeshcells,_data.data());
+        // _projection is used for _projection[0]
         _oclh->enqueueReadBuffer( projectionX_clbuf,CL_TRUE,0
-                                , sizeof(projection_t)*nMeshCells(0)
-                                , _projection[0],nullptr,evt);
+                                , sizeof(projection_t)*_nmeshcellsX
+                                , _projection.data(),nullptr,evt);
         _oclh->enqueueReadBuffer
-            (bunchpop_buf,CL_TRUE,0,sizeof(integral_t)*_nbunches,_bunchpopulation.data(),
+            (filling_buf,CL_TRUE,0,sizeof(integral_t),_filling.data(),
             nullptr,evt
             #if INOVESA_ENABLE_CLPROFILING == 1
             , syncPSEvents.get()
@@ -470,50 +414,95 @@ void vfps::PhaseSpace::syncCLMem(OCLH::clCopyDirection dir,cl::Event* evt)
 }
 #endif // INOVESA_USE_OPENCL
 
+const vfps::meshindex_t& vfps::PhaseSpace::nx = vfps::PhaseSpace::_nmeshcellsX;
+
+const vfps::meshindex_t& vfps::PhaseSpace::ny = vfps::PhaseSpace::_nmeshcellsY;
+
+const vfps::meshindex_t& vfps::PhaseSpace::nb = vfps::PhaseSpace::_nbunches;
+
+const vfps::meshindex_t& vfps::PhaseSpace::nxy = vfps::PhaseSpace::_nmeshcells;
+
+const vfps::meshindex_t& vfps::PhaseSpace::nxyb
+    = vfps::PhaseSpace::_totalmeshcells;
+
+void vfps::PhaseSpace::setSize(const meshindex_t x,
+                               const meshindex_t b )
+{
+    if (vfps::PhaseSpace::_firstinit)
+    {
+        vfps::PhaseSpace::_firstinit = false;
+        vfps::PhaseSpace::_nmeshcellsX = x;
+        vfps::PhaseSpace::_nmeshcellsY = x;
+        vfps::PhaseSpace::_nbunches = b;
+        vfps::PhaseSpace::_nmeshcells = x*x;
+        vfps::PhaseSpace::_totalmeshcells = x*x*b;
+    } else {
+        std::cerr << "vfps::PhaseSpace::setSize() "
+                     "is meant to be called only once." << std::endl;
+    }
+}
+
+bool vfps::PhaseSpace::_firstinit(true);
+
+vfps::meshindex_t vfps::PhaseSpace::_nmeshcellsX(0);
+
+vfps::meshindex_t vfps::PhaseSpace::_nmeshcellsY(0);
+
+vfps::meshindex_t vfps::PhaseSpace::_nbunches(0);
+
+vfps::meshindex_t vfps::PhaseSpace::_nmeshcells(0);
+
+vfps::meshindex_t vfps::PhaseSpace::_totalmeshcells(0);
+
 void vfps::PhaseSpace::createFromProjections()
 {
-    _data.Activate();
     for (size_t n=0; n < _nbunches; n++) {
-        for (meshindex_t x = 0; x < nMeshCells(0); x++) {
-            for (meshindex_t y = 0; y < nMeshCells(1); y++) {
+        for (meshindex_t x = 0; x < _nmeshcellsX; x++) {
+            for (meshindex_t y = 0; y < _nmeshcellsY; y++) {
                 _data[n][x][y] = _projection[0][n][x]*_projection[1][n][y];
             }
         }
     }
     updateXProjection();
+    integrate();
     normalize();
 }
 
-void vfps::PhaseSpace::gaus(const uint_fast8_t axis,
-                            const uint32_t bunch,
-                            const double zoom)
+boost::multi_array<vfps::projection_t, 1> vfps::PhaseSpace::gaus(
+        const uint_fast8_t axis,
+        const double zoom)
 {
     const double zoom2=zoom*zoom;
-    for(uint32_t i=0; i<nMeshCells(axis); i++){
-        _projection[axis][bunch][i]=std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
+    const meshindex_t maxi = (axis==0)? _nmeshcellsX : _nmeshcellsY;
+
+    boost::multi_array<vfps::projection_t,1> rv(boost::extents[maxi]);
+    for(meshindex_t i=0; i<maxi; i++){
+        rv[i] = boost::math::constants::one_div_root_two_pi<integral_t>()
+              * std::exp((-0.5)*_axis[axis]->at(i)*_axis[axis]->at(i)/zoom2);
     }
+    return rv;
 }
 
-const Array::array1<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
+std::vector<vfps::meshdata_t> vfps::PhaseSpace::simpsonWeights()
 {
-    Array::array1<vfps::meshdata_t> rv(nMeshCells(0));
+    std::vector<vfps::meshdata_t> rv(_nmeshcellsX);
     const integral_t ca = 3.;
     integral_t dc = 1;
 
     const integral_t h03 = getDelta(0)/integral_t(3);
     rv[0] = h03;
-    for (size_t x=1; x< nMeshCells(0)-1; x++){
-        _ws[x] = h03 * (ca+dc);
+    for (size_t x=1; x< _nmeshcellsX-1; x++){
+        rv[x] = h03 * (ca+dc);
         dc = -dc;
     }
-    rv[nMeshCells(0)-1] = h03;
+    rv[_nmeshcellsX-1] = h03;
 
     return rv;
 }
 
-void vfps::swap(vfps::PhaseSpace& first, vfps::PhaseSpace& second) noexcept
+void vfps::PhaseSpace::swap(vfps::PhaseSpace& other) noexcept
 {
-    std::swap(first._data, second._data);
+    std::swap(_data, other._data);
 }
 
 #if INOVESA_USE_OPENCL == 1
@@ -562,3 +551,8 @@ std::string vfps::PhaseSpace::cl_code_projection_x = R"(
      )";
 #endif // INOVESA_USE_OPENCL
 
+
+void vfps::swap(vfps::PhaseSpace &first, vfps::PhaseSpace &second) noexcept
+{
+    first.swap(second);
+}

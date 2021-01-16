@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #if INOVESA_USE_OPENCL == 1
@@ -39,7 +38,7 @@ OCLH::OCLH( uint32_t device, bool glsharing)
                 context = cl::Context( CL_DEVICE_TYPE_ALL
                                      , properties(p,ogl_sharing).data());
             } else {
-                throw e;
+                throw;
             }
         }
         _devices = context.getInfo<CL_CONTEXT_DEVICES>();
@@ -112,11 +111,10 @@ cl::Program OCLH::prepareCLProg(std::string code)
                   << p.getBuildInfo<CL_PROGRAM_BUILD_LOG>(_device)
                   << std::endl;
         #if DEBUG == 1
-        throw e;
+        throw;
         #endif
     }
-
-return p;
+    return p;
 }
 
 #if INOVESA_ENABLE_CLPROFILING == 1

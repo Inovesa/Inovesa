@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
+
+#include <type_traits>
 
 #include "SM/FokkerPlanckMap.hpp"
 
@@ -193,23 +194,24 @@ void vfps::FokkerPlanckMap::apply()
         meshdata_t* data_in = _in->getData();
         meshdata_t* data_out = _out->getData();
 
-        for (meshindex_t x=0; x< _meshxsize; x++) {
-            const meshindex_t offs = x*_ysize;
-            for (meshindex_t y=0; y< _ysize; y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[y*_ip+j];
-                    value += data_in[offs+h.index]
-                                     *  static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n<PhaseSpace::nb; n++) {
+            const meshindex_t offs1 = n*_meshxsize*_ysize;
+            for (meshindex_t x=0; x< _meshxsize; x++) {
+                const meshindex_t offs = offs1+x*_ysize;
+                for (meshindex_t y=0; y< _ysize; y++) {
+                    meshdata_t value = 0;
+                    for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
+                        hi h = _hinfo[y*_ip+j];
+                        value += data_in[offs+h.index]
+                                         *  static_cast<meshdata_t>(h.weight);
+                    }
+                    data_out[offs+y] = value;
                 }
-                data_out[offs+y] = value;
             }
         }
     }
 }
-
-vfps::PhaseSpace::Position
-vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
+void vfps::FokkerPlanckMap::applyTo(PhaseSpace::Position &pos) const
 {
     switch (_fptrack){
     case FPTracking::none:
@@ -221,7 +223,7 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
                                  , _ysize);
         interpol_t offset = 0;
 
-        for (uint_fast8_t j=0; j<_ip; j++) {
+        for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
             hi h = _hinfo[yi*_ip+j];
             interpol_t dy = static_cast<interpol_t>(yi)
                           - static_cast<interpol_t>(h.index);
@@ -238,13 +240,15 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
             = std::min( static_cast<decltype(_in->nMeshCells(0))>(std::floor(pos.x))
                       , _in->nMeshCells(0)-1);
         std::make_signed<meshindex_t>::type yi
-            = std::min( static_cast<decltype(_ysize)>(std::floor(pos.y))
-                      , _ysize-1);
+            = std::min( static_cast<std::make_signed<meshindex_t>::type>(
+                            std::floor(pos.y)),
+                        static_cast<std::make_signed<meshindex_t>::type>(
+                            _ysize-1));
         const meshindex_t offs = xi*_ysize;
         interpol_t offset = 0;
         meshdata_t charge = 0;
 
-        for (uint_fast8_t j=0; j<_ip; j++) {
+        for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
             hi h = _hinfo[yi*_ip+j];
             charge += data_in[offs+h.index]*h.weight;
             offset += data_in[offs+h.index]*h.weight
@@ -261,6 +265,5 @@ vfps::FokkerPlanckMap::apply(PhaseSpace::Position pos) const
         pos.y -= pos.y*_dampdecr+_normdist(_prng);
         break;
     }
-    return pos;
 }
 

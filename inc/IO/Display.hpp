@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -17,6 +16,10 @@
 #include <iostream>
 #include <memory>
 #include <type_traits>
+
+#if INOVESA_ENABLE_INTERRUPT == 1
+#include<csignal> // for SIGINT handling
+#endif
 
 #if INOVESA_USE_OPENGL == 1
 
@@ -45,12 +48,12 @@ class Display;
 
 class DisplayException : public std::exception {
 public:
-    DisplayException(std::string msg) : _msg(msg){}
+    explicit DisplayException(const std::string& msg) : _msg(msg){}
 
     const char* what() const noexcept override;
 
 private:
-    std::string _msg;
+    const std::string _msg;
 };
 
 /**
@@ -65,11 +68,9 @@ private:
  * just initialize the log, print some status information, or do nothing
  * but to return a nullptr.
  */
-std::unique_ptr<Display> make_display(std::string ofname
-                                      #if INOVESA_USE_OPENGL == 1
-                                      , bool gui=false
-                                      , uint_fast8_t glversion=0
-                                      #endif // INOVESA_USE_OPENGL
+std::unique_ptr<Display> make_display( std::string ofname
+                                     , bool gui=false
+                                     , uint_fast8_t glversion=0
                                      );
 
 class Display
@@ -85,6 +86,8 @@ public:
 
     volatile static bool abort;
 
+    volatile static bool silent_mode;
+
 public:
     Display() = delete;
 
@@ -99,13 +102,19 @@ public:
      * @brief Display initializes OpenGL
      * @param glversion
      */
-    Display(uint_fast8_t glversion);
+    explicit Display(uint_fast8_t glversion);
     #endif // INOVESA_USE_OPENGL
 
     /**
      * @brief ~Display() terminats OpenGL (if used)
      */
     ~Display() noexcept;
+
+    #if INOVESA_ENABLE_INTERRUPT == 1
+    static void SIGINT_handler(int) {
+        Display::abort = true;
+    }
+    #endif // INOVESA_ENABLE_INTERRUPT
 
     #if INOVESA_USE_OPENGL == 1
     void addElement(std::shared_ptr<GUIElement> newitem);
@@ -114,11 +123,15 @@ public:
     void draw();
 
     /**
-     * @brief printText to stdout and logfile
+     * @brief prints a timestamp followed by a text to both,
+     *        stdout and logfile (if present)
      *
-     * @param txt
-     * @param newline
-     * @param silentTime skip if last printout was less then silentTime s ago
+     * @param txt text to print
+     * @param newline Start new line after printing (true) or print next text on top (false)?
+     *        This is just for printing and has no effect for the logfile.
+     * @param silentTime skip if last printout was less then silentTime seconds ago.
+     *
+     * The timestamp is designed to be in seconds after program start.
      *
      * @todo replace by << operator
      */

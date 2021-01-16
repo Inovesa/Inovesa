@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -17,13 +16,12 @@ class Identity : public SourceMap
 public:
     Identity( std::shared_ptr<PhaseSpace> in
             , std::shared_ptr<PhaseSpace> out
-            , const meshindex_t xsize, const meshindex_t ysize
             , oclhptr_t oclh
             )
-  : SourceMap( in, out, xsize, ysize, 0, 0, oclh)
+  : SourceMap( in, out, PhaseSpace::nx, PhaseSpace::ny, 0, 0, oclh)
 {}
 
-    ~Identity() noexcept;
+    ~Identity() noexcept override;
 
     /**
      * @brief apply copys data from in to out
@@ -36,7 +34,7 @@ public:
             _in->syncCLMem(OCLH::clCopyDirection::cpu2dev);
             #endif // INOVESA_SYNC_CL
             _oclh->enqueueCopyBuffer( _in->data_buf, _out->data_buf
-                                   , 0,0,sizeof(meshdata_t)*_size
+                                   , 0,0,sizeof(meshdata_t)*PhaseSpace::nxy
                                    #if INOVESA_ENABLE_CLPROFILING == 1
                                    , nullptr,nullptr
                                    , applySMEvents.get()
@@ -49,18 +47,17 @@ public:
         } else
         #endif // INOVESA_USE_OPENCL
         {
-            meshdata_t* data_in = _in->getData();
-            meshdata_t* data_out = _out->getData();
-            std::copy_n(data_in,_size,data_out);
+            auto data_in = _in->getData();
+            auto data_out = _out->getData();
+            std::copy_n(data_in,PhaseSpace::nb*PhaseSpace::nxy,data_out);
         }
     }
 
     /**
      * @brief applyTo does nothing
      */
-    inline PhaseSpace::Position
-    apply(const PhaseSpace::Position pos) const override
-        { return pos; }
+    void applyTo(PhaseSpace::Position& pos) const override
+        { return; }
 };
 
 }

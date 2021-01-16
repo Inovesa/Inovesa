@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -13,6 +12,13 @@
 
 #include "InovesaConfig.hpp"
 
+/** \file
+ *  \brief global definitions
+ */
+
+/** \namespace vfps
+ *  \brief namespace Vlasov-Fokker-Planck solver
+ */
 namespace vfps
 {
 // has to be uint32_t (same as cl_uint) for OpenCL support
@@ -34,12 +40,6 @@ typedef data_t integral_t;
 typedef data_t timeaxis_t;
 
 typedef integral_t projection_t;
-
-inline bool isOfFileType(std::string ending, std::string fname)
-{
-    return ( fname.size() > ending.size() &&
-        std::equal(ending.rbegin(), ending.rend(),fname.rbegin()));
-}
 
 namespace physcons
 {
@@ -67,4 +67,31 @@ constexpr double mu0 = 1/(epsilon0*c*c);
 
 } // namespace vfps
 
+#ifndef INOVESA_USE_OPENGL
+#define INOVESA_USE_OPENGL 0
+#endif
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+#ifndef INOVESA_ENABLE_INTERRUPT
+#define INOVESA_ENABLE_INTERRUPT 0
+#endif
+#ifndef INOVESA_ENABLE_CLPROFILING
+#define INOVESA_ENABLE_CLPROFILING 0
+#endif
+#ifndef INOVESA_USE_OPENCL
+#define INOVESA_USE_OPENCL 0
+#endif
+#ifndef INOVESA_USE_CLFFT
+#define INOVESA_USE_CLFFT 0
+#endif
+#ifndef INOVESA_USE_OPENGL
+#define INOVESA_USE_OPENGL 0
+#endif
+#ifndef INOVESA_USE_HDF5
+#define INOVESA_USE_HDF5 0
+#endif
+#ifndef INOVESA_USE_PNG
+#define INOVESA_USE_PNG 0
+#endif
 

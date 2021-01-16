@@ -1,5 +1,3 @@
 path_classifiers:
     library:
         - inc/CL/local_cl.hpp
-        - inc/Array.h
-

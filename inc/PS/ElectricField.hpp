@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
 
 #include <algorithm>
-#include <fftw3.h>
+#include <boost/multi_array.hpp>
 #include <memory>
 #include <sstream>
 
-#include "Array.h"
 #include "defines.hpp"
+#include "FFTWWrapper.hpp"
 #include "PS/PhaseSpace.hpp"
 #include "PS/Ruler.hpp"
 #include "Z/Impedance.hpp"
@@ -23,9 +22,6 @@
 
 namespace vfps {
 
-typedef fftwf_plan fft_plan;
-typedef fftwf_complex fft_complex;
-
 class ElectricField
 {
 public:
@@ -33,82 +29,89 @@ public:
 
     /**
      * @brief ElectricField minimal constructor, will not offer wake function
-     * @param phasespace this electric field is assigned to
+     * @param ps this electric field is assigned to
      * @param impedance to use for electric field calculation
-     * @param revolutionpart
+     * @param bucketnumbers of buckets contained in ps
+     * @param spacing_bins number of grid points between bunch centers
+     *        (including grind points covered by phase space grid)
+     * @param f_rev revolution frequency
+     * @param revolutionpart part of one revolution covered by one time step
      * @param wakescaling scaling of wakepotential
      *        (As being part of fourier transform,
-     *         delta t and delta f will be automatically taken into account.
+     *         delta t and delta f will be automatically taken into account.)
      *
-     * Use other constructors when you want to use wake function or potential.
+     * This constructor leaves wakelosses and wakepotential anallocated,
+     * use other constructor when you want to use wake function or potential.
+     *
+     * @todo add a check whether impedance's frequencies match
+     *       the ones assumed here
      */
     ElectricField(std::shared_ptr<PhaseSpace> ps,
                   const std::shared_ptr<Impedance> impedance,
+                  const std::vector<uint32_t> &bucketnumbers,
+                  const meshindex_t spacing_bins,
                   oclhptr_t oclh,
                   const double f_rev,
-                  const double revolutionpart = 1,
+                  const meshaxis_t revolutionpart = 1,
                   const meshaxis_t wakescalining=0.0);
 
     /**
      * @brief ElectricField constructor for use of wake potential
-     * @param phasespace this electric field is assigned to
-     * @param impedance to use for electric field calculation
-     * @param Ib bunch current [A]
-     * @param E0 beam energy [eV]
-     * @param sigmaE normalized energy spread [1]
-     * @param dt time step [s]
-     *
-     * @todo: check whether impedance's frequencies match
+     * @param ps phasespace this electric field is assigned to
+     * @param impedance to use for electric field calculation \f$Z(f_n)\f$
+     * @param Ib bunch current \f$I_b\f$ in A
+     * @param E0 beam energy \f$E_0\f$ in eV
+     * @param sigma_delta normalized energy spread \f$\sigma_\delta\f$
+     * @param dt time step \f$\Delta t\f$ in s
      *
      * Internally all physical quantities are used to calculate
-     * the wakescalining for ElectricField(PhaseSpace*,Impedance*,meshaxis_t).
+     * the wakescalining for
+     * ElectricField::ElectricField(std::shared_ptr<PhaseSpace> ps,const std::shared_ptr<Impedance> impedance,const std::vector<uint32_t> &bucketnumbers,const meshindex_t spacing_bins,oclhptr_t oclh,const double f_rev,const meshaxis_t revolutionpart,const meshaxis_t wakescalining)
+     * and initialized wake potential calculation.
+     *
      * We have factors of:
-     *   Q_b = Ib/f0 (wake potential is calculated for normalized charge)
-     *   dt*f0 (fraction of one revolution, impedance is for one revolution)
-     *   c/ps->getScale(0) (charge/sigma_z -> current)
-     *   1/(ps->getDelta(1)*sigmaE*E0) (eV -> pixels)
+     *  - \f$ Q_b = I_b/f_0\f$
+     *    (wake potential is calculated for normalized charge)
+     *  - \f$ \Delta t \times f_0 \f$
+     *    fraction of one revolution, as impedance is given for one revolution
+     *  - \f$ c/\sigma_{z,0}\f$ to get current from charge density
+     *  - \f$ (\Delta E \times \sigma_\delta \times E_0)^{-1}\f$
+     *    to get grid points from energy in eV
      */
-    ElectricField( std::shared_ptr<PhaseSpace> ps
-                 , std::shared_ptr<Impedance> impedance
-                 , oclhptr_t oclh
-                 , const double f_rev
-                 , const double revolutionpart
-                 , const double Ib, const double E0
-                 , const double sigmaE, const double dt
-                 );
-
-    /**
-     * @brief ElectricField (unmaintained) constructor for use of wake function
-     * @param phasespace this electric field is assigned to
-     * @param impedance to use for electric field calculation
-     * @param Ib bunch current [A]
-     * @param bl natural rms bunch length [m]
-     * @param E0 beam energy [eV]
-     * @param sigmaE normalized energy spread [1]
-     * @param frev revolution frequency [Hz]
-     * @param dt time step [s]
-     * @param fs synchrotron frequency [Hz]
-     * @param nmax
-     */
-    ElectricField( std::shared_ptr<PhaseSpace> ps
-                 , std::shared_ptr<Impedance> impedance
-                 , oclhptr_t oclh
-                 , const double f_rev
-                 , const double Ib, const double E0
-                 , const double sigmaE, const double dt, const double rbend
-                 , const double fs, const size_t nmax
-                 );
+    ElectricField( std::shared_ptr<PhaseSpace> ps,
+                   std::shared_ptr<Impedance> impedance,
+                   const std::vector<uint32_t> &bucketnumber,
+                   const meshindex_t spacing_bins,
+                   oclhptr_t oclh,
+                   const double f_rev,
+                   const meshaxis_t revolutionpart,
+                   const double Ib,
+                   const double E0,
+                   const double sigma_delta,
+                   const double dt )
+        : ElectricField( ps,
+                         impedance,
+                         bucketnumber,
+                         spacing_bins,
+                         oclh,
+                         f_rev,
+                         revolutionpart,
+                         Ib*dt*physcons::c/ps->getScale(0,"Meter")
+                            /(ps->getDelta(1)*sigma_delta*E0))
+    {
+        _initWakeLossFFT();
+    }
 
     ~ElectricField() noexcept;
 
-    inline const csrpower_t& getCSRPower() const
-        { return _csrintensity; }
+    inline const csrpower_t* getCSRPower() const
+        { return _csrintensity.data(); }
 
-    inline csrpower_t* getCSRSpectrum() const
-        { return _csrspectrum; }
+    inline const csrpower_t* getCSRSpectrum() const
+        { return _csrspectrum.data(); }
 
-    inline csrpower_t* getISRSpectrum() const
-        { return _isrspectrum; }
+    inline const csrpower_t* getISRSpectrum() const
+        { return _isrspectrum.data(); }
 
     inline const std::shared_ptr<Impedance> getImpedance() const
         { return _impedance; }
@@ -124,128 +127,65 @@ public:
 
     /**
      * @brief updateCSR
-     * @param cutoff
-     * @return CSR spectrum (getNMax() points)
+     * @param cutoff_frequency \f$f_c\f$ in Hz
+     * @return CSR spectrum \f$P(f)\f$ (getNMax() points)
      *
      * @todo: Use OpenCL for power calculation
      *
      * relies on an up-t date PhaseSpace::_projection[0]
+     *
+     * \f$ P(f) = \Delta f \times \frac{1-\exp[{(f/f_c)^2]}}{(\Delta q)^2}
+     * \times \Re[Z(f)]\times |\tilde{\varrho}|^2 \f$
      */
-    csrpower_t* updateCSR(const frequency_t cutoff);
+    const csrpower_t* updateCSR(const frequency_t cutoff_frequency);
+
+    const std::vector<uint32_t> &getBuckets() const
+        { return _bucket; }
 
     meshaxis_t* getWakefunction() const
         { return _wakefunction; }
 
     /**
-     * @brief wakePotential
+     * @brief wakePotential updates wake potential
      * @return
      *
      * @todo: Handling of negative frequencies in the formfactor
-     * @todo: Correct scaling
      *
-     * relies on an up-t date PhaseSpace::_projection[axis]
+     * relies on an up to date PhaseSpace::_projection[axis]
      */
     meshaxis_t* wakePotential();
 
+    /**
+     * @brief padBunchProfiles copies bunch profiles to have correct padding
+
+     */
+    void padBunchProfiles();
+
+    inline integral_t* getPaddedBunchProfiles() const
+        { return _bp_padded; }
+
+    inline const auto& getWakePotentials() const
+        { return _wakepotential; }
+
+    inline meshaxis_t* getPaddedWakePotential() const
+        { return _wakepotential_padded; }
+
+
     #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir);
-    #endif // INOVESA_USE_OPENCL
+    #endif // INOVESA_USE_OPENCL == 1
 
 public:
     const double volts;
 
-private: // wrappers for FFTW
-    enum class fft_direction : uint_fast8_t {
-        forward, backward
-    };
-
-    fft_complex* fft_alloc_complex(size_t n);
-    integral_t* fft_alloc_real(size_t n);
-
-    /**
-     * @brief fft_cleanup to be implemented
-     */
-    void fft_cleanup(){}
-
-    inline void fft_destroy_plan(fftw_plan plan)
-        { fftw_destroy_plan(plan); }
-    inline void fft_destroy_plan(fftwf_plan plan)
-        { fftwf_destroy_plan(plan); }
-
-    inline void fft_execute(const fftw_plan plan)
-        { fftw_execute(plan); }
-    inline void fft_execute(const fftwf_plan plan)
-        { fftwf_execute(plan); }
-
-    inline void fft_free(double* addr)
-        { fftw_free(addr); }
-    inline void fft_free(float* addr)
-        { fftwf_free(addr); }
-
-    inline void fft_free(fftw_complex* addr)
-        { fftw_free(addr); }
-    inline void fft_free(fftwf_complex* addr)
-        { fftwf_free(addr); }
-
-    inline fftw_plan prepareFFT(size_t n, double* in, std::complex<double>* out)
-        {return prepareFFT(n,in, reinterpret_cast<fftw_complex*>(out)); }
-
-    fftw_plan prepareFFT(size_t n, double* in, fftw_complex* out);
-
-    inline fftwf_plan prepareFFT(size_t n, float* in, std::complex<float>* out)
-        {return prepareFFT(n,in, reinterpret_cast<fftwf_complex*>(out)); }
-
-    /**
-     * @brief prepareFFT real to complex (Hermitian) FFT, "forward"
-     * @param n
-     * @param in
-     * @param out
-     * @return
-     */
-    fftwf_plan prepareFFT(size_t n, float* in, fftwf_complex* out);
-
-    inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in, float* out)
-        {return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in), out); }
-
-    /**
-     * @brief prepareFFT Hermitian (complex) to real FFT, "backward"
-     * @param n
-     * @param in
-     * @param out
-     * @return
-     */
-    fftwf_plan prepareFFT(size_t n, fftwf_complex* in, float* out);
-
-    inline fftw_plan prepareFFT(size_t n, std::complex<double>* in,
-                                std::complex<double>* out,
-                                fft_direction direction)
-        { return prepareFFT(n,reinterpret_cast<fftw_complex*>(in),
-                            reinterpret_cast<fftw_complex*>(out),direction); }
-
-    /**
-     * @brief prepareFFT (unmaintained for C2C FFT)
-     */
-    fftw_plan prepareFFT(size_t n, fftw_complex *in,
-                         fftw_complex *out,
-                         fft_direction direction);
-
-    inline fftwf_plan prepareFFT(size_t n, std::complex<float>* in,
-                                std::complex<float>* out,
-                                fft_direction direction)
-        { return prepareFFT(n,reinterpret_cast<fftwf_complex*>(in),
-                            reinterpret_cast<fftwf_complex*>(out),direction); }
-
-    /**
-     * @brief prepareFFT (unmaintained for C2C FFT)
-     */
-    fftwf_plan prepareFFT(size_t n, fftwf_complex* in,
-                          fftwf_complex* out,
-                          fft_direction direction);
-
 private:
+    const uint32_t _nbunches;
+
+    const std::vector<uint32_t> _bucket;
+
     const size_t _nmax;
 
-    const uint32_t _bpmeshcells;
+    const size_t _spacing_bins;
 
     const Ruler<meshaxis_t> _axis_freq;
 
@@ -268,12 +208,20 @@ public:
     const double factor4Watts;
 
 private:
+    /**
+     * @brief _csrintensity dimensions: bunch
+     */
+    boost::multi_array<csrpower_t,1> _csrintensity;
 
-    csrpower_t _csrintensity;
+    /**
+     * @brief _csrspectrum dimensions: bunch, frequency
+     */
+    boost::multi_array<csrpower_t,2> _csrspectrum;
 
-    csrpower_t* _csrspectrum;
-
-    csrpower_t* _isrspectrum;
+    /**
+     * @brief _isrspectrum dimensions: bunch, frequency
+     */
+    boost::multi_array<csrpower_t,2> _isrspectrum;
 
     const std::shared_ptr<Impedance> _impedance;
 
@@ -287,7 +235,7 @@ private:
 
     impedance_t* _formfactor;
 
-    fft_complex* _formfactor_fft;
+    fft::complex* _formfactor_fft;
 
     oclhptr_t _oclh;
 
@@ -298,7 +246,7 @@ private:
     cl::Kernel _clKernWakelosses;
     #endif // INOVESA_USE_OPENCL
 
-    fft_plan _fft_bunchprofile;
+    fft::plan _fft_bunchprofile;
 
     #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_bunchprofile;
@@ -308,7 +256,7 @@ private:
 
     impedance_t* _wakelosses;
 
-    fft_complex* _wakelosses_fft;
+    fft::complex* _wakelosses_fft;
 
     #if INOVESA_USE_CLFFT == 1
     cl::Buffer _wakelosses_buf;
@@ -331,7 +279,7 @@ public:
     cl::Buffer wakepotential_clbuf;
 
 private:
-    // non-interleaved internal data format might be usefull
+    // @todo: non-interleaved internal data format might be usefull
     cl::Buffer _wakepotential_padded_buf;
 
     cl::Program _clProgScaleWP;
@@ -339,15 +287,24 @@ private:
 
     #endif // INOVESA_USE_OPENCL
 
-    meshaxis_t* _wakepotential;
+    boost::multi_array<meshaxis_t,2> _wakepotential;
 
-    fft_plan _fft_wakelosses;
+    fft::plan _fft_wakelosses;
 
     #if INOVESA_USE_CLFFT == 1
     clfftPlanHandle _clfft_wakelosses;
     #endif // INOVESA_USE_CLFFT
 
     const meshdata_t _wakescaling;
+
+    void _initWakeLossFFT();
+
+public:
+    /**
+     * @brief getWakeScaling getter function for scaling factor
+     */
+    auto getWakeScaling() const
+        { return _wakescaling; }
 };
 
 } // namespace vfps

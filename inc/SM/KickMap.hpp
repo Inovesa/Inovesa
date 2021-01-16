@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
 
 #include "SM/SourceMap.hpp"
+
+/** \file
+ *  \brief definitions of class KickMap
+ */
 
 namespace vfps
 {
@@ -28,23 +31,33 @@ public:
     };
 
 public:
-    KickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
-           , const meshindex_t xsize, const meshindex_t ysize
+    KickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
            , const InterpolationType it, const bool interpol_clamp
            , const Axis kd
            , oclhptr_t oclh
            );
 
-    ~KickMap() noexcept;
+    ~KickMap() noexcept override;
 
 public:
+    /**
+     * @brief getForce
+     * @return pointer to beginning of _offset
+     */
     const inline meshaxis_t* getForce() const
         { return _offset.data(); }
+
+    /**
+     * @brief swapOffset allows to replace _offset
+     * @param offset
+     */
+    inline void swapOffset(std::vector<meshaxis_t>& offset)
+        { _offset.swap(offset); updateSM(); }
 
 public:
     void apply() override;
 
-    PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
+    void applyTo(PhaseSpace::Position& pos) const override;
 
     #if INOVESA_USE_OPENCL == 1
     void syncCLMem(OCLH::clCopyDirection dir);
@@ -53,6 +66,13 @@ public:
 protected:
     /**
      * @brief _offset by one kick in units of mesh points
+     *
+     * If kick is different for every bunch,
+     * vector is used like a C-style ND array.
+     *
+     * @todo On the long run, a multi_array should be used.
+     * If the kick is the same for every bunch,
+     * the according dimentsion miht have just one entry.
      */
     std::vector<meshaxis_t> _offset;
 
@@ -83,11 +103,12 @@ protected:
     const meshindex_t _meshsize_pd;
     #endif // INOVESA_USE_OPENCL
 
+
     /**
-     * @brief updateSM
-     *
-     * does nothing when OpenCL is used
+     * @brief _lastbunch index of last bunch with individual KickMap
      */
+    uint32_t _lastbunch;
+
     void updateSM();
 };
 

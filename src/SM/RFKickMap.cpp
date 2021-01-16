@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "SM/RFKickMap.hpp"
@@ -10,17 +9,18 @@
 #include <boost/math/constants/constants.hpp>
 using boost::math::constants::two_pi;
 
+/**
+ * @brief RFKickMap constructor for linear RF approximation
+ */
 vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
-                          , const meshindex_t xsize
-                          , const meshindex_t ysize
                           , const meshaxis_t angle
                           , const frequency_t f_RF
                           , const InterpolationType it
                           , const bool interpol_clamp
                           , oclhptr_t oclh
                           )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  : KickMap( in,out,it,interpol_clamp,Axis::y, oclh)
   , _linear(true)
   , _angle(angle)
   , _revolutionpart(0)
@@ -33,10 +33,8 @@ vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
     _calcKick(_syncphase);
 }
 
-vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
+vfps::RFKickMap::RFKickMap( std::shared_ptr<PhaseSpace> in
                           , std::shared_ptr<PhaseSpace> out
-                          , const meshindex_t xsize
-                          , const meshindex_t ysize
                           , const timeaxis_t revolutionpart
                           , const meshaxis_t V_RF
                           , const frequency_t f_RF
@@ -45,7 +43,7 @@ vfps::RFKickMap::RFKickMap(std::shared_ptr<PhaseSpace> in
                           , const bool interpol_clamp
                           , oclhptr_t oclh
                           )
-  : KickMap( in,out,xsize,ysize,it,interpol_clamp,Axis::y, oclh)
+  : KickMap( in,out,it,interpol_clamp,Axis::y, oclh)
   , _linear(false)
   , _angle(0)
   , _revolutionpart(revolutionpart)

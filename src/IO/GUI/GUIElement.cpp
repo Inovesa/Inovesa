@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #if INOVESA_USE_OPENGL == 1
@@ -14,16 +13,19 @@
 class ShaderException : public std::exception
 {
 public:
-    ShaderException(const std::string msg) :
-        _msg(msg)
-                {}
+    explicit ShaderException(const std::string& msg) :
+        _msg(msg) {}
 
-        const char* what() const noexcept
-        { return _msg.c_str(); }
+    const char* what() const noexcept;
 
 private:
     std::string _msg;
 };
+
+const char* ShaderException::what() const noexcept
+{
+    return _msg.c_str();
+}
 
 vfps::GUIElement::GUIElement(bool buffer_shared)
  : buffer_shared(buffer_shared)

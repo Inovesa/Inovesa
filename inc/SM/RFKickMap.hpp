@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -15,11 +14,7 @@ namespace vfps
 class RFKickMap : public KickMap
 {
 public:
-    /**
-     * @brief RFKickMap constructor for linear RF approximation
-     */
-    RFKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
-             , const meshindex_t xsize, const meshindex_t ysize
+    RFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const meshaxis_t angle
              , const frequency_t f_RF
              , const InterpolationType it
@@ -28,8 +23,7 @@ public:
              );
 
 
-    RFKickMap( std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
-             , const meshindex_t xsize, const meshindex_t ysize
+    RFKickMap(std::shared_ptr<PhaseSpace> in, std::shared_ptr<PhaseSpace> out
              , const timeaxis_t revolutionpart
              , const meshaxis_t V_RF
              , const frequency_t f_RF
@@ -39,7 +33,7 @@ public:
              , oclhptr_t oclh
              );
 
-    ~RFKickMap() noexcept;
+    ~RFKickMap() noexcept override;
 
 protected:
     const bool _linear;

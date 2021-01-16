@@ -1,27 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include <sstream>
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "IO/Display.hpp"
 
 
-std::unique_ptr<vfps::Display> vfps::make_display(std::string ofname
-                                                  #if INOVESA_USE_OPENGL == 1
-                                                  , bool gui
-                                                  , uint_fast8_t glversion
-                                                  #endif // INOVESA_USE_OPENGL
+std::unique_ptr<vfps::Display> vfps::make_display( std::string ofname
+                                                 , bool gui
+                                                 , uint_fast8_t glversion
                                                  )
 {
-    const std::time_t start_ctime
+    std::time_t start_ctime
             = std::chrono::system_clock::to_time_t(Display::start_time);
     std::stringstream sstream;
-    sstream << std::put_time(std::localtime(&start_ctime),"%FT%T%z");
+    auto local_time = vfps::localtime(start_ctime);
+    sstream << std::put_time(&local_time, "%FT%T%z");
 
     std::string timestring = sstream.str();
 
@@ -72,7 +70,6 @@ vfps::Display::Display(uint_fast8_t glversion)
     if( _window == nullptr ) {
         glfwTerminate();
         throw DisplayException("Failed to initialize GLFW.");
-        return;
     }
     glfwMakeContextCurrent(_window);
     #endif // GLFW3
@@ -151,10 +148,12 @@ void vfps::Display::printText(std::string txt, bool newline, float silentTime)
                 << " ]: "
                 << txt;
         _lastmessage = now;
-        if (newline) {
-            std::cout << message.str() << std::endl;
-        } else {
-            std::cout << message.str() << "\r";
+        if (!silent_mode) {
+            if (newline) {
+                std::cout << message.str() << std::endl;
+            } else {
+                std::cout << message.str() << "\r";
+            }
         }
         std::cout.flush();
         if (logfile.is_open()) {
@@ -194,13 +193,15 @@ GLFWwindow* vfps::Display::openWindow(uint_fast8_t glversion)
         title+=" (GL3)";
         break;
     }
-    return glfwCreateWindow( 512, 512, title.c_str(), NULL, NULL);
+    return glfwCreateWindow( 512, 512, title.c_str(), nullptr, nullptr);
 }
 #endif // INOVESA_USE_OPENGL
 
 std::chrono::system_clock::time_point vfps::Display::start_time;
 
 volatile bool vfps::Display::abort(false);
+
+volatile bool vfps::Display::silent_mode(false);
 
 std::chrono::system_clock::time_point vfps::Display::_lastmessage;
 

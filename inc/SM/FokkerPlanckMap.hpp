@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -17,7 +16,7 @@ namespace vfps
 /**
  * @brief The FokkerPlanckMap class
  *
- * Heritage information for the FokkerPlanckMap is one dimensional
+ * Source information for the FokkerPlanckMap is one dimensional
  *
  * @todo Padding for faster memory access
  */
@@ -64,7 +63,7 @@ public:
                    , oclhptr_t oclh
                    );
 
-    ~FokkerPlanckMap() noexcept;
+    ~FokkerPlanckMap() noexcept override;
 
 
     /**
@@ -72,7 +71,7 @@ public:
      */
     void apply() override;
 
-    PhaseSpace::Position apply(PhaseSpace::Position pos) const override;
+    void applyTo(PhaseSpace::Position& pos) const override;
 
 private:
     /**

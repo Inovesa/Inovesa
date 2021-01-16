@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrick Schreiber
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "defines.hpp"
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "IO/Display.hpp"
 #include "IO/FSPath.hpp"
 #include "IO/GUI/Plot1DLine.hpp"
@@ -22,7 +22,6 @@
 #include "SM/DriftMap.hpp"
 #include "SM/RFKickMap.hpp"
 #include "SM/DynamicRFKickMap.hpp"
-#include "SM/WakeFunctionMap.hpp"
 #include "SM/WakePotentialMap.hpp"
 #include "IO/HDF5File.hpp"
 #include "IO/ProgramOptions.hpp"
@@ -34,9 +33,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#if INOVESA_USE_PNG == 1
-#include <png++/png.hpp>
-#endif
 #include <memory>
 #include <sstream>
 
@@ -46,14 +42,33 @@ using boost::math::constants::two_pi;
 
 using namespace vfps;
 
-#if INOVESA_ENABLE_INTERRUPT == 1
-#include<csignal> // for SIGINT handling
+/**
+ * @file
+ * @brief main Inovesa file
+ */
 
-void SIGINT_handler(int) {
-    Display::abort = true;
-}
-#endif // INOVESA_ENABLE_INTERRUPT
+/** \mainpage Inovesa Documentation
+ *
+ * Installation hints and references to papers describing concepts
+ * and mathematical background can be found in
+ * \ref md_README.
+ *
+ * Result files are described at
+ * -   vfps::saveToImage()
+ * -   vfps::HDF5File
+ * -   vfps::Display::printText() for basic information on the logfile.
+ */
 
+/**
+ * @brief main
+ * @param argc
+ * @param argv
+ * @return
+ *
+ * To minimize the effect of rounding errors, some one-time caculations that
+ * are done at startup are hardcoded to be performed using double precision,
+ * regardless of the definition of meshaxis_t.
+ */
 int main(int argc, char** argv)
 {
     /*
@@ -66,7 +81,7 @@ int main(int argc, char** argv)
 
     #if INOVESA_ENABLE_INTERRUPT == 1
     //Install signal handler for SIGINT
-    signal(SIGINT, SIGINT_handler);
+    signal(SIGINT, Display::SIGINT_handler);
     #endif // INOVESA_ENABLE_INTERRUPT
 
     /*
@@ -90,7 +105,11 @@ int main(int argc, char** argv)
 
     std::string ofname = opts.getOutFile();
 
+    #if DEBUG != 1
     if (ofname.empty() && !opts.getForceRun()
+	#if INOVESA_USE_OPENCL == 1
+	&& cldev >= 0
+        #endif // INOVESA_USE_OPENCL
         #if INOVESA_USE_OPENGL == 1
         && !opts.showPhaseSpace()
         #endif // INOVESA_USE_OPENGL
@@ -103,6 +122,7 @@ int main(int argc, char** argv)
                      " 'run_anyway'." << std::endl;
         return EXIT_SUCCESS;
     }
+    #endif
 
     std::unique_ptr<vfps::Display> display;
     #if INOVESA_USE_OPENGL == 1
@@ -120,7 +140,7 @@ int main(int argc, char** argv)
         display = make_display( ofname );
     }
 
-    oclhptr_t oclh;
+    oclhptr_t oclh(nullptr);
 
     #if INOVESA_USE_OPENCL == 1
     if (cldev > 0) {
@@ -156,15 +176,15 @@ int main(int argc, char** argv)
     const bool verbose = opts.getVerbosity();
     const auto renormalize = opts.getRenormalizeCharge();
 
-    const meshindex_t ps_size = opts.getGridSize();
-    const double pqsize = opts.getPhaseSpaceSize();
-    const double qcenter = -opts.getPSShiftX()*pqsize/(ps_size-1);
-    const double pcenter = -opts.getPSShiftY()*pqsize/(ps_size-1);
-    const double pqhalf = pqsize/2;
-    const double qmax = qcenter + pqhalf;
-    const double qmin = qcenter - pqhalf;
-    const double pmax = pcenter + pqhalf;
-    const double pmin = pcenter - pqhalf;
+    const auto ps_bins = opts.getGridSize();
+    const auto pqsize = opts.getPhaseSpaceSize();
+    const auto qcenter = -opts.getPSShiftX()*pqsize/(ps_bins-1);
+    const auto pcenter = -opts.getPSShiftY()*pqsize/(ps_bins-1);
+    const auto pqhalf = pqsize/2;
+    const auto qmax = qcenter + pqhalf;
+    const auto qmin = qcenter - pqhalf;
+    const auto pmax = pcenter + pqhalf;
+    const auto pmin = pcenter - pqhalf;
 
     // relative energy spread
     const auto sE = opts.getEnergySpread();
@@ -183,17 +203,18 @@ int main(int argc, char** argv)
     const auto use_set_bend = (opts.getBendingRadius()>0);
 
     // revolution frequency (in Hz)
-    const auto f_rev = opts.getRevolutionFrequency();
+    const auto f_rev = static_cast<double>(opts.getRevolutionFrequency());
 
     const auto R_bend = use_set_bend
             ? opts.getBendingRadius()
             : physcons::c/(two_pi<double>()*f_rev);
 
     const frequency_t fc = opts.getCutoffFrequency();
-    const auto harmonic_number = opts.getHarmonicNumber();
+    const auto harmonic_number = static_cast<double>(opts.getHarmonicNumber());
     const auto f_RF = f_rev*harmonic_number;
-    const double gap = opts.getVacuumChamberGap();
-    const double V_RF = opts.getRFVoltage();
+    const auto bunchspacing = 1.0/(f_RF);
+    const auto gap = opts.getVacuumChamberGap();
+    const auto V_RF = opts.getRFVoltage();
     const auto linearRF = opts.getLinearRF();
 
     const auto lorentzgamma = E0/physcons::me;
@@ -204,27 +225,59 @@ int main(int argc, char** argv)
 
     const double V_eff = std::sqrt(V_RF*V_RF-V0*V0);
 
-    double fs = opts.getSyncFreq();
-    meshaxis_t alpha0_tmp = opts.getAlpha0();
+    auto fs = static_cast<double>(opts.getSyncFreq());
+    auto alpha0_tmp = static_cast<double>(opts.getAlpha0());
 
     // non-zero f_s will be used, zero implies usage of alpha0
-    if (fs == 0) {
+    if (std::fpclassify(fs) == FP_ZERO) {
         fs = f_rev*std::sqrt(alpha0_tmp*harmonic_number*V_eff
-                             /(two_pi<double>()*E0));
+                            /(two_pi<double>()*E0));
     } else {
         alpha0_tmp = boost::math::sign(fs)*two_pi<double>()*E0
                    / (harmonic_number*V_eff)*std::pow(fs/f_rev,2);
     }
 
-    const meshaxis_t alpha0 = alpha0_tmp;
-    const meshaxis_t alpha1 = opts.getAlpha1();
-    const meshaxis_t alpha2 = opts.getAlpha2();
+    std::vector<meshaxis_t> alpha{{ static_cast<meshaxis_t>(alpha0_tmp),
+                                    opts.getAlpha1(),
+                                    opts.getAlpha2()}};
 
+    // natural RMS bunch length (m)
+    const double bl = physcons::c*dE/harmonic_number
+            /std::pow(f_rev,2.0)/V_eff*fs;
 
-    // natural RMS bunch length
-    const double bl = physcons::c*dE/harmonic_number/std::pow(f_rev,2.0)/V_eff*fs;
+    // filling pattern, first as individual bunch currents
+    std::vector<integral_t> filling = opts.getBunchCurrents();
 
-    const double Ib = opts.getBunchCurrent();
+    // number of total buckets (including in the simulation empty ones)
+    const auto nbuckets = static_cast<uint32_t>(filling.size());
+
+    /* Buckets that actually hold bunches.
+     * Eumeration is inverse to x coordinates (physical z position)
+     * because smaller numbers should come first (physical time axis).
+     */
+    std::vector<uint32_t> bucketnumbers;
+
+    // the normalized bunch currents (without empty buckets)
+    std::vector<integral_t> bunches;
+
+    for (uint32_t i=0; i<filling.size(); i++) {
+        if (filling[i] > 0) {
+            bucketnumbers.push_back(filling.size()-1-i);
+            bunches.emplace_back(filling[i]);
+        }
+    }
+
+    // number of total buckets (including in the simulation empty ones)
+    const uint32_t nbunches = bunches.size();
+
+    // accumulated beam current
+    const double Ib = std::accumulate(bunches.begin(),bunches.end(),0.0);
+
+    // normalize filling pattern
+    std::transform(bunches.begin(), bunches.end(), bunches.begin(),
+                   std::bind(std::divides<integral_t>(), std::placeholders::_1,
+                             Ib));
+
     const double Qb = Ib/f_rev;
     const double zoom = opts.getStartDistZoom();
 
@@ -232,7 +285,7 @@ int main(int argc, char** argv)
             ? opts.getStepsPerTrev()*f_rev/fs
             : std::max(opts.getStepsPerTsync(),1u);
     const auto outstep = opts.getOutSteps();
-    const float rotations = opts.getNRotations();
+    const auto rotations = static_cast<float>(opts.getNRotations());
 
     const auto calc_damp = E0*physcons::e/W0/f_rev;
 
@@ -247,11 +300,28 @@ int main(int argc, char** argv)
     const double t_sync = 1.0/fs;
     #endif
 
-    const double padding =std::max(opts.getPadding(),1.0);
-    const frequency_t fmax = ps_size*vfps::physcons::c/(pqsize*bl);
-    const size_t nfreqs = opts.getRoundPadding() ?
-                    Impedance::upper_power_of_two(ps_size*padding) :
-                    ps_size*padding;
+    // number of phace spaces that would fit in the bunch spacing
+    const double spacing_ps = (bunchspacing*physcons::c/bl/pqsize);
+
+    // number of bins that fit in the bunch spacing
+    const meshindex_t spacing_bins = std::round(ps_bins*spacing_ps);
+
+    const frequency_t fmax = ps_bins*vfps::physcons::c/(pqsize*bl);
+
+    double padding =std::max(opts.getPadding(),1.0);
+
+    size_t padded_bins = std::ceil(ps_bins*padding);
+    if (opts.getRoundPadding()) {
+        padded_bins = upper_power_of_two(padded_bins);
+    }
+
+    size_t spaced_bins = std::ceil(ps_bins*nbuckets*spacing_ps);
+    if (opts.getRoundPadding()) {
+        spaced_bins = upper_power_of_two(spaced_bins);
+    }
+
+
+
     const auto s = opts.getWallConductivity();
     const auto xi = opts.getWallSusceptibility();
     const auto collimator_radius = opts.getCollimatorRadius();
@@ -295,13 +365,20 @@ int main(int argc, char** argv)
 
     /**************************************************************************
      * Up next: Printing information (dynamics estimation) for upcoming run.  *
-     * Only some part has its own context because information will go to      *
-     * the results file.                                                      *
-     **************************************************************************/
+     * Not everything is in printing context because some information will go *
+     * to the results file (if HDF5 is active).                               *
+     *************************************************************************/
+    #if INOVESA_USE_HDF5 == 1
     double shield = 0;
     double S_csr = 0;
+    #endif
     { // context of information printing, not needed in the program
-    if (gap!=0) {
+    if (std::fpclassify(gap) == FP_ZERO) {
+        #if INOVESA_USE_HDF5 == 0
+        double shield = 0;
+        double S_csr = 0;
+        #endif
+
         if (gap>0) {
             shield = bl*std::sqrt(R_bend)*std::pow(gap,-3./2.);
         }
@@ -355,7 +432,7 @@ int main(int argc, char** argv)
         sstream << std::scientific << fs;
         Display::printText("Synchrotron Frequency: " +sstream.str()+ " Hz");
 
-        if (opts.getStepsPerTrev() == 0) {
+        if (std::fpclassify(opts.getStepsPerTrev()) == FP_ZERO) {
             sstream.str("");
             sstream << std::fixed << 1/revolutionpart;
             Display::printText("Doing " +sstream.str()+
@@ -366,47 +443,60 @@ int main(int argc, char** argv)
             Display::printText("Doing " +sstream.str()+
                                " simulation steps per synchrotron period.");
         }
+
+        if (nbuckets > 1) {
+            sstream.str("");
+            sstream << nbuckets << " buckets are seperated by "
+                    << std::scientific << bunchspacing << " s.";
+            Display::printText(sstream.str());
+        }
     }
     } // end of context of information printing
 
-
-    /*
-     * There are three phase space grids:
-     * grid_t1, grid_t2, and grid_t3
-     * This will allow to work with odd and even numbers of SourceMaps
-     * f(x,y,t) -> f(x,y,t+dt) with fixed source and destination.
-     * When memory usage is crytical, it might be worth to change this
-     * to two grids (only).
-     *
-     * This first grid (grid_t1) will be initialized and
+     /* This first grid (grid_t1) will be initialized and
      * copied for the other ones.
      */
     std::shared_ptr<PhaseSpace> grid_t1;
 
 
     /*
-     * initialization of mesh1
+     * initialization of grid
      *
-     * TODO: It can be considered ugly to do this in main(),
+     * @TODO: It can be considered ugly to do this in main(),
      * so initialization might be moved to a factory function
      * at some point.
      */
     if (startdistfile.empty()) {
-        if (ps_size == 0) {
+        /*
+         * There are three phase space grids:
+         * grid_t1, grid_t2, and grid_t3
+         * This will allow to work with odd and even numbers of SourceMaps
+         * f(x,y,t) -> f(x,y,t+dt) with fixed source and destination.
+         * When memory usage is crytical, it might be worth to change this
+         * to two grids (only).
+         */
+        PhaseSpace::setSize(ps_bins, nbunches);
+
+        if (ps_bins == 0) {
             Display::printText("Please give file for initial distribution "
                                "or size of target mesh > 0.");
         }
-        const auto nBunches = 1U;
-        grid_t1.reset(new PhaseSpace( ps_size,qmin,qmax,bl,pmin,pmax,dE
-                                    , oclh, Qb,Ib,nBunches,zoom));
+        grid_t1.reset(new PhaseSpace( qmin,qmax,bl,pmin,pmax,dE
+                                    , oclh, Qb,Ib,bunches,zoom));
     } else {
         Display::printText("Reading in initial distribution from: \""
                            +startdistfile+'\"');
         #if INOVESA_USE_PNG == 1
         // check for file ending .png
         if (isOfFileType(".png",startdistfile)) {
-            grid_t1 = makePSFromPNG( startdistfile,qmin,qmax,pmin,pmax
-                                   , oclh, Qb,Ib,bl,dE);
+            grid_t1 = makePSFromPNG( startdistfile,
+                                     qmin, qmax, bl,
+                                     pmin, pmax, dE,
+                                     oclh, Qb, Ib);
+
+            std::stringstream msg;
+            msg << "Read phase space (a=" << vfps::PhaseSpace::nx << " px).";
+            Display::printText(msg.str());
         } else
         #endif // INOVESA_USE_PNG
         #if INOVESA_USE_HDF5 == 1
@@ -418,13 +508,7 @@ int main(int argc, char** argv)
                                     , Qb,Ib,bl,dE);
 
             if (grid_t1 == nullptr) {
-                return EXIT_SUCCESS;
-            }
-
-            if (ps_size != grid_t1->nMeshCells(0)) {
-                std::cerr << startdistfile
-                          << " does not match set GridSize." << std::endl;
-
+                std::cerr << "Error reading " << startdistfile << std::endl;
                 return EXIT_SUCCESS;
             }
         } else
@@ -452,8 +536,8 @@ int main(int argc, char** argv)
 
     // find highest peak for display (and information in the log)
     meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-    for (unsigned int x=0; x<ps_size; x++) {
-        for (unsigned int y=0; y<ps_size; y++) {
+    for (unsigned int x=0; x<ps_bins; x++) {
+        for (unsigned int y=0; y<ps_bins; y++) {
             maxval = std::max(maxval,(*grid_t1)[0][x][y]);
         }
     }
@@ -509,12 +593,14 @@ int main(int argc, char** argv)
     // RF map
     std::shared_ptr<DynamicRFKickMap> drfm;
     std::shared_ptr<SourceMap> rfm;
-    if ( rf_phase_noise != 0 || rf_ampl_noise != 0
-      || (rf_mod_ampl != 0 && rf_mod_step != 0)) {
+    if ( std::fpclassify(rf_phase_noise) == FP_NORMAL
+         || std::fpclassify(rf_ampl_noise) == FP_NORMAL
+         || (std::fpclassify(rf_mod_ampl) == FP_NORMAL
+             && std::fpclassify(rf_mod_step) == FP_NORMAL)) {
         if (linearRF) {
             Display::printText("Building dynamic, linear RFKickMap...");
 
-            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_bins, ps_bins
                                            , angle, revolutionpart, f_RF
                                            , rf_phase_noise, rf_ampl_noise
                                            , rf_mod_ampl,rf_mod_step, laststep
@@ -524,7 +610,7 @@ int main(int argc, char** argv)
         } else {
             Display::printText("Building dynamic, nonlinear RFKickMap...");
 
-            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
+            drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_bins, ps_bins
                                            , revolutionpart, V_eff, f_RF, V0
                                            , rf_phase_noise, rf_ampl_noise
                                            , rf_mod_ampl,rf_mod_step, laststep
@@ -535,11 +621,12 @@ int main(int argc, char** argv)
 
         sstream.str("");
         sstream << opts.getRFPhaseSpread()/360.0/f_rev/harmonic_number;
-        if (rf_phase_noise != 0) {
+        if (std::fpclassify(rf_phase_noise) == FP_NORMAL) {
             Display::printText("...including phase noise (spread: "
                                + sstream.str()+" s)");
         }
-        if (rf_mod_ampl != 0 && rf_mod_step != 0) {
+        if (std::fpclassify(rf_mod_ampl) == FP_NORMAL
+                && std::fpclassify(rf_mod_step) == FP_NORMAL) {
             sstream.str("");
             sstream << "...including phase modulation ("
                     << opts.getRFPhaseModFrequency()/fs
@@ -552,18 +639,13 @@ int main(int argc, char** argv)
     } else {
         if (linearRF) {
             Display::printText("Building static, linear RFKickMap.");
-            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
-                                   , angle, f_RF
-                                   , interpolationtype,interpol_clamp
-                                   , oclh
-                                   ));
+            rfm.reset(new RFKickMap( grid_t2, grid_t1, angle, f_RF,
+                                     interpolationtype,interpol_clamp, oclh ));
         } else {
             Display::printText("Building static, nonlinear RFKickMap.");
-            rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
-                                   , revolutionpart, V_eff, f_RF, V0
-                                   , interpolationtype,interpol_clamp
-                                   , oclh
-                                   ));
+            rfm.reset(new RFKickMap( grid_t2, grid_t1, revolutionpart, V_eff,
+                                     f_RF, V0 , interpolationtype,
+                                     interpol_clamp , oclh ));
         }
     }
     { // context of information printing, not needed in the program
@@ -578,26 +660,21 @@ int main(int argc, char** argv)
     Display::printText("... with synchronous phase at "+sstream.str());
     } // context of information printing
 
+    const std::vector<meshaxis_t> slip {{ angle,alpha[1]/alpha[0]*angle,
+                                            alpha[2]/alpha[0]*angle }};
+
+    while ( !alpha.empty() && std::fpclassify(alpha.back()) == FP_ZERO ) {
+        alpha.pop_back();
+    }
+
     Display::printText("Building DriftMap with");
-    sstream.str("");
-    sstream << "... alpha0 = " << alpha0;
-    Display::printText(sstream.str());
-    if (alpha1 != 0) {
+    for (std::size_t n=0; n<alpha.size(); n++) {
         sstream.str("");
-        sstream << "... alpha1 = " << alpha1;
-        Display::printText(sstream.str());
-    }
-    if (alpha2 != 0) {
-        sstream.str("");
-        sstream << "... alpha2 = " << alpha2;
+        sstream << "... alpha" << n << "= " << alpha[n];
         Display::printText(sstream.str());
     }
 
-
-    const std::vector<meshaxis_t> alpha {{ angle,alpha1/alpha0*angle
-                                          , alpha2/alpha0*angle }};
-
-    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,ps_size,ps_size, alpha
+    auto drm =std::make_unique<DriftMap>( grid_t1,grid_t3,slip
                                         , E0,interpolationtype,interpol_clamp
                                         , oclh );
 
@@ -607,9 +684,10 @@ int main(int argc, char** argv)
     // SourceMap for damping and diffusion
     SourceMap* fpm;
     if (e1 > 0) {
-        Display::printText("Building FokkerPlanckMap");
-        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_size,ps_size,
-                                   fptype,fptrack,e1,derivationtype, oclh);
+        Display::printText("Building FokkerPlanckMap.");
+        fpm = new FokkerPlanckMap( grid_t3,grid_t1,ps_bins,ps_bins
+                                 , fptype,fptrack,e1, derivationtype, oclh
+                                 );
 
         sstream.str("");
         sstream << std::scientific << calc_damp << " s";
@@ -625,7 +703,7 @@ int main(int argc, char** argv)
         Display::printText("... damping beta: " +sstream.str());
     } else {
         Display::printText("Fokker-Planck-Term is neglected.");
-        fpm = new Identity(grid_t3,grid_t1,ps_size,ps_size, oclh);
+        fpm = new Identity(grid_t3,grid_t1,oclh);
     }
 
 
@@ -637,22 +715,23 @@ int main(int argc, char** argv)
 
     Display::printText("For beam dynamics computation:");
     std::shared_ptr<Impedance> wake_impedance
-            = vfps::makeImpedance( nfreqs
+            = vfps::makeImpedance( (filling.size()>1)? spaced_bins : padded_bins
                                  , oclh
                                  , fmax,R_bend,f_rev,gap,use_csr
                                  , s,xi,collimator_radius,impedance_file);
 
     Display::printText("For CSR computation:");
     std::shared_ptr<Impedance> rdtn_impedance
-            = vfps::makeImpedance( nfreqs
+            = vfps::makeImpedance( padded_bins
                                  , oclh
                                  , fmax,R_bend,f_rev,(gap>0)?gap:-1);
 
 
     // field for radiation (not for self-interaction)
-    ElectricField rdtn_field( grid_t1,rdtn_impedance
+    ElectricField rdtn_field( grid_t1,rdtn_impedance,bucketnumbers
+                            , 0 // no spacing
                             , oclh
-                            , f_rev,revolutionpart);
+                            , f_rev, revolutionpart);
 
     /**************************************************************************
      * Part modeling the self-interaction of the electron-bunch.              *
@@ -665,38 +744,22 @@ int main(int argc, char** argv)
 
     // depending if working time or frequency domain, only one might be used
     WakeKickMap* wkm = nullptr;
-    WakeFunctionMap* wfm = nullptr;
 
-    std::string wakefile = opts.getWakeFile();
-    if (wakefile.size() > 4) {
-        Display::printText("Reading WakeFunction from "+wakefile+".");
-        wfm = new WakeFunctionMap( grid_t1,grid_t2,ps_size,ps_size
-                                 , wakefile,E0,sE,Ib,dt
-                                 , interpolationtype,interpol_clamp
-                                 , oclh
-                                 );
-        wkm = wfm;
-    } else {
-        if (wake_impedance != nullptr) {
-            Display::printText("Calculating WakePotential.");
-            wake_field = new ElectricField( grid_t1,wake_impedance
-                                          , oclh
-                                          ,f_rev
-                                          , revolutionpart, Ib,E0,sE,dt
-                                          );
-
-            Display::printText("Building WakeKickMap.");
-            wkm = new WakePotentialMap( grid_t1,grid_t2,ps_size,ps_size
-                                      , wake_field ,interpolationtype
-                                      , interpol_clamp
+    if (wake_impedance != nullptr) {
+        Display::printText("Calculating WakePotential.");
+        wake_field = new ElectricField( grid_t1,wake_impedance
+                                      , bucketnumbers, spacing_bins
                                       , oclh
+                                      , f_rev
+                                      , revolutionpart, Ib,E0,sE,dt
                                       );
-        }
-    }
-    if (wkm != nullptr) {
+
+        Display::printText("Building WakePotentialMap.");
+        wkm = new WakePotentialMap( grid_t1,grid_t2,wake_field,
+                                    interpolationtype,interpol_clamp,oclh);
         wm = wkm;
     } else {
-        wm = new Identity( grid_t1,grid_t2,ps_size,ps_size,oclh);
+        wm = new Identity( grid_t1,grid_t2,oclh);
     }
 
     /* Load coordinates for particle tracking.
@@ -728,7 +791,7 @@ int main(int argc, char** argv)
     #if INOVESA_USE_OPENGL == 1
     if (display != nullptr) {
         try {
-            bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_size
+            bpv.reset(new Plot1DLine( std::array<float,3>{{1,0,0}},ps_bins
                                     , Plot1DLine::Orientation::horizontal
                                     , grid_t1->projectionX_glbuf));
             display->addElement(bpv);
@@ -740,7 +803,7 @@ int main(int argc, char** argv)
         if (!trackme.empty()) {
             try {
                 ppv.reset(new Plot2DPoints(std::array<float,3>{{1,1,1}},
-                                           ps_size,ps_size));
+                                           ps_bins,ps_bins));
                 display->addElement(ppv);
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -750,7 +813,7 @@ int main(int argc, char** argv)
         }
         if (wkm != nullptr) {
             try {
-                wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_size
+                wpv.reset(new Plot1DLine( std::array<float,3>{{0,0,1}},ps_bins
                                         , Plot1DLine::Orientation::horizontal
                                         , wkm->getGLBuffer()));
                 display->addElement(wpv);
@@ -785,7 +848,7 @@ int main(int argc, char** argv)
         Display::printText("Saved configuiration to \""+ofname+".cfg\".");
         try {
             hdf_file = new HDF5File(ofname,grid_t1, &rdtn_field, wake_impedance,
-                                    wfm,trackme.size(), t_sync,f_rev);
+                                    trackme.size(), t_sync,f_rev);
             Display::printText("Will save results to \""+ofname+"\".");
             opts.save(hdf_file);
             hdf_file->addParameterToGroup("/Info","CSRStrength",
@@ -816,18 +879,6 @@ int main(int argc, char** argv)
         return EXIT_SUCCESS;
     }
 
-    #if INOVESA_USE_HDF5 == 1
-    const auto h5save = opts.getSavePhaseSpace();
-    // end of preparation to save results
-
-
-    if (hdf_file != nullptr && h5save == 0) {
-        // save initial phase space (if not saved anyways)
-        hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
-    }
-    #endif
-
-
 
     Display::printText("Starting the simulation.");
 
@@ -852,6 +903,26 @@ int main(int argc, char** argv)
     grid_t1->variance(1);
 
     Display::printText(status_string(grid_t1,0,rotations),false);
+
+    #if INOVESA_USE_HDF5 == 1
+    const auto h5save = opts.getSavePhaseSpace();
+    // end of preparation to save results
+
+    if (hdf_file != nullptr) {
+        // save initial conditions
+        if (wake_field != nullptr) {
+            // padded bunch and wake profiles
+            wake_field->wakePotential();
+            hdf_file->appendPadded(wake_field);
+        }
+        if (h5save == 0) {
+            // phase space (if not saved anyways)
+            hdf_file->append(*grid_t1,0,HDF5File::AppendType::PhaseSpace);
+        }
+    }
+    #endif
+
+
 
     #if INOVESA_USE_OPENCL == 1
     if (oclh) {
@@ -881,7 +952,7 @@ int main(int argc, char** argv)
         }
         if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
-            grid_t1->normalize();
+            grid_t1->integrateAndNormalize();
         } else {
             // works on XProjection
             grid_t1->integrate();
@@ -933,7 +1004,7 @@ int main(int argc, char** argv)
                     psv->createTexture(grid_t1);
                 }
                 if (bpv != nullptr && !bpv->getBufferShared()) {
-                    bpv->update(grid_t1->getProjection(0));
+                    bpv->update(grid_t1->getProjection(0).origin());
                 }
                 if (ppv != nullptr) {
                     ppv->update(trackme);
@@ -948,7 +1019,7 @@ int main(int argc, char** argv)
                     {
                         rdtn_field.updateCSR(fc);
                     }
-                    csrlog[outstepnr] = rdtn_field.getCSRPower();
+                    csrlog[outstepnr] = rdtn_field.getCSRPower()[0];
                     history->update(csrlog.data());
                 }
                 display->draw();
@@ -961,13 +1032,13 @@ int main(int argc, char** argv)
                                rotations),false,updatetime);
         }
         wm->apply();
-        wm->applyTo(trackme);
+        wm->applyToAll(trackme);
         rfm->apply();
-        rfm->applyTo(trackme);
+        rfm->applyToAll(trackme);
         drm->apply();
-        drm->applyTo(trackme);
+        drm->applyToAll(trackme);
         fpm->apply();
-        fpm->applyTo(trackme);
+        fpm->applyToAll(trackme);
 
         // udate for next time step
         grid_t1->updateXProjection();
@@ -993,7 +1064,7 @@ int main(int argc, char** argv)
          */
         if (renormalize > 0 && simulationstep%renormalize == 0) {
             // works on XProjection
-            grid_t1->normalize();
+            grid_t1->integrateAndNormalize();
         } else {
             // works on XProjection
             grid_t1->integrate();
@@ -1023,30 +1094,21 @@ int main(int argc, char** argv)
         if (drfm) {
             hdf_file->appendRFKicks(drfm->getPastModulation());
         }
+        if (wake_field != nullptr) {
+            hdf_file->appendPadded(wake_field);
+        }
     }
     #endif // INOVESA_USE_HDF5
     #if INOVESA_USE_PNG == 1
     if ( isOfFileType(".png",ofname)) {
-        meshdata_t maxval = std::numeric_limits<meshdata_t>::min();
-        meshdata_t* val = grid_t1->getData();
-        for (meshindex_t i=0; i<grid_t1->nMeshCells(); i++) {
-            maxval = std::max(val[i],maxval);
-        }
-        png::image< png::gray_pixel_16 > png_file(ps_size, ps_size);
-        for (unsigned int x=0; x<ps_size; x++) {
-            for (unsigned int y=0; y<ps_size; y++) {
-                png_file[ps_size-y-1][x]=
-                        static_cast<png::gray_pixel_16>(
-                            std::max((*grid_t1)[0][x][y],meshdata_t(0))
-                            /maxval*float(UINT16_MAX));
-            }
-        }
-        png_file.write(ofname);
+        saveToImage(*grid_t1, ofname);
     }
     #endif
 
     // Print the last status.
-    Display::printText(status_string(grid_t1, static_cast<float>(simulationstep)/steps, rotations));
+    Display::printText(status_string(
+                           grid_t1, static_cast<float>(
+                               simulationstep)/steps, rotations));
 
     delete wake_field;
 

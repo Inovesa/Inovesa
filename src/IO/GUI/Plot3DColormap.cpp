@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #if INOVESA_USE_OPENGL == 1
@@ -146,7 +145,7 @@ void vfps::Plot3DColormap::createTexture(std::shared_ptr<vfps::PhaseSpace> mesh)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-    size_t npixels = mesh->nMeshCells();
+    size_t npixels = PhaseSpace::nxy;
     float* data = new float[3*npixels];
     vfps::meshdata_t* meshdata = mesh->getData();
     float newmax=std::numeric_limits<vfps::meshdata_t>::min();
@@ -159,7 +158,7 @@ void vfps::Plot3DColormap::createTexture(std::shared_ptr<vfps::PhaseSpace> mesh)
         }
         maxValue = newmax;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F,
-                 mesh->nMeshCells(0), mesh->nMeshCells(1),
+                 PhaseSpace::nx, PhaseSpace::ny,
                  0, GL_RGB, GL_FLOAT, data);
     delete [] data;
 

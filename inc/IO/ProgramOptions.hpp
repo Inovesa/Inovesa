@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -16,7 +15,7 @@
 #include <sstream>
 
 #include "defines.hpp"
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 #include "SM/FokkerPlanckMap.hpp"
 #if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
@@ -27,35 +26,17 @@ namespace po = boost::program_options;
 namespace vfps
 {
 
+/**
+ * @brief The ProgramOptions class wraps boost::program_options
+ *        and allows to keep the configuration at one place.
+ */
 class ProgramOptions
 {
 public:
     ProgramOptions();
 
-    /**
-     * @brief parse parse command line parameters
-     * @param argc argument count (handed over from main)
-     * @param argv argument values (handed over from main)
-     * @return Run simulation?
-     *
-     * Function will return true, except in cases where it is undesired that the
-     * simulation is run. This is the case when one of the following command
-     * line parameters is present:
-     *
-     * --help: print list of
-     * --copyright: print copyright hint
-     * --version: print showt version information
-     * --buildinfo: print verbose build information
-     * --cldev < 0: list available devices for OpenCL
-     */
     bool parse(int argc, char** argv);
 
-    /**
-     * @brief save
-     * @param fname
-     *
-     * @todo ignore members of _compatopts
-     */
     void save(std::string fname);
 
     #if INOVESA_USE_HDF5 == 1
@@ -100,9 +81,6 @@ public:
 
     inline auto getForceRun() const
         { return _forcerun; }
-
-    inline auto getWakeFile() const
-        { return _wakefile; }
 
 public:
     inline auto getGridSize() const
@@ -181,7 +159,7 @@ public:
     inline auto getBendingRadius() const
         { return r_bend; }
 
-    inline auto getBunchCurrent() const
+    inline auto getBunchCurrents() const
         { return I_b; }
 
     inline auto getCutoffFrequency() const
@@ -250,22 +228,20 @@ private: // program parameters
 
     std::string _configfile;
 
-    int32_t _glversion;
+    uint_fast8_t _glversion;
 
     bool _verbose;
 
     bool _forcerun;
 
-    std::string _wakefile;
-
 private: // simulation parameters
-    uint32_t meshsize;
+    meshindex_t meshsize;
     uint32_t outsteps;
     double padding;
     bool roundpadding;
-    double pq_size;
-    double meshshiftx;
-    double meshshifty;
+    meshaxis_t pq_size;
+    meshaxis_t meshshiftx;
+    meshaxis_t meshshifty;
     uint32_t steps_per_Ts;
     double steps_per_Trev;
     int32_t renormalize;
@@ -278,9 +254,9 @@ private: // simulation parameters
     bool interpol_clamp;
 
 private: // phsical parameters
-    double alpha0;
-    double alpha1;
-    double alpha2;
+    meshaxis_t alpha0;
+    meshaxis_t alpha1;
+    meshaxis_t alpha2;
 
     double rf_phase_spread;
     double rf_amplitude_spread;
@@ -296,15 +272,15 @@ private: // phsical parameters
      * @brief zoom initial distribution
      */
     double zoom;
-    double f_c;
-    double f_s;
-    double f0;
+    frequency_t f_c;
+    frequency_t f_s;
+    frequency_t f0;
     double g;
     double collimator;
     double s_c;
     double xi_wall;
-    double H;
-    double I_b;
+    frequency_t H;
+    std::vector<integral_t> I_b;
     double t_d;
     double r_bend;
     double s_E;

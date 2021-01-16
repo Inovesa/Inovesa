@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -74,7 +73,7 @@ public:
      * @param device
      * @param glsharing needs to be implemented
      */
-    OCLH( uint32_t device, bool glsharing=false);
+    explicit OCLH( uint32_t device, bool glsharing=false);
 
     cl::Program prepareCLProg(std::string);
 

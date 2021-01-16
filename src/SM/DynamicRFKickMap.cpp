@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Johannes Schestag
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "SM/DynamicRFKickMap.hpp"
@@ -56,8 +56,7 @@ vfps::DynamicRFKickMap::DynamicRFKickMap( std::shared_ptr<PhaseSpace> in
                                         , const bool interpol_clamp
                                         , oclhptr_t oclh
                                         )
-  : RFKickMap( in,out,xsize,ysize
-             , revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
+  : RFKickMap( in,out,revolutionpart,V_RF,f_RF,V0,it,interpol_clamp,oclh )
   , _phasenoise(phasespread/std::sqrt(revolutionpart))
   , _amplnoise(amplspread/std::sqrt(revolutionpart))
   , _modampl(modampl)

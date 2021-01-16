@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -15,7 +14,7 @@ namespace vfps
 class ParallelPlatesCSR : public Impedance
 {
 public:
-    ParallelPlatesCSR( const size_t n
+    ParallelPlatesCSR( const size_t nfreqs
                      , const frequency_t f0
                      , const frequency_t f_max
                      , const double g
@@ -24,7 +23,7 @@ public:
 
 private:
     static std::vector<vfps::impedance_t>
-    __calcImpedance(const size_t n,
+    __calcImpedance(const size_t nfreqs,
                     const frequency_t f0,
                     const frequency_t f_max,
                     const double g);

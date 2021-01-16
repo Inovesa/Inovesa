@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "Z/ParallelPlatesCSR.hpp"
@@ -12,31 +11,31 @@
 using boost::math::constants::pi;
 using boost::math::constants::pi_sqr;
 
-vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t n
+vfps::ParallelPlatesCSR::ParallelPlatesCSR( const size_t nfreqs
                                           , const frequency_t f0
                                           , const frequency_t f_max
                                           , const double g
                                           , oclhptr_t oclh
                                           )
     :
-      Impedance(__calcImpedance(n,f0,f_max,g),f_max, oclh )
+      Impedance(__calcImpedance(nfreqs,f0,f_max,g),f_max, oclh )
 {
 }
 
 std::vector<vfps::impedance_t>
-vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
+vfps::ParallelPlatesCSR::__calcImpedance(const size_t nfreqs,
                                          const vfps::frequency_t f0,
                                          const vfps::frequency_t f_max,
                                          const double g)
 {
-    std::vector<vfps::impedance_t> rv(n,0);
+    std::vector<vfps::impedance_t> rv(nfreqs,0);
 
     // frequency resolution: impedance will be sampled at multiples of delta
-    const frequency_t delta = f_max/f0/(n-1.0);
+    const double delta = f_max/f0/(nfreqs-1.0);
 
     const double r_bend = physcons::c/(2*pi<double>()*f0);
     constexpr std::complex<double> j(0,1);
-    for (size_t i=1; i<=n/2; i++) {
+    for (size_t i=1; i<=nfreqs/2; i++) {
         std::complex<double> Z=0;
         const double n = i*delta;
         const double m = n*std::pow(g/r_bend,3./2.);
@@ -59,7 +58,12 @@ vfps::ParallelPlatesCSR::__calcImpedance(const size_t n,
             Z += zinc;
         }
         Z *= 4.0*b*n*g/r_bend*pi_sqr<double>()*std::pow(2,1./3.)*physcons::Z0;
-        rv[i] = Z;
+
+        /* Calculation was done using double to increase accuracy
+         * for this one-time computation. Explicitly cast down to
+         * impedance_t, to make this transparent.
+         */
+        rv[i] = static_cast<impedance_t>(Z);
     }
 
     return rv;

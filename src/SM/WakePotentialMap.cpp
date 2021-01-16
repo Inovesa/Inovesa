@@ -1,23 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "SM/WakePotentialMap.hpp"
 
 vfps::WakePotentialMap::WakePotentialMap( std::shared_ptr<PhaseSpace> in
                                         , std::shared_ptr<PhaseSpace> out
-                                        , const vfps::meshindex_t xsize
-                                        , const vfps::meshindex_t ysize
                                         , ElectricField* field
                                         , const InterpolationType it
                                         , bool interpol_clamp
                                         , oclhptr_t oclh
                                         )
-  : WakeKickMap( in,out,xsize,ysize,it,interpol_clamp,oclh
-               #if defined INOVESA_USE_OPENCL and defined INOVESA_USE_OPENGL
+  : WakeKickMap( in,out,it,interpol_clamp,oclh
+               #if INOVESA_USE_OPENCL == 1 and INOVESA_USE_OPENGL == 1
                , field->wakepotential_glbuf
                #endif // INOVESA_USE_OPENCL and INOVESA_USE_OPENGL
                )
@@ -47,7 +44,7 @@ void vfps::WakePotentialMap::update()
     } else
     #endif // INOVESA_USE_OPENCL
     {
-        std::copy_n(_field->wakePotential(),_xsize,_offset.data());
+        std::copy_n(_field->wakePotential(),PhaseSpace::nb*_xsize,_offset.data());
     }
     updateSM();
 }

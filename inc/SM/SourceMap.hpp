@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -82,11 +81,10 @@ public:
     /**
      * @brief apply
      * @param pos
-     * @return  updated position
      */
-    virtual PhaseSpace::Position apply(PhaseSpace::Position pos) const =0;
+    virtual void applyTo(PhaseSpace::Position& pos) const=0;
 
-    void applyTo(std::vector<PhaseSpace::Position>& particles);
+    void applyToAll(std::vector<PhaseSpace::Position>& particles);
 
 protected:
     /**
@@ -108,11 +106,6 @@ protected:
      * @brief _hinfo
      */
     hi* const _hinfo;
-
-    /**
-     * @brief _size size of the SourceMap (_xsize*_ysize)
-     */
-    const meshindex_t _size;
 
     /**
      * @brief _xsize horizontal size of the SourceMap (in grid points)
@@ -167,8 +160,8 @@ protected:
      * @param f distance from lower mesh point
      * @param it number of interpolation coefficiants (size of ic)
      */
-    void calcCoefficiants(interpol_t* ic, const interpol_t f,
-                          const uint_fast8_t it) const;
+    static void calcCoefficiants(interpol_t* ic, const interpol_t f,
+                          const uint_fast8_t it);
 
     static void notClampedMessage();
 

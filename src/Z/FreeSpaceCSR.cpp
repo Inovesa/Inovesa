@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #include "Z/FreeSpaceCSR.hpp"
@@ -31,7 +30,7 @@ vfps::FreeSpaceCSR::__calcImpedance(const size_t n,
     constexpr impedance_t Z0 = impedance_t(306.3,176.9);
 
     // frequency resolution: impedance will be sampled at multiples of delta
-    const frequency_t delta = f_max/f_rev/(n-1.0);
+    const frequency_t delta = f_max/f_rev/(n-1);
 
     for (size_t i=0; i<=n/2; i++) {
         rv.push_back(Z0*std::pow(i*delta,csrpower_t(1.0/3.0)));

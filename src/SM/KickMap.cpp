@@ -1,35 +1,55 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
+
+#include <type_traits>
 
 #include "SM/KickMap.hpp"
 
+
+/** \file
+ *  \brief implementation of class KickMap
+ */
+
+/**
+ * @brief vfps::KickMap::KickMap
+ * @param in source
+ * @param out target
+ * @param it number of points used for 1D interpolation
+ * @param interpol_clamp clamp values after interpoltion
+ * @param kd direction of kick
+ * @param oclh pointer to OpenCL handler
+ */
 vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
                       , std::shared_ptr<PhaseSpace> out
-                      , const meshindex_t xsize
-                      , const meshindex_t ysize
                       , const InterpolationType it
                       , const bool interpol_clamp
                       , const Axis kd
                       , oclhptr_t oclh
                       )
-  : SourceMap( in,out,kd==Axis::x?1:xsize ,kd==Axis::x?ysize:1,it,it,oclh),
+  : SourceMap( in,out,kd==Axis::x?1:PhaseSpace::nx,
+               kd==Axis::x?PhaseSpace::ny:1
+             , kd==Axis::x?PhaseSpace::ny*PhaseSpace::nb*it:
+                           PhaseSpace::nx*PhaseSpace::nb*it
+             , it,it,oclh),
     _kickdirection(kd),
-    _meshsize_kd(kd==Axis::x?xsize:ysize),
-    _meshsize_pd(kd==Axis::x?ysize:xsize)
+    _meshsize_kd(kd==Axis::x?PhaseSpace::nx:PhaseSpace::ny)
+  , _meshsize_pd(kd==Axis::x?PhaseSpace::ny:PhaseSpace::nx)
+  , _lastbunch(PhaseSpace::nb-1)
 {
     if (interpol_clamp && _oclh != nullptr) {
         notClampedMessage();
     }
-    _offset.resize(_meshsize_pd,meshaxis_t(0));
+    // explicitly state that product should fit into meshindex_t
+    _offset.resize(static_cast<meshindex_t>(_meshsize_pd*PhaseSpace::nb),
+                   static_cast<meshaxis_t>(0));
     #if INOVESA_INIT_KICKMAP == 1
     for (meshindex_t q_i=0; q_i<static_cast<meshindex_t>(_meshsize_pd); q_i++) {
         _hinfo[q_i*_ip].index = _meshsize_kd/2;
         _hinfo[q_i*_ip].weight = 1;
-        for (unsigned int j1=1; j1<_it; j1++) {
+        for (meshindex_t j1=1; j1<_it; j1++) {
             _hinfo[q_i*_ip+j1].index = 0;
             _hinfo[q_i*_ip+j1].weight = 0;
         }
@@ -156,6 +176,9 @@ vfps::KickMap::KickMap( std::shared_ptr<PhaseSpace> in
 #endif // INOVESA_USE_OPENCL
 }
 
+/**
+ * @brief saves timings if profiling is enabled
+ */
 vfps::KickMap::~KickMap() noexcept
 #if INOVESA_ENABLE_CLPROFILING == 1
 {
@@ -165,6 +188,9 @@ vfps::KickMap::~KickMap() noexcept
     = default;
 #endif // INOVESA_ENABLE_CLPROFILING
 
+/**
+ * @brief vfps::KickMap::apply implements vfps::SourceMap::apply
+ */
 void vfps::KickMap::apply()
 {
     #if INOVESA_USE_OPENCL == 1
@@ -193,39 +219,49 @@ void vfps::KickMap::apply()
     meshdata_t* data_out = _out->getData();
 
     if (_kickdirection == Axis::x) {
-        for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
-            for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[y*_ip+j];
-                    // the min makes sure not to have out of bounds accesses
-                    // casting is to be sure about overflow behaviour
-                    const meshindex_t xs = std::min(
-                         static_cast<meshindex_t>(_meshsize_pd-1),
-                         static_cast<meshindex_t>(static_cast<int32_t>(x+h.index)
-                                                - static_cast<int32_t>(_meshsize_pd/2)));
-                    value += data_in[xs*_meshsize_pd+y]
-                          * static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n < PhaseSpace::nb; n++) {
+            const meshindex_t offs = n*_meshsize_kd*_meshsize_pd;
+            for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_kd); x++) {
+                for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_pd); y++) {
+                    meshdata_t value = 0;
+                    for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
+                        hi h = _hinfo[y*_ip+j];
+                        // the min makes sure not to have out of bounds accesses
+                        // casting is to be sure about overflow behaviour
+                        const meshindex_t xs = static_cast<meshindex_t>(
+                                    static_cast<int32_t>(x+h.index)
+                                    - static_cast<int32_t>(_meshsize_pd/2));
+                        if (xs < static_cast<meshindex_t>(_meshsize_pd)) {
+                            value += data_in[offs+xs*_meshsize_pd+y]
+                                  * static_cast<meshdata_t>(h.weight);
+                        }
+                    }
+                    data_out[offs+x*_meshsize_pd+y] = value;
                 }
-                data_out[x*_meshsize_pd+y] = value;
             }
         }
     } else {
-        for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
-            const meshindex_t offs = x*_meshsize_kd;
-            for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
-                meshdata_t value = 0;
-                for (uint_fast8_t j=0; j<_ip; j++) {
-                    hi h = _hinfo[x*_ip+j];
-                    // the min makes sure not to have out of bounds accesses
-                    // casting is to be sure about overflow behaviour
-                    const meshindex_t ys = std::min(
-                        static_cast<meshindex_t>(_meshsize_kd-1),
-                        static_cast<meshindex_t>(static_cast<int32_t>(y+h.index)
-                                               - static_cast<int32_t>(_meshsize_kd/2)));
-                    value += data_in[offs+ys]*static_cast<meshdata_t>(h.weight);
+        for (uint32_t n=0; n < PhaseSpace::nb; n++) {
+            const meshindex_t offs1 = n*_meshsize_kd*_meshsize_pd;
+            const meshindex_t offs2 = std::min(n,_lastbunch)*_meshsize_pd;
+            for (meshindex_t x=0; x< static_cast<meshindex_t>(_meshsize_pd); x++) {
+                const meshindex_t offs = offs1 + x*_meshsize_kd;
+                for (meshindex_t y=0; y< static_cast<meshindex_t>(_meshsize_kd); y++) {
+                    meshdata_t value = 0;
+                    for (std::remove_const<decltype(_ip)>::type j=0; j<_ip; j++) {
+                        hi h = _hinfo[offs2+x*_ip+j];
+                        // the min makes sure not to have out of bounds accesses
+                        // casting is to be sure about overflow behaviour
+                        const meshindex_t ys = static_cast<meshindex_t>(
+                                    static_cast<int32_t>(y+h.index)
+                                    - static_cast<int32_t>(_meshsize_kd/2));
+                        if (ys < static_cast<meshindex_t>(_meshsize_pd)) {
+                            value += data_in[offs+ys]
+                                  * static_cast<meshdata_t>(h.weight);
+                        }
+                    }
+                    data_out[offs+y] = value;
                 }
-                data_out[offs+y] = value;
             }
         }
     }
@@ -234,8 +270,14 @@ void vfps::KickMap::apply()
     }
 }
 
-vfps::PhaseSpace::Position
-vfps::KickMap::apply(PhaseSpace::Position pos) const
+/**
+ * @brief vfps::KickMap::applyTo implements vfps::SourceMap::applyTo
+ * @param pos
+ *
+ * Coordinates in _offset are defined for backward mapping but this function
+ * does foreward mapping. So the shift is inverted.
+ */
+void vfps::KickMap::applyTo(PhaseSpace::Position& pos) const
 {
     if (_kickdirection == Axis::x) {
         meshindex_t yi;
@@ -258,7 +300,6 @@ vfps::KickMap::apply(PhaseSpace::Position pos) const
         pos.y = std::max(static_cast<meshaxis_t>(1),
                      std::min(pos.y,static_cast<meshaxis_t>(_meshsize_kd-1)));
     }
-    return pos;
 }
 
 #if INOVESA_USE_OPENCL == 1
@@ -290,6 +331,11 @@ void vfps::KickMap::syncCLMem(OCLH::clCopyDirection dir)
 }
 #endif // INOVESA_USE_OPENCL
 
+/**
+ * @brief updateSM
+ *
+ * does nothing when OpenCL is used
+ */
 void vfps::KickMap::updateSM()
 {
     if (_oclh == nullptr) {
@@ -300,7 +346,7 @@ void vfps::KickMap::updateSM()
     interpol_t* smc = new interpol_t[_it];
 
     // translate offset into SM
-    for (meshindex_t i=0; i< static_cast<meshindex_t>(_meshsize_pd); i++) {
+    for (size_t i=0; i< _offset.size(); i++) {
         meshaxis_t poffs = _meshsize_kd/2+_offset[i];
         meshaxis_t qp_int;
         //Scaled arguments of interpolation functions:

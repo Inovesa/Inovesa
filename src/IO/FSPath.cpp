@@ -1,56 +1,67 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
+
+#include <stdlib.h>
 
 #include "IO/FSPath.hpp"
 
 vfps::FSPath::FSPath(std::string path)
   : _path(expand_user(path))
 {
-    checkDirectory(path);
+    validateDirectory(_path);
 }
 
 vfps::FSPath& vfps::FSPath::append(std::string path)
 {
     _path /= path;
-    checkDirectory(path);
+    validateDirectory(_path);
     return *this;
 }
 
 /* References:
- * https://stackoverflow.com/questions/4891006/how-to-create-a-folder-in-the-home-directory
+ * https://stackoverflow.com/questions/4891006/
+ *          how-to-create-a-folder-in-the-home-directory
  */
 std::string vfps::FSPath::expand_user(std::string path)
 {
-  if (!path.empty() && path[0] == '~') {
-    assert(path.size() == 1 || path[1] == '/');  // or other error handling
-    char const* home = getenv("HOME");
-    if (home || ((home = getenv("USERPROFILE")))) {
-      path.replace(0, 1, home);
+    if (!path.empty() && path[0] == '~') {
+        // either "~" or "~/..."
+        assert(path.size() == 1 || path[1] == '/');
+        // typically, home is defined in HOME
+        char const* home = std::getenv("HOME");
+        // try another name for the environment variable
+        if (!home) {
+          home = std::getenv("USERPROFILE");
+        }
+        if ( home ) {
+            path.replace(0, 1, home);
+        }
+        #ifdef _WIN32
+        else { // fallback for WIN32 plattform
+            char const *hdrive = std::getenv("HOMEDRIVE");
+            char const *hpath = std::getenv("HOMEPATH");
+            assert(hdrive);  // or other error handling
+            assert(hpath);
+            path.replace(0, 1, std::string(hdrive) + hpath);
+        }
+        #endif // _WIN32
     }
-    else {
-      char const *hdrive = getenv("HOMEDRIVE"),
-        *hpath = getenv("HOMEPATH");
-      assert(hdrive);  // or other error handling
-      assert(hpath);
-      path.replace(0, 1, std::string(hdrive) + hpath);
-    }
-  }
-  return path;
+    return path;
 }
 
-void vfps::FSPath::checkDirectory(std::string path)
+bool vfps::FSPath::validateDirectory(boost::filesystem::path path)
 {
-    if (!fs::exists(_path)) {
-        if ((path.back()) == '/') {
-            fs::create_directories(_path);
+    if (!fs::exists(path)) {
+        if ((path.string().back()) == '/') {
+            return fs::create_directories(path);
         } else {
-            fs::create_directories(_path.parent_path());
+            return fs::create_directories(path.parent_path());
         }
     }
+    return false;
 }
 
 /* References:
@@ -61,7 +72,7 @@ void vfps::FSPath::checkDirectory(std::string path)
  */
 std::string vfps::FSPath::datapath()
 {
-    char const *envstr = getenv("XDG_DATA_HOME");
+    char const *envstr = std::getenv("XDG_DATA_HOME");
     std::string rval;
     if (envstr != nullptr) {
         rval = std::string(envstr);

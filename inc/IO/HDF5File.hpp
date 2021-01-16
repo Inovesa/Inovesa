@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #pragma once
@@ -18,10 +17,34 @@
 #include "PS/ElectricField.hpp"
 #include "Z/Impedance.hpp"
 #include "PS/PhaseSpace.hpp"
-#include "SM/WakeFunctionMap.hpp"
+#include "SM/WakeKickMap.hpp"
+
+/** @file
+ *  @brief HDF5 result file class definition
+ */
 
 namespace vfps {
 
+    /**
+     * @anchor ResultFormatHDF5
+     *
+     * @brief  HDF5 result file as it is written to disk
+     *
+     * The file is created on construction.
+     * Constant data is already added on construction.
+     * All data that might change during simulation is added later,
+     * the file is (only) prepared so that it can be appended.
+     *
+     * There are axis (named <em>/Infos/AxisValues_...</em>)
+     * and datasets containing the actual data (named <em>.../data</em>).
+     * The latter have links to the corrsponding axis next to them,
+     * that hold information on the dimension of the dataset.
+     *
+     * To avoid slowing down computation, data is saved as a binary copy.
+     * This leaves normalization, units and dimensions untouched.
+     * Conversion to physical units is facilitated by conversion factors,
+     * that are given as attributes to the data frames.
+     */
 class HDF5File
 {
 public:
@@ -34,12 +57,12 @@ public:
      * @param wfm wake
      * @param nparticles
      * @param t_sync
+     * @param f_rev
      */
-    HDF5File(const std::string filename,
+    HDF5File(const std::string& filename,
              const std::shared_ptr<PhaseSpace> ps,
              const ElectricField* ef,
              const std::shared_ptr<Impedance> imp,
-             const WakeFunctionMap *wfm,
              const size_t nparticles,
              const double t_sync,
              const double f_rev);
@@ -57,6 +80,13 @@ public:
      * @param fullspectrum safe full CSR spectrum or only integrated power
      */
     void append(const ElectricField* ef, const bool fullspectrum = true);
+
+    /**
+     * @brief savePaddedProfile
+     * @param ef
+     * @param timestep 0 or 1 (for start or end of simulation)
+     */
+    void appendPadded(const ElectricField* ef);
 
     /**
      * @brief The AppendType enum
@@ -110,7 +140,9 @@ private:
 
     H5::H5File _file;
 
-    const meshindex_t _nBunches;
+    const uint32_t _nBuckets;
+
+    const uint32_t _nBunches;
 
     const uint32_t _nParticles;
 
@@ -136,9 +168,13 @@ private: // values for phase space axis
 
     DatasetInfo<1> _timeAxisPS;
 
+    DatasetInfo<1> _bucketNumbers;
+
     DatasetInfo<2> _bunchPopulation;
 
     DatasetInfo<3> _bunchProfile;
+
+    DatasetInfo<2> _paddedProfile;
 
     DatasetInfo<2> _bunchLength;
 
@@ -156,6 +192,8 @@ private: // values for phase space axis
 
     DatasetInfo<3> _wakePotential;
 
+    DatasetInfo<2> _paddedPotential;
+
     DatasetInfo<3> _csrSpectrum;
 
     DatasetInfo<2> _csrIntensity;
@@ -164,8 +202,6 @@ private: // values for phase space axis
 
     DatasetInfo<1> _impedanceReal;
     DatasetInfo<1> _impedanceImag;
-
-    DatasetInfo<1> _wakeFunction;
 
 private:
     template <int rank, typename datatype>

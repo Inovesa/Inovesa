@@ -1,29 +1,45 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * This file is part of Inovesa (github.com/Inovesa/Inovesa).
- * It's copyrighted by the contributors recorded
- * in the version control history of the file.
+ * Copyright (c) Patrik Schönfeldt
+ * Copyright (c) Patrick Schreiber
+ * Copyright (c) Karlsruhe Institute of Technology
  */
 
 #if INOVESA_USE_HDF5 == 1
 #include "IO/HDF5File.hpp"
 
-#include "MessageStrings.hpp"
+#include "HelperFunctions.hpp"
 
-vfps::HDF5File::HDF5File(const std::string filename,
+namespace vfps {
+class HDF5FileException
+{
+public:
+    explicit HDF5FileException(const std::string& msg) : _msg(msg) {}
+
+    const char* what() const noexcept;
+
+private:
+    const std::string _msg;
+};
+} // namespace vfps
+
+const char* vfps::HDF5FileException::what() const noexcept
+    { return _msg.c_str(); }
+
+vfps::HDF5File::HDF5File(const std::string& filename,
                          const std::shared_ptr<PhaseSpace> ps,
                          const ElectricField* ef,
                          const std::shared_ptr<Impedance> imp,
-                         const WakeFunctionMap* wfm,
                          const size_t nparticles,
                          const double t_sync,
                          const double f_rev)
   : _fname( filename )
   , _file( _prepareFile() )
-  , _nBunches( ps->nBunches() )
+  , _nBuckets( (ef != nullptr)? ef->getBuckets().size() : 0)
+  , _nBunches( PhaseSpace::nb )
   , _nParticles( nparticles )
-  , _psSizeX( ps->nMeshCells(0) )
-  , _psSizeY( ps->nMeshCells(1) )
+  , _psSizeX( PhaseSpace::nx )
+  , _psSizeY( PhaseSpace::ny )
   , _maxn( (ef != nullptr)? ef->getNMax()/static_cast<size_t>(2) : 0 )
   , _impSize( imp != nullptr ? imp->nFreqs()/2 : 0 )
   , _positionAxis(_makeDatasetInfo<1,meshaxis_t>( "/Info/AxisValues_z"
@@ -42,6 +58,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                              , {{0}},{{256}},{{H5F_UNLIMITED}}))
   , _timeAxisPS(_makeDatasetInfo<1,timeaxis_t>( "/PhaseSpace/axis0"
                                            , {{0}},{{256}},{{H5F_UNLIMITED}}))
+  , _bucketNumbers(_makeDatasetInfo<1,uint32_t>( "/Info/BucketNumbers"
+                                              , {{_nBuckets}}
+                                              , {{std::min(2048U,_nBuckets)}}
+                                              , {{_nBuckets}}))
   , _bunchPopulation(_makeDatasetInfo<2,integral_t>( "/BunchPopulation/data"
                                                   , {{0,_nBunches}}
                                                   , {{256,_nBunches}}
@@ -53,6 +73,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                   , std::min(256U,_psSizeX) }}
                                                , {{ H5S_UNLIMITED,_nBunches
                                                   , _psSizeX }} ))
+  , _paddedProfile(_makeDatasetInfo<2,integral_t>("/BunchProfile/padded"
+                                                 , {{0,_impSize}}
+                                                 , {{2,std::min(256U,_psSizeX)}}
+                                                 , {{H5S_UNLIMITED,_impSize}}))
   , _bunchLength( _makeDatasetInfo<2,meshaxis_t>( "/BunchLength/data"
                                                , {{ 0, _nBunches }}
                                                , {{ 256, 1 }}
@@ -93,6 +117,10 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                     , std::min(256U,_psSizeX) }}
                                                  , {{ H5S_UNLIMITED,_nBunches
                                                     , _psSizeX }} ))
+  , _paddedPotential(_makeDatasetInfo<2,integral_t>("/WakePotential/padded"
+                                                 , {{0,_impSize}}
+                                                 , {{2,std::min(256U,_psSizeX)}}
+                                                 , {{H5S_UNLIMITED,_impSize}}))
   , _csrSpectrum(_makeDatasetInfo<3,meshaxis_t>( "/CSR/Spectrum/data"
                                                , {{ 0, _nBunches, _maxn }}
                                                , {{ 64, 1
@@ -119,11 +147,6 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                                  , {{_impSize}}
                                                  , {{std::min( 4097U,_impSize)}}
                                                  , {{_impSize}}))
-  , _wakeFunction(_makeDatasetInfo<1,meshaxis_t>("/WakeFunction/data"
-                                                 , {{2*_psSizeX}}
-                                                 , {{std::min( 4097U
-                                                             , 2U*_psSizeX)}}
-                                                 , {{2*_psSizeX}}))
   , _ps(ps)
 {
     // Axis
@@ -167,7 +190,14 @@ vfps::HDF5File::HDF5File(const std::string filename,
     _bunchPopulation.dataset.createAttribute("Coulomb",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&(ps->charge));
 
+    if (ef != nullptr) {
+        _bucketNumbers.dataset.write( ef->getBuckets().data()
+                                    , _bucketNumbers.datatype);
+    }
+
+
     // actual data
+
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchProfile/axis0" );
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_z", "/BunchProfile/axis1" );
 
@@ -285,11 +315,6 @@ vfps::HDF5File::HDF5File(const std::string filename,
                                            &(imp->factor4Ohms));
     }
 
-    if (wfm != nullptr ) {
-        _wakeFunction.dataset.write( wfm->getWakeFunction()
-                                   , _wakeFunction.datatype);
-    }
-
     // save Inovesa version
     {
     std::array<hsize_t,1> version_dims {{3}};
@@ -335,7 +360,13 @@ void vfps::HDF5File::append(const ElectricField* ef, const bool fullspectrum)
     if (fullspectrum) {
         _appendData(_csrSpectrum,ef->getCSRSpectrum());
     }
-    _appendData(_csrIntensity,&ef->getCSRPower());
+    _appendData(_csrIntensity,ef->getCSRPower());
+}
+
+void vfps::HDF5File::appendPadded(const vfps::ElectricField *ef)
+{
+    _appendData(_paddedProfile,ef->getPaddedBunchProfiles());
+    _appendData(_paddedPotential,ef->getPaddedWakePotential());
 }
 
 void vfps::HDF5File::appendRFKicks(
@@ -366,17 +397,17 @@ void vfps::HDF5File::append(const PhaseSpace& ps,
 
     if (at != AppendType::PhaseSpace) {
         _appendData(_timeAxis,&t);
-        _appendData(_bunchProfile,ps.getProjection(0));
-        _appendData(_bunchLength,ps.getBunchLength());
+        _appendData(_bunchProfile,ps.getProjection(0).origin());
+        _appendData(_bunchLength,ps.getBunchLength().origin());
         {
         auto mean_q = ps.getMoment(0,0);
-        _appendData(_bunchPosition,mean_q.data());
+        _appendData(_bunchPosition,mean_q.origin());
         }
-        _appendData(_energyProfile,ps.getProjection(1));
-        _appendData(_energySpread,ps.getEnergySpread());
+        _appendData(_energyProfile,ps.getProjection(1).origin());
+        _appendData(_energySpread,ps.getEnergySpread().origin());
         {
         auto mean_E = ps.getMoment(1,0);
-        _appendData(_energyAverage,mean_E.data());
+        _appendData(_energyAverage,mean_E.origin());
         }
         {
         _appendData(_bunchPopulation,ps.getBunchPopulation().data());
@@ -443,13 +474,20 @@ vfps::HDF5File::readPhaseSpace( std::string fname
         axistype = H5::PredType::IEEE_F64LE;
     }
 
-    auto ps = std::make_unique<PhaseSpace>( ps_size
-                                          , qmin,qmax,bl
+    std::vector<integral_t> filling = {1.0};
+
+    PhaseSpace::setSize(ps_size, filling.size());
+
+    auto ps = std::make_unique<PhaseSpace>( qmin,qmax,bl
                                           , pmin,pmax,dE
                                           , oclh
-                                          , Qb,Ib_unscaled,1U,1
+                                          , Qb,Ib_unscaled,filling,1
                                           );
-    ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
+    if (PhaseSpace::nxyb == ps_space.getSelectNpoints()) {
+        ps_dataset.read(ps->getData(), datatype, memspace, ps_space);
+    } else {
+        throw HDF5FileException("Unexpected data size.");
+    }
 
     return ps;
 }
@@ -487,7 +525,7 @@ vfps::HDF5File::_makeDatasetInfo( std::string name
 
     H5::DataType rv_datatype;
     if (std::is_same<datatype,float>::value) {
-            rv_datatype = H5::PredType::IEEE_F32LE;
+        rv_datatype = H5::PredType::IEEE_F32LE;
     } else if (std::is_same<datatype,double>::value) {
         rv_datatype = H5::PredType::IEEE_F64LE;
     }else if (std::is_same<datatype,uint32_t>::value) {
