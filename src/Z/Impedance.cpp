@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <limits>
 
 vfps::Impedance::Impedance(const Impedance &other)
   : Impedance( Ruler<frequency_t>(other._axis),other._data, other._oclh)
