@@ -525,7 +525,7 @@ int main(int argc, char** argv)
             Display::printText("Building dynamic, nonlinear RFKickMap...");
 
             drfm.reset(new DynamicRFKickMap( grid_t2, grid_t1,ps_size, ps_size
-                                           , revolutionpart, V_eff, f_RF, V0
+                                           , revolutionpart, V_RF, f_RF, V0
                                            , rf_phase_noise, rf_ampl_noise
                                            , rf_mod_ampl,rf_mod_step, laststep
                                            , interpolationtype,interpol_clamp
@@ -560,7 +560,7 @@ int main(int argc, char** argv)
         } else {
             Display::printText("Building static, nonlinear RFKickMap.");
             rfm.reset(new RFKickMap( grid_t2,grid_t1,ps_size,ps_size
-                                   , revolutionpart, V_eff, f_RF, V0
+                                   , revolutionpart, V_RF, f_RF, V0
                                    , interpolationtype,interpol_clamp
                                    , oclh
                                    ));
