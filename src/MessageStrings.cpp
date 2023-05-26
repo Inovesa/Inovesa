@@ -19,6 +19,7 @@ const std::string vfps::copyright_notice() noexcept {
         "Copyright (c) Johannes Schestag\n"
         "Copyright (c) Tobias Boltz\n"
         "Copyright (c) Patrick Schreiber\n"
+        "Copyright (c) Miriam Brosi\n"
         "Copyright (c) Julian Gethmann\n"
         "Copyright (c) Matthias Blaicher\n"
         "Copyright (c) John C. Bowman,\n"
