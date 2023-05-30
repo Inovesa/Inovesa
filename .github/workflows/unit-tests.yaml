@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: update package list
+      run: sudo apt update
     - name: install dependencies
       run: sudo apt install cmake g++ pkg-config libboost-all-dev libclfft-dev libfftw3-dev libglew-dev libglfw3-dev libhdf5-dev libopenimageio-dev libpng++-dev libxrandr-dev opencl-dev libxxf86vm-dev
     - name: cmake
