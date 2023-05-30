@@ -16,8 +16,6 @@ is a good starting point.
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
 [![Inovesa build status](https://travis-ci.com/Inovesa/Inovesa.svg?branch=v1.1)](https://travis-ci.com/Inovesa/Inovesa/branches)
-[![Code quality alerts](https://img.shields.io/lgtm/alerts/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/alerts/)
-[![Code quality grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/Inovesa/Inovesa.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Inovesa/Inovesa/context:cpp)
 [![License: GPLv3](https://img.shields.io/github/license/Inovesa/Inovesa.svg)](https://github.com/Inovesa/Inovesa/blob/master/LICENSE)
 
 Installation
