@@ -15,7 +15,8 @@ If you consider contributing, the [contibuting file](CONTRIBUTING.md)
 is a good starting point.
 
 [![DOI](https://zenodo.org/badge/73905339.svg)](https://zenodo.org/badge/latestdoi/73905339)
-[![Inovesa build status](https://travis-ci.com/Inovesa/Inovesa.svg?branch=v1.1)](https://travis-ci.com/Inovesa/Inovesa/branches)
+[![Build](https://github.com/Inovesa/Inovesa/actions/workflows/build-test.yaml/badge.svg?branch=master)](https://github.com/Inovesa/Inovesa/actions/workflows/build-test.yaml)
+[![CodeQL](https://github.com/Inovesa/Inovesa/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/Inovesa/Inovesa/actions/workflows/codeql.yml)
 [![License: GPLv3](https://img.shields.io/github/license/Inovesa/Inovesa.svg)](https://github.com/Inovesa/Inovesa/blob/master/LICENSE)
 
 Installation
