@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+      branches: [ master, develop ]
+  pull_request:
+      branches: [ master, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: update package list
+      run: sudo apt update
+    - name: install dependencies
+      run: sudo apt install cmake g++ pkg-config libboost-all-dev libclfft-dev libfftw3-dev libglew-dev libglfw3-dev libhdf5-dev libopenimageio-dev libpng++-dev libxrandr-dev opencl-dev libxxf86vm-dev
+    - name: cmake
+      run: cmake .
+    - name: make
+      run: make
+    - name: check run
+      run: ./inovesa --version
