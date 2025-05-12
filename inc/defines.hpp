@@ -10,7 +10,7 @@
 #include <complex>
 #include <string>
 #include <fftw3.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include "InovesaConfig.hpp"
 
