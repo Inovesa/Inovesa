@@ -149,6 +149,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # workaround CMake bug where previous definition is ignored
 set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
+# make compatible to newer boost and cmake
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
 # workaround problem in boost with g++
 IF( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
     set(CMAKE_CXX_FLAGS "-fext-numeric-literals ${CMAKE_CXX_FLAGS}")
