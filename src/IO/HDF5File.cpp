@@ -212,6 +212,7 @@ vfps::HDF5File::HDF5File(const std::string& filename,
 
 
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchLength/axis0" );
+    _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/BunchPopulation/axis0" );
 
     _bunchLength.dataset.createAttribute("Meter",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_z_meter);
@@ -240,6 +241,7 @@ vfps::HDF5File::HDF5File(const std::string& filename,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_E_eVolt);
 
     _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergyAverage/axis0" );
+    _file.link(H5L_TYPE_SOFT, "/Info/AxisValues_t", "/EnergySpread/axis0" );
 
     _energyAverage.dataset.createAttribute("ElectronVolt",H5::PredType::IEEE_F64LE,
             H5::DataSpace()).write(H5::PredType::IEEE_F64LE,&ax_E_eVolt);
